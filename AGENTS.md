@@ -1,3 +1,34 @@
+# AGENTS.md — Vyzon (game-of-sales)
+
+Instruções para agentes de código (qualquer ferramenta). A fonte completa e
+canônica é o `CLAUDE.md` deste diretório; este arquivo é o espelho mínimo
+pra portabilidade. Não duplicar conteúdo: mudou regra, muda lá.
+
+## O que é este repo
+Central Comercial com EVA para agências BR que vendem por conversa.
+Vite + React 18 + TS + Tailwind + Supabase (RLS + edge functions) + Vercel.
+
+## Comandos
+```bash
+npm run lint
+npx tsc -p tsconfig.app.json --noEmit
+npm test
+npm run build
+npx supabase db query --linked -f <arquivo.sql>   # NUNCA `db push`
+```
+
+## Regras que quebram produção se ignoradas
+1. Autonomia graduada: ações internas a EVA executa sozinha; nenhuma
+   mensagem de saída sem aprovação humana (`agent_suggestions` pending);
+   nunca prometer automação total.
+2. Claims Policy: não afirmar feature/integração/preço sem verificar no
+   código (`src/config/plans.ts`, `src/config/integrationsConfig.ts`).
+3. Migrations: GRANT antes de RLS, escopo por `company_id`, sempre aditivas.
+4. Front: empresa efetiva = `useTenant().activeCompanyId || companyId`.
+5. Copy: sem travessão, sem emoji, sem "CRM gamificado".
+
+Detalhe de marca, UI, verificação e DoD: `CLAUDE.md` e `.claude/skills/`.
+
 <!-- VERCEL BEST PRACTICES START -->
 ## Best practices for developing on Vercel
 

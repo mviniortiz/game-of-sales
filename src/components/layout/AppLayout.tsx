@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
+import { EvaLiveIsland } from "@/components/eva/EvaLiveIsland";
 import { TrialBanner } from "./TrialBanner";
 import { EvaHelpDock } from "@/components/help/EvaHelpDock";
 import { AskEvaPalette } from "@/components/help/AskEvaPalette";
@@ -12,6 +13,7 @@ import { useTrial } from "@/hooks/useTrial";
 // Rotas novas (/inicio, /inbox, etc) são as principais; antigas redirect silencioso.
 const getPageTitle = (pathname: string) => {
   if (pathname === "/") return "Início";
+  if (pathname.startsWith("/orcamentos")) return "Orçamentos";
   if (pathname.startsWith("/inicio") || pathname.startsWith("/dashboard")) return "Início";
   if (pathname.startsWith("/inbox") || pathname.startsWith("/pulse") || pathname.startsWith("/whatsapp")) return "Inbox";
   if (pathname.startsWith("/pipeline") || pathname.startsWith("/crm")) return "Pipeline";
@@ -64,6 +66,12 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
           >
             <SidebarTrigger />
             <span className="text-xs sm:text-sm font-medium text-[#64748B] truncate">{getPageTitle(location.pathname)}</span>
+            {/* O trabalho da EVA acompanha a pessoa: o Diário vive no /inicio e
+                sumia assim que ela ia para o Inbox ou o Pipeline, que é onde ela
+                passa o dia. */}
+            <div className="ml-auto shrink-0">
+              <EvaLiveIsland />
+            </div>
           </header>
           <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto" style={{ background: "#F6F4EF" }}>
             {/* Animação de entrada padrão de TODA aba: a key por rota remonta e

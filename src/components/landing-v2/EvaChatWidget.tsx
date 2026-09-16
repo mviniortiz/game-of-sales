@@ -125,7 +125,7 @@ export const EvaChatWidget = () => {
     };
 
     return (
-        <div className="fixed z-[90] left-1/2 -translate-x-1/2 bottom-4 sm:bottom-6 print:hidden flex justify-center">
+        <div className="fixed z-[90] right-4 bottom-4 sm:right-6 sm:bottom-6 print:hidden flex justify-end">
             <AnimatePresence mode="wait">
                 {hidden ? null : open ? (
                     <motion.div

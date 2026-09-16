@@ -31,7 +31,8 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const DAILY_LIMIT_PER_USER = 50;        // plano Pro (e trial do Pro)
-const FREE_DAILY_LIMIT_PER_USER = 10;   // plano Free — espelha src/config/plans.ts
+const ESSENTIAL_DAILY_LIMIT_PER_USER = 25; // plano Essential
+const FREE_DAILY_LIMIT_PER_USER = 10;   // piso interno — espelha src/config/plans.ts
 // EVA.AUTO.1 — auto-qualificação (modo serviço) consome um balde por-empresa,
 // separado da cota manual do dono. Teto diário de novos contatos analisados.
 const AUTO_DAILY_LIMIT = 200;
@@ -595,8 +596,9 @@ serve(async (req) => {
             companyId = prof?.company_id ?? null;
         }
 
-        // Limite diário por PLANO (espelha src/config/plans.ts): free 10/dia,
-        // pro 50/dia por usuário; trial ativo conta como Pro, expirado degrada.
+        // Limite diário por PLANO (espelha src/config/plans.ts): piso free 10/dia,
+        // essential 25/dia, pro 50/dia por usuário; trial ativo conta como Pro,
+        // expirado degrada pro piso. "escala"/"enterprise" legados = pro.
         let planDailyLimit = DAILY_LIMIT_PER_USER;
         if (!serviceMode && companyId) {
             const { data: comp } = await adminSupabase
@@ -607,9 +609,11 @@ serve(async (req) => {
             const normalizePlan = (raw: string | null | undefined): string => {
                 const v = (raw || "").toLowerCase();
                 if (v === "pro" || v === "plus") return "pro";
-                if (v === "escala" || v === "enterprise") return "escala";
+                if (v === "essential" || v === "essencial") return "essential";
+                if (v === "escala" || v === "enterprise") return "pro";
                 return "free";
             };
+            const PLAN_DAILY: Record<string, number> = { free: FREE_DAILY_LIMIT_PER_USER, essential: ESSENTIAL_DAILY_LIMIT_PER_USER, pro: DAILY_LIMIT_PER_USER, escala: DAILY_LIMIT_PER_USER };
             let effectivePlan = "free";
             if (comp?.subscription_status === "trialing") {
                 const ends = comp?.trial_ends_at ? new Date(comp.trial_ends_at).getTime() : NaN;
@@ -617,7 +621,7 @@ serve(async (req) => {
             } else if (comp?.subscription_status === "active") {
                 effectivePlan = normalizePlan(comp?.plan);
             }
-            planDailyLimit = effectivePlan === "free" ? FREE_DAILY_LIMIT_PER_USER : DAILY_LIMIT_PER_USER;
+            planDailyLimit = PLAN_DAILY[effectivePlan] ?? FREE_DAILY_LIMIT_PER_USER;
             // super_admin não sofre limite reduzido
             if (profile?.is_super_admin) planDailyLimit = DAILY_LIMIT_PER_USER;
         }
@@ -722,7 +726,7 @@ serve(async (req) => {
 
         if (!rateLimit.allowed) {
             return json(429, {
-                error: `Limite diario de ${rlLimit} analises atingido. ${rlLimit === FREE_DAILY_LIMIT_PER_USER ? "No plano Pro sao 50 por dia." : "Tente novamente amanha."}`,
+                error: `Limite diario de ${rlLimit} analises atingido. ${rlLimit === DAILY_LIMIT_PER_USER ? "Tente novamente amanha." : "No plano Pro sao 50 por dia."}`,
                 code: "RATE_LIMITED",
                 remaining: 0,
                 resetAt: rateLimit.resetAt,

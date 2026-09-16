@@ -9,7 +9,8 @@
 
 services:
   evolution-api:
-    image: atendai/evolution-api:v2.2.3   # confira a tag estável mais recente no Docker Hub
+    # atendai 2.2.x fica em loop de conexão e nunca gera QR; a linha mantida é a evoapicloud
+    image: evoapicloud/evolution-api:v2.3.7
     container_name: evolution-api
     restart: always
     ports:

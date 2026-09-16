@@ -59,6 +59,7 @@ interface SuggestionRow {
     content: Record<string, unknown> | null;
     confidence: number | null;
     document_id: string | null;
+    source: string | null;
 }
 
 interface GapRow {
@@ -178,7 +179,7 @@ export function useEvaContextSuggestions() {
                 supabase
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tabela fora dos types gerados (padrão do projeto)
                     .from("eva_context_suggestions" as any)
-                    .select("id, suggestion_type, title, content, confidence, document_id")
+                    .select("id, suggestion_type, title, content, confidence, document_id, source")
                     .eq("company_id", companyId)
                     .eq("status", "pending")
                     .order("confidence", { ascending: false }),
@@ -201,13 +202,19 @@ export function useEvaContextSuggestions() {
                 // SelectQueryError, então o cast direto falha. Passa por unknown primeiro.
                 ((docRes.data ?? []) as unknown as { id: string; file_name: string }[]).map((d) => [d.id, d.file_name]),
             );
-            const sourceLabel = (docId: string | null): string =>
-                docId && docNames.has(docId)
-                    ? `do documento "${docNames.get(docId)}"`
-                    : "do texto que você colou";
+            // LEARN.1: a origem vem da coluna source. Antes era deduzida do
+            // document_id, e sugestão vinda das conversas aparecia como texto
+            // colado: a pessoa aprovava sem saber de onde aquilo saiu.
+            const sourceLabel = (row: SuggestionRow): string => {
+                if (row.source === "conversations") return "das suas conversas no WhatsApp";
+                if (row.document_id && docNames.has(row.document_id)) {
+                    return `do documento "${docNames.get(row.document_id)}"`;
+                }
+                return "do texto que você colou";
+            };
 
             const suggestions = ((sugRes.data ?? []) as unknown as SuggestionRow[]).map((r) =>
-                mapSuggestion(r, sourceLabel(r.document_id)),
+                mapSuggestion(r, sourceLabel(r)),
             );
             const gaps = ((gapRes.data ?? []) as unknown as GapRow[]).map(mapGap);
             return { suggestions, gaps };

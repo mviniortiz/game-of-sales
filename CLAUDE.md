@@ -1,367 +1,158 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code when working in this repository.
-
-> **Atualizado em 2026-06-12.** Substitui o posicionamento horizontal antigo
-> ("CRM gamificado") pelo posicionamento atual em produção: **Central Comercial
-> com EVA para agências que vendem por conversa**. Sempre verifique no código
-> antes de afirmar capacidades (ver "Claims Policy").
-
-## Project Overview
-
-**Vyzon** é a **Central Comercial com EVA** para **agências que vendem por
-conversa**. O lead chega pelo WhatsApp/Instagram/formulário, a **EVA** (a
-camada de inteligência da plataforma) lê cada atendimento, aponta quem está
-pronto para avançar e sugere o próximo passo. O time aprova e a oportunidade
-segue no pipeline.
-
-Posicionamento canônico (em produção em `index.html` / homepage):
-
-> **Pare de perder leads no WhatsApp.**
-> A Central Comercial para agências que vendem por conversa. A EVA lê cada
-> atendimento, aponta quem está pronto para avançar e sugere o próximo passo.
-> Seu time aprova e a oportunidade segue no pipeline.
-
-O produto resolve a dor central das agências: **lead frio porque ninguém
-respondeu a tempo, qualificação ruim, follow-up esquecido e pipeline que não
-reflete o que aconteceu na conversa.**
-
-### Princípio inegociável — agentes assistidos
-
-A EVA e seus agentes são **assistidos, com humano no controle das mensagens
-de saída**. O modelo de autonomia vigente é **HÍBRIDO** (decisão do produto,
-2026-06-12):
-
-- **Pode ser automático:** criar/atualizar o card de oportunidade no pipeline
-  a partir de um lead que **já entrou** (inbound), com os campos qualificados
-  preenchidos. Isso é trabalho interno sobre dado que já chegou.
-- **Sempre exige aprovação humana:** qualquer **mensagem de saída** para o lead
-  (abordagem, follow-up, resposta) — padrão "aprovar-e-enviar". Nenhum agente
-  dispara mensagem sozinho.
-- **Nunca:** scraping/enriquecimento por fonte externa (Google/LinkedIn),
-  promessa de resultado, ou substituir o vendedor na condução da conversa.
-
-Isso está cristalizado na marca: **"A EVA sugere, seu time aprova."**
-
-## Brand
-
-Vyzon deve parecer um SaaS B2B premium, moderno e editorial-técnico.
-
-Direção de marca: clean, afiada, premium, confiante (não lúdica), focada em
-performance comercial. A landing usa uma linguagem editorial ("o fio da
-conversa"): papel, tinta, hairlines, voz serif itálica (humano) + mono
-(máquina/telemetria).
-
-### Design tokens reais da landing (`src/index.css`, namespace `--lp-*`)
-
-- Papel (fundo): `--lp-paper: #faf9f5`
-- Tinta / navy (texto): `--lp-ink: #0d1421`
-- Azul elétrico (CTA/acento primário): `--lp-blue: #1556c0` (deep `#0e3e8a`)
-- Roxo da EVA (IA): `--lp-eva: #6d28d9`
-- Verde "ao vivo": `--lp-live: #008a52`
-- Hairlines: `--lp-line` / `--lp-line-soft`; raio: `--lp-radius: 10px`
-
-Fontes: **Satoshi** (headlines), **Sentient** itálica (voz humana/serif),
-**Sora**/**Inter** (UI), **mono** (telemetria). Tokens de app em `--vyz-*`
-com dark mode (`.dark`). Não introduzir um estilo visual não relacionado sem
-pedido explícito.
-
-## ICP (Ideal Customer Profile)
-
-**Agências de marketing e serviços digitais brasileiras que vendem por
-conversa** (ver `docs/product/vyzon_agents_for_agencies.md` e
-`docs/vendas/01-ICP-ideal-customer-profile.md`).
-
-- **Tipo:** tráfego pago, social media, criação de sites/landing, lançamentos,
-  branding, consultorias e produtoras de conteúdo.
-- **Tamanho:** 3 a 30 pessoas; comercial feito por 1–5 (dono + closer + SDR
-  informal).
-- **Canais:** WhatsApp (principal), Instagram/DM, formulário, indicação,
-  tráfego pago. Entrada quase toda por **conversa**, não por formulário.
-- **Maturidade:** baixa/média — "tem CRM no nome" mas usa planilha + WhatsApp +
-  memória; sem playbook, sem SLA de resposta, sem critério de qualificação.
-
-Segmentos adjacentes citados no ICP de vendas (imobiliárias, corretoras,
-energia solar, infoprodutos, SaaS B2B) existem como expansão, mas a **mensagem
-principal é agências**. As páginas de persona (`/para-infoprodutores`,
-`/para-saas-b2b`) foram DESPUBLICADAS (2026-06-16, 301 → home): foco único na
-home. Componentes preservados em src/pages/personas/ pra eventual republicação.
-
-## Messaging Hierarchy
-
-A homepage deve responder rápido (≤5s):
-
-1. O que é Vyzon? → Central Comercial com EVA.
-2. Para quem? → Agências que vendem por conversa.
-3. Que dor resolve? → Lead perdido no WhatsApp, follow-up esquecido, pipeline
-   desconectado da conversa.
-4. Por que é diferente? → A EVA lê a conversa e sugere; o time aprova.
-5. Como funciona? → Inbox → EVA analisa → time aprova → pipeline.
-6. Próximo passo? → Agendar demo gratuita / Testar grátis 14 dias.
-
-## Copy Principles
-
-Copy orientada a dor e à conversa, nunca feature seca. Evitar "CRM
-gamificado", "venda mais", "automatize suas vendas", "robô que vende sozinho".
-
-Preferir: "Pare de perder leads no WhatsApp", "A EVA lê a conversa e aponta
-quem está pronto", "Follow-up que não depende de cobrança no grupo",
-"O pipeline finalmente reflete o que aconteceu na conversa".
-
-Enquadrar a IA como **camada assistida** ("a EVA sugere, seu time aprova"),
-nunca como automação total ou substituição do vendedor.
-
-## EVA & Agentes (núcleo do produto)
-
-A EVA é a camada-mãe de inteligência. Os **agentes** são especializações dela,
-configurados pelo gestor e amarrados ao **contexto da empresa**.
-
-### Contexto da empresa (o que alimenta a EVA)
-
-Configurado em **Configurações → EVA** (`src/components/configuracoes/eva/*`):
-serviços, ICP, tom de voz, objeções, playbooks e materiais aprovados (base de
-conhecimento). Nada entra no contexto da EVA sem aprovação. Tabelas `eva_*`
-(`eva_blueprints`, `eva_business_context`, `eva_simulation_results`,
-`eva_deal_suggestions`, `eva_training_documents`, etc.).
-
-### Agent Studio (EVA Studio evoluído)
-
-O motor do EVA Studio (blueprint persistente + memória + regras + simulações +
-aprovação) configura **agentes especializados**. Dimensão `agent_key`
-(`qualifier`, `followup`, `objection`, `proposal`, `manager`). MVP = **Agente
-Qualificador**. Specs de referência: `docs/product/vyzon_agents_for_agencies.md`
-(VYZON.AGENTS.1) e `vyzon_qualifier_agent_spec.md` (VYZON.AGENTS.2).
-
-### Agente Qualificador (MVP)
-
-Lê a conversa do lead e produz um **diagnóstico**: campos detectados
-(orçamento, segmento, urgência, decisor, prazo…), score (verde/amarelo/
-vermelho), tags sugeridas, perguntas recomendadas e próxima ação. No modelo
-**híbrido**: ao qualificar um lead inbound, **cria/atualiza o card no pipeline
-com os campos preenchidos**; qualquer mensagem de saída fica como rascunho na
-fila "aprovar-e-enviar". Toda geração é proposta auditável (`agent_suggestions`).
-
-### Ciclo de vida e auditoria
-
-- **Config do agente** (`eva_blueprints.status`): `draft → in_review →
-  ready_to_test → prepared → published_preview`. Só publica sugestões ao vivo
-  quando preparado/aprovado.
-- **Sugestão em runtime** (`agent_suggestions.status`): `pending → accepted |
-  adjusted | rejected | expired`, com `applied_payload` e `feedback`.
-- Permissões: **admin** configura/aprova; **membro** usa e registra desfecho;
-  **super_admin** bypassa. RLS por `company_id` (padrão do projeto).
-
-### Prospecção outbound supervisionada (existente)
-
-`prospecting_instances` + `prospecting_allowlist` (PROSPECT.1): um número em
-modo prospecção só conversa com a allowlist; tudo fora é descartado no webhook
-(`evolution-message-webhook`), protegendo a vida pessoal. Envio é
-**aprovar-e-enviar**. `validateChatOwnership` é fail-CLOSED.
-
-## Pricing (fonte única `src/config/plans.ts`; landing espelha em `src/data/landing/pricing.ts`)
-
-Modelo 2026-07-16 (Free + 1 pago + contato). **Verificar os arquivos antes de
-citar valores em copy** — eles mudam:
-
-- **Free** — grátis pra sempre (1 usuário, 1 WhatsApp, EVA 10 análises/dia,
-  10 produtos, sem ligações)
-- **Pro** — R$ 397/mês (popular; até 5 usuários, EVA 50/dia por usuário,
-  ligações com transcrição)
-- **Escala** — sem preço público ("Falar com a gente" → WhatsApp de suporte
-  em `src/config/contact.ts`)
-
-Trial: todo cadastro entra com 14 dias de Pro sem cartão; ao expirar a conta
-DEGRADA pro Free em runtime (`resolveEffectivePlan`) — não existe mais tela de
-bloqueio de trial. Limites são espelhados hardcoded nas edges
-`admin-create-seller`, `whatsapp-copilot`, `deal-call-initiate` e
-`deal-call-generate-insights`: mudou limite em plans.ts, redeploya as edges.
-
-### Fluxo de cadastro e checkout (verificado em auditoria 2026-07-13)
-
-- Todo CTA de trial ("Testar grátis", "Começar teste grátis") leva pra
-  `/criar-conta?plan=starter|plus|pro` (`SignupV2.tsx`, roteado em
-  `AppShell.tsx`). `/onboarding?plan=X` e `/register` são só redirects de
-  compatibilidade pra `/criar-conta` (links antigos).
-- Cadastro cria a `company` já com trial de 14 dias **sem pedir cartão**:
-  `subscription_status: "trialing"`, `trial_ends_at` = agora + 14 dias. Sem
-  cartão nesta etapa; Mercado Pago não entra no fluxo de cadastro.
-- Confirmação de email está **ativa**: se o Supabase não devolver sessão
-  (`needsConfirmation`), o SignupV2 mostra uma tela dedicada ("Confirme seu
-  email") em vez de navegar pro app, evitando que a pessoa caia no login sem
-  entender o que aconteceu.
-- Mercado Pago só aparece depois, em **Faturamento → Fazer upgrade** ou
-  `/upgrade` (`PlanPicker` + `PlanCheckoutForm`, checkout transparente com
-  tokenização de cartão embutida na tela; não é link/redirect externo).
-- "Agendar demo gratuita" é um fluxo à parte: agenda via edge functions
-  `calendar-slots` (horários livres) + `calendar-book` (cria evento real no
-  Google Calendar do super_admin com Meet, convite de verdade pro lead).
-
-## Integrations (verificado em `src/config/integrationsConfig.ts`)
-
-**Nunca inventar integração.** As reais (webhooks/conectores no código):
-
-- **Vendas/infoproduto:** Hotmart, Kiwify, Greenn, Cakto, Braip.
-  (Eduzz e Monetizze REMOVIDAS em 2026-07-17 a pedido do Markus — edges
-  deletadas, não recolocar em copy.)
-- **B2B / cobrança / pagamento:** RD Station, Asaas, Mercado Pago, Pagar.me
-  (ligada 2026-07-17: edge deployada + testada ponta a ponta com evento
-  sintético).
-- **Produtividade / genérico:** Zapier, Notazz, Notion (NOTION.1: sync
-  OUTBOUND do pipeline pra database Notion via edge `notion-sync` + cron
-  15min; token de integração interna em `integration_configs.hottok`,
-  estado em `webhook_url` como `db:<id>`; aguarda validação com workspace
-  real), Webhooks/API por token.
-- **Canal nativo:** WhatsApp via **Evolution API** (`evolution-whatsapp`,
-  `evolution-message-webhook`).
-- **Em roadmap / sob consulta:** Stripe, Celetus.
-
-Se uma integração não estiver confirmada no código, usar "Em breve", "Sob
-consulta" ou "Integração via API/Webhook".
-
-## Stack & Architecture
-
-- **Frontend:** Vite + React 18 + TypeScript + Tailwind + shadcn/ui (Radix).
-  Roteamento: React Router v6 (`src/App.tsx`). Estado de servidor:
-  `@tanstack/react-query`. Formulários: react-hook-form + zod. Animação:
-  framer-motion (seletivo) + CSS (landing).
-- **Backend:** Supabase (Postgres + RLS + Edge Functions em `supabase/functions/`).
-  Cliente em `src/integrations/supabase/`. Migrations em `supabase/migrations/`.
-- **Pagamentos:** Mercado Pago (assinaturas). **Analytics:** GA4 + Google Ads +
-  Meta Pixel + Clarity (carregados após 1ª interação).
-- **Vídeo:** Remotion (`remotion/`). **Build:** `vite build` +
-  `scripts/prerender-seo.mjs` (HTML por slug para crawlers).
-
-### Rotas públicas principais
-
-`/` (landing), `/auth`, `/criar-conta?plan=starter|plus|pro` (cadastro,
-`/onboarding` e `/register` redirecionam pra cá), `/changelog`,
-`/politica-privacidade`, `/termos-de-servico`. Rotas públicas de SEO ficam em
-`App.tsx`; `/auth`, `/criar-conta` e o app autenticado (catch-all `AppShell`)
-vivem em `AppShell.tsx`: Inbox, Pipeline, Deal (`DealCommandCenter`), EVA
-(`/eva`), EVA/Agent Studio, Configurações (com `/upgrade`), Performance, Metas.
-
-## Database conventions (migrations)
-
-- Aplicar **sempre** via `npx supabase db query --linked -f <arquivo>` —
-  **NUNCA `db push`**.
-- **GRANT antes de habilitar RLS** (`grant ... to authenticated; grant all to
-  service_role;` depois `enable row level security`).
-- Helpers de RLS: `public.is_super_admin()`, `public.get_my_company_id()`,
-  `public.has_role(auth.uid(), 'admin'::public.app_role)`.
-- Trigger de timestamp: `public.update_updated_at()`.
-- Escopo por `company_id`. Mudanças **aditivas** e backward-compatible; colunas
-  novas com `default` para não quebrar linhas existentes.
-
-## CTA Rules
-
-- "Agendar demo gratuita" / "Ver demo" → abre o `EvaDemoModal` (tour guiado +
-  booking em `DemoBooking.tsx`), que agenda de verdade via `calendar-slots` +
-  `calendar-book` (convite real no Google Calendar). `DemoScheduleSection` e
-  `NativeScheduler` estão ÓRFÃOS (fora da árvore de rotas); não usar como
-  referência de fluxo.
-- "Testar grátis por 14 dias" / "Começar teste grátis" → `/criar-conta?plan=X`
-  (trial de 14 dias sem cartão; ver seção Pricing acima).
-- "Falar com especialista" (Pro) → link de booking externo definido em
-  `pricing.ts`. Não inventar URLs; reusar rotas existentes e marcar TODO se
-  faltar.
-- Upgrade de plano (usuário já em trial/ativo) → `/upgrade` ou Faturamento,
-  checkout embutido com Mercado Pago (`PlanCheckoutForm`). Nunca confundir com
-  o cadastro inicial, que não pede cartão.
-
-## SEO Requirements
-
-HTML real e rastreável. Requisitos: um H1 por página; HTML semântico; title e
-meta description descritivos; Open Graph + Twitter card; alt text (vazio em
-decorativas); JSON-LD (`SoftwareApplication`, `Organization`, `FAQPage`) já
-presente em `index.html`; `<noscript>` rico mantido em sincronia.
-
-Title atual: `Vyzon | Central Comercial com EVA para agências que vendem por
-conversa`. Não inventar ratings, reviews, pricing, clientes, integrações ou
-métricas em dados estruturados.
-
-## Accessibility Requirements
-
-Contraste adequado; foco visível; navegação por teclado; labels claros; seções
-semânticas; formulários acessíveis; nada crítico só por cor; `prefers-reduced-
-motion` em toda animação (a landing já respeita — ver `src/index.css`).
-
-## Performance Requirements
-
-Sem dependências pesadas desnecessárias. Preferir componentes leves, visuais
-CSS/HTML, lazy-load abaixo da dobra (`LazyOnVisible`), animação barata,
-layout sem CLS. Boa performance no mobile é obrigatória.
-
-## Responsive Design
-
-Funcionar de mobile pequeno a wide. No mobile: H1 legível, CTA cedo, hero não
-empurra CTA pra baixo demais, cards empilham, navegação usável.
-
-## Engineering Rules
-
-Antes de mudar: inspecionar repo; identificar stack, rotas, design system,
-componentes e tokens; identificar CTAs/forms e integrações confirmadas.
-
-Durante: preservar arquitetura; reusar componentes; evitar duplicação e deps
-desnecessárias; código idiomático e modular; preservar páginas legais,
-analytics e código funcional; não inventar comportamento de backend.
-
-Depois: rodar checks disponíveis (instalar se preciso → lint → typecheck →
-testes → build); corrigir o que der; reportar pendências honestamente.
-
-Comandos: `npm run lint`, `npx tsc -p tsconfig.app.json --noEmit`,
-`npm test` (vitest), `npm run test:e2e` (playwright), `npm run build`.
-
-## Claims Policy
-
-**Não afirmar** resultados de clientes, aumento de conversão/receita, nº de
-usuários/clientes, ratings, depoimentos, integrações, features de IA,
-capacidades de WhatsApp/automação/pagamento — **a menos que verificadas** no
-código, documentação, env, copy existente ou fornecidas pelo usuário. Na
-dúvida, linguagem cautelosa.
-
-Em especial: descrever a IA como **assistida (híbrida)** conforme o princípio
-acima. Não prometer "agente que vende/aborda sozinho" — a abordagem de saída
-sempre passa por aprovação humana.
-
-## Definition of Done
-
-1. Comunica o posicionamento (Central Comercial com EVA para agências) com
-   clareza, entendível em ≤5s.
-2. Copy orientada a dor/conversa; IA enquadrada como assistida/híbrida.
-3. ICP de agências claro; CTAs visíveis e repetidos.
-4. Conteúdo core em HTML rastreável; SEO e acessibilidade básicos.
-5. Mobile funciona; links legais acessíveis.
-6. Nenhuma claim não verificada introduzida.
-7. Migrations aditivas com GRANT+RLS por empresa; nada vai a produção sem OK.
-8. `tsc --noEmit` e `vite build` passam (ou falha documentada com causa).
+# CLAUDE.md — Vyzon (game-of-sales)
+
+> **Vyzon é a Central Comercial com EVA para agências BR que vendem por
+> conversa.** O lead chega por WhatsApp/Instagram/formulário, a EVA lê cada
+> atendimento, aponta quem está pronto e sugere o próximo passo; o time
+> aprova e a oportunidade segue no pipeline. Posicionamento canônico em
+> produção: `index.html`. (Atualizado 2026-07-28; substitui a versão longa,
+> cujo detalhe migrou pra fontes de verdade, docs e skills.)
+
+## Inegociável — autonomia GRADUADA (decisão 2026-08-21; substitui o híbrido de 2026-06-12)
+
+- **Interno: automático.** O loop da EVA (`eva-agent-loop`) executa sozinho
+  ações internas: ler contexto, criar/atualizar card, mover estágio, criar
+  nota. Catálogo de tools em `agent_tools`; execução auditada em
+  `agent_runs`/`agent_steps`.
+- **Saída pro lead: sempre aprovação humana** (padrão aprovar-e-enviar,
+  `agent_suggestions` status='pending'). Nenhum agente dispara mensagem
+  sozinho. Tool `draft_outbound_message` só gera rascunho, nunca envia.
+- **A aprovação acontece no WhatsApp do dono** (APPROVAL.1, 2026-08-24), não
+  numa fila dentro do app: `_shared/whatsappApproval.ts` manda o rascunho com
+  código curto, ele responde 1, 2 ou o texto corrigido, e a
+  `evolution-message-webhook` resolve. Motivo: 162 de 175 sugestões estavam
+  paradas em 'pending' porque aprovar exigia abrir o app. Rascunho com mais de
+  48h expira sozinho e nunca é enviado.
+- **Nunca:** scraping/enriquecimento externo, promessa de resultado,
+  substituir o vendedor. Slogan segue válido pra saída:
+  **"A EVA sugere, seu time aprova."**
+
+## Comandos
+
+```bash
+npm run lint
+npx tsc -p tsconfig.app.json --noEmit
+npm test               # vitest
+npm run test:e2e       # playwright
+npm run build          # vite build + scripts/prerender-seo.mjs
+npx supabase db query --linked -f <arquivo.sql>   # migrations. NUNCA `db push`
+```
+
+Deploy: push na `main` → Vercel (projetos vyzon + vyzon-org). GitHub Actions
+está BLOQUEADO por billing; não criar workflows.
+
+## Regras duras (violação = retrabalho garantido)
+
+1. **Claims Policy:** nunca afirmar feature, integração, número, resultado ou
+   capacidade sem verificar no código. Antes de copy de produto: grep.
+2. **Migrations:** aditivas e backward-compatible; **GRANT (authenticated +
+   service_role) ANTES de habilitar RLS**; escopo por `company_id`; auditar
+   as 4 operações RLS (schemas legados têm policy parcial); helpers
+   `is_super_admin()` / `get_my_company_id()` / `has_role()`; trigger
+   `update_updated_at()`. `insert().select()` de anon exige policy SELECT →
+   preferir RPC SECURITY DEFINER.
+3. **Empresa efetiva no front:** `useTenant().activeCompanyId || companyId`,
+   nunca só `companyId` (super_admin opera outra empresa).
+4. **Copy:** sem travessão, sem emoji; autonomia graduada (interna automática,
+   saída pro lead sempre aprovada); proibido "CRM gamificado",
+   "automatize suas vendas", "robô que vende sozinho", promessa de automação
+   total.
+5. **Visual:** sem ícones Sparkles/Zap; sem orbe/partícula/glow de IA
+   genérica; EVA é entidade ABSTRATA (EvaCoreVisual/EvaNode), nunca
+   avatar/rosto; roxo `#6d28d9` só como micro-acento.
+6. **Fonte de verdade > prosa.** Antes de citar em copy, LER:
+   - Preços/planos: `src/config/plans.ts` (landing espelha
+     `src/data/landing/pricing.ts`; limites hardcoded nas edges
+     `admin-create-seller`, `whatsapp-copilot`, `deal-call-initiate`,
+     `deal-call-generate-insights` — mudou plano, redeploya as 4).
+   - Integrações: `src/config/integrationsConfig.ts` (não confirmada no
+     código = "Em breve" / "Sob consulta"; nunca inventar).
+   - Contatos/links: `src/config/contact.ts`.
+   - Tokens de design: `src/index.css` (`--lp-*` landing, `--vyz-*` app).
+
+## Stack e mapa
+
+- Vite + React 18 + TypeScript + Tailwind + shadcn/ui; React Router v6;
+  @tanstack/react-query; react-hook-form + zod; framer-motion seletivo.
+- Supabase: Postgres + RLS + edge functions (`supabase/functions/`),
+  migrations em `supabase/migrations/`. Núcleo agéntico: edge
+  `eva-agent-loop` (function-calling, teto de 6 iterações) + tabelas
+  `agent_tools`/`agent_runs`/`agent_steps`. Pagamentos: Mercado Pago.
+  Analytics: GA4 + Google Ads + Meta Pixel + Clarity (carregados após 1ª
+  interação).
+- Quem dispara o agente (desde 24/08): cron `eva-agent-tick` às 9h BRT em dia
+  útil, teto de 3 cards parados por empresa com WhatsApp ativo; e cron
+  `eva-approval-notify` a cada 10min, que leva rascunho pendente pro WhatsApp
+  do dono e expira o que passou de 48h. Catálogo em `agent_tools`: 10 tools,
+  9 internas e só `draft_outbound_message` de saída. Para rodar na hora:
+  `scripts/eva-tick-agora.sql`.
+- Contexto do negócio: a EVA deduz sozinha das conversas
+  (`eva-learn-from-conversations`, cron `eva-learn-context` toda segunda 10h
+  BRT) e propõe em `eva_context_suggestions` com `source='conversations'` e
+  `evidence` obrigatória. Quem aprova é o humano, na Base de Conhecimento ou no
+  EVA Studio. O `eva-agent-loop` passou a ler `eva_business_context` no system
+  prompt: sem isso o rascunho saía sem a voz da empresa.
+- Fila ÚNICA de sugestão: `agent_suggestions`. Escrevem nela o
+  `eva-agent-loop` e o `eva-stale-deal-followup` (kind='followup'), e as duas
+  passam pela aprovação por WhatsApp (UNIFY.1, 2026-08-24).
+  `eva_deal_suggestions` está CONGELADA: histórico migrado, nenhum código
+  escreve nela, pode ser dropada quando o backup não for mais necessário.
+- Travas da notificação (APPROVAL.2): teto de 5 entregas por empresa a cada
+  24h, 5 tentativas por rascunho (`notify_attempts`) e corte do lote inteiro
+  quando o socket do número cai. Sessão de WhatsApp fica 'active' no banco
+  mesmo caída, então esta última é a que evita queimar a rodada.
+- Rotas públicas/SEO em `App.tsx`; `/auth`, `/criar-conta` e o app
+  autenticado (catch-all) em `AppShell.tsx`. `/onboarding` e `/register` são
+  redirects de compatibilidade.
+- Cadastro: trial Pro 14 dias SEM cartão; expirou → degrada pra Free em
+  runtime (`resolveEffectivePlan`). Cartão só em `/upgrade` / Faturamento
+  (`PlanCheckoutForm`, checkout transparente MP).
+- CTAs: demo → `EvaDemoModal` (agenda real via `calendar-slots` +
+  `calendar-book`); trial → `/criar-conta?plan=X`. `DemoScheduleSection` e
+  `NativeScheduler` estão órfãos, não usar como referência.
+- WhatsApp nativo: Evolution API (`evolution-whatsapp`,
+  `evolution-message-webhook`); prospecção supervisionada com allowlist
+  fail-closed (`validateChatOwnership`).
+
+## UI: usar as skills, não improvisar
+
+Qualquer trabalho de UI → skill `ui-polish` (tokens, sombras, easing,
+estados, reduced-motion). Landing → skill `vyzon-landing-art-director`.
+Vídeo de produto → skill `vyzon-product-film`. Tracking → skill
+`analytics-tracking`.
 
 ## Self-verification (obrigatório antes de entregar)
 
-Minerado dos erros recorrentes (jul/2026):
+1. **UI nova/alterada → olhar o render** (Playwright headless ou preview)
+   antes de entregar. SVG sempre com width/height explícitos em atributo.
+2. **Dado novo no front → verificar contrato real:** tipo da coluna
+   (date vs string), unidade (contagem vs valor), empresa efetiva (regra 3).
+3. **Query de dashboard:** fonte OPCIONAL falhando não derruba o painel
+   (degradar com warning); resultado vazio suspeito → testar sob RLS
+   simulando a sessão real.
+4. Antes de push: `tsc --noEmit` + `npm run build` no mínimo; lógica nova
+   roda `npm test`.
 
-1. **UI nova ou alterada → olhar o render antes de entregar.** Capturar a tela
-   via Playwright headless (dev server local) e inspecionar contra o pedido —
-   não entregar layout que você nunca viu renderizado. SVG: sempre width/height
-   explícitos em atributo (h-full sem altura definida no pai = default 150px).
-2. **Antes de ligar dado novo, verificar o contrato real:** tipo da coluna no
-   types.ts/banco (date vs string!), unidade/semântica (contagem vs valor),
-   e empresa efetiva (`useTenant().activeCompanyId || companyId` — nunca só
-   `companyId`, super_admin opera outra empresa).
-3. **Query nova de dashboard:** erro de fonte OPCIONAL não pode derrubar o
-   painel inteiro; degradar com warning. Testar a query sob RLS simulando a
-   sessão real (`set_config('role','authenticated')` + jwt claims) quando o
-   resultado parecer vazio sem motivo.
-4. Antes de push: `tsc --noEmit` + `npm run build` (mínimo); mudanças com
-   lógica nova rodam `npm test`.
+## Docs sob demanda (ler quando o tema entrar na tarefa)
 
-## Final Report Format
+- ICP e mensagem: `docs/vendas/01-ICP-ideal-customer-profile.md`,
+  `docs/product/vyzon_agents_for_agencies.md`
+- Agentes EVA (blueprint, ciclo de vida, Qualificador):
+  `docs/product/vyzon_qualifier_agent_spec.md`
+- API interna: `docs/api/` (52 edge functions catalogadas)
 
-Após qualquer tarefa: Resumo das mudanças; Arquivos alterados; Decisões de
-posicionamento/copy; Decisões técnicas; SEO/acessibilidade; Comandos rodados;
-Status de build/lint/test; Riscos/assunções; Próximos passos.
+## Barra de qualidade (resumo do que era 6 seções)
 
-## Operating Principle
+SEO: HTML rastreável, 1 H1/página, meta+OG, JSON-LD sem claims inventadas,
+noscript em sincronia. Acessibilidade: contraste AA, foco visível, teclado,
+labels, `prefers-reduced-motion` em toda animação. Performance: sem dep
+pesada nova, lazy abaixo da dobra (`LazyOnVisible`), sem CLS, mobile
+primeiro (PageSpeed mobile 99 é o baseline a não regredir). Mobile: CTA
+cedo, cards empilham, inputs ≥16px no iOS.
 
-Priorizar conversão e clareza sobre complexidade decorativa. Cada seção deve
-responder ao menos uma de: para quem é? que dor resolve? por que importa? como
-funciona? por que confiar? qual o próximo passo?
+## Definition of Done
+
+1. Posicionamento claro em ≤5s; copy orientada a dor; IA assistida.
+2. Nenhuma claim não verificada; CTAs reusam rotas existentes.
+3. `tsc --noEmit` + `npm run build` passam (ou falha documentada).
+4. Report final: mudanças, arquivos, decisões, comandos rodados, status de
+   build/test, riscos, próximos passos.

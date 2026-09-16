@@ -128,25 +128,27 @@ export const KanbanColumn = memo(({
 
         {/* F5P.4e — Column Header com bg distinto (white em light / card em dark)
             cria grouping visual com cards e separação clara do "track" da coluna */}
-        <div className="px-3.5 pt-4 pb-3 bg-white/60 dark:bg-card/30 border-b border-border/40">
-          <div className="flex items-center gap-2 mb-1.5">
+        {/* Uma linha: etapa, quantidade e valor. Antes eram duas linhas e 84px
+            de cabeçalho, com a palavra "Total" ocupando espaço para explicar um
+            número que só pode ser o total da coluna. Os 40px que sobraram vão
+            para os cards, que é o que a pessoa veio ver. */}
+        <div className="px-3.5 pt-3 pb-2.5 bg-white/60 dark:bg-card/30 border-b border-border/40">
+          <div className="flex items-center gap-2">
             <Icon className={`h-4 w-4 ${stage.color} flex-shrink-0`} strokeWidth={2.2} />
-            <span className="font-semibold text-foreground text-[13px] tracking-tight truncate flex-1">
+            <span className="font-semibold text-foreground text-[13px] tracking-tight truncate">
               {stage.title}
             </span>
-            {/* Count badge sólido com cor do stage (bg + ring via currentColor) */}
             <span className={`inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-md text-[10.5px] font-bold tabular-nums bg-muted/60 dark:bg-card/60 ${stage.color}`} style={{ boxShadow: "inset 0 0 0 1px currentColor" }}>
               {total.count}
             </span>
+            {total.count > 0 && (
+              <span className="ml-auto text-[13px] font-bold text-slate-900 dark:text-emerald-300 tabular-nums tracking-tight">
+                {formatCurrency(total.value)}
+              </span>
+            )}
           </div>
           {total.count > 0 ? (
-            <div className="pl-6 flex flex-col gap-1.5">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-[11px] text-muted-foreground">Total</span>
-                <span className="text-[13px] font-bold text-slate-900 dark:text-emerald-300 tabular-nums tracking-tight">
-                  {formatCurrency(total.value)}
-                </span>
-              </div>
+            <div className="mt-2 flex flex-col gap-1.5">
               {/* LP-PIPE.2 — barra de proporção (valor da coluna vs maior coluna) */}
               {valueRatio > 0 && (
                 <div
@@ -161,7 +163,7 @@ export const KanbanColumn = memo(({
               )}
             </div>
           ) : (
-            <div className="pl-6 text-[11px] text-muted-foreground/70">
+            <div className="mt-1.5 text-[11px] text-muted-foreground/70">
               vazio
             </div>
           )}

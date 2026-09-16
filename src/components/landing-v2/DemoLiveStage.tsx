@@ -365,6 +365,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
         clearStepWatch();
         narr.stop();
         stopSpeak();
+        trackBehavior(DEMO_EVENTS.DEMO_COMPLETE, { source: "live_tour" });
         if (onTourEnd) onTourEnd();
         else enterFreeChat();
     };
@@ -613,7 +614,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
                             className="mt-1 rounded-full px-6 py-2.5 text-[13.5px] font-semibold text-white transition-transform hover:scale-[1.03] active:scale-95"
                             style={{ background: "#080808", border: "1px solid rgba(255,255,255,0.25)" }}
                         >
-                            Continuar → agendar minha demo
+                            Continuar →
                         </button>
                     </div>
                 )}
@@ -622,8 +623,8 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
             {/* BARRA: progresso à esquerda, controles no centro, CTA à direita */}
             <div className="flex shrink-0 items-center gap-3 px-3 py-2.5 sm:gap-4 sm:px-6 sm:py-3" style={{ borderTop: "1px solid var(--lp-line)", background: "#fff" }}>
                 {/* esquerda: progresso do tour CLICÁVEL (DEMO.RITMO.1) — cada ponto
-                    pula pra cena; o último abre o menu. Some no mobile estreito. */}
-                <div className="hidden min-w-0 flex-1 items-center sm:flex">
+                    pula pra cena; o último abre o menu. Visível também no mobile. */}
+                <div className="flex min-w-0 flex-1 items-center">
                     {CORE_ORDER.map((s, i) => (
                         <button
                             key={s}
@@ -666,7 +667,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
                     {/* DEMO.RITMO.1: o avanço manual fica SEMPRE disponível durante o
                         roteiro — ritmo é do visitante. */}
                     {tourMode && !inMenuPhase && (
-                        <button type="button" onClick={() => goManual(activeIdx + 1)} className="hidden rounded-full px-4 py-1.5 text-[13px] text-white sm:inline-flex" style={{ background: "var(--lp-ink)", fontWeight: 600 }}>
+                        <button type="button" onClick={() => goManual(activeIdx + 1)} className="inline-flex whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] text-white sm:px-4" style={{ background: "var(--lp-ink)", fontWeight: 600 }}>
                             Pular cena →
                         </button>
                     )}

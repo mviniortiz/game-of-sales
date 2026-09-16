@@ -10,6 +10,7 @@ import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { PlanPicker } from "@/components/billing/PlanPicker";
+import { APP_HOME } from "@/config/routes";
 
 export default function UpgradeLock() {
     const navigate = useNavigate();
@@ -22,7 +23,7 @@ export default function UpgradeLock() {
     const handlePaid = async () => {
         try { await refreshProfile(); } catch { /* não crítico */ }
         toast.success("Assinatura ativada! Bem-vindo de volta.");
-        navigate("/inicio");
+        navigate(APP_HOME);
     };
 
     return (

@@ -1,7 +1,9 @@
-// Logos REAIS (funcionando hoje) — coloridas. Lista auditada 2026-07-17 contra
-// src/pages/Integracoes.tsx (status "available") + canais nativos (WhatsApp via
-// Evolution, Meta Lead Ads via lead-webhook). Pagar.me testada e2e; Slack e
-// Discord NO AR (notificações da EVA). Eduzz e Monetizze removidas.
+// Logos REAIS (funcionando hoje) — coloridas. Auditado 2026-08-21 contra
+// supabase/functions/ (13 webhooks conferidos um a um): notify-channel valida
+// hosts reais de Slack/Discord; lead-webhook trata leadgen_id (Meta Lead Ads);
+// notion-sync roda no cron. Google Sheets REMOVIDO (só existe via Zapier;
+// logo próprio seria claim inflado). Ordem = trabalho da agência:
+// canal → cobrança do cliente → infoproduto → produtividade.
 import whatsappLogo from "@/assets/integrations/whatsapp.svg";
 import rdstationLogo from "@/assets/integrations/rdstation.svg";
 import mercadopagoLogo from "@/assets/integrations/mercadopago.webp";
@@ -12,22 +14,22 @@ import zapierLogo from "@/assets/integrations/zapier.svg";
 import greennLogo from "@/assets/integrations/greenn.webp";
 import notazzLogo from "@/assets/integrations/notazz.png";
 import googleCalendarLogo from "@/assets/integrations/google-calendar.webp";
-import googleSheetsLogo from "@/assets/integrations/google-sheets.svg";
 import metaLogo from "@/assets/integrations/meta.svg";
 import caktoLogo from "@/assets/integrations/cakto.webp";
 import braipLogo from "@/assets/integrations/braip.webp";
 import slackLogo from "@/assets/integrations/slack.svg";
 import discordLogo from "@/assets/integrations/discord.svg";
 import pagarmeLogo from "@/assets/integrations/pagarme.svg";
+import notionLogo from "@/assets/integrations/notion.svg";
 
-// Logos "em breve" — mono/apagadas. Roadmap real (Stripe, Celetus) +
-// ferramentas do mercado. Notion fica aqui até o 1º sync real validar.
+// Logos "em breve" — mono/apagadas. Stripe tem edge mas sem setup na UI
+// (não alegar "no ar"); Celetus é roadmap; Google Ads tem edge órfã
+// (upload-ads-conversion sem invocador — só entra aqui quando ligar).
 import stripeLogo from "@/assets/integrations/stripe.svg";
 import celetusLogo from "@/assets/integrations/celetus.webp";
 import makeLogo from "@/assets/integrations/make.svg";
 import calendlyLogo from "@/assets/integrations/calendly.svg";
 import googleadsLogo from "@/assets/integrations/googleads.svg";
-import notionLogo from "@/assets/integrations/notion.svg";
 import typeformLogo from "@/assets/integrations/typeform.svg";
 import trelloLogo from "@/assets/integrations/trello.svg";
 import clickupLogo from "@/assets/integrations/clickup.svg";
@@ -48,32 +50,34 @@ import mondayLogo from "@/assets/integrations/monday.svg";
 type LiveLogo = { src: string; alt: string; label?: string; wordmark?: boolean; h?: number };
 
 const LIVE: LiveLogo[] = [
+    // 1. Canal (o núcleo da operação)
     { src: whatsappLogo, alt: "WhatsApp", label: "WhatsApp" },
+    { src: googleCalendarLogo, alt: "Google Calendar", label: "Google Calendar" },
+    { src: metaLogo, alt: "Meta Lead Ads", label: "Meta Lead Ads" },
     { src: rdstationLogo, alt: "RD Station", wordmark: true, h: 22 },
+    // 2. Cobrança do seu cliente
+    { src: asaasLogo, alt: "Asaas", wordmark: true, h: 20 },
     { src: mercadopagoLogo, alt: "Mercado Pago", label: "Mercado Pago" },
+    { src: pagarmeLogo, alt: "Pagar.me", wordmark: true, h: 22 },
+    { src: notazzLogo, alt: "Notazz", wordmark: true, h: 25 },
+    { src: slackLogo, alt: "Slack", label: "Slack" },
+    { src: discordLogo, alt: "Discord", label: "Discord" },
+    // 3. Infoproduto
     { src: hotmartLogo, alt: "Hotmart", label: "Hotmart", h: 24 },
     { src: kiwifyLogo, alt: "Kiwify", label: "Kiwify" },
-    { src: metaLogo, alt: "Meta Lead Ads", label: "Meta Lead Ads" },
-    { src: googleSheetsLogo, alt: "Google Sheets", label: "Google Sheets" },
-    { src: asaasLogo, alt: "Asaas", wordmark: true, h: 20 },
-    { src: pagarmeLogo, alt: "Pagar.me", wordmark: true, h: 22 },
-    { src: zapierLogo, alt: "Zapier", label: "Zapier" },
     { src: greennLogo, alt: "Greenn", label: "Greenn", h: 24 },
     { src: caktoLogo, alt: "Cakto", label: "Cakto", h: 22 },
     { src: braipLogo, alt: "Braip", label: "Braip", h: 22 },
-    { src: notazzLogo, alt: "Notazz", wordmark: true, h: 25 },
-    { src: googleCalendarLogo, alt: "Google Calendar", label: "Google Calendar" },
-    { src: slackLogo, alt: "Slack", label: "Slack" },
-    { src: discordLogo, alt: "Discord", label: "Discord" },
+    // 4. Produtividade
+    { src: notionLogo, alt: "Notion", label: "Notion" },
+    { src: zapierLogo, alt: "Zapier", label: "Zapier" },
 ];
 
 const SOON = [
     { src: stripeLogo, alt: "Stripe" },
     { src: celetusLogo, alt: "Celetus" },
-    { src: makeLogo, alt: "Make" },
     { src: calendlyLogo, alt: "Calendly" },
     { src: googleadsLogo, alt: "Google Ads" },
-    { src: notionLogo, alt: "Notion" },
     { src: typeformLogo, alt: "Typeform" },
     { src: trelloLogo, alt: "Trello" },
     { src: clickupLogo, alt: "ClickUp" },
@@ -143,7 +147,7 @@ export const IntegrationsStripV2 = () => {
                     className="text-center"
                     style={{ fontSize: "15px", color: "var(--lp-ink-55)", letterSpacing: "-0.01em" }}
                 >
-                    Conecta com as ferramentas que sua agência já usa. No ar hoje:
+                    Do lead ao pagamento: conecta com o que sua agência já usa. No ar hoje:
                 </p>
 
                 {/* Faixa 1 — No ar (trilho de tiles logo + nome) */}

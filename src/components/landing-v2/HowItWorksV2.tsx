@@ -24,8 +24,8 @@ const STEPS = [
     },
     {
         n: "03",
-        t: "Revise sugestões com seu time",
-        d: "A EVA sugere respostas e ações. A aprovação continua com quem conduz a venda.",
+        t: "Aprove o que sai pro lead",
+        d: "Respostas e propostas chegam prontas pra revisão. Nada é enviado sem o ok do seu time.",
     },
 ];
 
@@ -120,7 +120,7 @@ export const HowItWorksV2 = ({ onStart }: HowItWorksV2Props) => {
                         Coloque a EVA para operar sem mudar seu processo.
                     </h2>
                     <p className="mt-5 max-w-xl" style={{ fontSize: "1.0625rem", lineHeight: 1.6, color: "rgba(5,5,5,0.68)" }}>
-                        Conecte seus canais, ajuste o playbook comercial e comece a revisar sugestões com seu time.
+                        Conecte seus canais, ajuste o playbook comercial e veja o pipeline se manter em dia sozinho.
                     </p>
                 </Reveal>
                 <div className="mt-12 grid items-center gap-12 lg:grid-cols-2 lg:gap-16">

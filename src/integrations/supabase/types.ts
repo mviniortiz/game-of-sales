@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -103,10 +103,149 @@ export type Database = {
           },
         ]
       }
+      agent_runs: {
+        Row: {
+          agent_key: string
+          company_id: string
+          conversation_id: string | null
+          deal_id: string | null
+          error: string | null
+          finished_at: string | null
+          goal: string | null
+          id: string
+          input: Json
+          model: string | null
+          result: Json | null
+          source: string
+          started_at: string
+          status: string
+          steps_used: number
+          tokens_completion: number
+          tokens_prompt: number
+          updated_at: string
+        }
+        Insert: {
+          agent_key?: string
+          company_id: string
+          conversation_id?: string | null
+          deal_id?: string | null
+          error?: string | null
+          finished_at?: string | null
+          goal?: string | null
+          id?: string
+          input?: Json
+          model?: string | null
+          result?: Json | null
+          source?: string
+          started_at?: string
+          status?: string
+          steps_used?: number
+          tokens_completion?: number
+          tokens_prompt?: number
+          updated_at?: string
+        }
+        Update: {
+          agent_key?: string
+          company_id?: string
+          conversation_id?: string | null
+          deal_id?: string | null
+          error?: string | null
+          finished_at?: string | null
+          goal?: string | null
+          id?: string
+          input?: Json
+          model?: string | null
+          result?: Json | null
+          source?: string
+          started_at?: string
+          status?: string
+          steps_used?: number
+          tokens_completion?: number
+          tokens_prompt?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_runs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_runs_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_steps: {
+        Row: {
+          arguments: Json | null
+          company_id: string
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          id: string
+          kind: string
+          output: Json | null
+          run_id: string
+          seq: number
+          status: string
+          tool_key: string | null
+        }
+        Insert: {
+          arguments?: Json | null
+          company_id: string
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          kind: string
+          output?: Json | null
+          run_id: string
+          seq: number
+          status?: string
+          tool_key?: string | null
+        }
+        Update: {
+          arguments?: Json | null
+          company_id?: string
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          kind?: string
+          output?: Json | null
+          run_id?: string
+          seq?: number
+          status?: string
+          tool_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_steps_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_steps_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "agent_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_suggestions: {
         Row: {
           agent_key: string
           applied_payload: Json | null
+          approval_code: string | null
           company_id: string
           conversation_id: string | null
           created_at: string
@@ -116,14 +255,20 @@ export type Database = {
           id: string
           input_summary: Json
           kind: string
+          notified_at: string | null
+          notify_attempts: number
+          notify_channel: string | null
+          notify_error: string | null
           resolved_at: string | null
           resolved_by: string | null
+          resolved_via: string | null
           status: string
           suggestion: Json
         }
         Insert: {
           agent_key?: string
           applied_payload?: Json | null
+          approval_code?: string | null
           company_id: string
           conversation_id?: string | null
           created_at?: string
@@ -133,14 +278,20 @@ export type Database = {
           id?: string
           input_summary?: Json
           kind?: string
+          notified_at?: string | null
+          notify_attempts?: number
+          notify_channel?: string | null
+          notify_error?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
+          resolved_via?: string | null
           status?: string
           suggestion?: Json
         }
         Update: {
           agent_key?: string
           applied_payload?: Json | null
+          approval_code?: string | null
           company_id?: string
           conversation_id?: string | null
           created_at?: string
@@ -150,8 +301,13 @@ export type Database = {
           id?: string
           input_summary?: Json
           kind?: string
+          notified_at?: string | null
+          notify_attempts?: number
+          notify_channel?: string | null
+          notify_error?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
+          resolved_via?: string | null
           status?: string
           suggestion?: Json
         }
@@ -171,6 +327,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      agent_tools: {
+        Row: {
+          created_at: string
+          description: string
+          enabled: boolean
+          id: string
+          kind: string
+          name: string
+          parameters_schema: Json
+          tool_key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          enabled?: boolean
+          id?: string
+          kind?: string
+          name: string
+          parameters_schema?: Json
+          tool_key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          enabled?: boolean
+          id?: string
+          kind?: string
+          name?: string
+          parameters_schema?: Json
+          tool_key?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       api_rate_limit_counters: {
         Row: {
@@ -1840,6 +2032,7 @@ export type Database = {
           created_at: string
           document_id: string | null
           id: string
+          source: string
           status: string
           suggestion_type: string
           title: string
@@ -1853,6 +2046,7 @@ export type Database = {
           created_at?: string
           document_id?: string | null
           id?: string
+          source?: string
           status?: string
           suggestion_type: string
           title: string
@@ -1866,6 +2060,7 @@ export type Database = {
           created_at?: string
           document_id?: string | null
           id?: string
+          source?: string
           status?: string
           suggestion_type?: string
           title?: string
@@ -3944,6 +4139,10 @@ export type Database = {
         Returns: string
       }
       eva_touch_memories: { Args: { p_ids: string[] }; Returns: undefined }
+      expire_stale_agent_suggestions: {
+        Args: { p_max_age_hours?: number }
+        Returns: number
+      }
       forecast_by_month: {
         Args: { p_company_id: string; p_months_ahead?: number }
         Returns: {
@@ -4025,6 +4224,12 @@ export type Database = {
       refresh_landing_demo: { Args: never; Returns: Json }
       submit_demo_intake: { Args: { payload: Json }; Returns: string }
       submit_demo_request: { Args: { payload: Json }; Returns: string }
+      trigger_eva_agent_tick: {
+        Args: { p_max_per_company?: number }
+        Returns: number
+      }
+      trigger_eva_approval_notify: { Args: never; Returns: number }
+      trigger_eva_learn_context: { Args: never; Returns: number }
       trigger_eva_stale_followup: { Args: never; Returns: number }
       trigger_evolution_keepwarm: { Args: never; Returns: number }
       trigger_notion_sync: { Args: never; Returns: undefined }

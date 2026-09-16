@@ -13,15 +13,15 @@ interface SpecialistAgentsV2Props {
 const RIGHT = [
     {
         t: "Qualificação",
-        d: "Identifica intenção, contexto e estágio do lead antes de sugerir o próximo passo.",
+        d: "Identifica intenção e estágio do lead e organiza a oportunidade no pipeline. Sem planilha, sem preenchimento manual.",
     },
     {
         t: "Follow-up",
-        d: "Ajuda seu time a retomar conversas no momento certo, com abordagem alinhada ao histórico.",
+        d: "Detecta conversas esfriando e deixa o rascunho pronto na hora certa. Seu time lê, ajusta e envia.",
     },
     {
         t: "Propostas e próximos passos",
-        d: "Transforma o playbook comercial da agência em sugestões práticas para avançar cada oportunidade.",
+        d: "Transforma o playbook da agência em proposta estruturada no deal certo, com o histórico da conversa junto.",
     },
 ];
 
@@ -37,7 +37,7 @@ export const SpecialistAgentsV2 = ({ onCTAClick }: SpecialistAgentsV2Props) => {
                         Crie especialistas para cada etapa da conversa
                     </h2>
                     <p className="mt-5 max-w-xl" style={{ fontSize: "1.0625rem", lineHeight: 1.6, color: "rgba(5,5,5,0.68)" }}>
-                        No Vyzon, a EVA assume papéis: qualifica o lead, lembra o follow-up na hora certa e prepara o próximo passo. Sempre com o seu time aprovando antes de qualquer envio.
+                        No Vyzon, a EVA assume papéis e executa o interno sozinha: qualifica o lead, mantém o follow-up em dia e prepara o próximo passo. Mensagem pro lead só depois da aprovação do seu time.
                     </p>
                 </Reveal>
 

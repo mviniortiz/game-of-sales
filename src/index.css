@@ -302,56 +302,108 @@ All colors MUST be HSL.
   animation: shimmer 2s infinite;
 }
 
-/* Custom Scrollbar - Premium Dark Style */
-.scrollbar-thin {
+/* ─────────────────────────────────────────────────────────────────────────
+   Kanban em arraste (2026-08-25)
+
+   Durante o drag, cada reordenação mexia no transform de todos os cards da
+   coluna, e cada card carregava transition + hover próprios: o navegador
+   animava dezenas de elementos por movimento do ponteiro. Aqui o board avisa
+   que está arrastando e o card vira estático, sem hover e sem transição.
+
+   `contain` isola o card: mudança dentro dele não obriga o browser a
+   recalcular layout do board inteiro.
+   ───────────────────────────────────────────────────────────────────────── */
+[data-dragging="true"] .vz-deal-card,
+[data-dragging="true"] .vz-deal-card * {
+  transition: none !important;
+  animation: none !important;
+}
+
+[data-dragging="true"] .vz-deal-card:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.vz-deal-card {
+  contain: layout paint style;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Scrollbar do produto (2026-08-25)
+
+   Substitui a barra nativa, que no Windows tem 17px de trilho cinza e destoa
+   de tudo. Vale para as duas direções e para qualquer container com overflow,
+   sem precisar de classe.
+
+   Auditoria que motivou a troca: `custom-scrollbar`, `no-scrollbar` e
+   `scrollbar-none` apareciam em 11 arquivos e NENHUMA existia no CSS (não há
+   plugin de scrollbar no projeto), enquanto `.scrollbar-hide` e as três classes
+   do kanban estavam definidas e sem nenhum uso. Ou seja: onde o dev achou que
+   tinha escondido ou estilizado a barra, aparecia a barra crua do sistema.
+
+   Sobrou uma classe utilitária só: `.no-scrollbar`, para faixas que rolam na
+   horizontal por gesto (chips, abas), onde a barra vira sujeira.
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  /* 10px é o que o Chrome entrega sob `scrollbar-width: thin`: quando essa
+     propriedade está presente, ele ignora a largura declarada no
+     ::-webkit-scrollbar. Medido, não chutado. O token acompanha a realidade
+     para o inset abaixo fazer conta certa. */
+  --sb-size: 10px;
+  --sb-inset: 2px;          /* respiro nas laterais; sobra 6px de polegar */
+  --sb-thumb: rgba(15, 23, 42, 0.20);
+  --sb-thumb-hover: rgba(15, 23, 42, 0.36);
+  --sb-thumb-active: rgba(15, 23, 42, 0.48);
+  --sb-track: transparent;
+}
+
+.dark {
+  --sb-thumb: rgba(255, 255, 255, 0.18);
+  --sb-thumb-hover: rgba(255, 255, 255, 0.32);
+  --sb-thumb-active: rgba(255, 255, 255, 0.44);
+}
+
+/* Firefox: só aceita espessura e par de cores. */
+* {
   scrollbar-width: thin;
-  scrollbar-color: hsl(220 10% 70%) hsl(220 14% 96%);
+  scrollbar-color: var(--sb-thumb) var(--sb-track);
 }
 
-.scrollbar-thin::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+*::-webkit-scrollbar {
+  width: var(--sb-size);
+  height: var(--sb-size);
 }
 
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: hsl(220 14% 96%);
-  border-radius: 4px;
+*::-webkit-scrollbar-track {
+  background: var(--sb-track);
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: hsl(220 10% 70%);
-  border-radius: 4px;
-  border: 2px solid transparent;
+/* A borda transparente + background-clip é o que dá o polegar flutuante:
+   o trilho continua com 12px de alvo, mas só 6px pintam. */
+*::-webkit-scrollbar-thumb {
+  background-color: var(--sb-thumb);
   background-clip: content-box;
+  border: var(--sb-inset) solid transparent;
+  border-radius: 999px;
+  transition: background-color 0.16s var(--vyz-ease, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: hsl(220 10% 60%);
-  background-clip: content-box;
-}
+*::-webkit-scrollbar-thumb:hover { background-color: var(--sb-thumb-hover); }
+*::-webkit-scrollbar-thumb:active { background-color: var(--sb-thumb-active); }
 
-/* Hide scrollbar but keep functionality */
-.scrollbar-hide {
-  -ms-overflow-style: none;
+/* Encontro das duas barras: sem o quadradinho cinza do sistema. */
+*::-webkit-scrollbar-corner { background: transparent; }
+
+/* Setas de incremento do Windows: fora. */
+*::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+
+/* Esconde a barra e mantém o scroll. Uma classe só, o nome que já era o mais
+   usado no código. */
+.no-scrollbar {
   scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Kanban specific scrollbar */
-.scrollbar-track-slate-900::-webkit-scrollbar-track {
-  background: hsl(220 14% 96%);
-}
-
-.scrollbar-thumb-slate-700::-webkit-scrollbar-thumb {
-  background: hsl(220 10% 70%);
-}
-
-.hover\:scrollbar-thumb-slate-600:hover::-webkit-scrollbar-thumb {
-  background: hsl(220 10% 60%);
-}
+.no-scrollbar::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
 /* ─── Semantic Typography Classes ────────────────────────────────────────────
    Use these classes instead of ad-hoc font-weight/size combos to ensure
@@ -1242,7 +1294,7 @@ All colors MUST be HSL.
   font-weight: 700;
   color: #92400e;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s var(--vyz-ease);
 }
 .vz-evassist-q-use:hover { background: #fdf0dc; }
 
@@ -1327,6 +1379,31 @@ All colors MUST be HSL.
 @media (prefers-reduced-motion: reduce) {
   .vz-evassist-hero,
   .vz-evassist-quiet { animation: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Inbox Comercial — uma curva só (2026-08-24).
+
+   As classes transition-* do Tailwind já trazem a curva default
+   cubic-bezier(0.4,0,0.2,1). Medido no Inbox: 15 elementos na default, 6 em
+   `ease` e 8 na curva do projeto, três movimentos diferentes na mesma tela.
+   Aqui a curva do projeto passa a valer para tudo que estiver dentro do Inbox;
+   quem precisa de outra curva declara inline ou via framer-motion, que não usa
+   transition CSS.
+   ───────────────────────────────────────────────────────────────────────── */
+.vz-inbox *,
+.vz-inbox *::before,
+.vz-inbox *::after {
+  transition-timing-function: var(--vyz-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vz-inbox *,
+  .vz-inbox *::before,
+  .vz-inbox *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -1415,7 +1492,7 @@ All colors MUST be HSL.
   color: #475569;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s ease;
+  transition: background 0.15s var(--vyz-ease);
   flex-shrink: 0;
 }
 .vz-evlist-toggle:hover { background: #f1ede7; }
@@ -1481,7 +1558,10 @@ All colors MUST be HSL.
   text-align: left;
   padding: 10px 14px 10px 16px;
   cursor: pointer;
-  transition: background 0.12s ease;
+  /* A âncora de seleção (inset 3px) entrava seca. Animando o box-shadow
+     junto com o fundo, a barra azul cresce da esquerda e o olho segue a
+     troca de conversa em vez de reencontrar a tela já mudada. */
+  transition: background 0.16s var(--vyz-ease), box-shadow 0.2s var(--vyz-ease);
 }
 .vz-evlist-row:hover { background: #f1ede7; }
 /* Selecionada: âncora forte de acento à esquerda (não só troca de fundo) —
@@ -4526,6 +4606,37 @@ html.lenis, html.lenis body { height: auto; }
   outline: none;
   border-color: rgba(255, 255, 255, 0.3);
   background: rgba(255, 255, 255, 0.065);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+}
+
+/* ── AUTH.1 (2026-08-24) — micro-interações do fluxo login/cadastro ── */
+/* Estado de erro do campo: borda vermelha + anel discreto. */
+.vz-input--error,
+.vz-input--error:hover {
+  border-color: rgba(244, 63, 94, 0.55);
+}
+.vz-input--error:focus {
+  border-color: rgba(244, 63, 94, 0.75);
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12);
+}
+/* Shake sutil quando o erro aparece. 240ms, transform-only, uma vez. */
+@keyframes vz-shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+.vz-shake { animation: vz-shake 0.24s ease-out both; }
+/* Força de senha: 4 segmentos, cor por nível. */
+.vz-strength { display: flex; gap: 4px; }
+.vz-strength__seg {
+  height: 3px; flex: 1; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background 0.2s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vz-shake { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .vz-mesh-asset img { animation: none; }
@@ -5086,4 +5197,36 @@ html.lenis, html.lenis body { height: auto; }
   --vyz-eva-bg: #1d1633;
   --vyz-btn-solid: #f4f3ef;
   --vyz-btn-on: #0c0c0c;
+}
+
+/* ── LP.9 HeroConversa: conversa encenada do hero (CSS puro, loop 11s) ── */
+.lp-v2 .vzhc { opacity: 0; }
+.lp-v2 .vzhc-lead { animation: vzhc-lead 11s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+.lp-v2 .vzhc-card { animation: vzhc-card 11s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+.lp-v2 .vzhc-sent { animation: vzhc-sent 11s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+.lp-v2 .vzhc-card .vzhc-btn { animation: vzhc-press 11s ease-out infinite; }
+@keyframes vzhc-lead {
+  0%, 3% { opacity: 0; transform: translateY(14px) scale(0.97); }
+  8%, 88% { opacity: 1; transform: translateY(0) scale(1); }
+  93%, 100% { opacity: 0; transform: translateY(0) scale(1); }
+}
+@keyframes vzhc-card {
+  0%, 18% { opacity: 0; transform: translate(-50%, 16px); }
+  24%, 58% { opacity: 1; transform: translate(-50%, 0); }
+  63%, 100% { opacity: 0; transform: translate(-50%, -10px); }
+}
+@keyframes vzhc-press {
+  0%, 50% { transform: scale(1); }
+  52% { transform: scale(0.94); }
+  54%, 100% { transform: scale(1); }
+}
+@keyframes vzhc-sent {
+  0%, 60% { opacity: 0; transform: translateY(12px); }
+  66%, 88% { opacity: 1; transform: translateY(0); }
+  93%, 100% { opacity: 0; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-v2 .vzhc { animation: none !important; }
+  .lp-v2 .vzhc-lead, .lp-v2 .vzhc-card { opacity: 1; }
+  .lp-v2 .vzhc-sent { opacity: 0; }
 }

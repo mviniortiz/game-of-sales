@@ -66,10 +66,10 @@ export const FeaturesV2 = () => {
                 <Reveal className="mb-16 max-w-2xl sm:mb-24">
                     <p className="lp-mono" style={{ color: "rgba(5,5,5,0.48)" }}>EVA</p>
                     <h2 className="lp-display mt-4" style={{ fontSize: "clamp(2rem, 4.6vw, 3.2rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "#050505" }}>
-                        A EVA acompanha cada etapa da conversa
+                        A EVA cuida do operacional. A decisão fica com o seu time.
                     </h2>
                     <p className="mt-5 max-w-xl" style={{ fontSize: "1.0625rem", lineHeight: 1.6, color: "rgba(5,5,5,0.68)" }}>
-                        Da primeira mensagem ao fechamento, ela entende o contexto, sugere o próximo passo e não deixa nenhuma conversa ficar pra trás.
+                        Da primeira mensagem ao fechamento, ela registra, qualifica e move o pipeline sem ninguém pedir. Mensagem pro lead, só depois da aprovação.
                     </p>
                 </Reveal>
                 <div className="flex flex-col gap-24 sm:gap-32">

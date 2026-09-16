@@ -4,6 +4,7 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { ArrowLeft, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logger } from "@/utils/logger";
+import { APP_HOME } from "@/config/routes";
 
 const NotFound = () => {
   const location = useLocation();
@@ -41,9 +42,9 @@ const NotFound = () => {
             Voltar
           </Button>
           <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
-            <Link to="/dashboard">
+            <Link to={APP_HOME}>
               <Home className="h-4 w-4 mr-1.5" />
-              Ir pro dashboard
+              Ir pro início
             </Link>
           </Button>
         </div>

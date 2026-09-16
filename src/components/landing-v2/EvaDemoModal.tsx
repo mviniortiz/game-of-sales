@@ -1,16 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { DemoIntakeStep } from "./DemoIntakeStep";
-import { DemoPreparingStep } from "./DemoPreparingStep";
 import { DemoSummaryStep } from "./DemoSummaryStep";
-import { DemoLiveStage, type DemoSiteContext } from "./DemoLiveStage";
+import { DemoLiveStage } from "./DemoLiveStage";
 import { DemoBooking } from "./DemoBooking";
-import { supabase } from "@/integrations/supabase/client";
-import { getAttribution } from "@/lib/attribution";
+import { trackBehavior, DEMO_EVENTS } from "@/lib/analytics";
 
-// LP.8 (v2) — modal da demo da EVA. Fluxo: intake (email + site) → preparando →
-// TOUR AO VIVO (iframe do app real, /embed-demo, a EVA navega Central → Pipeline
-// → Agente com cursor fantasma + Live) → resumo. Portal pra fora de ancestrais
+// Modal da demo da EVA. Fluxo: TOUR AO VIVO direto (iframe do app real,
+// /embed-demo, a EVA narra Central → Inbox → Análise → Pipeline) → decisão
+// (trial ou conversa) → booking opcional. Sem formulário na porta: 68% de quem
+// abria não começava (GA4, 28d até 2026-08-21). Portal pra fora de ancestrais
 // com transform; Esc fecha; mobile scrollável.
 interface EvaDemoModalProps {
     open: boolean;
@@ -18,21 +16,12 @@ interface EvaDemoModalProps {
     onCTAClick: () => void;
 }
 
-type Step = "intake" | "preparing" | "tour" | "booking" | "summary";
+type Step = "tour" | "booking" | "summary";
 
 export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) => {
-    const [step, setStep] = useState<Step>("intake");
-    const [email, setEmail] = useState("");
-    const [site, setSite] = useState("");
-    const [heardFrom, setHeardFrom] = useState("");
+    const [step, setStep] = useState<Step>("tour");
     const [closing, setClosing] = useState(false);
-    const [intakeId, setIntakeId] = useState<string | null>(null);
-    const [siteCtx, setSiteCtx] = useState<DemoSiteContext | null>(null);
-    const ctxPromiseRef = useRef<Promise<unknown> | null>(null);
-
     const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const prepTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const ctxSentRef = useRef(false);
 
     const requestClose = () => {
         if (closing) return;
@@ -42,15 +31,8 @@ export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) =
 
     useEffect(() => {
         if (!open) return;
-        setStep("intake");
-        setEmail("");
-        setSite("");
-        setHeardFrom("");
+        setStep("tour");
         setClosing(false);
-        setIntakeId(null);
-        setSiteCtx(null);
-        ctxPromiseRef.current = null;
-        ctxSentRef.current = false;
         const prev = document.body.style.overflow;
         document.body.style.overflow = "hidden";
         const onKey = (e: KeyboardEvent) => e.key === "Escape" && requestClose();
@@ -59,66 +41,20 @@ export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) =
             document.body.style.overflow = prev;
             window.removeEventListener("keydown", onKey);
             if (closeTimer.current) clearTimeout(closeTimer.current);
-            if (prepTimer.current) clearTimeout(prepTimer.current);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
 
-    // DEMO.A2 + DEMO.C — ao sair do intake: (1) persiste o lead PARCIAL na hora
-    // (quem abandona o tour não se perde); (2) se informou site, dispara a
-    // leitura do site em paralelo (personaliza a narração da EVA).
-    const startDemo = () => {
-        supabase
-            .rpc("submit_demo_intake", {
-                payload: { email, company: site, heard_from: heardFrom, ...(getAttribution() ?? {}) },
-            })
-            .then(({ data, error }) => {
-                if (error) console.error("[EvaDemoModal] submit_demo_intake falhou:", error.message);
-                else if (data) setIntakeId(data as string);
-            });
-        if (site.trim()) {
-            ctxPromiseRef.current = supabase.functions
-                .invoke("demo-site-context", { body: { site } })
-                .then(({ data }) => {
-                    const ctx = (data as { context?: DemoSiteContext | null })?.context;
-                    if (ctx) setSiteCtx(ctx);
-                })
-                .catch(() => undefined);
-        }
-        setStep("preparing");
-    };
-
-    // DEMO.CRM.1 — a leitura do site (name/segment/oneliner) vira dado do CRM:
-    // assim que intake + contexto existem, persiste no demo_request e enriquece
-    // o deal no pipeline da Vyzon. Best-effort: falha não afeta a demo.
-    useEffect(() => {
-        if (!intakeId || !siteCtx || ctxSentRef.current) return;
-        ctxSentRef.current = true;
-        supabase
-            .rpc("attach_demo_site_context", {
-                p_id: intakeId,
-                ctx: { name: siteCtx.name, segment: siteCtx.segment, oneliner: siteCtx.oneliner },
-            })
-            .then(({ error }) => {
-                if (error) console.error("[EvaDemoModal] attach_demo_site_context falhou:", error.message);
-            });
-    }, [intakeId, siteCtx]);
-
-    // preparando → tour: espera a leitura do site (teto 6.5s) e no mínimo 1.2s
-    // de tela — o "preparando" agora é trabalho real, não só teatro.
-    useEffect(() => {
-        if (step !== "preparing") return;
-        let cancelled = false;
-        const minWait = new Promise((r) => { prepTimer.current = setTimeout(r, 1200); });
-        const ctxWait = Promise.race([
-            ctxPromiseRef.current ?? Promise.resolve(),
-            new Promise((r) => setTimeout(r, 6500)),
-        ]);
-        Promise.all([minWait, ctxWait]).then(() => { if (!cancelled) setStep("tour"); });
-        return () => { cancelled = true; if (prepTimer.current) clearTimeout(prepTimer.current); };
-    }, [step]);
-
     if (!open) return null;
+
+    const startTrial = () => {
+        trackBehavior(DEMO_EVENTS.DEMO_CTA, { cta: "trial" });
+        onCTAClick();
+    };
+    const openBooking = () => {
+        trackBehavior(DEMO_EVENTS.DEMO_CTA, { cta: "booking_open" });
+        setStep("booking");
+    };
 
     const isTour = step === "tour" || step === "booking";
 
@@ -144,19 +80,13 @@ export const EvaDemoModal = ({ open, onClose, onCTAClick }: EvaDemoModalProps) =
                     </div>
 
                     <div className={`flex flex-1 flex-col ${isTour ? "overflow-hidden" : "overflow-y-auto"}`}>
-                        {step === "intake" && (
-                            <DemoIntakeStep email={email} site={site} heardFrom={heardFrom} setEmail={setEmail} setSite={setSite} setHeardFrom={setHeardFrom} onStart={startDemo} />
-                        )}
-                        {step === "preparing" && <DemoPreparingStep site={site} />}
-                        {step === "tour" && <DemoLiveStage onDone={() => setStep("summary")} onTourEnd={() => setStep("booking")} site={site} siteCtx={siteCtx} />}
+                        {step === "tour" && <DemoLiveStage onDone={() => setStep("summary")} onTourEnd={() => setStep("summary")} site="" />}
                         {step === "booking" && (
                             <div className="relative flex-1">
-                                <DemoBooking email={email} site={site} intakeId={intakeId} onDone={() => setStep("summary")} />
+                                <DemoBooking email="" site="" intakeId={null} onDone={() => setStep("summary")} />
                             </div>
                         )}
-                        {/* "Agendar demo" abre o BOOKING real (Google Calendar) — não o
-                            teste grátis; o trial segue nos CTAs próprios da página. */}
-                        {step === "summary" && <DemoSummaryStep onSchedule={() => setStep("booking")} onRestart={() => setStep("tour")} />}
+                        {step === "summary" && <DemoSummaryStep onTrial={startTrial} onSchedule={openBooking} onRestart={() => setStep("tour")} />}
                     </div>
                 </div>
             </div>

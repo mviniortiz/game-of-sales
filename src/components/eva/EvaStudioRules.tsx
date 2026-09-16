@@ -17,7 +17,7 @@ export function EvaStudioRules({ className = "", max = 3 }: { className?: string
         <div className={`rounded-xl p-3.5 ${className}`} style={{ background: "#F5F3FF", border: "1px solid rgba(124,58,237,0.18)" }}>
             <div className="flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#7C3AED" }} />
-                <p className="text-[12px] font-semibold" style={{ color: "#4C1D95" }}>Regras usadas pela EVA</p>
+                <p className="text-[13px] font-semibold" style={{ color: "#4C1D95" }}>Regras usadas pela EVA</p>
             </div>
 
             {has ? (

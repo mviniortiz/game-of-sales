@@ -68,7 +68,7 @@ Cobrança da própria assinatura do Vyzon (trial 14 dias, checkout transparente)
 - **`report-agent`** — POST · JWT do usuário · body `question` (+`companyId` só super_admin) ·
   EVA analítica sobre métricas reais (`vendas`/`metas`/`produtos`/`eva_memory`) · OpenAI `gpt-5.4-mini`.
 - **`eva-stale-deal-followup`** — POST (cron 6h) · `x-cron-secret` ou service_role ·
-  varre deals parados em todos os tenants e gera rascunhos de follow-up em `eva_deal_suggestions`
+  varre deals parados em todos os tenants e gera rascunhos de follow-up em `agent_suggestions` (kind=followup), que seguem para aprovação no WhatsApp do dono
   (pending) · Claude Haiku (`claude-haiku-4-5-20251001`) com fallback OpenAI.
 - **`generate-eva-context-suggestions`** — POST · JWT do usuário · body `documentId` ·
   extrai sugestões de contexto de `eva_training_documents` → `eva_context_suggestions` (pending) · `gpt-5.4-nano`.

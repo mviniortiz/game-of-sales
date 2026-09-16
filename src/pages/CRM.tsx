@@ -77,7 +77,6 @@ import { differenceInDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { syncWonDealToSale, unsyncDealSale } from "@/utils/salesSync";
 import { KanbanColumn } from "@/components/crm/KanbanColumn";
-import { ReadinessBand } from "@/components/crm/ReadinessBand";
 import { DealCard } from "@/components/crm/DealCard";
 import { NewDealModal } from "@/components/crm/NewDealModal";
 import { KanbanSkeleton } from "@/components/crm/KanbanSkeleton";
@@ -157,6 +156,22 @@ function scrollKanbanToStage(container: HTMLElement | null, idx: number) {
   if (step <= 0) return;
   container.scrollTo({ left: step * idx, behavior: "smooth" });
 }
+
+// Lista: uma grade só, usada pelo cabeçalho e por toda linha, senão as colunas
+// não alinham entre si. Antes cada item era um card de 131px com o meio da
+// linha vazio (medido: ~900px de nada entre o responsável e o valor).
+const LIST_GRID =
+  "grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(0,2fr)_minmax(0,1.1fr)_104px_132px_minmax(0,1fr)_60px_92px_32px] gap-x-3 gap-y-0.5 sm:gap-y-1";
+// No mobile a linha empilhava os oito campos (208px de altura, "50%" e a data
+// soltos sem rótulo). Ali só cabem os quatro que identificam a negociação, em
+// duas colunas; o resto volta a partir de sm.
+const LIST_CELL_MAIN = "col-start-1 row-start-1 sm:col-auto sm:row-auto";
+const LIST_CELL_SUB = "col-start-1 row-start-2 sm:col-auto sm:row-auto";
+const LIST_CELL_RIGHT_TOP = "col-start-2 row-start-1 justify-self-end sm:justify-self-auto sm:col-auto sm:row-auto";
+const LIST_CELL_RIGHT_SUB = "col-start-2 row-start-2 justify-self-end sm:justify-self-auto sm:col-auto sm:row-auto";
+const LIST_CELL_DESKTOP = "hidden sm:flex";
+const LIST_CELL_DESKTOP_BLOCK = "hidden sm:block";
+const LIST_TH = "text-[10.5px] uppercase font-semibold tracking-[0.07em] text-muted-foreground truncate";
 
 export default function CRM() {
   const { user, isSuperAdmin, companyId } = useAuth();
@@ -1543,7 +1558,7 @@ export default function CRM() {
         )}
 
         {/* Content Area */}
-        <div className="flex-1 min-w-0 overflow-x-auto overflow-y-auto sm:overflow-y-hidden scrollbar-thin">
+        <div className="flex-1 min-w-0 overflow-x-auto overflow-y-auto sm:overflow-y-hidden">
           {isLoading ? (
             <KanbanSkeleton />
           ) : viewMode === "kanban" ? (
@@ -1559,18 +1574,16 @@ export default function CRM() {
                 },
               }}
             >
-              {/* LP-PIPE.2 — faixa "Precisa de você agora" (leitura da EVA, accent roxo).
-                  Some sozinha quando não há deal pronto. Não esconde nada do board. */}
-              {!selectionMode && (
-                <ReadinessBand
-                  deals={filteredDeals}
-                  contextByDeal={pipelineContext.contextByDeal}
-                  formatCurrency={formatCurrency}
-                />
-              )}
+              {/* A faixa "Precisa de você agora" saiu daqui (2026-08-25): ela
+                  repetia, no topo, cards que já estavam nas colunas logo
+                  abaixo, então a mesma negociação aparecia duas vezes na mesma
+                  tela. A urgência continua legível no próprio card, pela
+                  leitura da EVA e pelo tempo parado. */
+
+}
 
               {/* Mobile stage selector pills */}
-              <div className="flex sm:hidden gap-2 px-4 pt-3 pb-1 overflow-x-auto scrollbar-none">
+              <div className="flex sm:hidden gap-2 px-4 pt-3 pb-1 overflow-x-auto no-scrollbar">
                 {STAGES.map((stage, idx) => {
                   const Icon = stage.icon;
                   return (
@@ -1601,10 +1614,15 @@ export default function CRM() {
 
               <div
                 ref={kanbanScrollRef}
+                /* Enquanto arrasta, o board inteiro entra em modo de arraste: o
+                   CSS desliga hover e transição de cada card. Sem isso, cada
+                   reordenação disparava a transição de todos os cards ao mesmo
+                   tempo, e o custo cresce com o tamanho do funil. */
+                data-dragging={activeId ? "true" : undefined}
                 className="
                   flex gap-2 sm:gap-3 p-4 sm:p-6 h-full
                   sm:min-w-max
-                  max-sm:snap-x max-sm:snap-mandatory max-sm:overflow-x-auto max-sm:scrollbar-none
+                  max-sm:snap-x max-sm:snap-mandatory max-sm:overflow-x-auto max-sm:no-scrollbar
                   max-sm:scroll-pl-4 max-sm:pr-[14vw]
                 "
                 onScroll={(e) => {
@@ -1695,85 +1713,111 @@ export default function CRM() {
               </DragOverlay>
             </DndContext>
           ) : (
-            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 max-w-6xl">
+            <div className="p-4 sm:p-6">
               {sortedDealsForList.length === 0 && (
                 <div className="text-muted-foreground text-sm">Nenhuma negociação cadastrada.</div>
               )}
-              {sortedDealsForList.map((deal) => {
-                const value = Number(deal.value) || 0;
-                const owner = (deal as { profiles?: { nome?: string; avatar_url?: string } }).profiles;
-                const ownerName = owner?.nome || (deal.assignee_outside_company ? "Outro time" : "Sem responsável");
-                const initials = (owner?.nome || "?").trim().split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
-                const isSel = selectionMode && selectedDeals.has(deal.id);
-                return (
+
+              {sortedDealsForList.length > 0 && (
+                <div className="rounded-xl border border-border bg-white dark:bg-card overflow-hidden">
+                  {/* Cabeçalho de colunas. Sem ele, "50%" e "24 de ago." eram
+                      números soltos no fim da linha: o cliente via o dado e não
+                      sabia o que era. */}
                   <div
-                    key={deal.id}
-                    onClick={selectionMode ? () => toggleSelectDeal(deal.id) : () => navigate(`/deals/${deal.id}`)}
-                    className={`group bg-white dark:bg-card border rounded-xl p-3.5 sm:p-4 cursor-pointer transition-all duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                      isSel
-                        ? "border-[#2563EB] ring-2 ring-[#2563EB]/30"
-                        : "border-border hover:border-[#2563EB]/30 hover:shadow-md hover:-translate-y-px"
-                    }`}
+                    className={`${LIST_GRID} hidden sm:grid px-4 py-2 border-b border-border`}
+                    style={{ background: "rgba(15,23,42,0.025)" }}
                   >
-                    {/* Topo: título + cliente | valor + estágio */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-2.5 min-w-0">
-                        {selectionMode && (
-                          <div
-                            className={`w-5 h-5 mt-0.5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
-                              isSel ? "bg-[#2563EB] border-[#2563EB]" : "bg-muted border-border"
-                            }`}
-                          >
-                            {isSel && (
-                              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <div className="text-[14.5px] font-semibold text-foreground truncate" style={{ letterSpacing: "-0.01em" }}>
+                    <span className={LIST_TH}>Negociação</span>
+                    <span className={LIST_TH}>Cliente</span>
+                    <span className={`${LIST_TH} text-right`}>Valor</span>
+                    <span className={LIST_TH}>Etapa</span>
+                    <span className={LIST_TH}>Responsável</span>
+                    <span className={`${LIST_TH} text-right`}>Prob.</span>
+                    <span className={`${LIST_TH} text-right`}>Atualizado</span>
+                    <span aria-hidden />
+                  </div>
+
+                  {sortedDealsForList.map((deal) => {
+                    const value = Number(deal.value) || 0;
+                    const owner = (deal as { profiles?: { nome?: string; avatar_url?: string } }).profiles;
+                    const ownerName = owner?.nome || (deal.assignee_outside_company ? "Outro time" : "Sem responsável");
+                    const initials = (owner?.nome || "?").trim().split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+                    const isSel = selectionMode && selectedDeals.has(deal.id);
+                    return (
+                      <div
+                        key={deal.id}
+                        onClick={selectionMode ? () => toggleSelectDeal(deal.id) : () => navigate(`/deals/${deal.id}`)}
+                        className={`${LIST_GRID} group items-center px-4 py-2.5 border-b border-border/60 last:border-b-0 cursor-pointer transition-colors duration-150 ${
+                          isSel ? "bg-[#2563EB]/[0.06]" : "hover:bg-muted/50"
+                        }`}
+                      >
+                        {/* Negociação */}
+                        <div className={`${LIST_CELL_MAIN} flex items-center gap-2.5 min-w-0`}>
+                          {selectionMode && (
+                            <div
+                              className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
+                                isSel ? "bg-[#2563EB] border-[#2563EB]" : "bg-muted border-border"
+                              }`}
+                            >
+                              {isSel && (
+                                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </div>
+                          )}
+                          <span className="text-[13.5px] font-semibold text-foreground truncate" style={{ letterSpacing: "-0.01em" }}>
                             {deal.title || "Sem título"}
-                          </div>
-                          <div className="text-[12px] text-muted-foreground truncate mt-0.5">
-                            {deal.customer_name || "Sem cliente"}
-                          </div>
+                          </span>
                         </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-1.5 shrink-0">
-                        <span className="text-[14px] font-bold tabular-nums text-foreground">
+
+                        {/* Cliente */}
+                        <span className={`${LIST_CELL_SUB} text-[12.5px] text-muted-foreground truncate`}>
+                          {deal.customer_name || "—"}
+                        </span>
+
+                        {/* Valor */}
+                        <span className={`${LIST_CELL_RIGHT_TOP} text-[13.5px] font-bold tabular-nums text-foreground text-right`}>
                           {formatCurrency(value)}
                         </span>
-                        {renderStageBadge(deal.stage_id || "")}
-                      </div>
-                    </div>
 
-                    {/* Rodapé: responsável | probabilidade · atualizado · excluir */}
-                    <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-border/50">
-                      <div className="flex items-center gap-2 min-w-0">
-                        {owner?.avatar_url ? (
-                          <img src={owner.avatar_url} alt="" className="h-6 w-6 rounded-full object-cover shrink-0" />
-                        ) : (
-                          <span
-                            className="h-6 w-6 rounded-full shrink-0 flex items-center justify-center text-white text-[9px] font-semibold"
-                            style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)" }}
-                          >
-                            {initials}
-                          </span>
-                        )}
-                        <span className="text-[12px] text-muted-foreground truncate">{ownerName}</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 shrink-0">
-                        {!!deal.probability && (
-                          <span className="text-[11px] font-medium text-muted-foreground tabular-nums">{deal.probability}%</span>
-                        )}
-                        <span className="text-[11px] text-muted-foreground/80 tabular-nums hidden sm:inline">
-                          {deal.updated_at ? new Date(deal.updated_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) : "—"}
+                        {/* Etapa */}
+                        <span className={`${LIST_CELL_RIGHT_SUB} min-w-0 flex sm:justify-start`}>
+                          {renderStageBadge(deal.stage_id || "")}
                         </span>
+
+                        {/* Responsável */}
+                        <span className={`${LIST_CELL_DESKTOP} items-center gap-2 min-w-0`}>
+                          {owner?.avatar_url ? (
+                            <img src={owner.avatar_url} alt="" className="h-5 w-5 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <span
+                              className="h-5 w-5 rounded-full shrink-0 flex items-center justify-center text-white text-[9.5px] font-semibold"
+                              style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)" }}
+                            >
+                              {initials}
+                            </span>
+                          )}
+                          <span className="text-[12.5px] text-muted-foreground truncate">{ownerName}</span>
+                        </span>
+
+                        {/* Probabilidade */}
+                        <span className={`${LIST_CELL_DESKTOP_BLOCK} text-[12.5px] font-medium text-muted-foreground tabular-nums text-right`}>
+                          {deal.probability ? `${deal.probability}%` : "—"}
+                        </span>
+
+                        {/* Atualizado */}
+                        <span className={`${LIST_CELL_DESKTOP_BLOCK} text-[12.5px] text-muted-foreground/80 tabular-nums text-right`}>
+                          {deal.updated_at
+                            ? new Date(deal.updated_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })
+                            : "—"}
+                        </span>
+
+                        {/* Ações */}
                         <button
                           type="button"
-                          aria-label="Excluir"
-                          className="opacity-50 sm:opacity-0 sm:group-hover:opacity-100 text-rose-500 hover:text-rose-600 p-1 rounded transition-opacity"
+                          aria-label={`Excluir ${deal.title || "negociação"}`}
+                          className="hidden sm:block justify-self-end opacity-50 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 text-rose-500 hover:text-rose-600 p-1 rounded transition-opacity"
                           onClick={(e) => {
                             e.stopPropagation();
                             if (confirm(`Tem certeza que deseja excluir a negociação "${deal.title}"?`)) {
@@ -1784,10 +1828,10 @@ export default function CRM() {
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

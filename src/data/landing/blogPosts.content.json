@@ -1,5 +1,60 @@
 [
     {
+        "slug": "ia-agentica-vendas-agencias",
+        "category": "Produto",
+        "date": "2026-08-21",
+        "title": "IA agêntica para vendas: o que um agente pode fazer sozinho e o que nunca deve",
+        "excerpt": "Agente de IA executando tarefas sozinho virou moda, mas em venda a linha é fina. Veja o que um agente comercial deve resolver sem ninguém pedir e o que só sai com aprovação humana.",
+        "coverText": "Sozinha no interno. Acompanhada na saída.",
+        "accent": "#0F766E",
+        "featured": true,
+        "content": [
+            { "type": "p", "text": "Resposta direta: um agente de IA em vendas deve executar sozinho tudo o que é interno à operação e nunca enviar uma mensagem ao cliente sem aprovação humana. Essa divisão, conhecida como autonomia graduada, é o que separa ganho real de produtividade de risco desnecessário com leads e com a sua marca." },
+            { "type": "p", "text": "Nos últimos meses, “agente de IA que vende sozinho” virou promessa de landing page. A realidade que aparece depois da assinatura costuma ser uma das duas: ou a ferramenta é tão travada que só repete sugestões genéricas, ou é tão solta que o time descobre no prejuízo o que ela estava mandando pro lead. O meio termo existe e tem nome: saber exatamente onde termina a autonomia da máquina e começa a decisão humana." },
+            { "type": "h2", "text": "O que um agente comercial pode fazer sozinho" },
+            { "type": "p", "text": "Toda tarefa interna, repetitiva e baseada em leitura de contexto é território natural de agente. São exatamente as atividades que caem quando o dia aperta:" },
+            { "type": "ul", "items": [
+                "Ler 100% das conversas e manter o contexto sempre atualizado, sem depender de alguém registrar nada.",
+                "Organizar o pipeline: criar a oportunidade quando o lead entra, mover de etapa quando a conversa anda, anotar o que importa.",
+                "Detectar conversas esfriando e preparar o follow-up no momento certo.",
+                "Qualificar por intenção, urgência e objeção, aplicando o mesmo critério às 9h e às 23h.",
+                "Preparar rascunhos de resposta e proposta, prontos para revisão.",
+                "Ordenar as prioridades: quem merece atenção primeiro, com base nos sinais da conversa."
+            ] },
+            { "type": "h2", "text": "O que nenhum agente deveria fazer sem humano" },
+            { "type": "p", "text": "Aqui mora o risco. São as ações que tocam o cliente ou comprometem a agência:" },
+            { "type": "ul", "items": [
+                "Enviar mensagem pro lead por conta própria. O tom errado no momento errado custa uma venda que já estava quase fechada.",
+                "Prometer preço, prazo ou resultado. Compromisso comercial é decisão de quem assina embaixo.",
+                "Conduzir negociação e fechamento. Ler a entrelinha e conduzir a jogada ainda é faro construído com experiência.",
+                "Decidir sozinho em cima de informação ambígua. Contexto confuso se escala pra pessoa, não se improvisa."
+            ] },
+            { "type": "h2", "text": "Por que autonomia total quebra a venda" },
+            { "type": "p", "text": "O argumento da automação total é velocidade. O problema é que velocidade sem freio transforma cada falha do sistema em falha pública, na frente do lead." },
+            { "type": "example", "title": "Duas agências, dois níveis de autonomia", "body": [
+                "Na primeira, o agente responde e envia tudo sozinho. É rápido, sim. Mas manda “oi, tudo bem?” pra lead que já perguntou de preço duas vezes, promete prazo que ninguém confirmou e insiste no follow-up justamente com quem pediu espaço. Cada erro é público e irreversível.",
+                "Na segunda, o agente prepara tudo e o time aprova o envio. A resposta sai dois minutos depois, correta e com contexto. O custo dessa supervisão é baixo: ler um rascunho pronto leva segundos. O benefício é que nenhum deslize chega ao cliente.",
+                "A diferença não está na tecnologia, está na arquitetura da autonomia. Ferramenta parecida, resultado desigual."
+            ] },
+            { "type": "h2", "text": "Como funciona a autonomia graduada na prática" },
+            { "type": "ol", "items": [
+                "O interno roda sem ninguém pedir. Leitura das conversas, criação e atualização de oportunidades, notas, detecção de esfriamento.",
+                "Toda saída nasce como rascunho. Mensagem pro lead vira item numa fila de aprovação, com o contexto do porquê daquele contato agora.",
+                "Aprovar é barato. O time lê, ajusta se quiser e envia. Segundos de revisão contra minutos de redação do zero.",
+                "Tudo fica registrado. Cada sugestão aceita, ajustada ou rejeitada alimenta o critério do agente e a visibilidade do dono sobre a operação."
+            ] },
+            { "type": "h2", "text": "Onde a EVA entra" },
+            { "type": "p", "text": "É exatamente esse o modelo da EVA no Vyzon. Ela executa sozinha o operacional comercial da agência: lê os atendimentos no WhatsApp, organiza oportunidades no pipeline, detecta conversas esfriando e deixa rascunhos prontos. Nenhuma mensagem sai pro lead sem o time revisar e aprovar." },
+            { "type": "quote", "text": "Autonomia graduada: a máquina cuida do operacional, o humano decide o que chega ao cliente." },
+            { "type": "p", "text": "Se você está avaliando ferramentas de IA pra vender mais, faça uma pergunta direta: o que ela faz sozinha e onde exige uma pessoa? Se a resposta for “tudo sozinho”, desconfie. Se for “o interno sozinho, o resto com aprovação”, você encontrou uma ferramenta feita pra durar." }
+        ],
+        "faq": [
+            { "q": "O que é autonomia graduada em agentes de IA para vendas?", "a": "É dividir o trabalho do agente entre o que ele executa sozinho e o que depende de aprovação humana. Tarefa interna, como ler conversas, atualizar pipeline e preparar rascunhos, roda automática. Mensagem para o cliente só sai após revisão de uma pessoa. Combina velocidade com controle de risco." },
+            { "q": "Um agente de IA pode responder leads sozinho no WhatsApp?", "a": "Pode tecnicamente, mas em venda consultiva isso custa caro: resposta genérica queima lead quente, promessa fora do combinado gera problema real e insistência mal calibrada espanta. O modelo mais seguro é o agente preparar a resposta com contexto completo e o time aprovar o envio em segundos." },
+            { "q": "O que a EVA faz sozinha no Vyzon?", "a": "Ela executa sozinha o interno: lê os atendimentos no WhatsApp, organiza oportunidades no pipeline, detecta conversas esfriando e deixa rascunhos de mensagem e follow-up prontos. Nenhuma mensagem sai para o lead sem aprovação do time." }
+        ]
+    },
+    {
         "slug": "pare-de-perder-leads-no-whatsapp",
         "category": "Comercial",
         "date": "2026-06-11",
@@ -7,7 +62,6 @@
         "excerpt": "Cada conversa que fica sem resposta no WhatsApp é uma oportunidade esfriando. Veja onde o vazamento acontece, faça a conta do que isso custa e monte um sistema simples pra fechar a torneira.",
         "coverText": "Quem não responde, não vende.",
         "accent": "#1556C0",
-        "featured": true,
         "content": [
             { "type": "p", "text": "São 19h47 de uma sexta. O dono de uma agência de tráfego está fechando o notebook quando o WhatsApp vibra: “Boa noite, vi o anúncio de vocês sobre gestão pra e-commerce. Quanto fica?”. Ele lê, pensa “respondo amanhã com calma”, e vai jantar. No sábado o celular afoga em mensagem de cliente. No domingo ele descansa, com razão. Na segunda, quando abre a conversa, já tem outras dezessete por cima. Ele responde. O lead não. Aquela venda não foi perdida pra um concorrente mais barato. Foi perdida pro relógio." },
             { "type": "p", "text": "Essa cena se repete em quase toda agência que vende por conversa, e quase nunca entra na conta. Você mede custo por lead, custo por clique, talvez taxa de fechamento. Mas o lead que evaporou na caixa de entrada não aparece em lugar nenhum. Ele é invisível justamente porque ninguém registrou que ele existiu." },
@@ -47,7 +101,7 @@
             ] },
             { "type": "h2", "text": "Onde a EVA entra" },
             { "type": "p", "text": "Esse sistema funciona, mas tem um problema: ele depende de gente disciplinada o tempo todo, e gente cansa. No fim de um dia corrido, a revisão dos esquecidos é a primeira coisa que cai. É exatamente esse trabalho constante e chato (ler tudo, lembrar de todos, apontar o que está parado) que uma camada de inteligência faz sem cansar." },
-            { "type": "p", "text": "A EVA acompanha cada atendimento, entende o que está sendo dito e aponta quem está pronto pra avançar e o que está esfriando. Quando faz sentido, ela já sugere o próximo passo: a resposta, o follow-up, a mudança de etapa no pipeline. O seu time lê, ajusta se quiser, e aprova. Nada sai sem o ok de uma pessoa." },
+            { "type": "p", "text": "A EVA resolve isso dividindo o trabalho pelo que cada lado faz melhor. Ela executa sozinha a parte que não precisa de julgamento humano: lê cada atendimento, organiza a oportunidade no pipeline, aponta quem está pronto e deixa o follow-up preparado na hora certa. A parte que decide a venda continua com o seu time: mensagem pro lead só sai depois de alguém revisar e aprovar. O interno roda no automático; o que chega ao cliente passa por gente." },
             { "type": "quote", "text": "A EVA sugere, seu time aprova. A decisão continua humana, mas nada importante passa batido." },
             { "type": "p", "text": "Repare que não é um robô respondendo lead sozinho. É um copiloto que enxerga a caixa de entrada inteira e te cutuca no que importa, pra você decidir com a informação na mão em vez de na memória. A disciplina deixa de depender só de força de vontade." },
             { "type": "h2", "text": "Faça as contas do seu vazamento esta semana" },
@@ -101,7 +155,7 @@
             { "type": "h3", "text": "Os limites do humano" },
             { "type": "p", "text": "O humano não escala, cansa, esquece, tem viés e custa caro pra fazer trabalho repetitivo. Colocar uma pessoa talentosa pra triar caixa de entrada oito horas por dia é desperdiçar talento e dinheiro ao mesmo tempo, e ainda assim coisas vão escapar quando o volume aperta." },
             { "type": "h3", "text": "Os limites da EVA" },
-            { "type": "p", "text": "A EVA não deve conduzir o fechamento, não tem o faro humano pra negociação difícil e não substitui o vínculo. Por isso o modelo dela é assistido: ela sugere, o humano aprova. Toda mensagem de saída passa por uma pessoa. Ela é o copiloto, não o piloto." },
+            { "type": "p", "text": "A EVA não deve conduzir o fechamento, não tem o faro humano pra negociação difícil e não substitui o vínculo. Por isso ela trabalha com autonomia graduada: executa sozinha o que é interno, como ler conversas, qualificar leads e manter o pipeline em dia, mas toda mensagem de saída passa por uma pessoa antes de ser enviada. Máquina no operacional, humano na decisão de falar com o cliente." },
             { "type": "h2", "text": "A pergunta certa: o que fazer com tempo humano caro?" },
             { "type": "p", "text": "Quando você para de pensar “humano ou máquina” e começa a pensar “onde o tempo de uma pessoa cara rende mais”, a decisão muda de forma." },
             { "type": "example", "title": "Duas agências, dois caminhos", "body": [
@@ -122,7 +176,7 @@
         "faq": [
             { "q": "Vale a pena contratar um SDR ou usar IA para qualificar leads?", "a": "Depende do gargalo real. O SDR humano é insubstituível para ler a entrelinha emocional, conduzir negociação e fechamento e construir relação. Uma IA como a EVA é melhor no trabalho repetitivo: ler 100% das conversas, qualificar com critério constante, não esquecer follow-up e cobrir o fora de hora. O caminho que economiza é deixar a EVA triar e qualificar primeiro e contratar o humano para fechar, não para apagar incêndio na caixa de entrada." },
             { "q": "Quanto custa de verdade contratar um SDR para uma agência?", "a": "Muito além do salário. Some encargos, férias e 13º; o tempo de rampa de 6 a 8 semanas com produção parcial; as horas de quem treina e revisa; e o risco de erro silencioso, quando o SDR qualifica errado sem avisar e leads bons são tratados como ruins. Boa parte desse custo não aparece no contracheque, mas é real." },
-            { "q": "A EVA substitui o vendedor ou o time comercial?", "a": "Não. O modelo da EVA é assistido: ela sugere, o humano aprova, e toda mensagem de saída passa por uma pessoa. Ela não conduz o fechamento nem substitui o faro humano para negociação e vínculo. É o copiloto que lê tudo e qualifica, não o piloto." }
+            { "q": "A EVA substitui o vendedor ou o time comercial?", "a": "Não. A EVA trabalha com autonomia graduada: executa sozinha o trabalho interno, como ler conversas, qualificar leads e manter o pipeline atualizado, mas nenhuma mensagem sai para o lead sem aprovação humana. Ela não conduz o fechamento nem substitui o faro humano para negociação e vínculo." }
         ]
     },
     {
@@ -178,7 +232,7 @@
             ] },
             { "type": "h2", "text": "Onde a EVA entra" },
             { "type": "p", "text": "O problema de tudo isso é simples: ter contexto na mão depende de alguém lembrar de tudo, e ninguém lembra de tudo com quarenta conversas abertas. Memória perfeita, no WhatsApp, é humanamente inviável. É exatamente o que uma camada de inteligência resolve." },
-            { "type": "p", "text": "A EVA lê o atendimento e entrega o contexto pro time antes da resposta sair: o que o lead já disse, o que parece importar pra ele, em que ponto da decisão ele está e qual o próximo passo mais provável. O vendedor revisa, ajusta o tom e envia. De fora, a conversa flui como se a agência tivesse memória impecável. Porque agora tem, sem depender de ninguém guardar tudo na cabeça." },
+            { "type": "p", "text": "A EVA lê o atendimento e entrega o contexto pro time antes da resposta sair: o que o lead já disse, o que parece importar pra ele, em que ponto da decisão ele está e qual o próximo passo mais provável. De quebra, ela mantém a oportunidade atualizada no pipeline sem ninguém precisar preencher nada. O vendedor revisa, ajusta o tom e envia. De fora, a conversa flui como se a agência tivesse memória impecável. Porque agora tem, sem depender de ninguém guardar tudo na cabeça." },
             { "type": "quote", "text": "Aparecer na hora certa, com a resposta certa, não é sorte. É contexto. E contexto se constrói na conversa, não no anúncio." },
             { "type": "p", "text": "O anúncio traz o lead até a porta, depois de uma jornada inteira que você nem viu. O que acontece nos primeiros minutos de conversa, com quanto contexto e quão rápido, decide se ele entra ou vai bater na porta do lado. Esse é o jogo que dá pra ganhar." }
         ],
@@ -232,7 +286,7 @@
             { "type": "p", "text": "A maioria das ferramentas para na organização: junta tudo num lugar e te entrega a tarefa de ler. Útil, mas ainda é trabalho seu. A Vyzon coloca a EVA no centro dessa central pra fechar essa última lacuna." },
             { "type": "example", "title": "Central sem IA vs central com EVA", "body": [
                 "Central comum: organiza as conversas, mostra o pipeline e espera você abrir, ler tudo e decidir o que fazer. Melhor que planilha, mas o esforço de leitura continua sendo seu, e em dia cheio ele cai.",
-                "Central com EVA: ela lê os atendimentos por você, aponta quem está pronto pra avançar, sugere o próximo passo e mantém o pipeline conectado ao que de fato rolou na conversa. Você revisa e aprova, em vez de garimpar.",
+                "Central com EVA: ela lê os atendimentos por você, mantém o pipeline atualizado sozinha, aponta quem está pronto pra avançar e deixa a resposta preparada. Você aprova o que sai pro cliente, em vez de garimpar.",
                 "A diferença é parar de usar a ferramenta como arquivo e passar a usá-la como copiloto. Mesmo dado, esforço muito menor, e nada importante passando batido."
             ] },
             { "type": "quote", "text": "Não é um chatbot que responde sozinho, nem automação que tira o vendedor da jogada. É um copiloto que enxerga tudo e te deixa decidir." },

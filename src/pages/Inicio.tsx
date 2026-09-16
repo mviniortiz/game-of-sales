@@ -35,7 +35,8 @@ import {
     CARD_STYLE,
     type QueueHandlers,
 } from "@/components/inicio/DecisionWorkspace";
-import { OnboardingChecklist } from "@/components/inicio/OnboardingChecklist";
+import { ActivationCard } from "@/components/inicio/ActivationCard";
+import { EvaDiaryCard } from "@/components/inicio/EvaDiaryCard";
 import { useOnboardingProgress } from "@/hooks/useOnboardingProgress";
 import { useEvolutionSender } from "@/hooks/useEvolutionSender";
 import {
@@ -605,15 +606,13 @@ const Inicio = () => {
                 </div>
             </div>
 
-            {(onboardingPreview || (!onboarding.loading && !onboarding.allDone)) && (
-                <OnboardingChecklist
-                    progress={onboardingPreview ? { whatsapp: false, eva: false, leads: false, deal: false } : onboarding.progress}
-                    doneCount={onboardingPreview ? 0 : onboarding.doneCount}
-                    total={onboarding.total}
-                    nextStep={onboardingPreview ? "whatsapp" : onboarding.nextStep}
-                    onNavigate={navigate}
-                />
+            {(onboardingPreview || (!onboarding.loading && !onboarding.connected)) && (
+                <ActivationCard onNavigate={navigate} />
             )}
+
+            {/* O que a EVA fez sozinha hoje. Vem antes dos números: primeiro a
+                pessoa entende quem está mexendo no funil, depois vê o resultado. */}
+            <EvaDiaryCard />
 
             {/* COMMAND.UI.7 — Cockpit: números/gráficos (esquerda) + fila (direita). */}
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_400px] gap-5 2xl:gap-6 items-start">

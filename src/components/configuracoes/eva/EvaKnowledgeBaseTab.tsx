@@ -182,6 +182,7 @@ interface TrainingDoc {
 interface ContextSuggestion {
   id: string;
   document_id: string | null;
+  source: string | null;
   suggestion_type: string;
   title: string;
   content: Record<string, unknown>;
@@ -240,7 +241,7 @@ export function EvaKnowledgeBaseTab({ companyId, isAdmin, userId }: EvaKnowledge
           .limit(50),
         supabase
           .from("eva_context_suggestions")
-          .select("id, document_id, suggestion_type, title, content, confidence, status, created_at")
+          .select("id, document_id, source, suggestion_type, title, content, confidence, status, created_at")
           .eq("company_id", companyId)
           .order("created_at", { ascending: false })
           .limit(100),
@@ -422,6 +423,10 @@ export function EvaKnowledgeBaseTab({ companyId, isAdmin, userId }: EvaKnowledge
 
       const patch: Record<string, unknown> = { company_id: companyId };
       const c = s.content || {};
+      // LEARN.1: registra de onde a informação saiu. Fixar
+      // "knowledge_base" marcava como documento o que a EVA deduziu das
+      // conversas, e a trilha de auditoria do contexto ficava errada.
+      const origem = s.source === "conversations" ? "conversations" : "knowledge_base";
       switch (s.suggestion_type) {
         case "agency":
           patch.agency = { ...currentAgency, ...c };
@@ -434,7 +439,7 @@ export function EvaKnowledgeBaseTab({ companyId, isAdmin, userId }: EvaKnowledge
               description: c.description ?? null,
               price: c.price ?? null,
               evidence: c.evidence ?? null,
-              source: "knowledge_base",
+              source: origem,
               suggestion_id: s.id,
               priority,   // F4E.5.3
             },
@@ -454,7 +459,7 @@ export function EvaKnowledgeBaseTab({ companyId, isAdmin, userId }: EvaKnowledge
               kind: s.suggestion_type,
               title: s.title,
               content: c,
-              source: "knowledge_base",
+              source: origem,
               suggestion_id: s.id,
               applied_at: new Date().toISOString(),
               priority,   // F4E.5.3

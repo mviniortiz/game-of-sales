@@ -41,7 +41,7 @@ delete from deal_custom_field_values where deal_id in (
 delete from deal_tag_assignments where deal_id in (
   select id from deals where company_id='7e2e21ac-d834-448b-a61b-79ca01255702'
     and (source_data->>'demo_seed') is distinct from 'DEMO.1');
-delete from eva_deal_suggestions where deal_id in (
+delete from agent_suggestions where deal_id in (
   select id from deals where company_id='7e2e21ac-d834-448b-a61b-79ca01255702'
     and (source_data->>'demo_seed') is distinct from 'DEMO.1');
 delete from follow_up_reminders where deal_id in (

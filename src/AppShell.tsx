@@ -20,8 +20,8 @@ const isEmbedded = (() => { try { return window.self !== window.top; } catch { r
 const LoginV2 = lazy(() => import("./pages/LoginV2"));
 const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
 const RedefinirSenha = lazy(() => import("./pages/RedefinirSenha"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Inicio = lazy(() => import("./pages/Inicio"));
+const Orcamentos = lazy(() => import("./pages/Orcamentos"));
 const Ranking = lazy(() => import("./pages/Ranking"));
 const NovaVenda = lazy(() => import("./pages/NovaVenda"));
 const Calls = lazy(() => import("./pages/Calls"));
@@ -44,7 +44,6 @@ const ConfEvaContexto = lazy(() => import("./pages/configuracoes/EvaContexto"));
 const Calendario = lazy(() => import("./pages/Calendario"));
 const CRM = lazy(() => import("./pages/CRM"));
 const DealCommandCenter = lazy(() => import("./pages/DealCommandCenter"));
-const Pulse = lazy(() => import("./pages/Pulse"));
 const Inbox = lazy(() => import("./pages/Inbox"));
 const SignupV2 = lazy(() => import("./pages/SignupV2"));
 const SalesPerformanceCenter = lazy(() => import("./pages/SalesPerformanceCenter"));
@@ -55,8 +54,6 @@ const Docs = lazy(() => import("./pages/Docs"));
 const Suporte = lazy(() => import("./pages/admin/Suporte"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const TermosServico = lazy(() => import("./pages/TermosServico"));
-const LogoPreview = lazy(() => import("./pages/LogoPreview"));
-const ScenePreview = lazy(() => import("./pages/ScenePreview"));
 const Changelog = lazy(() => import("./pages/Changelog"));
 const EmbedDemo = lazy(() => import("./pages/EmbedDemo"));
 
@@ -67,6 +64,19 @@ const CheckoutRedirect = () => {
 };
 
 const LazyFallback = () => <BrandedLoader />;
+
+// /orcamentos é a tela principal. Em dev, ?preview=1|vazio|erro renderiza com
+// dados fixos sem login (import.meta.env.DEV é false no build de produção).
+const OrcamentosRoute = () => {
+  const [params] = useSearchParams();
+  const page = (
+    <AppLayout>
+      <Orcamentos />
+    </AppLayout>
+  );
+  if (import.meta.env.DEV && params.get("preview")) return page;
+  return <ProtectedRoute>{page}</ProtectedRoute>;
+};
 
 const PreProdRoute = ({ children, fallback = "/dashboard" }: { children: React.ReactNode; fallback?: string }) => {
   const { isSuperAdmin } = useAuth();
@@ -103,13 +113,13 @@ const AppShell = () => (
               <Route path="/checkout" element={<CheckoutRedirect />} />
               <Route path="/recuperar-senha" element={<RecuperarSenha />} />
               <Route path="/redefinir-senha" element={<RedefinirSenha />} />
-              <Route path="/logo-preview" element={<LogoPreview />} />
-              <Route path="/scene-preview" element={<ScenePreview />} />
               <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
               <Route path="/termos-de-servico" element={<TermosServico />} />
               <Route path="/changelog" element={<Changelog />} />
               <Route path="/embed-demo" element={<EmbedDemo />} />
 
+              {/* 2026-09-16: Orçamentos é a tela principal (APP_HOME). */}
+              <Route path="/orcamentos" element={<OrcamentosRoute />} />
               {/* F4A 2026-05-19: /inicio renderiza Inicio (Central da Operação).
                   /dashboard antigo continua acessível como fallback (não removido em F4A,
                   só não está no menu). F3 fez redirect /dashboard → /inicio que segue válido. */}
@@ -124,16 +134,6 @@ const AppShell = () => (
                 }
               />
               <Route path="/dashboard" element={<Navigate to="/inicio" replace />} />
-              <Route
-                path="/dashboard-legacy"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Dashboard />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
               <Route
                 path="/ranking"
                 element={
@@ -319,7 +319,6 @@ const AppShell = () => (
                   }
                 />
                 {/* Contratos virou seção da Gestão. */}
-                <Route path="contratos" element={<Navigate to="/admin" replace />} />
                 {/* Webhooks de leads (Google Sheets / Meta Lead Ads / etc.): setup via
                     Apps Script + lead-webhook. Alcançado pelo botão "Conectar" do Sheets
                     em Integrações (navigate com ?create=). Estava órfão (redirect). */}
@@ -340,9 +339,7 @@ const AppShell = () => (
               <Route path="/profile" element={<Navigate to="/configuracoes/perfil" replace />} />
               <Route path="/integracoes" element={<Navigate to="/configuracoes/integracoes" replace />} />
               <Route path="/importar" element={<Navigate to="/configuracoes/importar" replace />} />
-              {/* F4C.1 2026-05-19: /inbox renderiza Inbox Comercial nova. Pulse antigo
-                  fica acessível em /inbox-legacy (fora do menu) pra rollback emergencial.
-                  /pulse e /whatsapp redirect silencioso pra /inbox. */}
+              {/* /pulse redireciona pra /inbox: a Inbox Comercial é a única. */}
               <Route
                 path="/inbox"
                 element={
@@ -353,18 +350,7 @@ const AppShell = () => (
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/inbox-legacy"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Pulse />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
               <Route path="/pulse" element={<Navigate to="/inbox" replace />} />
-              <Route path="/whatsapp" element={<Navigate to="/inbox" replace />} />
               {/* F3 2026-05-19: /agenda é a rota principal, /calendario redirect silencioso */}
               <Route
                 path="/agenda"

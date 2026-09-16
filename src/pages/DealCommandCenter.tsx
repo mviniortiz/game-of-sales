@@ -220,7 +220,7 @@ const getCallStatusBadge = (status?: string) => {
 const StageChips = ({ currentStage, onStageChange, companyId }: { currentStage: string; onStageChange: (id: string) => void; companyId?: string | null }) => {
     const idx = PIPELINE_STAGES.findIndex(s => s.id === currentStage);
     return (
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
             {PIPELINE_STAGES.map((stage, i) => {
                 const done = i < idx;
                 const active = i === idx;
@@ -1081,7 +1081,7 @@ export default function DealCommandCenter() {
                             <div className="bg-card/50 rounded-2xl border border-border overflow-hidden">
 
                                 {/* Tab bar - text-only, underline on active */}
-                                <div className="flex items-center gap-0 border-b border-border px-3 overflow-x-auto scrollbar-none">
+                                <div className="flex items-center gap-0 border-b border-border px-3 overflow-x-auto no-scrollbar">
                                     {TABS.map((tab) => {
                                         const active = activeTab === tab.id;
                                         return (

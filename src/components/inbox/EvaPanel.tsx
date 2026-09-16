@@ -61,7 +61,6 @@ import { useAgentSuggestionLog } from "@/hooks/useAgentSuggestionLog";
 import { useEntityTags } from "@/hooks/useDealsTags";
 import { getTagColorClass, isHexColor } from "@/lib/tags";
 import type { Tag } from "@/types/tags";
-import { EvaStudioRules } from "@/components/eva/EvaStudioRules";
 import type {
     FitSugerido,
     KnowledgeGap,
@@ -734,7 +733,7 @@ function PanelContent({
                         </button>
                     )}
                     <span
-                        className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full shrink-0"
+                        className="inline-flex items-center gap-1 text-[11.5px] px-2 py-0.5 rounded-full shrink-0"
                         title="A EVA sugere. Seu time aprova antes de qualquer ação."
                         style={{
                             background: "rgba(124,58,237,0.10)",
@@ -754,7 +753,7 @@ function PanelContent({
                     O tom do dot carrega o "desatualizada" (não precisa de pill). */}
                 <div className="flex items-center justify-between gap-2 mt-2 pl-[48px]">
                     <span
-                        className="inline-flex items-center gap-1.5 min-w-0 text-[11px]"
+                        className="inline-flex items-center gap-1.5 min-w-0 text-[11.5px]"
                         style={{ color: statusColor }}
                     >
                         <span
@@ -766,7 +765,7 @@ function PanelContent({
                     {/* FIO 4 — avisa quando o limite diário está acabando. */}
                     {insight.remaining !== null && insight.remaining <= 10 && (
                         <span
-                            className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded shrink-0 tabular-nums"
+                            className="inline-flex items-center gap-1 text-[11.5px] px-1.5 py-0.5 rounded shrink-0 tabular-nums"
                             title={`Restam ${insight.remaining} de ${insight.dailyLimit ?? "—"} análises da EVA hoje`}
                             style={{
                                 background: insight.remaining <= 3 ? "rgba(220,38,38,0.10)" : "rgba(245,158,11,0.12)",
@@ -1083,7 +1082,7 @@ function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
             <button
                 type="button"
                 onClick={onAnalyze}
-                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white transition-all hover:brightness-110"
+                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold text-white transition-all hover:brightness-110"
                 style={{
                     background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
                     boxShadow: "0 6px 16px -4px rgba(37,99,235,0.40), 0 1px 0 rgba(255,255,255,0.20) inset",
@@ -1137,7 +1136,7 @@ function StaleBadge({
         >
             <AlertCircle className="h-4 w-4 mt-0.5 shrink-0 vz-eva-stale-dot" style={{ color: "#B45309" }} />
             <div className="flex-1 min-w-0">
-                <p className="text-[12.5px] font-semibold mb-0.5" style={{ color: "#0B1220" }}>
+                <p className="text-[13px] font-semibold mb-0.5" style={{ color: "#0B1220" }}>
                     {title}
                 </p>
                 <p className="text-[11.5px]" style={{ color: "#64748B", lineHeight: 1.5 }}>
@@ -1271,12 +1270,17 @@ function RealContent({
                     style={{
                         background: "#FFFFFF",
                         border: "1px solid var(--ibx-line)",
-                        boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 12px 32px -16px rgba(37,99,235,0.18)",
+                        // Fio roxo de 2px no topo: no meio de um painel todo
+                        // branco, é o que diz "a decisão é aqui" antes de a
+                        // pessoa ler qualquer palavra. Roxo só como acento,
+                        // igual ao EvaNode logo abaixo.
+                        borderTop: "2px solid #6D28D9",
+                        boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 14px 36px -18px rgba(109,40,217,0.28)",
                     }}
                 >
                     <div className="px-4 pt-3 pb-1.5">
                         <p
-                            className="text-[10px] uppercase inline-flex items-center gap-1.5"
+                            className="text-[10.5px] uppercase inline-flex items-center gap-1.5"
                             style={{ color: "#6D28D9", fontWeight: 700, letterSpacing: "0.08em" }}
                         >
                             <EvaNode size={10} color="#6D28D9" />
@@ -1334,12 +1338,12 @@ function RealContent({
             {/* ── DOSSIÊ: seções SEPARADAS com respiro (não 1 caixa monolítica) ── */}
             <RevealItem className="space-y-2.5">
                 <DossierCard>
-                    <DossierRow title="Resumo da conversa" defaultOpen>
-                        <p className="text-[12.5px]" style={{ color: "#334155", lineHeight: 1.6 }}>
+                    <DossierRow title="Resumo da conversa">
+                        <p className="text-[13px]" style={{ color: "#334155", lineHeight: 1.6 }}>
                             {summary}
                         </p>
                         {analysis.stage && (
-                            <p className="text-[11px] mt-1.5" style={{ color: "#64748B" }}>
+                            <p className="text-[11.5px] mt-1.5" style={{ color: "#64748B" }}>
                                 Estágio sugerido: <strong style={{ color: "#0B1220" }}>{analysis.stage}</strong>
                             </p>
                         )}
@@ -1386,10 +1390,11 @@ function RealContent({
                 </DossierCard>
             </RevealItem>
 
-            {/* EVA.STUDIO.7 — regras aplicadas no EVA Studio (só leitura) */}
-            <RevealItem>
-                <EvaStudioRules />
-            </RevealItem>
+            {/* As regras do EVA Studio saíram daqui (2026-08-24): são iguais em
+                toda conversa, então ocupavam o fim do painel repetindo a mesma
+                coisa a cada lead. Continuam visíveis no EVA Studio e no
+                DealCommandCenter, onde a pergunta é sobre a EVA e não sobre
+                este lead. */}
         </Stack>
     );
 }
@@ -1443,7 +1448,7 @@ function DossierRow({
                     }}
                 />
                 <span
-                    className="text-[11px] uppercase flex-1 transition-colors duration-200"
+                    className="text-[10.5px] uppercase flex-1 transition-colors duration-200"
                     style={{
                         color: open ? "#0B1220" : "#475569",
                         fontWeight: 700,
@@ -1454,7 +1459,7 @@ function DossierRow({
                 </span>
                 {typeof count === "number" && count > 0 && (
                     <span
-                        className="text-[10px] tabular-nums px-1.5 py-0.5 rounded-full shrink-0"
+                        className="text-[11.5px] tabular-nums px-1.5 py-0.5 rounded-full shrink-0"
                         style={{
                             background: "rgba(37,99,235,0.08)",
                             color: "#1D4ED8",
@@ -1588,7 +1593,7 @@ function QuickDiagnosis({ qualification }: { qualification: Qualification }) {
                 {/* Fit */}
                 {fit && fitStyle && (
                     <span
-                        className="ml-auto text-[11px] px-2 py-0.5 rounded-md shrink-0"
+                        className="ml-auto text-[11.5px] px-2 py-0.5 rounded-md shrink-0"
                         style={{ background: fitStyle.bg, color: fitStyle.text, fontWeight: 700 }}
                         title={`Fit ${fit.label}`}
                     >
@@ -1623,14 +1628,12 @@ function QuickDiagnosis({ qualification }: { qualification: Qualification }) {
 
 function QualificationBlock({ qualification }: { qualification: Qualification }) {
     const reduce = useReducedMotion();
-    const temp = qualification.temperatura ? TEMPERATURA_META[qualification.temperatura] : null;
     const urg = qualification.urgencia ? URGENCIA_META[qualification.urgencia] : null;
 
     // LP-INBOX.2: sinais AGRUPADOS por categoria, cada um com micro-label.
     // O score/fit/temperatura já apareceram no diagnóstico rápido acima; aqui
     // entra a justificativa + os sinais qualificados, organizados.
     const signals: { category: string; tone: ToneKey; value: string; icon?: typeof Flame }[] = [];
-    if (temp) signals.push({ category: "Temperatura", tone: temp.tone, value: temp.label, icon: temp.icon });
     if (urg) signals.push({ category: "Urgência", tone: urg.tone, value: urg.label });
     if (qualification.intencao)
         signals.push({
@@ -1654,7 +1657,7 @@ function QualificationBlock({ qualification }: { qualification: Qualification })
     return (
         <div className="px-0.5">
             <p
-                className="text-[10px] uppercase mb-2.5"
+                className="text-[10.5px] uppercase mb-2.5"
                 style={{ color: "#64748B", fontWeight: 700, letterSpacing: "0.08em" }}
             >
                 Por que a EVA leu assim
@@ -1697,13 +1700,13 @@ function CategoryPill({
     const s = TONE_STYLES[tone];
     const inner = (
         <span
-            className="inline-flex items-stretch rounded-md overflow-hidden text-[11px]"
+            className="inline-flex items-stretch rounded-md overflow-hidden text-[11.5px]"
             style={{ border: `1px solid ${s.border}` }}
             title={`${category}: ${value}`}
         >
             <span
                 className="inline-flex items-center px-1.5 uppercase"
-                style={{ background: "rgba(15,23,42,0.035)", color: "#64748B", fontWeight: 700, letterSpacing: "0.04em", fontSize: "9px" }}
+                style={{ background: "rgba(15,23,42,0.035)", color: "#64748B", fontWeight: 700, letterSpacing: "0.06em", fontSize: "10.5px" }}
             >
                 {category}
             </span>
@@ -1878,15 +1881,15 @@ function SuggestedReply({
             {/* Conector visual: deixa claro que a resposta executa a ação acima. */}
             {hasAction && (
                 <p
-                    className="text-[10px] uppercase mb-1.5"
-                    style={{ color: "#94A3B8", fontWeight: 700, letterSpacing: "0.07em" }}
+                    className="text-[10.5px] uppercase mb-1.5"
+                    style={{ color: "#94A3B8", fontWeight: 700, letterSpacing: "0.08em" }}
                 >
                     Resposta sugerida
                 </p>
             )}
             {edited === null ? (
                 <div
-                    className="px-3.5 py-3 text-[12.5px]"
+                    className="px-3.5 py-3 text-[13px]"
                     style={{
                         background: "#F7F5FE",
                         border: "1px solid rgba(124,58,237,0.16)",
@@ -1902,7 +1905,7 @@ function SuggestedReply({
                     value={edited}
                     onChange={(e) => setEdited(e.target.value)}
                     autoFocus
-                    className="w-full text-base md:text-[12.5px] px-3.5 py-3 outline-none resize-y min-h-[88px]"
+                    className="w-full text-base md:text-[13px] px-3.5 py-3 outline-none resize-y min-h-[88px]"
                     style={{
                         background: "#FFFFFF",
                         border: "1px solid rgba(124,58,237,0.35)",
@@ -1920,7 +1923,7 @@ function SuggestedReply({
                         type="button"
                         onClick={handleSend}
                         disabled={sending}
-                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white flex-1 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold text-white flex-1 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                         style={{
                             background: "linear-gradient(135deg, #10B981, #34D399)",
                             boxShadow: "0 6px 16px -6px rgba(16,185,129,0.45), 0 1px 0 rgba(255,255,255,0.20) inset",
@@ -1933,7 +1936,7 @@ function SuggestedReply({
                     <button
                         type="button"
                         onClick={handleUse}
-                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white flex-1 transition-all"
+                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold text-white flex-1 transition-all"
                         style={{
                             background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
                             boxShadow: "0 6px 16px -6px rgba(37,99,235,0.40), 0 1px 0 rgba(255,255,255,0.20) inset",
@@ -1946,7 +1949,7 @@ function SuggestedReply({
                     <button
                         type="button"
                         onClick={handleCopy}
-                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white flex-1 transition-all"
+                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold text-white flex-1 transition-all"
                         style={{
                             background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
                             boxShadow: "0 6px 16px -6px rgba(37,99,235,0.40), 0 1px 0 rgba(255,255,255,0.20) inset",
@@ -1982,7 +1985,7 @@ function SuggestedReply({
                 </button>
             </div>
             {/* Legenda do bloco inteiro: o controle continua humano. */}
-            <p className="text-[10px] mt-2" style={{ color: "#94A3B8" }}>
+            <p className="text-[11.5px] mt-2" style={{ color: "#94A3B8" }}>
                 Você aprova antes de enviar.
             </p>
         </div>
@@ -2018,13 +2021,13 @@ function RecommendationCallout({
             />
             <div className="flex-1 min-w-0">
                 <p
-                    className="text-[12px] font-semibold mb-0.5"
+                    className="text-[13px] font-semibold mb-0.5"
                     style={{ color: s.text }}
                 >
                     {title}
                 </p>
                 <p
-                    className="text-[11px] mb-2"
+                    className="text-[11.5px] mb-2"
                     style={{ color: "#475569", lineHeight: 1.4 }}
                 >
                     {body}
@@ -2033,7 +2036,7 @@ function RecommendationCallout({
                     <button
                         type="button"
                         onClick={cta.onClick}
-                        className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-all hover:brightness-110"
+                        className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11.5px] font-semibold transition-all hover:brightness-110"
                         style={{
                             background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
                             color: "#FFFFFF",
@@ -2060,7 +2063,7 @@ function KnowledgeGapsList({ gaps }: { gaps: KnowledgeGap[] }) {
     return (
         <div>
             {/* Enquadramento: insumo pra afinar a EVA, não erro. */}
-            <p className="text-[11px] mb-2.5" style={{ color: "#64748B", lineHeight: 1.5 }}>
+            <p className="text-[11.5px] mb-2.5" style={{ color: "#64748B", lineHeight: 1.5 }}>
                 Cadastrar estes pontos no contexto deixa as próximas leituras da EVA mais precisas.
             </p>
             <ul className="space-y-2">
@@ -2075,7 +2078,7 @@ function KnowledgeGapsList({ gaps }: { gaps: KnowledgeGap[] }) {
                     >
                         <div className="flex items-center gap-1.5 mb-1">
                             <span
-                                className="text-[9.5px] uppercase px-1.5 py-0.5 rounded"
+                                className="text-[10.5px] uppercase px-1.5 py-0.5 rounded"
                                 style={{
                                     background: "rgba(124,58,237,0.10)",
                                     color: "#6D28D9",
@@ -2092,7 +2095,7 @@ function KnowledgeGapsList({ gaps }: { gaps: KnowledgeGap[] }) {
                         >
                             {g.description}
                         </p>
-                        <p className="text-[11px] flex items-start gap-1" style={{ color: "#64748B", lineHeight: 1.4 }}>
+                        <p className="text-[11.5px] flex items-start gap-1" style={{ color: "#64748B", lineHeight: 1.4 }}>
                             <ArrowRight className="h-3 w-3 mt-0.5 shrink-0" style={{ color: "#6D28D9" }} />
                             <span>{g.suggested_fix}</span>
                         </p>
@@ -2138,7 +2141,7 @@ function EvaTagsSection({
                         <span
                             key={tag.id}
                             title={tag.description ?? tag.name}
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium ring-1 ring-inset ${useHex ? "" : getTagColorClass(tag.color)}`}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11.5px] font-medium ring-1 ring-inset ${useHex ? "" : getTagColorClass(tag.color)}`}
                             style={
                                 useHex
                                     ? {
@@ -2208,10 +2211,10 @@ function CrmBlock({
                 style={{ background: "var(--ibx-sunken)", border: "1px solid var(--ibx-line)" }}
             >
                 <Workflow className="h-5 w-5 mx-auto mb-1.5" style={{ color: "#94A3B8" }} />
-                <p className="text-[12px]" style={{ color: "#0B1220", fontWeight: 600 }}>
+                <p className="text-[13px]" style={{ color: "#0B1220", fontWeight: 600 }}>
                     Ainda não está no pipeline
                 </p>
-                <p className="text-[11px] mt-1" style={{ color: "#64748B" }}>
+                <p className="text-[11.5px] mt-1" style={{ color: "#64748B" }}>
                     Use "Criar oportunidade no pipeline" acima pra adicionar este lead.
                 </p>
             </div>
@@ -2245,13 +2248,13 @@ function CrmBlock({
                 className="rounded-lg px-3 py-3"
                 style={{ background: "#FFFFFF", border: "1px solid var(--ibx-line)", boxShadow: "0 1px 2px rgba(15,23,42,0.03)" }}
             >
-                <p className="text-[12px] font-semibold" style={{ color: noteColor }}>
+                <p className="text-[13px] font-semibold" style={{ color: noteColor }}>
                     {noteText}
                 </p>
                 {href && (
                     <a
                         href={href}
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold mt-2 transition-colors hover:text-[#1D4ED8]"
+                        className="inline-flex items-center gap-1 text-[11.5px] font-semibold mt-2 transition-colors hover:text-[#1D4ED8]"
                         style={{ color: "#2563EB" }}
                     >
                         Abrir no CRM
@@ -2288,25 +2291,25 @@ function CrmBlock({
                 boxShadow: "0 1px 2px rgba(15,23,42,0.03)",
             }}
         >
-            <p className="text-[11px] font-semibold mb-2" style={{ color: noteColor }}>
+            <p className="text-[11.5px] font-semibold mb-2" style={{ color: noteColor }}>
                 {noteText}
             </p>
             <div className="flex items-start justify-between gap-2 mb-2">
                 <p
-                    className="text-[12.5px] font-semibold flex-1 min-w-0 truncate"
+                    className="text-[13px] font-semibold flex-1 min-w-0 truncate"
                     style={{ color: "#0B1220" }}
                     title={detailDeal.title as string}
                 >
                     {detailDeal.title}
                 </p>
                 <span
-                    className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded shrink-0"
+                    className="inline-flex items-center text-[11.5px] px-1.5 py-0.5 rounded shrink-0"
                     style={{ background: stage.bg, color: stage.color, fontWeight: 600 }}
                 >
                     {stage.label}
                 </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
+            <div className="grid grid-cols-2 gap-2 text-[11.5px]">
                 <Stat icon={BarChart3} label="Valor" value={valueStr} color="#1D4ED8" />
                 {updated && <Stat icon={Clock} label="Atualizado" value={updated} color="#64748B" />}
                 {typeof detailDeal.probability === "number" && (
@@ -2321,7 +2324,7 @@ function CrmBlock({
             {href && (
                 <a
                     href={href}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold mt-2.5 transition-colors hover:text-[#1D4ED8]"
+                    className="inline-flex items-center gap-1 text-[11.5px] font-semibold mt-2.5 transition-colors hover:text-[#1D4ED8]"
                     style={{ color: "#2563EB" }}
                 >
                     Abrir no CRM

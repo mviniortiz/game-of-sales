@@ -1,19 +1,15 @@
 // Seleção de plano + checkout embutido, usada no /upgrade e no Faturamento.
-// Modelo 2026-07: Free (sem cobrança), Pro (checkout Mercado Pago embutido)
-// e Escala (conversa com o time via WhatsApp — sem preço público).
+// Modelo 2026-08-21: Essential e Pro (checkout Mercado Pago embutido).
+// O piso "free" existe só internamente e NÃO aparece aqui (plans.ts).
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Star, Rocket, Building2, ArrowRight, ArrowLeft, MessageCircle, type LucideIcon } from "lucide-react";
+import { Check, Layers, Rocket, ArrowRight, ArrowLeft, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
 import { PLANS, PLAN_ORDER, formatPrice, type PlanId } from "@/config/plans";
-import { whatsappUrl } from "@/config/contact";
 import { PlanCheckoutForm } from "@/components/billing/PlanCheckoutForm";
 
-const PLAN_ICONS: Record<PlanId, LucideIcon> = { free: Star, pro: Rocket, escala: Building2 };
-
-const ESCALA_WHATSAPP_MESSAGE =
-    "Olá! Tenho um time com mais de 5 pessoas e quero conversar sobre o plano Escala do Vyzon.";
+const PLAN_ICONS: Record<PlanId, LucideIcon> = { free: Layers, essential: Layers, pro: Rocket };
 
 interface PlanPickerProps {
     /** Chamado após o pagamento ser aprovado. */
@@ -24,13 +20,15 @@ interface PlanPickerProps {
 
 export function PlanPicker({ onPaid, currentPlan }: PlanPickerProps) {
     const [checkoutOpen, setCheckoutOpen] = useState(false);
-    const proPlan = PLANS.pro;
+    const [checkoutPlan, setCheckoutPlan] = useState<PlanId>("pro");
+    const selectedPlan = PLANS[checkoutPlan];
+    const visiblePlans = PLAN_ORDER.map((id) => PLANS[id]).filter((p) => p.visible !== false);
 
     return (
         <>
-            <div className="grid md:grid-cols-3 gap-4 sm:gap-5 max-w-5xl w-full">
-                {PLAN_ORDER.map((id, index) => {
-                    const plan = PLANS[id];
+            <div className="grid md:grid-cols-2 gap-4 sm:gap-5 max-w-4xl w-full">
+                {visiblePlans.map((plan, index) => {
+                    const id = plan.id;
                     const Icon = PLAN_ICONS[id];
                     const popular = !!plan.highlight;
                     const isCurrent = currentPlan === id;
@@ -54,7 +52,7 @@ export function PlanPicker({ onPaid, currentPlan }: PlanPickerProps) {
                                         className="text-[10px] font-bold uppercase tracking-wider text-white px-2.5 py-1 rounded-full"
                                         style={{ background: "#2563EB", letterSpacing: "0.08em" }}
                                     >
-                                        Mais popular
+                                        Recomendado
                                     </span>
                                 </div>
                             )}
@@ -90,9 +88,7 @@ export function PlanPicker({ onPaid, currentPlan }: PlanPickerProps) {
                                 )}
                             </div>
                             <p className="text-xs font-semibold mb-5" style={{ color: "#2563EB" }}>
-                                {Number.isFinite(plan.limits.users)
-                                    ? plan.limits.users === 1 ? "1 usuário" : `Até ${plan.limits.users} usuários`
-                                    : "Time do seu tamanho"}
+                                Até {plan.limits.users} usuários
                             </p>
 
                             <ul className="space-y-2.5 mb-6 flex-1">
@@ -106,41 +102,23 @@ export function PlanPicker({ onPaid, currentPlan }: PlanPickerProps) {
                                 ))}
                             </ul>
 
-                            {id === "pro" && (
-                                <Button
-                                    onClick={() => {
-                                        trackEvent(FUNNEL_EVENTS.UPGRADE_CLICK, { plan: id });
-                                        setCheckoutOpen(true);
-                                    }}
-                                    disabled={isCurrent}
-                                    className="w-full h-11 font-semibold text-[14px] rounded-xl border-none text-white mt-auto"
-                                    style={{ background: "linear-gradient(135deg, #2563EB, #1D4ED8)" }}
-                                >
-                                    {isCurrent ? "Seu plano atual" : "Assinar Pro"}
-                                    {!isCurrent && <ArrowRight className="ml-1.5 h-4 w-4" />}
-                                </Button>
-                            )}
-                            {id === "free" && (
-                                <div
-                                    className="w-full h-11 flex items-center justify-center font-semibold text-[13px] rounded-xl mt-auto"
-                                    style={{ background: "#F1F5F9", color: "#64748B" }}
-                                >
-                                    {isCurrent ? "Seu plano atual" : "Incluído pra sempre"}
-                                </div>
-                            )}
-                            {id === "escala" && (
-                                <Button
-                                    onClick={() => {
-                                        trackEvent(FUNNEL_EVENTS.UPGRADE_CLICK, { plan: id });
-                                        window.open(whatsappUrl(ESCALA_WHATSAPP_MESSAGE), "_blank", "noopener,noreferrer");
-                                    }}
-                                    className="w-full h-11 font-semibold text-[14px] rounded-xl border-none text-white mt-auto"
-                                    style={{ background: "#0B1220" }}
-                                >
-                                    <MessageCircle className="mr-1.5 h-4 w-4" />
-                                    Falar com a gente
-                                </Button>
-                            )}
+                            <Button
+                                onClick={() => {
+                                    trackEvent(FUNNEL_EVENTS.UPGRADE_CLICK, { plan: id });
+                                    setCheckoutPlan(id);
+                                    setCheckoutOpen(true);
+                                }}
+                                disabled={isCurrent}
+                                className="w-full h-11 font-semibold text-[14px] rounded-xl border-none text-white mt-auto"
+                                style={{
+                                    background: popular
+                                        ? "linear-gradient(135deg, #2563EB, #1D4ED8)"
+                                        : "linear-gradient(135deg, #0F766E, #115E59)",
+                                }}
+                            >
+                                {isCurrent ? "Seu plano atual" : `Assinar ${plan.name}`}
+                                {!isCurrent && <ArrowRight className="ml-1.5 h-4 w-4" />}
+                            </Button>
                         </motion.div>
                     );
                 })}
@@ -181,19 +159,19 @@ export function PlanPicker({ onPaid, currentPlan }: PlanPickerProps) {
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-[13px]" style={{ color: "#64748B" }}>Assinando o plano</p>
-                                    <p className="text-base font-bold" style={{ color: "#0B1220" }}>{proPlan.name}</p>
+                                    <p className="text-base font-bold" style={{ color: "#0B1220" }}>{selectedPlan.name}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-xl font-bold" style={{ color: "#0B1220" }}>{formatPrice(proPlan.monthlyPrice)}</p>
+                                    <p className="text-xl font-bold" style={{ color: "#0B1220" }}>{formatPrice(selectedPlan.monthlyPrice)}</p>
                                     <p className="text-[11px]" style={{ color: "#94A3B8" }}>/mês</p>
                                 </div>
                             </div>
 
                             <PlanCheckoutForm
-                                planId="pro"
+                                planId={checkoutPlan}
                                 billingCycle="monthly"
-                                upgrade={!!currentPlan && currentPlan !== "pro"}
-                                submitLabel={`Assinar Pro · ${formatPrice(proPlan.monthlyPrice)}/mês`}
+                                upgrade={!!currentPlan && normalizeForCompare(currentPlan) !== checkoutPlan}
+                                submitLabel={`Assinar ${selectedPlan.name} · ${formatPrice(selectedPlan.monthlyPrice)}/mês`}
                                 onSuccess={onPaid}
                             />
                         </motion.div>
@@ -202,4 +180,12 @@ export function PlanPicker({ onPaid, currentPlan }: PlanPickerProps) {
             </AnimatePresence>
         </>
     );
+}
+
+// compara o plano atual (pode vir legado: plus/escala) com o alvo
+function normalizeForCompare(plan: string): PlanId {
+    const v = (plan || "").toLowerCase();
+    if (v === "pro" || v === "plus" || v === "escala" || v === "enterprise") return "pro";
+    if (v === "essential" || v === "essencial") return "essential";
+    return "free";
 }

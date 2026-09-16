@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { APP_HOME } from "@/config/routes";
 
 export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, isAdmin } = useAuth();
@@ -13,7 +14,7 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
     }
 
     if (!loading && user && !isAdmin) {
-      navigate("/dashboard", { replace: true });
+      navigate(APP_HOME, { replace: true });
     }
   }, [user, loading, isAdmin, navigate]);
 

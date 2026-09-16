@@ -300,20 +300,22 @@ serve(async (req) => {
           .eq("id", call.company_id)
           .single();
 
-        // Plano efetivo (espelha src/config/plans.ts): trial ativo = Pro;
-        // ligações são exclusivas do Pro/Escala (Free não tem).
+        // Plano efetivo (espelha src/config/plans.ts): trial ativo = Pro.
+        // Ligações são ADICIONAL (2026-08-21); enquanto não há cobrança de
+        // adicional, o gate exige plano pago ("escala"/"enterprise" legados
+        // contam como pro).
         const rawPlan = String(company?.plan || "free").toLowerCase();
         let companyPlan = "free";
         if (company?.subscription_status === "trialing") {
           const ends = company?.trial_ends_at ? new Date(company.trial_ends_at).getTime() : NaN;
           companyPlan = !Number.isNaN(ends) && ends >= Date.now() ? "pro" : "free";
         } else if (company?.subscription_status === "active") {
-          companyPlan = ["pro", "plus"].includes(rawPlan) ? "pro"
-            : ["escala", "enterprise"].includes(rawPlan) ? "escala" : "free";
+          companyPlan = ["pro", "plus", "escala", "enterprise", "essential"].includes(rawPlan) ? "pro"
+            : "free";
         }
-        if (!["pro", "escala"].includes(companyPlan)) {
+        if (!["pro"].includes(companyPlan)) {
           return new Response(JSON.stringify({
-            error: "Ligações disponíveis apenas no plano Pro",
+            error: "Ligações são um adicional. Fale com a gente para habilitar.",
             code: "PLAN_UPGRADE_REQUIRED",
             required_plan: "pro",
             current_plan: companyPlan,

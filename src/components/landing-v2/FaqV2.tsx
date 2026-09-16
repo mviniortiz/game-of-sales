@@ -2,8 +2,12 @@
 // finas, perguntas em serif, respostas em sans muted. Responde objeções reais.
 const FAQS = [
     {
+        q: "O que a EVA faz sozinha?",
+        a: "Tudo que é interno: lê os atendimentos, organiza oportunidades no pipeline, detecta conversas esfriando e deixa rascunhos prontos pra revisão. O time não precisa pedir nem conferir.",
+    },
+    {
         q: "A EVA envia mensagens sozinha?",
-        a: "Não. A EVA sugere respostas e próximos passos, mas o envio depende da aprovação do seu time. A ideia é acelerar a operação sem tirar o controle humano.",
+        a: "Não. Toda mensagem pro lead passa pela fila de aprovação: a EVA escreve, seu time revisa, ajusta se quiser e envia. Controle humano é regra, não exceção.",
     },
     {
         q: "A EVA substitui meu time comercial?",

@@ -1,23 +1,29 @@
 /**
- * Vyzon — Fonte ÚNICA de planos (2026-07-16).
+ * Vyzon — Fonte ÚNICA de planos (2026-08-21).
  *
- * Estrutura: Free (validação sem relógio) + Pro R$ 397 (até 5 usuários) +
- * Escala (sob contato). Cadastro novo entra em trial do Pro por 14 dias e,
- * ao expirar, DEGRADA para o Free (não bloqueia mais — UpgradeLock aposentado).
+ * Estrutura comercial: Essential R$ 197 (até 3 usuários) +
+ * Pro R$ 497 (até 10 usuários). O id "free" NÃO é mais plano comercial:
+ * é piso interno silencioso pra degradação de trial expirado e contas
+ * legadas (nunca aparece na landing nem no checkout).
+ *
+ * Ligações e e-mail são ADICIONAIS (decisão 2026-08-21): nenhum plano os
+ * inclui. Enquanto não existe cobrança de adicional no checkout, o gate de
+ * ligações no backend (deal-call-initiate) continua exigindo plano pago.
  *
  * Toda superfície (landing, PlanPicker, Faturamento, TenantContext, edges)
  * deriva daqui ou espelha estes números. As edges que espelham:
  *   - supabase/functions/admin-create-seller (PLAN_MAX_USERS)
- *   - supabase/functions/whatsapp-copilot (EVA_DAILY_LIMIT)
+ *   - supabase/functions/whatsapp-copilot (limites diários da EVA)
+ *   - supabase/functions/deal-call-initiate / deal-call-generate-insights
  */
 
-export type PlanId = "free" | "pro" | "escala";
+export type PlanId = "free" | "essential" | "pro";
 
 export interface Plan {
     id: PlanId;
     name: string;
     description: string;
-    /** null = sem preço público (Escala: "Fale com a gente"). */
+    /** null = sem preço público. */
     monthlyPrice: number | null;
     annualDiscount: number; // percentual, só para planos pagos
     features: string[];
@@ -29,95 +35,99 @@ export interface Plan {
         evaDailyPerUser: number;
         whatsappNumbers: number;
     };
+    /** false = piso interno; fora de landing, picker e checkout. */
+    visible?: boolean;
     highlight?: boolean;
     badge?: string;
 }
 
 export const PLANS: Record<PlanId, Plan> = {
+    // Piso interno silencioso (degradação de trial expirado / contas legadas).
+    // Não comercializado: manter limites mínimos intactos.
     free: {
         id: "free",
         name: "Free",
-        description: "Para organizar a operação e testar no dia a dia",
+        description: "Piso interno de degradação",
         monthlyPrice: 0,
         annualDiscount: 0,
-        features: [
-            "1 usuário",
-            "WhatsApp conectado",
-            "Inbox Comercial completo",
-            "Pipeline com agendamentos",
-            "EVA sugerindo respostas (10 análises/dia)",
-            "10 produtos cadastrados",
-        ],
+        features: [],
         limits: {
             users: 1,
             products: 10,
             evaDailyPerUser: 10,
             whatsappNumbers: 1,
         },
-        badge: "Grátis",
+        visible: false,
+    },
+    essential: {
+        id: "essential",
+        name: "Essential",
+        description: "Pra agência que quer parar de perder lead no WhatsApp",
+        monthlyPrice: 197,
+        annualDiscount: 10,
+        features: [
+            "Até 3 usuários",
+            "WhatsApp conectado",
+            "Inbox Comercial completo",
+            "Pipeline com agendamentos",
+            "EVA lê as conversas e sugere respostas (25 análises/dia por usuário)",
+            "Qualificação automática dos leads",
+            "Relatórios essenciais",
+        ],
+        limits: {
+            users: 3,
+            products: 100,
+            evaDailyPerUser: 25,
+            whatsappNumbers: 1,
+        },
+        visible: true,
     },
     pro: {
         id: "pro",
         name: "Pro",
-        description: "Para agências que recebem leads todos os dias",
-        monthlyPrice: 397,
+        description: "Pra agência que recebe leads todos os dias e quer o operacional resolvido",
+        monthlyPrice: 497,
         annualDiscount: 10,
         features: [
-            "Até 5 usuários",
-            "Tudo do Free",
-            "EVA com análise de intenção, fit, urgência e objeções (50/dia por usuário)",
-            "Ligações com transcrição e resumo no deal",
+            "Até 10 usuários",
+            "Tudo do Essential",
+            "EVA completa: intenção, fit, urgência e objeções (50/dia por usuário)",
+            "Follow-up supervisionado com rascunho pronto na hora certa",
+            "Pipeline que se atualiza sozinho conforme a conversa anda",
             "Ranking e metas do time",
             "Relatórios completos",
             "Integrações Hotmart, Kiwify e Mercado Pago",
         ],
         limits: {
-            users: 5,
+            users: 10,
             products: Infinity,
             evaDailyPerUser: 50,
             whatsappNumbers: 1,
         },
-        badge: "Popular",
+        visible: true,
+        badge: "Recomendado",
         highlight: true,
-    },
-    escala: {
-        id: "escala",
-        name: "Escala",
-        description: "Para operações comerciais maiores",
-        monthlyPrice: null,
-        annualDiscount: 0,
-        features: [
-            "Mais de 5 usuários",
-            "Tudo do Pro",
-            "Implantação acompanhada",
-            "Suporte direto com o time",
-        ],
-        limits: {
-            users: Infinity,
-            products: Infinity,
-            evaDailyPerUser: 50,
-            whatsappNumbers: 1,
-        },
     },
 };
 
 /**
- * Normaliza valores legados de companies.plan para o modelo atual.
- * Legado: basic/starter (antigo tier de entrada) → free; plus → pro;
- * enterprise → escala. Valor desconhecido cai no free (nunca dá acesso a mais).
+ * Normaliza valores legados de companies.plan pro modelo atual.
+ * plus → pro; escala/enterprise → pro (grandfathered); essencial (com s) →
+ * essential; desconhecido cai no piso free (nunca dá acesso a mais).
  */
 export function normalizePlanId(raw: string | null | undefined): PlanId {
     const value = (raw || "").toLowerCase();
     if (value === "pro") return "pro";
     if (value === "plus") return "pro";
-    if (value === "escala" || value === "enterprise") return "escala";
+    if (value === "essential" || value === "essencial") return "essential";
+    if (value === "escala" || value === "enterprise") return "pro";
     return "free";
 }
 
 /**
  * Plano EFETIVO de uma empresa: trial ativo experimenta o Pro completo;
- * trial expirado degrada para o plano normalizado (free para cadastros novos).
- * Espelhada nas edges admin-create-seller e whatsapp-copilot.
+ * trial expirado degrada pro piso free. Espelhada nas edges
+ * admin-create-seller e whatsapp-copilot.
  */
 export function resolveEffectivePlan(
     rawPlan: string | null | undefined,
@@ -194,8 +204,8 @@ export const getBillingConfig = (planId: string, cycle: BillingCycle): BillingCo
     };
 };
 
-// Plan order for comparisons
-export const PLAN_ORDER: PlanId[] = ["free", "pro", "escala"];
+// Plan order for comparisons (free = piso interno, sempre primeiro)
+export const PLAN_ORDER: PlanId[] = ["free", "essential", "pro"];
 
 // Get next plan upgrade
 export const getNextPlan = (currentPlan: string): Plan | null => {

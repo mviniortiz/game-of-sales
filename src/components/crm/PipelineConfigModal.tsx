@@ -310,7 +310,7 @@ export const PipelineEditor = ({
         </div>
 
         {/* Lista de estágios */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-2 scrollbar-thin relative">
+        <div className="flex-1 overflow-y-auto p-5 space-y-2 relative">
           <Reorder.Group axis="y" values={stages} onReorder={setStages} className="space-y-2 relative">
             <AnimatePresence initial={false}>
               {stages.map((stage, index) => (

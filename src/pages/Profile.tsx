@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
-  Loader2, Lock, Eye, EyeOff, Star, Rocket, Crown, Check,
+  Loader2, Lock, Eye, EyeOff, Star, Rocket, Crown, Check, Layers,
   ArrowRight, Users, Package, Bot, CreditCard, User, Shield, ShieldOff,
   Building2, Upload, TrendingUp, Plug, ChevronRight, BarChart3,
   Kanban, UserPlus
@@ -54,8 +54,8 @@ interface IntegrationStatus {
 
 const PLAN_ICONS: Record<PlanType, React.ComponentType<any>> = {
   free: Star,
+  essential: Layers,
   pro: Rocket,
-  escala: Crown,
 };
 
 const planPriceLabel = (plan: PlanType): string => {
@@ -425,7 +425,7 @@ export default function Profile() {
             </span>
           )}
           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
-            currentPlan === "escala" ? "bg-emerald-500/10 text-emerald-400" :
+            currentPlan === "essential" ? "bg-teal-500/10 text-teal-400" :
             currentPlan === "pro" ? "bg-blue-500/10 text-blue-400" :
             "bg-zinc-500/10 text-zinc-400"
           }`}>
@@ -450,12 +450,12 @@ export default function Profile() {
             <div className="p-5 space-y-3">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  currentPlan === "escala" ? "bg-emerald-500/15" :
+                  currentPlan === "essential" ? "bg-teal-500/15" :
                   currentPlan === "pro" ? "bg-blue-500/15" :
                   "bg-zinc-500/15"
                 }`}>
                   <PlanIcon className={`h-5 w-5 ${
-                    currentPlan === "escala" ? "text-emerald-400" :
+                    currentPlan === "essential" ? "text-teal-400" :
                     currentPlan === "pro" ? "text-blue-400" :
                     "text-zinc-400"
                   }`} />

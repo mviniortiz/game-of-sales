@@ -17,9 +17,6 @@ import {
   House,
   ChatCircleText,
   Kanban as KanbanIcon,
-  CalendarBlank,
-  Brain as BrainIcon,
-  ChartLineUp,
   GearSix,
   ShieldCheck,
   Lifebuoy as LifeBuoyIcon,
@@ -29,6 +26,7 @@ import {
   Question,
   SignOut,
   Star,
+  Receipt,
   type IconProps,
 } from "@phosphor-icons/react";
 import {
@@ -90,13 +88,19 @@ type NavItem = {
 // Erasure 2026-07-17: menu enxuto no caminho da promessa (WhatsApp → EVA →
 // aprovar → pipeline). Metas e Ranking saíram do 1º nível (uso externo zero,
 // herança do "CRM gamificado"); seguem acessíveis via Performance e busca.
+//
+// Erasure 2026-08-24: Agenda, EVA Studio e Performance saíram do 1º nível. São
+// telas de consulta, não de operação: a operação inteira mora em Início, Inbox
+// e Pipeline. As três continuam na busca (Ctrl+K) e nos links contextuais do
+// deal e do Inbox.
+//
+// 2026-09-16: Orçamentos (placar de dinheiro parado) vira a tela principal e o
+// primeiro item; o resto desce sem sair do menu.
 const mainNavItems: NavItem[] = [
+  { title: "Orçamentos", url: "/orcamentos", icon: Receipt },
   { title: "Início", url: "/inicio", icon: House },
   { title: "Inbox", url: "/inbox", icon: ChatCircleText },
   { title: "Pipeline", url: "/pipeline", icon: KanbanIcon, badge: "rotting" },
-  { title: "Agenda", url: "/agenda", icon: CalendarBlank },
-  { title: "EVA Studio", url: "/eva-studio", icon: BrainIcon, adminOnly: true, feature: "eva" },
-  { title: "Performance", url: "/performance", icon: ChartLineUp },
   { title: "Configurações", url: "/configuracoes", icon: GearSix },
 ];
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
+import { ActionSwapBlurText } from "@/components/vendor/action-swap-blur";
 
 // Momento "EVA lendo a conversa" no Inbox. Em vez de um spinner, a EVA mostra
 // que está LENDO: uma linha de varredura passa sobre uma miniatura da conversa
@@ -64,12 +65,16 @@ export function EvaAnalyzingState() {
                 <span className="vz-scan-line" />
             </div>
 
+            {/* A troca de etapa era um corte seco no texto. Agora o rótulo sai
+                de foco e o próximo entra, que é como a leitura realmente avança:
+                uma coisa vira a outra, não pisca. Mecânica vinda do beui
+                (src/components/vendor), pintada com o tom daqui. */}
             <p
                 className="vz-eva-steplabel mt-4 text-[12.5px] font-semibold"
                 aria-live="polite"
                 style={{ minHeight: 16 }}
             >
-                {STATUSES[status]}
+                <ActionSwapBlurText value={STATUSES[status]}>{STATUSES[status]}</ActionSwapBlurText>
             </p>
 
             <style>{`

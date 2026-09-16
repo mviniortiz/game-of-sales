@@ -327,7 +327,7 @@ function LeadCard({ chat, isSelected, isNear, onSelect, demoTarget }: LeadCardPr
                 type="button"
                 onClick={onSelect}
                 className={cn(
-                    "group w-full text-left px-2.5 py-2.5 rounded-xl flex items-center gap-3 transition-all duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                    "group w-full text-left px-2.5 py-2.5 rounded-xl flex items-center gap-3 transition-all duration-150",
                     isSelected ? "bg-[#EEF4FF]" : isNear ? "bg-[#F4F7FB]" : "hover:bg-[#F4F7FB]"
                 )}
                 style={

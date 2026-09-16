@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Home, Trophy, PlusCircle, Target, PhoneCall, Shield, Calendar, Kanban, Settings,
     Inbox, UserCog, HelpCircle, Briefcase, Phone, User, Search, CornerDownLeft, Command as CmdIcon,
+    TrendingUp, Brain,
 } from "lucide-react";
 import { EvaIcon } from "@/components/icons/EvaAvatar";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
@@ -39,6 +40,8 @@ const NAV_ITEMS = [
     { label: "CRM Pipeline", path: "/crm", icon: Kanban, sub: "Kanban de deals por estágio", keywords: "pipeline kanban deals" },
     { label: "Calls", path: "/calls", icon: PhoneCall, sub: "Histórico e performance de ligações", keywords: "ligacoes chamadas" },
     { label: "Calendário", path: "/calendario", icon: Calendar, sub: "Compromissos e follow-ups agendados", keywords: "agenda eventos" },
+    { label: "Performance", path: "/performance", icon: TrendingUp, sub: "Números do time, metas e ranking", keywords: "desempenho resultados metas ranking" },
+    { label: "EVA Studio", path: "/eva-studio", icon: Brain, sub: "Regras e contexto que guiam a EVA", keywords: "ia agente regras contexto studio", adminOnly: true },
     { label: "Metas", path: "/metas", icon: Target, sub: "Objetivos mensais por vendedor", keywords: "objetivos goals" },
     { label: "Ranking", path: "/ranking", icon: Trophy, sub: "Placar da equipe em tempo real", keywords: "gamificacao competicao" },
     { label: "Eva", path: "/agente", icon: EvaIcon, sub: "IA que analisa seu pipeline e sugere ações", keywords: "ia agente assistente copilot", feature: "eva" },

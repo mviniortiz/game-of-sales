@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Star, Crown, Rocket, Check, ArrowRight, Users, Package, CreditCard,
-  Loader2, AlertTriangle, Calendar, HeartCrack,
+  Loader2, AlertTriangle, Calendar, HeartCrack, Layers,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PLAN_FEATURES, PLANS_INFO, PlanType } from "@/config/planConfig";
@@ -19,8 +19,8 @@ import { normalizeSubscriptionStatus } from "@/lib/utils";
 // em src/config/plans.ts, nada de lista hardcoded aqui.
 const PLAN_ICONS: Record<PlanType, React.ComponentType<any>> = {
   free: Star,
+  essential: Layers,
   pro: Rocket,
-  escala: Crown,
 };
 
 interface Subscription {
@@ -170,12 +170,12 @@ export default function Faturamento() {
             <div className="flex items-center gap-3">
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
                 currentPlan === "pro" ? "bg-[rgba(37,99,235,0.12)]" :
-                currentPlan === "escala" ? "bg-[rgba(11,18,32,0.08)]" :
+                currentPlan === "essential" ? "bg-[rgba(15,118,110,0.12)]" :
                 "bg-[#F1F5F9]"
               }`}>
                 <PlanIcon className={`h-5 w-5 ${
                   currentPlan === "pro" ? "text-[#2563EB]" :
-                  currentPlan === "escala" ? "text-[#0B1220]" :
+                  currentPlan === "essential" ? "text-[#0F766E]" :
                   "text-[#64748B]"
                 }`} />
               </div>
@@ -257,7 +257,7 @@ export default function Faturamento() {
             <p className="text-xs text-muted-foreground mt-0.5">Mais usuários no time e EVA com limite maior</p>
           </div>
           <div className="p-3 space-y-2">
-            {PLAN_ORDER.slice(currentIndex + 1).map((plan) => {
+            {PLAN_ORDER.slice(currentIndex + 1).filter((plan) => PLANS[plan].visible !== false).map((plan) => {
               const planData = PLANS[plan];
               const info = PLANS_INFO[plan];
               const Icon = PLAN_ICONS[plan];
@@ -267,19 +267,11 @@ export default function Faturamento() {
               return (
                 <button
                   key={plan}
-                  onClick={() =>
-                    plan === "escala"
-                      ? window.open(
-                          whatsappUrl("Olá! Quero conversar sobre o plano Escala do Vyzon."),
-                          "_blank",
-                          "noopener,noreferrer",
-                        )
-                      : navigate(`/upgrade?plan=${plan}`)
-                  }
+                  onClick={() => navigate(`/upgrade?plan=${plan}`)}
                   className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 hover:border-border transition-all text-left group"
                 >
                   <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                    plan === "pro" ? "bg-[rgba(37,99,235,0.12)]" : "bg-[rgba(11,18,32,0.08)]"
+                    plan === "pro" ? "bg-[rgba(37,99,235,0.12)]" : "bg-[rgba(15,118,110,0.12)]"
                   }`}>
                     <Icon className={`h-4 w-4 ${plan === "pro" ? "text-[#2563EB]" : "text-[#0B1220]"}`} />
                   </div>

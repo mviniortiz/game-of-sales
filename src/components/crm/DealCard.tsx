@@ -483,7 +483,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
           : {}),
       }}
       className={`
-        group relative
+        vz-deal-card group relative
         bg-white border border-slate-200/80
         dark:bg-card dark:border-border/50
         rounded-xl p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_2px_8px_-4px_rgba(15,23,42,0.05)]
@@ -752,6 +752,12 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
         {context && (() => {
           const hasConv = !!context.conversationId;
 
+          // Sem conversa vinculada, a etiqueta não tem o que dizer: exibia o
+          // selo "EVA" seguido de "Sem conversa vinculada", e sem nenhuma ação
+          // ao lado. Eram 6 dos 8 cards do pipeline anunciando ausência.
+          // Melhor o card não ter a linha do que ter uma linha vazia de sentido.
+          if (!hasConv) return null;
+
           // Texto da leitura: stale > proxima_acao > derivado da temperatura.
           // Trunca elegante via line-clamp no JSX.
           let readText: string;
@@ -890,10 +896,14 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
         {/* LP-PIPE.2 — value hero movido pra Row 1 (alinhado ao título). */}
 
         {/* ── F5P.4f — Meta row humanizado: linguagem comercial em vez de tags técnicas. */}
-        <div className="flex items-center gap-2.5 text-[10.5px] text-muted-foreground pt-0.5 mt-0.5 border-t border-slate-100 dark:border-border/30">
+        {/* Quebra em vez de espremer. Sem o wrap, com "Aguardando 74 dias" e
+            "Venceu 10 mai" na frente, o texto de tempo era comprimido até 15px de
+            largura (medido) e aparecia como um toco cortado na borda do card. O
+            piso de 86px garante que ele desce de linha antes de ficar ilegível. */}
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10.5px] text-muted-foreground pt-1 mt-0.5 border-t border-slate-100 dark:border-border/30">
           {/* Aguardando (era "Parado há X dias") — só em deals abertos */}
           {daysSince > 3 && deal.stage !== "closed_won" && deal.stage !== "closed_lost" && (
-            <span className="inline-flex items-center gap-1 tabular-nums text-amber-600 dark:text-amber-400/90">
+            <span className="inline-flex items-center gap-1 tabular-nums whitespace-nowrap flex-shrink-0 text-amber-600 dark:text-amber-400/90">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
               Aguardando {daysSince} {daysSince === 1 ? "dia" : "dias"}
             </span>
@@ -901,14 +911,14 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
 
           {/* Previsão de fechamento (prefixo "Prev." pra contextualizar a data) */}
           {deal.expected_close_date && (
-            <span className={`inline-flex items-center gap-1 tabular-nums flex-shrink-0 ${isOverdue ? "text-rose-600 dark:text-rose-400 font-semibold" : ""}`}>
+            <span className={`inline-flex items-center gap-1 tabular-nums whitespace-nowrap flex-shrink-0 ${isOverdue ? "text-rose-600 dark:text-rose-400 font-semibold" : ""}`}>
               <Calendar className="h-2.5 w-2.5" strokeWidth={2.2} />
               {isOverdue ? "Venceu" : "Prev."} {format(parseISO(deal.expected_close_date), "dd MMM", { locale: ptBR })}
             </span>
           )}
 
           {/* Última atividade — addSuffix: true ("há X") para soar humano */}
-          <span className="flex items-center gap-1 truncate flex-1 min-w-0 justify-end">
+          <span className="flex items-center gap-1 truncate flex-1 min-w-[86px] justify-end">
             {deal.lastActivity ? (
               <>
                 {deal.lastActivity.type === "note" && <MessageSquare className="h-2.5 w-2.5 flex-shrink-0" strokeWidth={2.2} />}

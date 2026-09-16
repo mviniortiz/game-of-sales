@@ -223,7 +223,7 @@ export const AgendamentoDetailsModal = ({
             </div>
           </DialogHeader>
 
-          <div className="px-4 md:px-6 py-4 md:py-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          <div className="px-4 md:px-6 py-4 md:py-6 max-h-[70vh] overflow-y-auto">
             {!isEditing ? (
               // View Mode
               <div className="space-y-3">

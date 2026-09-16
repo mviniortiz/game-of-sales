@@ -553,7 +553,8 @@ export const CopilotSidebar = ({
                                         onClose={() => setShowSaleForm(false)} onSuccess={refreshCrm} />
                                 )}
                                 {showProposalForm && (
-                                    <CreateProposalForm contactName={chat.name} onClose={() => setShowProposalForm(false)} />
+                                    <CreateProposalForm contactName={chat.name} phone={chat.phone} deal={deal}
+                                        onPersisted={refreshCrm} onClose={() => setShowProposalForm(false)} />
                                 )}
 
                                 {/* Stage Selector */}

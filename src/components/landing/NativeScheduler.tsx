@@ -248,7 +248,7 @@ export default function NativeScheduler({
                 {/* Day picker */}
                 <div className="border-b md:border-b-0 md:border-r min-w-0" style={{ borderColor: "rgba(10,10,10,0.08)" }}>
                     {/* Mobile: chips compactos horizontais */}
-                    <div className="flex md:hidden gap-2 px-3 py-3 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: "none" }}>
+                    <div className="flex md:hidden gap-2 px-3 py-3 overflow-x-auto no-scrollbar" style={{ scrollbarWidth: "none" }}>
                         {dayKeys.map((dk) => {
                             const isActive = dk === selectedDay;
                             const chip = formatDayChip(dk);

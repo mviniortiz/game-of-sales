@@ -17,10 +17,11 @@ export type PlanFeatures = {
     maxProducts: number;
 };
 
-// Free tem tudo que o produto entrega hoje, exceto ligações (custo real de
-// telefonia). A EVA existe em todos os planos — a diferença é o limite
-// diário, aplicado no backend (whatsapp-copilot), não por flag.
+// Ligações são ADICIONAL (decisão 2026-08-21): nenhum plano inclui. Enquanto
+// não existe cobrança de adicional, o backend (deal-call-initiate) continua
+// exigindo plano pago; a UI reflete "não incluso" até o adicional existir.
 export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
+    // piso interno: o mínimo pra conta não travar
     free: {
         metas: true,
         gamification: true,
@@ -31,50 +32,51 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
         maxUsers: PLANS.free.limits.users,
         maxProducts: PLANS.free.limits.products,
     },
+    essential: {
+        metas: true,
+        gamification: true,
+        calls: false,
+        reports: true,
+        integrations: true,
+        eva: true,
+        maxUsers: PLANS.essential.limits.users,
+        maxProducts: PLANS.essential.limits.products,
+    },
     pro: {
         metas: true,
         gamification: true,
-        calls: true,
+        calls: false,
         reports: true,
         integrations: true,
         eva: true,
         maxUsers: PLANS.pro.limits.users,
         maxProducts: PLANS.pro.limits.products,
     },
-    escala: {
-        metas: true,
-        gamification: true,
-        calls: true,
-        reports: true,
-        integrations: true,
-        eva: true,
-        maxUsers: PLANS.escala.limits.users,
-        maxProducts: PLANS.escala.limits.products,
-    },
 };
 
 export const PLANS_INFO: Record<PlanType, { label: string; color: string }> = {
     free: { label: "Free", color: "bg-gray-500" },
+    essential: { label: "Essential", color: "bg-teal-500" },
     pro: { label: "Pro", color: "bg-blue-500" },
-    escala: { label: "Escala", color: "bg-emerald-600" },
 };
 
 // Feature display names for upgrade prompts
 export const FEATURE_NAMES: Record<keyof Omit<PlanFeatures, 'maxUsers' | 'maxProducts'>, string> = {
     metas: 'Metas & Objetivos',
     gamification: 'Gamificação',
-    calls: 'Ligações na Plataforma',
+    calls: 'Ligações na Plataforma (adicional)',
     reports: 'Relatórios Avançados',
     integrations: 'Integrações (Hotmart, etc)',
     eva: 'Eva — Analista de Vendas com IA'
 };
 
-// Get the minimum plan required for a feature
+// Get the minimum plan required for a feature (nenhum plano tem ligações:
+// cai no fallback 'pro' e o prompt explica que é adicional).
 export const getMinimumPlanForFeature = (feature: keyof PlanFeatures): PlanType => {
     for (const plan of PLAN_ORDER) {
         if (PLAN_FEATURES[plan][feature]) {
             return plan;
         }
     }
-    return 'escala';
+    return 'pro';
 };

@@ -337,7 +337,7 @@ export function CalendarTimelineView({
             </div>
 
             {/* ── SCROLLABLE TIMELINE BODY ─────────────────────────── */}
-            <div ref={scrollRef} className={`flex overflow-y-auto flex-1 custom-scrollbar ${isMobile && isWeek ? "overflow-x-auto" : "overflow-x-hidden"}`}>
+            <div ref={scrollRef} className={`flex overflow-y-auto flex-1 ${isMobile && isWeek ? "overflow-x-auto" : "overflow-x-hidden"}`}>
                 {/* ── HOUR GUTTER ─────────────────────────────────────── */}
                 <div
                     className={`${gutterWidth} flex-shrink-0 relative bg-card/30`}

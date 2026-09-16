@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useReducedMotion } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { InboxPriorityList, type InboxLeadSignal } from "@/components/inbox/InboxPriorityList";
 import { ConnectionStatusCard } from "@/components/inbox/ConnectionStatusCard";
@@ -442,6 +443,27 @@ const Inbox = () => {
         }, 2000);
     };
 
+    // Troca de conversa: a coluna central e o painel da EVA entram com um fade
+    // curto em vez de piscar o conteúdo novo. Anima os elementos que já existem
+    // (WAAPI), então nada remonta e o scroll da lista não se perde.
+    const conversaRef = useRef<HTMLElement>(null);
+    const evaRef = useRef<HTMLElement>(null);
+    const reduceMotion = useReducedMotion();
+
+    useEffect(() => {
+        if (reduceMotion || !selectedChatId) return;
+        const alvos = [conversaRef.current, evaRef.current].filter(Boolean) as HTMLElement[];
+        for (const el of alvos) {
+            el.animate(
+                [
+                    { opacity: 0, transform: "translateY(6px)" },
+                    { opacity: 1, transform: "translateY(0)" },
+                ],
+                { duration: 200, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+            );
+        }
+    }, [selectedChatId, reduceMotion]);
+
     return (
         <div
             className="vz-inbox vz-page-full flex w-full overflow-hidden -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6"
@@ -449,6 +471,10 @@ const Inbox = () => {
                 background: "var(--ibx-paper)",
             }}
         >
+            {/* Colunas: a conversa é o conteúdo, então é ela que fica maior.
+                Com as laterais em 340/380 fixos, em 1440px a central sobrava com
+                361px, menos que cada lateral (medido 24/08). As laterais só
+                voltam a crescer em 2xl, onde há espaço de verdade. */}
             {/* Coluna esquerda — lista */}
             <aside
                 className={
@@ -456,7 +482,7 @@ const Inbox = () => {
                         ? showListOnMobile
                             ? "w-full flex flex-col"
                             : "hidden"
-                        : "w-[340px] xl:w-[380px] shrink-0 flex flex-col border-r border-[var(--ibx-line)] bg-[var(--ibx-card)]"
+                        : "w-[300px] 2xl:w-[340px] shrink-0 flex flex-col border-r border-[var(--ibx-line)] bg-[var(--ibx-card)]"
                 }
             >
                 <InboxPriorityList
@@ -486,12 +512,13 @@ const Inbox = () => {
 
             {/* Coluna central — conversa */}
             <main
+                ref={conversaRef}
                 className={
                     isMobile
                         ? showDetailOnMobile
-                            ? "flex-1 flex flex-col bg-white"
+                            ? "flex-1 min-w-0 flex flex-col bg-white"
                             : "hidden"
-                        : "flex-1 flex flex-col bg-white"
+                        : "flex-1 min-w-0 flex flex-col bg-white"
                 }
             >
                 <InboxConversation
@@ -521,7 +548,8 @@ const Inbox = () => {
             {/* Coluna direita — EvaPanel (desktop) */}
             {!isMobile && (
                 <aside
-                    className="w-[340px] xl:w-[380px] shrink-0 flex flex-col bg-[var(--ibx-card)]"
+                    ref={evaRef}
+                    className="w-[320px] 2xl:w-[380px] shrink-0 flex flex-col bg-[var(--ibx-card)]"
                     style={{ borderLeft: "1px solid var(--ibx-line)" }}
                 >
                     <EvaPanel

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { APP_HOME } from "@/config/routes";
 
 type AuthProfile = {
   nome: string;
@@ -285,7 +286,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, nome: string, companyId?: string) => {
     // Link de confirmação leva direto pro app (a sessão vem na URL).
-    const redirectUrl = `${window.location.origin}/inicio`;
+    const redirectUrl = `${window.location.origin}${APP_HOME}`;
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -304,7 +305,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // decide o que mostrar (tela de "confirme seu email").
     const needsConfirmation = !error && !data?.session;
     if (!error && data?.session) {
-      navigate("/inicio");
+      navigate(APP_HOME);
     }
 
     return { error, needsConfirmation };

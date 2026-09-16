@@ -62,8 +62,8 @@ export const useTrial = (): TrialInfo => {
             planName = 'Pro (Trial)';
         } else if (currentPlan === 'pro') {
             planName = 'Pro';
-        } else if (currentPlan === 'escala') {
-            planName = 'Escala';
+        } else if (currentPlan === 'essential') {
+            planName = 'Essential';
         } else {
             planName = 'Free';
         }

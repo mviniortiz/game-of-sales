@@ -1,12 +1,16 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getAttribution } from "@/lib/attribution";
 import { trackBehavior, FUNNEL_EVENTS } from "@/lib/analytics";
 import { toast } from "sonner";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { CloudWaveOrb } from "@/components/landing-v2/CloudWaveOrb";
+import { AuthField } from "@/components/auth/AuthField";
+import { scorePassword, STRENGTH_META } from "@/components/auth/password";
+import { APP_HOME } from "@/config/routes";
 
 // Cadastro SIMPLES (substitui o wizard de onboarding): 1 tela → conta criada com
 // trial de 14 dias ativo (sem cartão) → direto pro app. Trata 2 modos: (a) novo
@@ -14,6 +18,7 @@ import { CloudWaveOrb } from "@/components/landing-v2/CloudWaveOrb";
 // e ainda não tem empresa (pede só o nome da empresa). Rota /criar-conta.
 const SignupV2 = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [params] = useSearchParams();
     // Mantido só pra analytics/atribuição de origem: independente do card
     // clicado, TODO cadastro entra em trial do Pro (14d) e degrada pro Free.
@@ -22,12 +27,20 @@ const SignupV2 = () => {
 
     const [nome, setNome] = useState("");
     const [empresa, setEmpresa] = useState("");
-    const [email, setEmail] = useState("");
+    const [email, setEmail] = useState(
+        // veio do login com o email preenchido (amarração do fluxo)
+        (((location.state as { email?: string } | null)?.email) ?? "").toLowerCase(),
+    );
     const [senha, setSenha] = useState("");
     const [loading, setLoading] = useState(false);
+    const [erros, setErros] = useState<{ nome?: string; empresa?: string; email?: string; senha?: string; form?: string; formAction?: "login" }>({});
+    const [erroKey, setErroKey] = useState(0);
+    const [showSenha, setShowSenha] = useState(false);
     // email pra onde foi o link de confirmação; quando setado, troca o form
     // pela tela de "confirme seu email" (conta criada mas sem sessão ainda).
     const [confirmSentTo, setConfirmSentTo] = useState<string | null>(null);
+    const [reenviando, setReenviando] = useState(false);
+    const [reenvioCooldown, setReenvioCooldown] = useState(0);
 
     // veio do Google (logado) mas ainda sem empresa → só completar o nome da empresa
     const ssoMode = !authLoading && !!user && !companyId && !isSuperAdmin;
@@ -41,8 +54,44 @@ const SignupV2 = () => {
     // já logado e com empresa → vai pro app
     useEffect(() => {
         const ok = !!profile && (profile.is_super_admin || isSuperAdmin || !!companyId);
-        if (!authLoading && user && ok) navigate("/inicio", { replace: true });
+        if (!authLoading && user && ok) navigate(APP_HOME, { replace: true });
     }, [authLoading, user, profile, isSuperAdmin, companyId, navigate]);
+
+    // Tela de confirmação: se a pessoa confirmar em outra aba, esta aqui
+    // detecta a sessão nova e entra no app sozinha (sem procurar o botão).
+    useEffect(() => {
+        if (!confirmSentTo) return;
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+            // SIGNED_IN cobre o clique no link de confirmação em outra aba.
+            if (event === "SIGNED_IN") {
+                navigate(APP_HOME, { replace: true });
+            }
+        });
+        return () => subscription.unsubscribe();
+    }, [confirmSentTo, navigate]);
+
+    // Cooldown do botão reenviar (evita spam no rate limit do Supabase).
+    useEffect(() => {
+        if (reenvioCooldown <= 0) return;
+        const t = window.setTimeout(() => setReenvioCooldown((s) => s - 1), 1000);
+        return () => window.clearTimeout(t);
+    }, [reenvioCooldown]);
+
+    const reenviarConfirmacao = async () => {
+        if (reenviando || reenvioCooldown > 0 || !confirmSentTo) return;
+        setReenviando(true);
+        try {
+            const { error } = await supabase.auth.resend({ type: "signup", email: confirmSentTo });
+            if (error) {
+                toast.error("Não foi possível reenviar agora. Aguarde um minuto.");
+            } else {
+                toast.success("Email reenviado. Confira o spam também.");
+                setReenvioCooldown(30);
+            }
+        } finally {
+            setReenviando(false);
+        }
+    };
 
     // cria a company já com o trial de 14 dias ligado; devolve o id
     const createCompanyWithTrial = async (): Promise<string> => {
@@ -83,19 +132,26 @@ const SignupV2 = () => {
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        if (!empresa.trim()) { toast.error("Informe o nome da sua agência."); return; }
+        const next: typeof erros = {};
+        if (!empresa.trim()) next.empresa = "Informe o nome da sua agência.";
         if (!ssoMode) {
-            if (!nome.trim()) { toast.error("Informe seu nome."); return; }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { toast.error("Email inválido."); return; }
-            if (senha.length < 8) { toast.error("A senha deve ter no mínimo 8 caracteres."); return; }
+            if (!nome.trim()) next.nome = "Informe seu nome.";
+            if (!email.trim()) next.email = "Informe seu email.";
+            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) next.email = "Email inválido.";
+            if (!senha) next.senha = "Escolha uma senha.";
+            else if (senha.length < 8) next.senha = "Mínimo de 8 caracteres.";
         }
+        setErros(next);
+        setErroKey((k) => k + 1);
+        if (Object.keys(next).length > 0) return;
+
         setLoading(true);
         try {
             if (ssoMode) {
                 await createCompanyWithTrial();
                 try { await refreshProfile(); } catch { /* noop */ }
                 toast.success("Tudo pronto! 14 dias grátis liberados.");
-                navigate("/inicio", { replace: true });
+                navigate(APP_HOME, { replace: true });
                 return;
             }
             const id = await createCompanyWithTrial();
@@ -104,16 +160,20 @@ const SignupV2 = () => {
                 const m = (error.message || "").toLowerCase();
                 if (m.includes("rate limit") || m.includes("too many")) {
                     const { error: siErr } = await signIn(email.trim(), senha);
-                    if (!siErr) { toast.success("Conta criada! 14 dias grátis liberados."); navigate("/inicio", { replace: true }); return; }
+                    if (!siErr) { toast.success("Conta criada! 14 dias grátis liberados."); navigate(APP_HOME, { replace: true }); return; }
                     await supabase.from("companies").delete().eq("id", id);
-                    toast.error("Muitas tentativas. Aguarde alguns minutos e tente de novo.");
+                    setErros({ form: "Muitas tentativas. Aguarde alguns minutos e tente de novo." });
+                    setErroKey((k) => k + 1);
                     return;
                 }
                 await supabase.from("companies").delete().eq("id", id);
                 if (m.includes("already registered") || m.includes("already been registered")) {
-                    toast.error("Esse email já tem conta. Tente fazer login.");
+                    // erro com caminho de saída: leva pro login com o email preenchido
+                    setErros({ form: "Esse email já tem conta.", formAction: "login" });
+                    setErroKey((k) => k + 1);
                 } else {
-                    toast.error(error.message || "Não foi possível criar a conta.");
+                    setErros({ form: error.message || "Não foi possível criar a conta." });
+                    setErroKey((k) => k + 1);
                 }
                 return;
             }
@@ -128,7 +188,8 @@ const SignupV2 = () => {
             // signUp() já direciona pro app; o trial está ativo na company.
             toast.success("Conta criada! 14 dias grátis liberados.");
         } catch (err) {
-            toast.error(err instanceof Error ? err.message : "Não foi possível criar a conta.");
+            setErros({ form: err instanceof Error ? err.message : "Não foi possível criar a conta." });
+            setErroKey((k) => k + 1);
         } finally {
             setLoading(false);
         }
@@ -166,12 +227,26 @@ const SignupV2 = () => {
                     </p>
                     <button
                         type="button"
-                        onClick={() => navigate("/auth")}
-                        className="mt-9 rounded-full px-6 py-3 text-[14px] font-semibold transition-opacity hover:opacity-90"
-                        style={{ background: "#fff", color: "#0B1220" }}
+                        onClick={reenviarConfirmacao}
+                        disabled={reenviando || reenvioCooldown > 0}
+                        className="mt-6 inline-flex items-center gap-2 text-[13.5px] underline underline-offset-4 transition-opacity disabled:opacity-50"
+                        style={{ color: "rgba(255,255,255,0.65)" }}
                     >
-                        Já confirmei, fazer login
+                        {reenviando && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                        {reenvioCooldown > 0
+                            ? `Pode reenviar em ${reenvioCooldown}s`
+                            : "Não chegou? Reenviar email"}
                     </button>
+                    <div className="mt-9">
+                        <button
+                            type="button"
+                            onClick={() => navigate("/auth")}
+                            className="rounded-full px-6 py-3 text-[14px] font-semibold transition-opacity hover:opacity-90"
+                            style={{ background: "#fff", color: "#0B1220" }}
+                        >
+                            Já confirmei, fazer login
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -191,14 +266,23 @@ const SignupV2 = () => {
                                 {ssoMode ? "Quase lá" : "Criar conta"}
                             </h1>
                             <p className="mt-2.5 landing-fade-in-up landing-delay-150" style={{ color: "rgba(255,255,255,0.55)", fontSize: "1rem" }}>
-                                {ssoMode ? "Só falta o nome da sua agência." : "14 dias de Pro grátis, sem cartão. Depois sua conta continua no plano gratuito."}
+                                {ssoMode ? "Só falta o nome da sua agência." : "14 dias de Pro grátis, sem cartão. Depois, escolha o plano da sua operação."}
                             </p>
 
                             {!ssoMode && (
                                 <>
-                                    <button type="button" onClick={handleGoogle} disabled={busy} className="mt-9 flex w-full items-center justify-center gap-2.5 rounded-full py-3 text-[14px] font-semibold transition-colors disabled:opacity-50 landing-fade-in-up landing-delay-200" style={{ background: "#fff", color: "#0B1220" }}>
-                                        <svg width="17" height="17" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" /></svg>
-                                        Criar conta com Google
+                                    <button type="button" onClick={handleGoogle} disabled={busy} className="mt-9 flex w-full items-center justify-center gap-2.5 rounded-full py-3 text-[14px] font-semibold transition-transform active:scale-[0.98] disabled:opacity-50 landing-fade-in-up landing-delay-200" style={{ background: "#fff", color: "#0B1220" }}>
+                                        {loading ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" style={{ color: "#0B1220" }} />
+                                                Conectando ao Google…
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg width="17" height="17" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" /></svg>
+                                                Criar conta com Google
+                                            </>
+                                        )}
                                     </button>
                                     <div className="my-6 flex items-center gap-3">
                                         <span className="h-px flex-1" style={{ background: "rgba(255,255,255,0.12)" }} />
@@ -208,32 +292,110 @@ const SignupV2 = () => {
                                 </>
                             )}
 
-                            <form className={`flex flex-col gap-5 landing-fade-in-up landing-delay-300 ${ssoMode ? "mt-9" : ""}`} onSubmit={onSubmit}>
+                            <form className={`flex flex-col gap-5 landing-fade-in-up landing-delay-300 ${ssoMode ? "mt-9" : ""}`} onSubmit={onSubmit} noValidate>
                                 {!ssoMode && (
-                                    <label className="flex flex-col gap-2">
-                                        <span className="text-[12.5px]" style={{ color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>Seu nome</span>
-                                        <input className="vz-input" placeholder="Como te chamamos?" value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="name" autoFocus />
-                                    </label>
+                                    <AuthField
+                                        label="Seu nome"
+                                        placeholder="Como te chamamos?"
+                                        value={nome}
+                                        onChange={(v) => { setNome(v); if (erros.nome) setErros((p) => ({ ...p, nome: undefined })); }}
+                                        autoComplete="name"
+                                        autoFocus
+                                        error={erros.nome}
+                                        errorKey={erroKey}
+                                    />
                                 )}
-                                <label className="flex flex-col gap-2">
-                                    <span className="text-[12.5px]" style={{ color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>Nome da agência</span>
-                                    <input className="vz-input" placeholder="Sua agência" value={empresa} onChange={(e) => setEmpresa(e.target.value)} autoComplete="organization" autoFocus={ssoMode} />
-                                </label>
+                                <AuthField
+                                    label="Nome da agência"
+                                    placeholder="Sua agência"
+                                    value={empresa}
+                                    onChange={(v) => { setEmpresa(v); if (erros.empresa) setErros((p) => ({ ...p, empresa: undefined })); }}
+                                    autoComplete="organization"
+                                    autoFocus={ssoMode}
+                                    error={erros.empresa}
+                                    errorKey={erroKey}
+                                />
                                 {!ssoMode && (
                                     <>
-                                        <label className="flex flex-col gap-2">
-                                            <span className="text-[12.5px]" style={{ color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>Email</span>
-                                            <input type="email" className="vz-input" placeholder="voce@suaagencia.com" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
-                                        </label>
-                                        <label className="flex flex-col gap-2">
-                                            <span className="text-[12.5px]" style={{ color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>Senha</span>
-                                            <input type="password" className="vz-input" placeholder="Mínimo 8 caracteres" value={senha} onChange={(e) => setSenha(e.target.value)} autoComplete="new-password" />
-                                        </label>
+                                        <AuthField
+                                            label="Email"
+                                            type="email"
+                                            placeholder="voce@suaagencia.com"
+                                            value={email}
+                                            onChange={(v) => { setEmail(v); if (erros.email || erros.form) setErros((p) => ({ ...p, email: undefined, form: undefined })); }}
+                                            autoComplete="email"
+                                            error={erros.email}
+                                            errorKey={erroKey}
+                                        />
+                                        <div className="flex flex-col gap-2">
+                                            <AuthField
+                                                label="Senha"
+                                                type={showSenha ? "text" : "password"}
+                                                placeholder="Mínimo 8 caracteres"
+                                                value={senha}
+                                                onChange={(v) => { setSenha(v); if (erros.senha) setErros((p) => ({ ...p, senha: undefined })); }}
+                                                autoComplete="new-password"
+                                                error={erros.senha}
+                                                errorKey={erroKey}
+                                                rightSlot={
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowSenha((s) => !s)}
+                                                        aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
+                                                        className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+                                                        style={{ color: "rgba(255,255,255,0.4)" }}
+                                                        onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.8)")}
+                                                        onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
+                                                    >
+                                                        {showSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                    </button>
+                                                }
+                                            />
+                                            {senha && (
+                                                <div className="flex items-center gap-2.5" aria-live="polite">
+                                                    <div className="vz-strength w-28">
+                                                        {[1, 2, 3, 4].map((n) => (
+                                                            <span
+                                                                key={n}
+                                                                className="vz-strength__seg"
+                                                                style={n <= scorePassword(senha) ? { background: STRENGTH_META[scorePassword(senha)].color } : undefined}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    <span className="text-[11.5px]" style={{ color: "rgba(255,255,255,0.45)" }}>
+                                                        {STRENGTH_META[scorePassword(senha)].label}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </>
                                 )}
 
+                                {erros.form && (
+                                    <div key={`f${erroKey}`} className="vz-shake rounded-xl px-3.5 py-2.5" style={{ background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.25)" }} role="alert">
+                                        <p className="text-[13px]" style={{ color: "#FDA4AF" }}>{erros.form}</p>
+                                        {erros.formAction === "login" && (
+                                            <button
+                                                type="button"
+                                                onClick={() => navigate("/auth", { state: { email: email.trim() } })}
+                                                className="mt-1 text-[12.5px] underline underline-offset-4"
+                                                style={{ color: "rgba(255,255,255,0.7)" }}
+                                            >
+                                                Fazer login com este email
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+
                                 <button type="submit" disabled={busy} className="vz-btn vz-btn--light mt-3 w-full disabled:opacity-50">
-                                    {busy ? "Criando…" : ssoMode ? "Entrar na Vyzon" : "Começar 14 dias grátis"}
+                                    {loading ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Criando…
+                                        </span>
+                                    ) : (
+                                        ssoMode ? "Entrar na Vyzon" : "Começar 14 dias grátis"
+                                    )}
                                 </button>
                             </form>
 
