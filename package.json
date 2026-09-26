@@ -23,7 +23,9 @@
     "ads:sitelinks": "node scripts/ads/sitelinks.mjs",
     "ads:negatives": "node scripts/ads/negatives.mjs",
     "ads:keywords:fix-match": "node scripts/ads/keywords.mjs",
-    "ads:persona-sitelink": "node scripts/ads/persona-sitelink.mjs"
+    "ads:persona-sitelink": "node scripts/ads/persona-sitelink.mjs",
+    "social:post": "node scripts/social/post.mjs",
+    "social:test": "node --test scripts/social/social.test.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

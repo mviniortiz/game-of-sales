@@ -21,6 +21,11 @@ são **ignoradas pelo git** (`scripts/*.mp4|webm|png|jpg|wav|mp3|bin` e `_*` em
 | `ads-add-extensions.mjs` · `ads-bid-raise.mjs` · `ads-search-guerrilla.mjs` · `ads-search-refinements.mjs` | Ajustes de extensões, lances e refinamentos de Search. |
 | `swap-pmax-images.mjs` · `swap-pmax-images-fix.mjs` · `swap-pmax-videos.mjs` | Troca de criativos (imagem/vídeo) em campanhas PMax. |
 
+## Distribuição (X + Instagram)
+| Script | O que faz |
+|---|---|
+| `social/post.mjs` | Publica um post de `distribution/posts/<id>.json` no X e no Instagram. Simula por padrão; `--publish` exige confirmação humana. Setup e credenciais em `social/README.md`. |
+
 ## Vídeo & áudio (marketing — Remotion + ffmpeg)
 | Script | O que faz |
 |---|---|
