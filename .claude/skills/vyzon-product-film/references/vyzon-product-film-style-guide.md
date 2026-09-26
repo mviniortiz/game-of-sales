@@ -13,6 +13,20 @@ como print no dribbble da marca, o frame está errado.
 A tela do produto é a heroína. Tipografia é a coadjuvante. Todo o resto é
 figuração e deve desaparecer.
 
+**Intenção em tudo.** Nada no frame é acidental: fonte, fundo, cor, trilha e
+cada efeito têm motivo declarável. O que parece premium é, em boa parte, o que
+foi deixado de fora. As regras fixas deste guia (4 fontes, paleta da seção 2,
+paleta de SFX da seção 8) existem pra que o público sinta que "foi decidido
+assim", não pra limitar.
+
+### Composição por frame
+
+- Um frame = uma ideia. Se precisa de duas leituras, são dois beats.
+- Respiro: o objeto-chave ocupa o frame com espaço livre em volta; nada
+  encostado em outro elemento sem intenção.
+- Objeto-chave no centro óptico (dentro da faixa 25–65% de altura da seção 9).
+- O fundo segue a paleta e nunca disputa atenção com o objeto-chave.
+
 ## 2. Paleta
 
 | Papel | Cor | Uso |
@@ -87,8 +101,16 @@ glow, sem partícula; duração total scan→resolve ≤ 2s.
 
 - Easing padrão: `cubic-bezier(.22,1,.36,1)` (soft out). Overshoot elástico
   só em micro-elementos (chips, badges), nunca em painéis ou texto grande.
-- Cortes secos > crossfades. Match cut entre estados da UI (mesma posição,
-  conteúdo muda) vale mais que qualquer transição.
+- **Sobreposição (overlap):** elementos de um mesmo gesto não animam em fila
+  indiana. O seguinte começa quando o anterior está em ~60–70% do percurso
+  (stagger de 60–120ms entre itens de lista/chips). Linear só no `scan` do
+  EVA Signal; qualquer outro movimento linear parece barato.
+- Hierarquia de transição: continuidade (match cut entre estados da UI,
+  mesma posição e conteúdo muda; ou zoom que entra no componente e vira a
+  cena seguinte) > corte seco motivado (marca virada, cai no tempo da
+  trilha) > crossfade. Corte seco entre cenas sem relação visual é erro.
+- Ritmo adaptativo: dor em cortes curtos (≤ 700ms por plano), produto com
+  planos mais longos pra leitura, clímax segurando ≥ 900ms parado.
 - Zoom editorial: scale 1.3–1.6 com origem no elemento-alvo, 450–700ms,
   segurar ≥ 900ms no destino, voltar ou cortar.
 - Câmera: Ken Burns sutil (≤ 1.06) permitido como respiração; punch de corte
@@ -129,7 +151,24 @@ acabamento editorial.
 | `payoff` | resolução suave (2 notas, sem sino de "achievement") | badge/insight final |
 
 Trilha: minimal/moderna (não corporativa), -18 a -14 LUFS abaixo dos SFX,
-sem drop, sem riser genérico. Mix final: pico ≤ -1dB, voz (quando existir em
+sem drop, sem riser genérico.
+
+**BPM (heurística de energia, declarar no EDL):**
+
+| Faixa | Sensação | Uso no Vyzon |
+|---|---|---|
+| 60–80 | régio, cinematográfico, institucional | evitar em reel (lento demais pra 12–22s) |
+| 90–110 | suave, cool, sem esforço | **padrão** (Copiloto, Virada) |
+| 115–123 | elite, cinético, sofisticado | Raio-X (muitas conversas, prioridade) |
+| 125+ | hype, drive | proibido: vira anúncio |
+
+Cortes motivados e o `hook-thud` caem no tempo forte da trilha. Com BPM
+conhecido, 1 tempo = 60000/BPM ms (100 BPM = 600ms); planeje os beats do EDL
+em múltiplos disso.
+
+**Passe de subtração (obrigatório antes do review):** ouça o filme inteiro
+com atenção só no som. Todo efeito alto demais, fora de lugar ou que não
+ajuda a entender o produto sai. Menos SFX bem colocados > cobertura total. Mix final: pico ≤ -1dB, voz (quando existir em
 experimento) sempre acima da trilha.
 
 **Padrão: sem voz.** Legendas tipográficas carregam a mensagem.
