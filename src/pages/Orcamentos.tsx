@@ -1,16 +1,12 @@
 // Orçamentos: o placar de dinheiro parado. Tela principal do app desde 2026-09-16.
-// Lê a RPC get_quote_board e marca desfecho via set_quote_outcome. O estado de
-// cada orçamento (nunca respondeu, respondeu e sumiu, esperando você...) é
-// calculado no banco (view quote_tracking_live); a tela só agrupa e mostra.
-// As RPCs ainda não estão nos tipos gerados, daí o cast local.
+// Lê o placar pelo useQuoteBoard e marca desfecho via set_quote_outcome. O
+// estado de cada orçamento (nunca respondeu, respondeu e sumiu, esperando
+// você...) é calculado no banco (view quote_tracking_live); a tela só agrupa e mostra.
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowUpRight, Check, FileText, MessageCircle, MoreHorizontal, RotateCcw, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { useTenant } from "@/contexts/TenantContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,60 +14,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-// ─── Contrato ──────────────────────────────────────────────────────────────
-type QuoteState = "no_reply" | "went_quiet" | "your_turn" | "talking" | "won" | "lost" | "expired" | "closed";
-type QuoteOutcome = "won" | "lost" | null;
-type DraftStatus = "pending" | "accepted" | "adjusted" | "rejected" | "expired" | "sent";
-
-export type QuoteItem = {
-  id: string;
-  deal_id: string | null;
-  conversation_id: string | null;
-  contact_name: string | null;
-  contact_phone: string | null;
-  amount: number | null;
-  detected_by: "pdf" | "text";
-  sent_at: string;
-  state: QuoteState;
-  /** Dias no estado atual (desde o orçamento, a última fala do cliente ou o desfecho). */
-  days: number;
-  outcome: QuoteOutcome;
-  recovered: boolean;
-  followup_sent_at: string | null;
-  draft_status: DraftStatus | null;
-  draft_at: string | null;
-};
-
-export type QuoteBoard = {
-  totals: {
-    parked_amount: number;
-    parked_count: number;
-    no_reply_count: number;
-    went_quiet_count: number;
-    your_turn_amount: number;
-    your_turn_count: number;
-    talking_count: number;
-    recovered_amount: number;
-    recovered_count: number;
-    won_amount: number;
-    won_count: number;
-    lost_count: number;
-    expired_count: number;
-    total_count: number;
-  };
-  items: QuoteItem[];
-};
-
-type RpcResult<T> = { data: T | null; error: { message: string; code?: string } | null };
-type RpcFn = <T>(fn: string, args: Record<string, unknown>) => PromiseLike<RpcResult<T>>;
-const rpc = supabase.rpc.bind(supabase) as unknown as RpcFn;
+import { quoteRpc, useQuoteBoard, type QuoteBoard, type QuoteItem, type QuoteOutcome, type QuoteState } from "@/hooks/useQuoteBoard";
+import { brl, evaLine, OPEN_QUOTE_STATES, plural, quoteName, stateLine } from "@/lib/quoteText";
+import { DayTicks } from "@/components/quotes/DayTicks";
 
 const PERIODS = [7, 30, 90] as const;
 type Period = (typeof PERIODS)[number];
-
-/** Com 30 dias sem o cliente escrever, o orçamento morre (quote_tracking_expire). */
-const EXPIRE_DAYS = 30;
 
 type Tab = "parked" | "your_turn" | "talking" | "closed";
 const TAB_STATES: Record<Tab, QuoteState[]> = {
@@ -81,97 +29,6 @@ const TAB_STATES: Record<Tab, QuoteState[]> = {
   closed: ["won", "lost", "expired", "closed"],
 };
 
-// ─── Preview (só em dev): ?preview=1 | vazio | erro ─────────────────────────
-const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString();
-const previewItem = (p: Partial<QuoteItem> & Pick<QuoteItem, "id" | "state" | "days">): QuoteItem => ({
-  deal_id: `d-${p.id}`, conversation_id: `c-${p.id}`, contact_name: null, contact_phone: null, amount: null,
-  detected_by: "pdf", sent_at: daysAgo(p.days), outcome: null, recovered: false, followup_sent_at: null,
-  draft_status: null, draft_at: null, ...p,
-});
-const PREVIEW_BOARD: QuoteBoard = {
-  totals: {
-    parked_amount: 115_300, parked_count: 5, no_reply_count: 3, went_quiet_count: 2,
-    your_turn_amount: 18_400, your_turn_count: 1, talking_count: 1,
-    recovered_amount: 23_900, recovered_count: 1, won_amount: 35_500, won_count: 2,
-    lost_count: 1, expired_count: 1, total_count: 11,
-  },
-  items: [
-    previewItem({ id: "p1", state: "your_turn", days: 1, contact_name: "Marcos Vieira", amount: 18_400, sent_at: daysAgo(6) }),
-    previewItem({ id: "p2", state: "went_quiet", days: 8, contact_name: "Padaria Trigo Bom", amount: 61_200, sent_at: daysAgo(12), draft_status: "pending", draft_at: daysAgo(0) }),
-    previewItem({ id: "p3", state: "no_reply", days: 5, contact_name: "Carlos Menezes", amount: 23_900, draft_status: "sent", draft_at: daysAgo(3), followup_sent_at: daysAgo(3) }),
-    previewItem({ id: "p4", state: "went_quiet", days: 4, contact_name: "Juliana Rocha", amount: 14_300, sent_at: daysAgo(9) }),
-    previewItem({ id: "p5", state: "no_reply", days: 22, contact_name: "Ana Paula Ribeiro", amount: 15_900, draft_status: "rejected", draft_at: daysAgo(19) }),
-    previewItem({ id: "p6", state: "no_reply", days: 1, contact_name: null, contact_phone: "5521988887777", amount: null, detected_by: "text" }),
-    previewItem({ id: "p7", state: "talking", days: 1, contact_name: "Condomínio Vila Verde", amount: 142_000, sent_at: daysAgo(4) }),
-    previewItem({ id: "p8", state: "won", days: 2, contact_name: "Rafael Nunes", amount: 23_900, recovered: true, outcome: "won", followup_sent_at: daysAgo(9), sent_at: daysAgo(16) }),
-    previewItem({ id: "p9", state: "won", days: 6, contact_name: "Mercado Bom Preço", amount: 11_600, outcome: "won", sent_at: daysAgo(14) }),
-    previewItem({ id: "p10", state: "lost", days: 3, contact_name: "Pedro Almeida", amount: 9_800, outcome: "lost", sent_at: daysAgo(11) }),
-    previewItem({ id: "p11", state: "expired", days: 31, contact_name: "Studio Forma", amount: 12_300, sent_at: daysAgo(31) }),
-  ],
-};
-const EMPTY_BOARD: QuoteBoard = {
-  totals: {
-    parked_amount: 0, parked_count: 0, no_reply_count: 0, went_quiet_count: 0,
-    your_turn_amount: 0, your_turn_count: 0, talking_count: 0,
-    recovered_amount: 0, recovered_count: 0, won_amount: 0, won_count: 0,
-    lost_count: 0, expired_count: 0, total_count: 0,
-  },
-  items: [],
-};
-
-// ─── Formatação ────────────────────────────────────────────────────────────
-const brl = (v: number) =>
-  new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: Number.isInteger(v) ? 0 : 2,
-    maximumFractionDigits: 2,
-  }).format(v);
-
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-const ago = (days: number) => (days <= 0 ? "hoje" : days === 1 ? "ontem" : `há ${days} dias`);
-const daysSince = (iso: string) => Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
-
-/** O que aconteceu com o orçamento, em uma linha. */
-function stateLine(q: QuoteItem): string {
-  switch (q.state) {
-    case "no_reply":
-      return `Nunca respondeu · orçamento${q.detected_by === "pdf" ? " em PDF" : ""} enviado ${ago(q.days)}`;
-    case "went_quiet":
-      return `Respondeu e sumiu · última mensagem do cliente ${ago(q.days)}`;
-    case "your_turn":
-      return `Esperando você · mandou mensagem ${ago(q.days)} e está sem resposta`;
-    case "talking":
-      return `Em conversa · cliente falou ${ago(q.days)}`;
-    case "won":
-      return q.recovered ? `Fechou com retomada · ${ago(q.days)}` : `Fechou · ${ago(q.days)}`;
-    case "lost":
-      return `Perdeu · ${ago(q.days)}`;
-    case "expired":
-      return `Morreu · ${EXPIRE_DAYS} dias sem o cliente escrever`;
-    default:
-      return "Encerrado no pipeline";
-  }
-}
-
-/** O que a EVA fez por este orçamento. Só para orçamento aberto. */
-function evaLine(q: QuoteItem): string | null {
-  if (!["no_reply", "went_quiet", "your_turn", "talking"].includes(q.state) || !q.draft_status) return null;
-  switch (q.draft_status) {
-    case "pending":
-      return "Retomada pronta no seu WhatsApp, esperando o seu ok";
-    case "sent":
-    case "adjusted":
-      return `Retomada enviada ${ago(daysSince(q.followup_sent_at ?? q.draft_at ?? q.sent_at))}`;
-    case "rejected":
-      return "Você descartou a retomada";
-    case "expired":
-      return "A retomada expirou sem resposta sua";
-    default:
-      return null;
-  }
-}
-
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 const FOCUS =
   "outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F6F4EF]";
@@ -179,41 +36,17 @@ const SURFACE_SHADOW = "0 1px 2px rgba(15,23,42,0.04), 0 12px 32px -18px rgba(15
 
 // ─── Página ────────────────────────────────────────────────────────────────
 export default function Orcamentos() {
-  const { companyId } = useAuth();
-  const { activeCompanyId } = useTenant();
-  const effectiveCompanyId = activeCompanyId || companyId;
   const [searchParams] = useSearchParams();
   const preview = import.meta.env.DEV ? searchParams.get("preview") : null;
   const [days, setDays] = useState<Period>(30);
   const [tab, setTab] = useState<Tab | null>(null);
   const qc = useQueryClient();
-  const queryKey = ["quote-board", effectiveCompanyId, days, preview] as const;
-
-  const board = useQuery({
-    queryKey,
-    enabled: !!preview || !!effectiveCompanyId,
-    retry: false,
-    queryFn: async (): Promise<QuoteBoard> => {
-      if (import.meta.env.DEV && preview) {
-        if (preview === "erro") throw Object.assign(new Error("preview"), { code: "PGRST202" });
-        return preview === "vazio" ? EMPTY_BOARD : structuredClone(PREVIEW_BOARD);
-      }
-      const { data, error } = await rpc<QuoteBoard>("get_quote_board", {
-        p_company_id: effectiveCompanyId,
-        p_days: days,
-      });
-      if (error) throw Object.assign(new Error(error.message), { code: error.code });
-      return {
-        totals: { ...EMPTY_BOARD.totals, ...(data?.totals ?? {}) },
-        items: data?.items ?? [],
-      };
-    },
-  });
+  const { query: board, queryKey } = useQuoteBoard(days, preview);
 
   const outcome = useMutation({
     mutationFn: async (vars: { id: string; outcome: QuoteOutcome }) => {
       if (import.meta.env.DEV && preview) return;
-      const { error } = await rpc<unknown>("set_quote_outcome", {
+      const { error } = await quoteRpc<unknown>("set_quote_outcome", {
         p_quote_id: vars.id,
         p_outcome: vars.outcome,
       });
@@ -490,8 +323,8 @@ function initials(name: string): string {
 }
 
 function QuoteRow({ q, pending, onOutcome }: { q: QuoteItem; pending: boolean; onOutcome: (o: QuoteOutcome) => void }) {
-  const name = q.contact_name?.trim() || (q.contact_phone ? `+${q.contact_phone}` : "Contato sem nome");
-  const open = ["no_reply", "went_quiet", "your_turn", "talking"].includes(q.state);
+  const name = quoteName(q);
+  const open = OPEN_QUOTE_STATES.includes(q.state);
   const eva = evaLine(q);
   const target = q.conversation_id ? `/inbox?conversationId=${q.conversation_id}` : q.deal_id ? `/deals/${q.deal_id}` : null;
 
@@ -540,25 +373,6 @@ function QuoteRow({ q, pending, onOutcome }: { q: QuoteItem; pending: boolean; o
         <RowMenu q={q} name={name} pending={pending} onOutcome={onOutcome} />
       </div>
     </li>
-  );
-}
-
-// Um tracinho por dia até os 30 em que o orçamento morre: o dono vê quanto
-// falta, não uma barra abstrata.
-function DayTicks({ days }: { days: number }) {
-  const filled = Math.min(days, EXPIRE_DAYS);
-  const tone = filled >= 21 ? "bg-amber-600" : filled >= 8 ? "bg-[var(--vyz-text-muted)]" : "bg-[var(--vyz-text-soft)]";
-  return (
-    <div
-      role="img"
-      aria-label={`${plural(filled, "dia", "dias")} de ${EXPIRE_DAYS}. Com ${EXPIRE_DAYS} dias sem o cliente escrever, o orçamento é dado como morto.`}
-      title={`${filled} de ${EXPIRE_DAYS} dias`}
-      className="hidden gap-[2px] sm:flex"
-    >
-      {Array.from({ length: EXPIRE_DAYS }, (_, i) => (
-        <span key={i} className={`h-2.5 w-[3px] rounded-[1px] ${i < filled ? tone : "bg-[var(--vyz-border)]"}`} />
-      ))}
-    </div>
   );
 }
 

@@ -16,9 +16,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 // F5C.5.3 — Phosphor duotone (mesmo set da sidebar e do pipeline /pipeline).
 import {
-    Warning as AlertTriangle,
     Check,
-    CheckCircle,
     CurrencyDollar,
     Funnel,
     ArrowClockwise as RefreshCw,
@@ -29,15 +27,14 @@ import {
 import { useInicioData } from "@/hooks/useInicioData";
 import { useCockpitData, type CockpitData, type CockpitRange, type DayPoint } from "@/hooks/useCockpitData";
 import { useCommandCenterData, type DailyPriority } from "@/hooks/useCommandCenterData";
-import {
-    ActionQueue,
-    ActivityTimeline,
-    CARD_STYLE,
-    type QueueHandlers,
-} from "@/components/inicio/DecisionWorkspace";
-import { ActivationCard } from "@/components/inicio/ActivationCard";
+import { ActivityTimeline, CARD_STYLE } from "@/components/inicio/DecisionWorkspace";
+import { AgoraQueue, type QueueHandlers } from "@/components/inicio/AgoraQueue";
+import { AGORA_SAMPLE_PRIORITIES } from "@/components/inicio/agoraSample";
+import { WhatsappDownCard } from "@/components/inicio/WhatsappDownCard";
 import { EvaDiaryCard } from "@/components/inicio/EvaDiaryCard";
-import { useOnboardingProgress } from "@/hooks/useOnboardingProgress";
+import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
+import { useQuoteBoard } from "@/hooks/useQuoteBoard";
+import { brl, plural } from "@/lib/quoteText";
 import { useEvolutionSender } from "@/hooks/useEvolutionSender";
 import {
     loadLiveActions,
@@ -50,12 +47,12 @@ import {
 } from "@/lib/priorityActions";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Central de Comando — COMMAND.UI.7 "Cockpit do gestor" (2026-07-06)
+// Início — responde o que o dono faz agora (2026-09-29).
 //
-// A página virou dashboard: números e gráficos do NEGÓCIO à esquerda (receita
-// vs meta, leads/dia, pipeline por etapa, tempo de resposta — useCockpitData),
-// fila de ação compacta à direita (ActionQueue). A EVA saiu da página inteira
-// (rail, síntese, chat) — fica só o dock flutuante global (EvaHelpDock).
+// Ordem: frase do dia (quem espera resposta, quanto está parado) → aviso de
+// WhatsApp desconectado, quando for o caso → fila "Agora" (AgoraQueue: quem
+// espera resposta + orçamentos parados, com a atividade ao lado) → o que a EVA
+// fez → números e gráficos do negócio (useCockpitData).
 //
 // Identidade vs /performance: aqui é operação de HOJE/semana; análise de
 // período (funil, ciclo, ranking, heatmap) continua em /performance.
@@ -391,51 +388,12 @@ function PeriodToggle({ value, onChange }: { value: CockpitRange; onChange: (v: 
     );
 }
 
-// ─── Saudação + Progresso do dia ────────────────────────────────────────────
+// ─── Saudação ───────────────────────────────────────────────────────────────
 
 function getHourlyGreeting(hour: number): string {
     if (hour >= 5 && hour < 12) return "Bom dia";
     if (hour >= 12 && hour < 18) return "Boa tarde";
     return "Boa noite";
-}
-
-const PRIORITY_BAR_COLOR: Record<DailyPriority["priority"], string> = {
-    critical: "#F43F5E",
-    high: "#F59E0B",
-    medium: "#3B82F6",
-    low: "#94A3B8",
-};
-
-function DayProgress({ items, state }: { items: DailyPriority[]; state: PriorityActionState }) {
-    const total = items.length;
-    if (total === 0) return null;
-    const resolved = items.filter((p) => isResolved(state, p.id)).length;
-    const allDone = resolved === total;
-    return (
-        <div className="rounded-2xl px-5 py-4" style={CARD_STYLE}>
-            <div className="flex items-center justify-between mb-2">
-                <span className="text-[12.5px] font-bold" style={{ color: INK }}>Progresso do dia</span>
-                <span className="text-[12px] font-semibold tabular-nums inline-flex items-center gap-1.5" style={{ color: allDone ? "#047857" : SUB }}>
-                    {allDone && <CheckCircle size={14} weight="fill" />}
-                    {resolved} de {total} {resolved === 1 ? "resolvida" : "resolvidas"}
-                </span>
-            </div>
-            <div className="flex items-center gap-1">
-                {items.map((p) => {
-                    const done = isResolved(state, p.id);
-                    const c = PRIORITY_BAR_COLOR[p.priority];
-                    return (
-                        <div
-                            key={p.id}
-                            className="h-2 flex-1 rounded-full"
-                            style={{ background: done ? c : `${c}33`, transition: "background-color 0.45s cubic-bezier(0.4,0,0.2,1)" }}
-                            title={`${p.title}${done ? " · resolvida" : ""}`}
-                        />
-                    );
-                })}
-            </div>
-        </div>
-    );
 }
 
 function usePriorityActions(companyId: string | null | undefined) {
@@ -471,9 +429,11 @@ const Inicio = () => {
     const [rangeDays, setRangeDays] = useState<CockpitRange>(14);
     const cockpit = useCockpitData(rangeDays);
     const cc = useCommandCenterData();
-    const onboarding = useOnboardingProgress();
+    const wa = useWhatsappConnection();
     const [searchParams] = useSearchParams();
-    const onboardingPreview = searchParams.get("firstrun") === "1";
+    // Só em dev: ?preview=1 mostra a fila com dados de exemplo; ?preview=desconectado, o WhatsApp caído.
+    const preview = import.meta.env.DEV ? searchParams.get("preview") : null;
+    const { query: quoteBoard } = useQuoteBoard(30, preview ? "1" : null);
 
     const [manualRefreshing, setManualRefreshing] = useState(false);
     const handleRefresh = useCallback(async () => {
@@ -498,12 +458,22 @@ const Inicio = () => {
 
     const { dayItems, pendingAll } = useMemo(() => {
         const nowMs = Date.now();
-        const day = cc.dailyPriorities.filter((p) => !isSnoozed(actions.state, p.id, nowMs));
+        const source = preview ? AGORA_SAMPLE_PRIORITIES : cc.dailyPriorities;
+        const day = source.filter((p) => !isSnoozed(actions.state, p.id, nowMs));
         const pending = day.filter((p) => !isResolved(actions.state, p.id));
         return { dayItems: day, pendingAll: pending };
-    }, [cc.dailyPriorities, actions.state]);
+    }, [cc.dailyPriorities, actions.state, preview]);
+    const queueLoading = preview ? false : cc.loading;
 
-    const criticalCount = useMemo(() => pendingAll.filter((p) => p.priority === "critical").length, [pendingAll]);
+    // A linha do banco fica 'active' com a sessão caída; na Evolution, o check ao
+    // vivo (sender) decide. Kapso/Meta não tem esse check: vale o banco.
+    const liveDown = wa.viaEvolution && sender.lastStatusCheckedAt !== null && !sender.connected;
+    const waNeverConnected = preview === "desconectado" ? false : !wa.connected;
+    const waDown = preview
+        ? preview === "desconectado"
+        : searchParams.get("firstrun") === "1" || (!wa.loading && (!wa.connected || liveDown));
+    const lastInboundAt = preview === "desconectado" ? "2026-06-28T14:10:00-03:00" : wa.lastInboundAt;
+
     const dayComplete = dayItems.length > 0 && pendingAll.length === 0;
     const handlers: QueueHandlers = {
         onNavigate: navigate,
@@ -549,11 +519,23 @@ const Inicio = () => {
 
     const firstName = (profile?.nome || "").split(" ")[0] || "";
     const greeting = getHourlyGreeting(new Date().getHours());
-    const subtitle = cc.loading
-        ? "Carregando sua operação…"
-        : pendingAll.length === 0
-            ? "Operação em dia. Nada esperando por você agora."
-            : `Sua operação em números. ${pendingAll.length} ${pendingAll.length === 1 ? "ação espera" : "ações esperam"} por você na fila.`;
+    const qt = quoteBoard.data?.totals;
+    const covered = new Set(pendingAll.map((p) => p.conversationId).filter(Boolean));
+    const waiting =
+        pendingAll.filter((p) => p.source === "conversation").length +
+        (quoteBoard.data?.items ?? []).filter((q) => q.state === "your_turn" && !(q.conversation_id && covered.has(q.conversation_id))).length;
+    const dayParts = [
+        waiting > 0 && `${waiting === 1 ? "1 pessoa espera" : `${waiting} pessoas esperam`} a sua resposta`,
+        qt && qt.parked_count > 0 &&
+            `${brl(qt.parked_amount)} ${qt.parked_count === 1 ? "está parado" : "estão parados"} em ${plural(qt.parked_count, "orçamento", "orçamentos")}`,
+    ].filter(Boolean);
+    const subtitle = waDown
+        ? "Seu WhatsApp está desconectado, então a EVA não vê as conversas novas."
+        : queueLoading
+            ? "Carregando sua operação…"
+            : dayParts.length === 0
+                ? "Nada esperando por você agora."
+                : `${dayParts.join(", e ")}.`.replace(/^./, (c) => c.toUpperCase());
 
     return (
         <div className="vz-stagger space-y-5 sm:space-y-6 mx-auto w-full max-w-[1920px] 2xl:px-2">
@@ -572,15 +554,6 @@ const Inicio = () => {
                             style={{ color: INK, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500, letterSpacing: "-0.012em" }}>
                             {greeting}{firstName ? `, ${firstName}` : ""}
                         </h1>
-                        {criticalCount > 0 && (
-                            <button
-                                onClick={() => navigate("/inbox")}
-                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase transition-transform hover:scale-[1.03] active:scale-95"
-                                style={{ background: "#CB4327", color: "#FFFFFF", letterSpacing: "0.06em", boxShadow: "0 4px 12px -3px rgba(203,67,39,0.5)" }}>
-                                <AlertTriangle size={12} weight="fill" />
-                                {criticalCount} {criticalCount === 1 ? "urgente" : "urgentes"}
-                            </button>
-                        )}
                     </div>
                     <p className="text-[14.5px] sm:text-[15.5px]" style={{ color: SUB }}>{subtitle}</p>
                 </div>
@@ -606,67 +579,69 @@ const Inicio = () => {
                 </div>
             </div>
 
-            {(onboardingPreview || (!onboarding.loading && !onboarding.connected)) && (
-                <ActivationCard onNavigate={navigate} />
-            )}
+            {waDown && <WhatsappDownCard neverConnected={waNeverConnected} lastInboundAt={lastInboundAt} />}
 
-            {/* O que a EVA fez sozinha hoje. Vem antes dos números: primeiro a
-                pessoa entende quem está mexendo no funil, depois vê o resultado. */}
-            <EvaDiaryCard />
-
-            {/* COMMAND.UI.7 — Cockpit: números/gráficos (esquerda) + fila (direita). */}
+            {/* A fila "Agora" é a razão de ser da tela: vem antes dos números. */}
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_400px] gap-5 2xl:gap-6 items-start">
-                <div className="flex flex-col gap-5 min-w-0">
-                    {/* KPIs do negócio */}
-                    <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
-                        {kpis.map((k) => (
-                            <KpiCard key={k.label} kpi={k} loading={cockpit.loading || cc.loading} onNavigate={navigate} />
-                        ))}
-                    </div>
-
-                    {/* Gráficos operacionais, no 2xl (tela grande) em pares */}
-                    <div className="grid grid-cols-1 2xl:grid-cols-2 gap-5 2xl:gap-6 items-stretch">
-                        <ChartPanel title="Receita do mês" hint={ck?.monthGoal ? "acumulada vs meta" : "acumulada"} height={248} loading={cockpit.loading} error={!!cockpit.error}>
-                            {ck && <RevenueChart series={ck.wonMonthSeries} goal={ck.monthGoal} />}
-                        </ChartPanel>
-                        <section className="rounded-2xl px-5 pt-4 pb-4 min-w-0" style={CARD_STYLE}>
-                            <div className="flex items-baseline justify-between gap-3 mb-3">
-                                <h2 className="text-[13px] font-bold" style={{ color: INK }}>Funil do pipeline</h2>
-                                <span className="text-[11px] shrink-0" style={{ color: MUTE }}>cada bloco é uma oportunidade · largura = valor</span>
-                            </div>
-                            {pipeline.isLoading ? (
-                                <div className="space-y-2 py-2" aria-label="Carregando">
-                                    {[92, 74, 56, 40, 66].map((wd, i) => (
-                                        <div key={i} className="animate-pulse" style={{ width: `${wd}%`, height: 22, background: GRID, borderRadius: 9999 }} />
-                                    ))}
-                                </div>
-                            ) : (
-                                <PipelineFunnel
-                                    stages={(pipeline.data ?? []).map((s) => ({ key: s.key, name: s.name, count: s.count, totalValue: s.totalValue, values: s.values }))}
-                                    onNavigate={navigate}
-                                />
-                            )}
-                        </section>
-                    </div>
-
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 2xl:gap-6">
-                        <ChartPanel title="Novos leads por dia" hint={`últimos ${rangeDays} dias`} height={210} loading={cockpit.loading} error={!!cockpit.error}>
-                            {ck && <LeadsChart series={ck.leadsPerDay} />}
-                        </ChartPanel>
-                        <ChartPanel title="Tempo de 1ª resposta" hint={`mediana por dia, ${rangeDays} dias`} height={210} loading={cockpit.loading} error={!!cockpit.error}>
-                            {ck && <ResponseChart series={ck.responsePerDay} />}
-                        </ChartPanel>
-                    </div>
-                </div>
-
-                {/* Rail direito: o que precisa de você agora. No mobile vem
-                    ANTES dos gráficos (order-first): a fila de ações é a razão
-                    de ser da tela e ficava 4 telas de scroll abaixo. */}
-                <aside className="flex flex-col gap-5 min-w-0 order-first lg:order-none">
-                    <DayProgress items={dayItems} state={actions.state} />
-                    <ActionQueue compact queue={pendingAll} loading={cc.loading} dayComplete={dayComplete} handlers={handlers} />
+                <AgoraQueue
+                    pending={pendingAll}
+                    dayTotal={dayItems.length}
+                    dayComplete={dayComplete}
+                    loading={queueLoading}
+                    handlers={handlers}
+                    quotes={quoteBoard.data?.items ?? []}
+                    parkedCount={qt?.parked_count ?? 0}
+                    parkedAmount={qt?.parked_amount ?? 0}
+                />
+                <aside className="flex flex-col gap-5 min-w-0">
                     <ActivityTimeline items={cc.recentActivity} loading={cc.loading} onNavigate={navigate} />
                 </aside>
+            </div>
+
+            {/* O que a EVA fez sozinha hoje. */}
+            <EvaDiaryCard />
+
+            {/* Cockpit: números e gráficos do negócio. */}
+            <div className="flex flex-col gap-5 min-w-0">
+                <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+                    {kpis.map((k) => (
+                        <KpiCard key={k.label} kpi={k} loading={cockpit.loading || cc.loading} onNavigate={navigate} />
+                    ))}
+                </div>
+
+                {/* Gráficos operacionais, no 2xl (tela grande) em pares */}
+                <div className="grid grid-cols-1 2xl:grid-cols-2 gap-5 2xl:gap-6 items-stretch">
+                    <ChartPanel title="Receita do mês" hint={ck?.monthGoal ? "acumulada vs meta" : "acumulada"} height={248} loading={cockpit.loading} error={!!cockpit.error}>
+                        {ck && <RevenueChart series={ck.wonMonthSeries} goal={ck.monthGoal} />}
+                    </ChartPanel>
+                    <section className="rounded-2xl px-5 pt-4 pb-4 min-w-0" style={CARD_STYLE}>
+                        <div className="flex items-baseline justify-between gap-3 mb-3">
+                            <h2 className="text-[13px] font-bold" style={{ color: INK }}>Funil do pipeline</h2>
+                            <span className="text-[11px] shrink-0" style={{ color: MUTE }}>cada bloco é uma oportunidade · largura = valor</span>
+                        </div>
+                        {pipeline.isLoading ? (
+                            <div className="space-y-2 py-2" aria-label="Carregando">
+                                {[92, 74, 56, 40, 66].map((wd, i) => (
+                                    <div key={i} className="animate-pulse" style={{ width: `${wd}%`, height: 22, background: GRID, borderRadius: 9999 }} />
+                                ))}
+                            </div>
+                        ) : (
+                            <PipelineFunnel
+                                stages={(pipeline.data ?? []).map((s) => ({ key: s.key, name: s.name, count: s.count, totalValue: s.totalValue, values: s.values }))}
+                                onNavigate={navigate}
+                            />
+                        )}
+                    </section>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 2xl:gap-6">
+                    <ChartPanel title="Novos leads por dia" hint={`últimos ${rangeDays} dias`} height={210} loading={cockpit.loading} error={!!cockpit.error}>
+                        {ck && <LeadsChart series={ck.leadsPerDay} />}
+                    </ChartPanel>
+                    <ChartPanel title="Tempo de 1ª resposta" hint={`mediana por dia, ${rangeDays} dias`} height={210} loading={cockpit.loading} error={!!cockpit.error}>
+                        {ck && <ResponseChart series={ck.responsePerDay} />}
+                    </ChartPanel>
+                </div>
             </div>
 
             {cc.error && (

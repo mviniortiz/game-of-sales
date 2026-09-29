@@ -78,6 +78,18 @@ const OrcamentosRoute = () => {
   return <ProtectedRoute>{page}</ProtectedRoute>;
 };
 
+// Mesmo trato do OrcamentosRoute: ?preview= em dev abre com dados de exemplo, sem login.
+const InicioRoute = () => {
+  const [params] = useSearchParams();
+  const page = (
+    <AppLayout>
+      <Inicio />
+    </AppLayout>
+  );
+  if (import.meta.env.DEV && params.get("preview")) return page;
+  return <ProtectedRoute>{page}</ProtectedRoute>;
+};
+
 const PreProdRoute = ({ children, fallback = "/dashboard" }: { children: React.ReactNode; fallback?: string }) => {
   const { isSuperAdmin } = useAuth();
   if (!isSuperAdmin) return <Navigate to={fallback} replace />;
@@ -123,16 +135,7 @@ const AppShell = () => (
               {/* F4A 2026-05-19: /inicio renderiza Inicio (Central da Operação).
                   /dashboard antigo continua acessível como fallback (não removido em F4A,
                   só não está no menu). F3 fez redirect /dashboard → /inicio que segue válido. */}
-              <Route
-                path="/inicio"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Inicio />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/inicio" element={<InicioRoute />} />
               <Route path="/dashboard" element={<Navigate to="/inicio" replace />} />
               <Route
                 path="/ranking"

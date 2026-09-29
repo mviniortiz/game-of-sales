@@ -875,22 +875,6 @@ All colors MUST be HSL.
 .vz-stagger > *:nth-child(5) { animation-delay: 0.28s; }
 .vz-stagger > *:nth-child(6) { animation-delay: 0.34s; }
 
-/* 2. Pulso do herói — SÓ no card crítico. Respira (2.4s), não pisca. */
-.vz-pulse-critical { position: relative; }
-.vz-pulse-critical::after {
-  content: "";
-  position: absolute;
-  inset: -1.5px;
-  border-radius: 1rem; /* casa com o rounded-2xl do herói */
-  pointer-events: none;
-  animation: vz-pulse-ring 2.4s ease-out infinite;
-}
-@keyframes vz-pulse-ring {
-  0%   { box-shadow: 0 0 0 0 rgba(203, 67, 39, 0.32); }
-  70%  { box-shadow: 0 0 0 9px rgba(203, 67, 39, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(203, 67, 39, 0); }
-}
-
 /* 4. Check "pop" ao resolver + linha saindo ("o dia encolhendo"). */
 @keyframes vz-check-pop {
   0%   { transform: scale(0.6); }
@@ -904,21 +888,10 @@ All colors MUST be HSL.
 }
 .vz-resolving .vz-row-title { text-decoration: line-through; }
 
-/* 5. "Ver no foco" — a EVA aponta pro herói: anel azul que pulsa 1x e some.
-   Disparado por classe via JS (scrollIntoView + add/remove). */
-@keyframes vz-focus-flash {
-  0%   { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
-  20%  { box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.35); }
-  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
-}
-.vz-focus-flash { animation: vz-focus-flash 1.2s ease-out; border-radius: 1rem; }
-
 @media (prefers-reduced-motion: reduce) {
   .vz-stagger > * { opacity: 1; animation: none; }
-  .vz-pulse-critical::after { animation: none; }
   .vz-check-pop { animation: none; }
   .vz-resolving { transition: none; }
-  .vz-focus-flash { animation: none; }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
