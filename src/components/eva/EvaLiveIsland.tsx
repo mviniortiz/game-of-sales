@@ -35,11 +35,13 @@ export function EvaLiveIsland() {
     if (diary.loading) return null;
 
     const esperando = diary.rascunhos.length;
-    const acoes = diary.linhas.length;
+    const hoje = new Date().toDateString();
+    const deHoje = diary.eventos.filter((e) => e.quando.toDateString() === hoje);
+    const acoes = deHoje.length;
 
     // Conta parada não ganha pílula: uma EVA anunciando que não fez nada é pior
     // que silêncio.
-    if (!diary.trabalhou && esperando === 0) return null;
+    if (acoes === 0 && esperando === 0) return null;
 
     const resumoCurto = esperando > 0
         ? `${esperando} esperando você`
@@ -103,12 +105,12 @@ export function EvaLiveIsland() {
                         </span>
 
                         <ul className="flex flex-col gap-1">
-                            {diary.linhas.slice(0, 3).map((l) => (
-                                <li key={l.chave} className="text-[11.5px]" style={{ color: "var(--vyz-text-primary)" }}>
-                                    {l.texto}
+                            {deHoje.slice(0, 3).map((e) => (
+                                <li key={e.id} className="text-[11.5px]" style={{ color: "var(--vyz-text-primary)" }}>
+                                    {e.texto}
                                 </li>
                             ))}
-                            {diary.linhas.length === 0 && (
+                            {deHoje.length === 0 && (
                                 <li className="text-[11.5px]" style={{ color: "var(--vyz-text-muted)" }}>
                                     Nenhuma ação hoje ainda.
                                 </li>

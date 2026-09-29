@@ -1,45 +1,44 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// COMMAND.UI.7 — dados do Cockpit do gestor (/inicio como dashboard).
+// Números do Início (/inicio): a coluna do mês e os últimos 14 dias.
 //
 // Read-only, 4 leituras em paralelo:
-//   - Receita ganha no mês (deals closed_won) + série acumulada por dia
-//   - Meta do mês (metas_consolidadas, mes_referencia = YYYY-MM)
-//   - Novos leads por dia (deals.created_at, período selecionado 7/14/30d)
-//   - Tempo de resposta (channel_messages: 1º outbound após cada inbound,
-//     MEDIANA por dia no período selecionado — mediana, não média: uma noite sem
-//     resposta não pode distorcer o número; gaps > 12h ficam de fora)
+//   - Ganho no mês (deals closed_won, data = updated_at): total e quantidade,
+//     mais quantos fecharam por dia nos últimos 14 dias
+//   - Meta do mês (metas_consolidadas, mes_referencia = 1º dia do mês)
+//   - Novos leads por dia nos últimos 14 dias (deals.created_at)
+//   - Tempo de 1ª resposta em 14 dias (channel_messages: 1º outbound após cada
+//     inbound). Mediana, não média: uma noite sem resposta não pode distorcer
+//     o número; esperas acima de 12h ficam de fora.
 //
-// Identidade da tela: /inicio = operação de hoje/semana. Análise de período
-// (funil, ciclo, ranking) continua em /performance — sem duplicar insight.
+// Análise de período (funil, ciclo, ranking) continua em /performance.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 
-export interface DayPoint {
+export interface CockpitDay {
     /** "2026-07-06" (dia local) */
     day: string;
-    /** rótulo curto pro eixo ("6/7") */
+    /** rótulo curto ("6/7") */
     label: string;
-    value: number;
+    leads: number;
+    won: number;
 }
 
 export interface CockpitData {
     /** Receita ganha no mês corrente (R$). */
     wonMonthTotal: number;
-    /** Série acumulada da receita por dia do mês (até hoje). */
-    wonMonthSeries: DayPoint[];
+    wonMonthCount: number;
     /** Meta consolidada do mês (null = sem meta cadastrada). */
     monthGoal: number | null;
-    /** Novos leads (deals criados) por dia, no período selecionado. */
-    leadsPerDay: DayPoint[];
-    leads7dTotal: number;
-    /** Mediana do tempo de 1ª resposta por dia (minutos), no período. */
-    responsePerDay: DayPoint[];
-    /** Mediana geral do período (minutos; null = sem par inbound→outbound). */
+    /** Últimos 14 dias, do mais antigo para hoje. */
+    days: CockpitDay[];
+    /** Mediana da 1ª resposta em 14 dias (minutos; null = sem par inbound→outbound). */
     responseMedianMin: number | null;
 }
+
+export const COCKPIT_DAYS = 14;
 
 const RESPONSE_CAP_MS = 12 * 3_600_000; // acima disso não é "resposta", é retomada
 
@@ -67,13 +66,7 @@ function median(values: number[]): number | null {
     const mid = Math.floor(s.length / 2);
     return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
 }
-function toSeries(map: Map<string, number>): DayPoint[] {
-    return [...map.entries()].map(([day, value]) => ({ day, label: shortLabel(day), value }));
-}
-
-export type CockpitRange = 7 | 14 | 30;
-
-export function useCockpitData(rangeDays: CockpitRange = 14) {
+export function useCockpitData() {
     const { companyId: authCompanyId } = useAuth();
     const { activeCompanyId } = useTenant();
     // Mesmo padrão dos outros hooks da Central: super_admin pode estar operando
@@ -81,7 +74,7 @@ export function useCockpitData(rangeDays: CockpitRange = 14) {
     const companyId = activeCompanyId || authCompanyId;
 
     const query = useQuery({
-        queryKey: ["cockpit", companyId, rangeDays],
+        queryKey: ["cockpit", companyId],
         enabled: !!companyId,
         // Dashboard vivo: cache curto + repoll de 60s (padrão da Central) e
         // refetch on focus — marcar um ganho no pipeline reflete aqui sozinho.
@@ -90,8 +83,10 @@ export function useCockpitData(rangeDays: CockpitRange = 14) {
         queryFn: async (): Promise<CockpitData> => {
             const now = new Date();
             const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-            const d14 = new Date(now.getTime() - (rangeDays - 1) * 86_400_000);
-            const d7 = new Date(now.getTime() - (Math.min(rangeDays, 30) - 1) * 86_400_000);
+            const d14 = new Date(now.getTime() - (COCKPIT_DAYS - 1) * 86_400_000);
+            const since14 = new Date(d14.getFullYear(), d14.getMonth(), d14.getDate());
+            // Ganhos desde o que vier antes: início do mês (total) ou 14 dias (por dia).
+            const wonSince = since14 < monthStart ? since14 : monthStart;
             // metas_consolidadas.mes_referencia é DATE (1º dia do mês), não "YYYY-MM"
             const mesRef = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
 
@@ -101,7 +96,7 @@ export function useCockpitData(rangeDays: CockpitRange = 14) {
                     .select("value, updated_at")
                     .eq("company_id", companyId!)
                     .eq("stage", "closed_won")
-                    .gte("updated_at", monthStart.toISOString()),
+                    .gte("updated_at", wonSince.toISOString()),
                 supabase
                     .from("metas_consolidadas")
                     .select("valor_meta")
@@ -112,12 +107,12 @@ export function useCockpitData(rangeDays: CockpitRange = 14) {
                     .from("deals")
                     .select("created_at")
                     .eq("company_id", companyId!)
-                    .gte("created_at", new Date(d14.getFullYear(), d14.getMonth(), d14.getDate()).toISOString()),
+                    .gte("created_at", since14.toISOString()),
                 supabase
                     .from("channel_messages")
                     .select("conversation_id, direction, message_timestamp")
                     .eq("company_id", companyId!)
-                    .gte("message_timestamp", new Date(d7.getFullYear(), d7.getMonth(), d7.getDate()).toISOString())
+                    .gte("message_timestamp", since14.toISOString())
                     .order("message_timestamp", { ascending: true })
                     .limit(8000),
             ]);
@@ -128,26 +123,28 @@ export function useCockpitData(rangeDays: CockpitRange = 14) {
             if (goalQ.error) console.warn("cockpit: meta indisponível:", goalQ.error.message);
             if (msgsQ.error) console.warn("cockpit: mensagens indisponíveis:", msgsQ.error.message);
 
-            // Receita do mês: acumulada por dia
-            const wonByDay = dayRange(monthStart, now);
+            const leadsByDay = dayRange(since14, now);
+            const wonByDay = dayRange(since14, now);
             let wonMonthTotal = 0;
+            let wonMonthCount = 0;
             for (const r of wonQ.data ?? []) {
-                const v = Number(r.value) || 0;
-                wonMonthTotal += v;
+                if (new Date(r.updated_at) >= monthStart) {
+                    wonMonthTotal += Number(r.value) || 0;
+                    wonMonthCount += 1;
+                }
                 const k = localDayKey(r.updated_at);
-                if (wonByDay.has(k)) wonByDay.set(k, (wonByDay.get(k) ?? 0) + v);
+                if (wonByDay.has(k)) wonByDay.set(k, (wonByDay.get(k) ?? 0) + 1);
             }
-            let acc = 0;
-            const wonMonthSeries = toSeries(wonByDay).map((p) => ({ ...p, value: (acc += p.value) }));
-
-            // Leads por dia (14d)
-            const leadsByDay = dayRange(d14, now);
             for (const r of leadsQ.data ?? []) {
                 const k = localDayKey(r.created_at);
                 if (leadsByDay.has(k)) leadsByDay.set(k, (leadsByDay.get(k) ?? 0) + 1);
             }
-            const leadsPerDay = toSeries(leadsByDay);
-            const leads7dTotal = leadsPerDay.slice(-7).reduce((s, p) => s + p.value, 0);
+            const days: CockpitDay[] = [...leadsByDay.keys()].map((day) => ({
+                day,
+                label: shortLabel(day),
+                leads: leadsByDay.get(day) ?? 0,
+                won: wonByDay.get(day) ?? 0,
+            }));
 
             // Tempo de 1ª resposta: por conversa, cada inbound → 1º outbound seguinte
             const byConv = new Map<string, { direction: string; ts: number }[]>();
@@ -156,7 +153,6 @@ export function useCockpitData(rangeDays: CockpitRange = 14) {
                 arr.push({ direction: m.direction, ts: new Date(m.message_timestamp).getTime() });
                 byConv.set(m.conversation_id, arr);
             }
-            const deltasByDay = new Map<string, number[]>();
             const allDeltas: number[] = [];
             for (const msgs of byConv.values()) {
                 let pendingInbound: number | null = null;
@@ -168,27 +164,17 @@ export function useCockpitData(rangeDays: CockpitRange = 14) {
                         const delta = m.ts - pendingInbound;
                         pendingInbound = null;
                         if (delta <= 0 || delta > RESPONSE_CAP_MS) continue;
-                        const min = delta / 60_000;
-                        allDeltas.push(min);
-                        const k = localDayKey(new Date(m.ts).toISOString());
-                        deltasByDay.set(k, [...(deltasByDay.get(k) ?? []), min]);
+                        allDeltas.push(delta / 60_000);
                     }
                 }
             }
-            const respByDay = dayRange(d7, now);
-            const responsePerDay = toSeries(respByDay).map((p) => ({
-                ...p,
-                value: Math.round(median(deltasByDay.get(p.day) ?? []) ?? 0),
-            }));
-
+            const responseMedian = median(allDeltas);
             return {
                 wonMonthTotal,
-                wonMonthSeries,
+                wonMonthCount,
                 monthGoal: goalQ.data?.[0]?.valor_meta != null ? Number(goalQ.data[0].valor_meta) : null,
-                leadsPerDay,
-                leads7dTotal,
-                responsePerDay,
-                responseMedianMin: median(allDeltas) != null ? Math.round(median(allDeltas)!) : null,
+                days,
+                responseMedianMin: responseMedian != null ? Math.round(responseMedian) : null,
             };
         },
     });
