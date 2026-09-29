@@ -107,6 +107,16 @@
             "source": "/v2",
             "destination": "/",
             "statusCode": 301
+        },
+        {
+            "source": "/orcamento",
+            "destination": "/",
+            "statusCode": 301
+        },
+        {
+            "source": "/landing",
+            "destination": "/agencias",
+            "statusCode": 301
         }
     ],
     "rewrites": [

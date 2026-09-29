@@ -30,7 +30,7 @@ createRoot(document.getElementById("root")!).render(
 
 if (typeof window !== "undefined") {
   const isLanding =
-    window.location.pathname === "/" || window.location.pathname === "/landing";
+    window.location.pathname === "/" || window.location.pathname === "/agencias";
 
   // captureAttribution precisa rodar IMEDIATAMENTE: salva gclid/UTM no
   // sessionStorage assim que usuário chega do ad. Barato, só lê URL.

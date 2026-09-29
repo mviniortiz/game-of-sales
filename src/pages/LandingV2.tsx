@@ -45,7 +45,9 @@ const LandingV2 = () => {
         setDemoOpen(true);
     };
 
+    // Em /agencias; o título espelha o SIMPLE_ROUTES "agencias" do prerender-seo.mjs.
     useEffect(() => {
+        document.title = "Vyzon para agências | Sua agência responde lead sem abrir sistema nenhum";
         const html = document.documentElement;
         const wasDark = html.classList.contains("dark");
         html.classList.remove("dark");

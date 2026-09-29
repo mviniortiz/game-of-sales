@@ -19,16 +19,15 @@ const PublicReport = lazy(() => import("./pages/PublicReport"));
 // const CrmComRanking = lazy(() => import("./pages/seo/CrmComRanking"));
 // const CrmParaTimes = lazy(() => import("./pages/seo/CrmParaTimes"));
 
-// LP.6 — Landing v2 é a landing de PRODUÇÃO (cutover 2026-06-17): serve a home /.
-// A URL /v2 foi aposentada (2026-06-24): 301 → / no vercel.json (era duplicata).
+// Home = integradores de energia solar (Raio-X grátis). A landing de agência
+// (LandingV2) vive em /agencias; /landing e /orcamento são 301 no vercel.json.
 // O login v2 virou a página de /auth (dentro do AppShell, com AuthProvider).
+const SolarLanding = lazy(() => import("./pages/SolarLanding"));
 const LandingV2 = lazy(() => import("./pages/LandingV2"));
 const BlogV2 = lazy(() => import("./pages/BlogV2"));
 const BlogPostV2 = lazy(() => import("./pages/BlogPostV2"));
 const Alternativas = lazy(() => import("./pages/Alternativas"));
 const EvaVoz = lazy(() => import("./pages/EvaVoz"));
-// Landing de validação de uma dor só (teste fechado "orçamento que some").
-const OrcamentoLanding = lazy(() => import("./pages/OrcamentoLanding"));
 
 // Página temporária de calibração da EvaEntity (remover depois de plugar à lógica).
 const EvaEntityTest = lazy(() => import("./pages/EvaEntityTest"));
@@ -52,13 +51,12 @@ const App = () => (
     <BrowserRouter>
       <CanonicalManager />
       <Routes>
-        <Route path="/" element={<Suspense fallback={<LazyFallback />}><LandingV2 /></Suspense>} />
-        <Route path="/landing" element={<Suspense fallback={<LazyFallback />}><LandingV2 /></Suspense>} />
+        <Route path="/" element={<Suspense fallback={<LazyFallback />}><SolarLanding /></Suspense>} />
+        <Route path="/agencias" element={<Suspense fallback={<LazyFallback />}><LandingV2 /></Suspense>} />
         <Route path="/blog" element={<Suspense fallback={<LazyFallback />}><BlogV2 /></Suspense>} />
         <Route path="/blog/:slug" element={<Suspense fallback={<LazyFallback />}><BlogPostV2 /></Suspense>} />
         <Route path="/alternativas" element={<Suspense fallback={<LazyFallback />}><Alternativas /></Suspense>} />
         <Route path="/eva-voz" element={<Suspense fallback={<LazyFallback />}><EvaVoz /></Suspense>} />
-        <Route path="/orcamento" element={<Suspense fallback={<LazyFallback />}><OrcamentoLanding /></Suspense>} />
         {/* Personas /para-* despublicadas 2026-06-16 — 301 → home no vercel.json. */}
         {/* /alternativa-* individuais → /alternativas (hub republicado 2026-07-22). */}
         <Route

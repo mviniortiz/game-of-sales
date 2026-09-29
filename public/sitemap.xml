@@ -3,7 +3,7 @@
   <!-- Home -->
   <url>
     <loc>https://vyzon.com.br/</loc>
-    <lastmod>2026-06-21</lastmod>
+    <lastmod>2026-09-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -47,8 +47,8 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://vyzon.com.br/orcamento</loc>
-    <lastmod>2026-09-14</lastmod>
+    <loc>https://vyzon.com.br/agencias</loc>
+    <lastmod>2026-09-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>

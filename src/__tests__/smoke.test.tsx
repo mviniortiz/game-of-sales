@@ -165,6 +165,17 @@ describe('Smoke Tests - Public Pages', () => {
         // travar de verdade (~7-8s observado localmente); timeout maior em vez
         // de mockar cada seção individualmente.
     }, 20000);
+
+    it('Home solar renders with the Raio-X form', async () => {
+        const { default: SolarLanding } = await import('@/pages/SolarLanding');
+        render(
+            <MemoryRouter>
+                <SolarLanding />
+            </MemoryRouter>
+        );
+        expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/proposta de energia solar/i);
+        expect(screen.getByRole('button', { name: /pedir meu raio-x/i })).toBeDisabled();
+    });
 });
 
 describe('Smoke Tests - Components', () => {

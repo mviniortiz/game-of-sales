@@ -66,10 +66,10 @@ const SIMPLE_ROUTES = [
         },
     },
     {
-        slug: "orcamento",
+        slug: "agencias",
         seo: {
-            title: "Mandou o orçamento e o cliente sumiu? | Vyzon",
-            description: "A EVA acompanha os orçamentos que você manda pelo WhatsApp e, se o cliente some, prepara a retomada pra você aprovar. Teste fechado pra 20 negócios.",
+            title: "Vyzon para agências | Sua agência responde lead sem abrir sistema nenhum",
+            description: "A EVA lê cada conversa do WhatsApp, abre a oportunidade no funil e te manda a próxima mensagem pronta no seu WhatsApp. Você responde 1 e ela sai. Teste 14 dias grátis, sem cartão.",
         },
     },
 ];
@@ -326,6 +326,11 @@ async function buildSimple(config) {
     // Remove noscripts que não sejam o do Meta Pixel (facebook.com/tr).
     html = html.replace(/<noscript>([\s\S]*?)<\/noscript>/g, (match) =>
         match.includes("facebook.com/tr") ? match : ""
+    );
+    // O FAQPage do template é o da home; rich result exige FAQ visível na própria página.
+    html = html.replace(
+        /<script type="application\/ld\+json">\s*\{\s*"@context":\s*"https:\/\/schema\.org",\s*"@type":\s*"FAQPage"[\s\S]*?<\/script>/,
+        ""
     );
     const outDir = path.join(DIST, config.slug);
     if (!existsSync(outDir)) await mkdir(outDir, { recursive: true });

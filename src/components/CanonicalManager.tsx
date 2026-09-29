@@ -5,16 +5,16 @@ const ORIGIN = "https://vyzon.com.br";
 
 // Rotas públicas que devem ter canonical próprio (self-canonical).
 // MANTER SINCRONIZADO com as rotas SEO de App.tsx ao adicionar/remover landings.
-// Qualquer rota fora desta lista (home, /landing, app interno, /auth, previews,
+// Qualquer rota fora desta lista (home, app interno, /auth, previews,
 // /r/:token) cai no canonical da home.
 const SELF_CANONICAL = new Set<string>([
   // /para-* e /crm-* despublicadas (301 → home). /alternativas republicada 2026-07-22.
+  "/agencias",
   "/alternativas",
   "/changelog",
   "/politica-privacidade",
   "/termos-de-servico",
   "/blog",
-  "/orcamento",
 ]);
 
 // Rotas com slug dinâmico que devem ter canonical próprio (a URL real da página).
