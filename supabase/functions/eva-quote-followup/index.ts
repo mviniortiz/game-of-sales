@@ -1,12 +1,12 @@
-// eva-quote-followup (QUOTE.1, 2026-09-16) — "orçamento que some".
-// Cron a cada 30 min (eva-quote-followup-every-30m). Lê quote_tracking, que a
-// evolution-message-webhook preenche quando a empresa manda um orçamento:
-//   - lead respondeu depois do orçamento → 'replied' (quem marca é a trigger
-//     trg_quote_tracking_mark_replied no insert da mensagem; aqui é só rede de
-//     segurança pra resposta que não passou por channel_messages)
-//   - 2 dias sem resposta → rascunho de retomada em agent_suggestions
-//     (kind='followup'), levado pro WhatsApp do dono → 'followup_suggested'
-//   - 7 dias sem ação → 'closed'
+// eva-quote-followup (QUOTE.1, 2026-09-16; regras QUOTE.3, 2026-09-29) — "orçamento que some".
+// Cron a cada 30 min (eva-quote-followup-every-30m). O estado de cada orçamento
+// vem da view quote_tracking_live (quem falou por último na conversa), e a fila
+// da rodada vem da quote_followup_candidates:
+//   - no_reply: cliente nunca respondeu; uma retomada, 2 dias depois da última
+//     mensagem da empresa → 'followup_suggested'
+//   - went_quiet: cliente respondeu e parou há 3+ dias; uma retomada por
+//     silêncio, escrita a partir das últimas mensagens (last_draft_at)
+//   - 30 dias sem o cliente escrever → 'closed' (expired), via quote_tracking_expire
 // Só rascunha. O envio pro lead depende do dono aprovar no WhatsApp.
 //
 // Invocação:
@@ -16,7 +16,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { notifyPendingSuggestions } from "../_shared/whatsappApproval.ts";
-import { buildQuotePrompt, callLLM, daysBetween } from "../_shared/followupDraft.ts";
+import { buildQuietQuotePrompt, buildQuotePrompt, callLLM, daysBetween } from "../_shared/followupDraft.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -31,12 +31,12 @@ const corsHeaders = {
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-const NO_REPLY_DAYS = 2;
-const CLOSE_AFTER_DAYS = 7;
+const EXPIRE_AFTER_DAYS = 30;
 const MAX_QUOTES_PER_RUN = 40;
+const RECENT_MESSAGES = 8;
 const CLOSED_STAGES = ["closed_won", "closed_lost", "Ganho", "Perdido", "ganho", "perdido", "won", "lost"];
 
-type QuoteRow = {
+type Candidate = {
     id: string;
     company_id: string;
     conversation_id: string;
@@ -45,6 +45,8 @@ type QuoteRow = {
     amount: number | null;
     detected_by: "pdf" | "text";
     sent_at: string;
+    state: "no_reply" | "went_quiet";
+    client_at: string | null;
 };
 
 function json(status: number, body: unknown) {
@@ -65,9 +67,25 @@ async function hasPendingSuggestion(dealId: string): Promise<boolean> {
     return (count ?? 0) > 0;
 }
 
-async function setStatus(id: string, patch: Record<string, unknown>): Promise<void> {
+async function setQuote(id: string, patch: Record<string, unknown>): Promise<void> {
     const { error } = await supabase.from("quote_tracking").update(patch).eq("id", id);
     if (error) console.error("[eva-quote] update falhou", id, error.message);
+}
+
+async function recentMessages(conversationId: string) {
+    const { data } = await supabase
+        .from("channel_messages")
+        .select("direction, body, message_type")
+        .eq("conversation_id", conversationId)
+        .neq("message_type", "reaction")
+        .order("message_timestamp", { ascending: false })
+        .limit(RECENT_MESSAGES);
+    return ((data || []) as Array<{ direction: string; body: string | null; message_type: string }>)
+        .reverse()
+        .map((m) => ({
+            from: (m.direction === "inbound" ? "cliente" : "empresa") as "cliente" | "empresa",
+            text: (m.body?.trim() || `[${m.message_type}]`).slice(0, 400),
+        }));
 }
 
 serve(async (req) => {
@@ -93,36 +111,16 @@ serve(async (req) => {
             filterCompanyId = body.company_id;
         }
 
-        const now = Date.now();
-        const noReplyCutoff = new Date(now - NO_REPLY_DAYS * 86400000).toISOString();
-        const closeCutoff = new Date(now - CLOSE_AFTER_DAYS * 86400000).toISOString();
+        const { data: expired, error: expireErr } = await supabase.rpc("quote_tracking_expire", { p_days: EXPIRE_AFTER_DAYS });
+        if (expireErr) console.error("[eva-quote] vencimento falhou", expireErr.message);
 
-        // 1) Velho demais pra retomar: fecha sem rascunhar.
-        let closeQuery = supabase
-            .from("quote_tracking")
-            .update({ status: "closed" })
-            .eq("status", "open")
-            .lt("sent_at", closeCutoff);
-        if (filterCompanyId) closeQuery = closeQuery.eq("company_id", filterCompanyId);
-        const { data: closedRows, error: closeErr } = await closeQuery.select("id");
-        if (closeErr) console.error("[eva-quote] fechamento falhou", closeErr.message);
-
-        // 2) Janela de retomada: entre 2 e 7 dias.
-        let query = supabase
-            .from("quote_tracking")
-            .select("id, company_id, conversation_id, contact_id, deal_id, amount, detected_by, sent_at")
-            .eq("status", "open")
-            .lt("sent_at", noReplyCutoff)
-            .gte("sent_at", closeCutoff)
-            .order("sent_at", { ascending: true })
-            .limit(MAX_QUOTES_PER_RUN);
+        let query = supabase.rpc("quote_followup_candidates", { p_limit: 500 });
         if (filterCompanyId) query = query.eq("company_id", filterCompanyId);
+        const { data: quotes, error } = await query.limit(MAX_QUOTES_PER_RUN);
+        if (error) throw new Error(`leitura da fila de retomada falhou: ${error.message}`);
 
-        const { data: quotes, error } = await query;
-        if (error) throw new Error(`leitura de quote_tracking falhou: ${error.message}`);
-
-        let replied = 0;
-        let suggested = 0;
+        let suggestedNoReply = 0;
+        let suggestedQuiet = 0;
         let notified = 0;
         let closedDealDone = 0;
         let skippedPending = 0;
@@ -130,19 +128,12 @@ serve(async (req) => {
         let failedLLM = 0;
         const errors: string[] = [];
 
-        for (const q of (quotes || []) as QuoteRow[]) {
+        for (const q of (quotes || []) as Candidate[]) {
             const { data: conv } = await supabase
                 .from("channel_conversations")
-                .select("deal_id, contact_id, last_inbound_at")
+                .select("deal_id, contact_id")
                 .eq("id", q.conversation_id)
                 .maybeSingle();
-
-            // Rede de segurança: a trigger de channel_messages já marca 'replied'.
-            if (conv?.last_inbound_at && new Date(conv.last_inbound_at) > new Date(q.sent_at)) {
-                await setStatus(q.id, { status: "replied", replied_at: conv.last_inbound_at });
-                replied++;
-                continue;
-            }
 
             // Card criado à mão depois do orçamento também serve.
             const dealId = q.deal_id || conv?.deal_id || null;
@@ -150,7 +141,7 @@ serve(async (req) => {
                 skippedNoDeal++;
                 continue;
             }
-            if (!q.deal_id) await setStatus(q.id, { deal_id: dealId });
+            if (!q.deal_id) await setQuote(q.id, { deal_id: dealId });
 
             if (await hasPendingSuggestion(dealId)) {
                 skippedPending++;
@@ -167,7 +158,7 @@ serve(async (req) => {
                 continue;
             }
             if (CLOSED_STAGES.includes(deal.stage)) {
-                await setStatus(q.id, { status: "closed" });
+                await setQuote(q.id, { status: "closed", closed_reason: "deal_closed" });
                 closedDealDone++;
                 continue;
             }
@@ -179,16 +170,28 @@ serve(async (req) => {
 
             const contactName = contact?.name || deal.customer_name || deal.account_name || null;
             const contactPhone = contact?.phone_e164 || deal.customer_phone || null;
-            const days = daysBetween(q.sent_at);
+            const quiet = q.state === "went_quiet" && !!q.client_at;
+            const days = daysBetween(quiet ? q.client_at! : q.sent_at);
+            const plural = days === 1 ? "dia" : "dias";
 
-            const draft = await callLLM(buildQuotePrompt({
-                contactName,
-                daysSinceQuote: days,
-                amount: q.amount,
-                detectedBy: q.detected_by,
-                dealTitle: deal.title,
-                stage: deal.stage,
-            }));
+            const draft = await callLLM(
+                quiet
+                    ? buildQuietQuotePrompt({
+                        contactName,
+                        daysSinceClient: days,
+                        amount: q.amount,
+                        dealTitle: deal.title,
+                        recent: await recentMessages(q.conversation_id),
+                    })
+                    : buildQuotePrompt({
+                        contactName,
+                        daysSinceQuote: days,
+                        amount: q.amount,
+                        detectedBy: q.detected_by,
+                        dealTitle: deal.title,
+                        stage: deal.stage,
+                    }),
+            );
             if (!draft) {
                 failedLLM++;
                 continue;
@@ -204,10 +207,12 @@ serve(async (req) => {
                     conversation_id: q.conversation_id,
                     input_summary: {
                         channel: "whatsapp",
-                        trigger: "quote_no_reply",
+                        trigger: quiet ? "quote_went_quiet" : "quote_no_reply",
                         quote_id: q.id,
                         days,
-                        reason: `Orçamento enviado há ${days} dia(s) sem resposta`,
+                        reason: quiet
+                            ? `Respondeu ao orçamento e está há ${days} ${plural} sem falar`
+                            : `Orçamento enviado há ${days} ${plural} sem resposta`,
                     },
                     suggestion: {
                         channel: "whatsapp",
@@ -227,8 +232,15 @@ serve(async (req) => {
                 continue;
             }
 
-            await setStatus(q.id, { status: "followup_suggested", suggestion_id: inserted.id });
-            suggested++;
+            const draftedAt = new Date().toISOString();
+            await setQuote(
+                q.id,
+                quiet
+                    ? { suggestion_id: inserted.id, last_draft_at: draftedAt }
+                    : { status: "followup_suggested", suggestion_id: inserted.id, last_draft_at: draftedAt },
+            );
+            if (quiet) suggestedQuiet++;
+            else suggestedNoReply++;
 
             try {
                 const notify = await notifyPendingSuggestions(supabase, {
@@ -244,12 +256,12 @@ serve(async (req) => {
 
         return json(200, {
             ok: true,
+            expired: expired ?? 0,
             scanned: quotes?.length ?? 0,
-            closed_stale: closedRows?.length ?? 0,
-            closed_deal_done: closedDealDone,
-            replied,
-            suggested,
+            suggested_no_reply: suggestedNoReply,
+            suggested_went_quiet: suggestedQuiet,
             notified,
+            closed_deal_done: closedDealDone,
             skipped_pending: skippedPending,
             skipped_no_deal: skippedNoDeal,
             failed_llm: failedLLM,

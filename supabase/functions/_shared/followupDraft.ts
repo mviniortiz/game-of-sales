@@ -159,6 +159,60 @@ Retorne APENAS o JSON, nada fora dele.`;
     return { system, user };
 }
 
+export type QuietPromptInput = {
+    contactName: string | null;
+    daysSinceClient: number;
+    amount: number | null;
+    dealTitle?: string | null;
+    /** Últimas mensagens da conversa, da mais antiga pra mais nova. */
+    recent: Array<{ from: "cliente" | "empresa"; text: string }>;
+};
+
+// O cliente respondeu ao orçamento e depois parou de falar. Diferente do
+// buildQuotePrompt, aqui existe conversa: a retomada parte do que o cliente
+// disse por último (quer pensar, vai falar com alguém, pediu desconto). Mesma
+// regra de não repetir valor, pelo mesmo motivo.
+export function buildQuietQuotePrompt(q: QuietPromptInput): FollowupPrompt {
+    const contactName = q.contactName || "cliente";
+    const firstName = contactName.split(" ")[0];
+    const quando = q.daysSinceClient === 1 ? "ontem" : `há ${q.daysSinceClient} dias`;
+
+    const system = `Você é Eva, assistente comercial brasileira do Vyzon. Sua missão: escrever uma retomada curta no WhatsApp para um cliente que recebeu um orçamento, chegou a responder e depois parou de falar. Sempre em pt-BR.
+
+REGRAS:
+- Ler a conversa e partir do que o cliente disse por último (ex.: ia pensar, falar com alguém, comparar, ver o financiamento)
+- Tom leve, de quem lembra sem cobrar. Nada de pressão, urgência ou escassez
+- Chamar pelo primeiro nome do contato
+- No máximo 2 parágrafos curtos
+- Terminar com UMA pergunta simples, fácil de responder
+- Não repetir valores, preços nem condições do orçamento
+- Nunca inventar informação que não está na conversa
+- Sem emojis
+- Sem "tudo bem?" ou "espero que esteja bem" (clichê)`;
+
+    const conversa = q.recent.map((m) => `${m.from === "cliente" ? firstName : "Empresa"}: ${m.text}`).join("\n");
+
+    const user = `CLIENTE QUE RESPONDEU E SUMIU:
+
+Contato: ${contactName}
+Última mensagem do cliente: ${quando}
+${formatBRL(q.amount) ? `Valor do orçamento (só contexto, não citar): ${formatBRL(q.amount)}` : ""}
+${q.dealTitle ? `Oportunidade: ${q.dealTitle}` : ""}
+
+Conversa recente:
+${conversa || "(sem texto disponível)"}
+
+Gere JSON com esta estrutura exata:
+{
+  "suggestion_text": "Uma linha dizendo o que o cliente disse por último e por que retomar agora (15-25 palavras)",
+  "message_draft": "Mensagem de WhatsApp pronta pro ${firstName}, leve, até 2 parágrafos curtos, termina com uma pergunta"
+}
+
+Retorne APENAS o JSON, nada fora dele.`;
+
+    return { system, user };
+}
+
 // Provider dispatch: Claude Haiku se tiver ANTHROPIC_API_KEY, senão OpenAI gpt-4o-mini
 export async function callLLM(prompt: FollowupPrompt): Promise<FollowupDraft | null> {
     if (ANTHROPIC_API_KEY) {
