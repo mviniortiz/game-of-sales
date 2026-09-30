@@ -56,7 +56,14 @@ Escreva `factory/films/<slug>/edl.md` com: hook no primeiro frame; promessa
 por beat; transições; trilha e efeitos; CTA.
 
 Regras duras: **nunca começar pelo logo**; **nunca mais de uma grande ideia
-visual por vídeo**.
+visual por vídeo**; **um beat = uma ideia** (cada cena prova uma coisa só).
+
+**Design antes de motion.** Antes de animar, cada beat do EDL vira um
+**frame-chave estático** (HTML da cena congelado no estado final do beat →
+screenshot PNG em `factory/films/<slug>/keyframes/`). Os frames são revisados
+juntos, como sequência: se um frame parado não se sustenta (hierarquia,
+respiro, objeto-chave no centro, fundo que não disputa com a UI), o motion
+não vai salvar. Só depois disso entra animação.
 
 ## 2. Estrutura do reel
 
@@ -84,6 +91,16 @@ visual por vídeo**.
 - Use o **EVA Signal** (spec no style guide) com três estados: `scan` →
   `lock` → `resolve`. Sutil, gráfico, editorial. **Nunca** orbe, plasma,
   partículas ou efeito sci-fi.
+- **Suavidade:** todo movimento com easing (curvas no style guide) e
+  **sobreposição**: o elemento seguinte começa antes do anterior terminar.
+  Movimento linear só no `scan` do EVA Signal.
+- **Continuidade entre cenas:** a melhor transição é o próprio elemento de UI
+  que sai de uma cena e vira a próxima (match cut, zoom que entra no
+  componente). Corte seco é válido, mas por decisão: marca uma virada no
+  beat. Corte seco sem relação entre as cenas = erro.
+- **Ritmo adaptativo:** a velocidade não é constante. A dor corre, o produto
+  respira, o clímax (clique humano / insight) segura. Declare a curva de
+  ritmo no EDL.
 
 ## 4. Som
 
@@ -97,6 +114,11 @@ visual por vídeo**.
   - transição curta e limpa para zooms;
   - resolução suave no payoff.
 - Sem excesso, sem risers genéricos.
+- **BPM é decisão de marca, não de gosto do dia:** faixa-padrão e cortes no
+  tempo da trilha estão no style guide (seção 8). Declare o BPM no EDL.
+- **Passe de subtração** depois do mix: ouça o filme inteiro e remova todo
+  efeito alto demais, fora de lugar ou que não ajuda a entender o produto.
+  Na dúvida, sai.
 - **Padrão é SEM voz.** Voz só como experimento separado, nunca como muleta.
 
 ## 5. Qualidade técnica
@@ -140,11 +162,12 @@ trocando cor, voz ou prompt — a correção tem que atacar a causa-raiz.
 ## 7. Fluxo de execução
 
 1. Storyboard + EDL (pré-produção acima).
-2. Rough cut (layout + timing, sem polish).
-3. Motion + sound design.
-4. Assistir ao render → review → **no máximo 2 rodadas de refinamento**
+2. Frames-chave estáticos aprovados (design antes de motion).
+3. Rough cut (layout + timing, sem polish).
+4. Motion + sound design (fecha com o passe de subtração).
+5. Assistir ao render → review → **no máximo 2 rodadas de refinamento**
    guiadas pelo review.
-5. Sem variações aleatórias: cada variação testa **um** hook, ângulo ou ritmo
+6. Sem variações aleatórias: cada variação testa **um** hook, ângulo ou ritmo
    específico, declarado no EDL.
 
 ## Integração com o motor de produção
