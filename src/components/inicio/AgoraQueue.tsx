@@ -325,7 +325,7 @@ export function AgoraQueue({
                         )}
 
                         <Link
-                            to="/orcamentos"
+                            to="/orcamentos?aba=parados"
                             className={`flex items-center justify-between px-5 py-3.5 text-[13px] text-[var(--vyz-text)] transition-colors duration-150 hover:bg-[var(--vyz-surface-2)] sm:px-6 ${FOCUS}`}
                         >
                             {parkedCount > parked.length ? `Ver os ${parkedCount} parados em Orçamentos` : "Ver todos em Orçamentos"}

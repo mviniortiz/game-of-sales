@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
+import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowClockwise as RefreshCw } from "@phosphor-icons/react";
 import { useInicioData } from "@/hooks/useInicioData";
@@ -23,6 +24,8 @@ import {
     resolvePriority,
     snoozePriority,
     startOfTomorrowIso,
+    unresolvePriority,
+    unsnoozePriority,
     isResolved,
     isSnoozed,
     type PriorityActionState,
@@ -39,10 +42,6 @@ import {
 //
 // Análise de período (funil, ciclo, ranking, heatmap) continua em /performance.
 // ─────────────────────────────────────────────────────────────────────────────
-
-const INK = "#0B1220";
-const SUB = "#475569";
-const BLUE = "#2563EB";
 
 function relativeTime(iso: string | null | undefined): string {
     if (!iso) return "";
@@ -73,10 +72,14 @@ function usePriorityActions(companyId: string | null | undefined) {
     useEffect(() => {
         setState(loadLiveActions(companyId, Date.now()));
     }, [companyId]);
+    // Resolver e adiar tiram o item da fila na hora; o aviso dá a volta.
     const resolve = useCallback(
         (id: string) => {
             if (!companyId) return;
             setState(resolvePriority(companyId, id, new Date().toISOString()));
+            toast.success("Marcado como resolvido.", {
+                action: { label: "Desfazer", onClick: () => setState(unresolvePriority(companyId, id)) },
+            });
         },
         [companyId],
     );
@@ -84,6 +87,9 @@ function usePriorityActions(companyId: string | null | undefined) {
         (id: string) => {
             if (!companyId) return;
             setState(snoozePriority(companyId, id, startOfTomorrowIso()));
+            toast("Adiado para amanhã.", {
+                action: { label: "Desfazer", onClick: () => setState(unsnoozePriority(companyId, id)) },
+            });
         },
         [companyId],
     );
@@ -186,6 +192,8 @@ const Inicio = () => {
     const funnelLoading = preview ? false : pipeline.isLoading;
 
     const firstName = (profile?.nome || "").split(" ")[0] || "";
+    const weekday = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+    const today = weekday.charAt(0).toUpperCase() + weekday.slice(1);
     const greeting = getHourlyGreeting(new Date().getHours());
     const covered = new Set(pendingAll.map((p) => p.conversationId).filter(Boolean));
     const waiting =
@@ -206,42 +214,35 @@ const Inicio = () => {
 
     return (
         <div className="vz-stagger space-y-5 sm:space-y-6 mx-auto w-full max-w-[1920px] 2xl:px-2">
-            {/* Header */}
-            <div
-                className="rounded-2xl px-5 sm:px-9 py-6 sm:py-7 flex flex-col sm:flex-row sm:items-end justify-between gap-4 relative overflow-hidden"
-                style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}
-            >
-                <div
-                    className="absolute top-0 inset-x-0 h-px pointer-events-none"
-                    style={{ background: "linear-gradient(90deg, transparent, rgba(37,99,235,0.30) 40%, rgba(37,99,235,0.16) 70%, transparent)" }}
-                />
-                <div className="relative z-10">
-                    <h1 className="mb-2 text-[30px] sm:text-[40px] leading-[1.04]"
-                        style={{ color: INK, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500, letterSpacing: "-0.012em" }}>
+            {/* Cabeçalho: data, saudação e a frase do dia. */}
+            <header className="flex flex-col gap-4 rounded-[16px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-5 py-6 sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:py-7">
+                <div className="min-w-0">
+                    <p className="text-[12.5px] font-medium text-[var(--vyz-text-muted)]">{today}</p>
+                    <h1
+                        className="mt-1 text-[30px] font-medium leading-[1.05] tracking-[-0.012em] text-[var(--vyz-text-primary)] sm:text-[40px]"
+                        style={{ fontFamily: "'Newsreader', Georgia, serif" }}
+                    >
                         {greeting}{firstName ? `, ${firstName}` : ""}
                     </h1>
-                    <p className="text-[14.5px] sm:text-[15.5px]" style={{ color: SUB }}>{subtitle}</p>
+                    <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-[var(--vyz-text)] sm:text-[15.5px]">{subtitle}</p>
                 </div>
-                <div className="relative z-10 flex items-center gap-2">
-                    <motion.button
-                        onClick={() => void handleRefresh()}
-                        disabled={refreshing}
-                        whileTap={reduce ? undefined : { scale: 0.95 }}
-                        className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-[13px] font-medium transition-colors hover:bg-white hover:border-[#BFD3F2] shrink-0 disabled:opacity-70"
-                        style={{ background: "rgba(255,255,255,0.85)", border: "1px solid #D9E2EC", color: SUB }}
+                <motion.button
+                    type="button"
+                    onClick={() => void handleRefresh()}
+                    disabled={refreshing}
+                    whileTap={reduce ? undefined : { scale: 0.97 }}
+                    className="inline-flex h-10 shrink-0 items-center gap-2 self-start rounded-full border border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-1)] px-4 text-[13px] font-medium text-[var(--vyz-text)] transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[var(--vyz-surface-2)] hover:text-[var(--vyz-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 disabled:opacity-70 sm:self-auto"
+                >
+                    <motion.span
+                        className="inline-flex"
+                        animate={refreshing && !reduce ? { rotate: 360 } : { rotate: 0 }}
+                        transition={refreshing && !reduce ? { repeat: Infinity, ease: "linear", duration: 0.7 } : { type: "spring", stiffness: 260, damping: 18 }}
                     >
-                        <motion.span
-                            className="inline-flex"
-                            animate={refreshing && !reduce ? { rotate: 360 } : { rotate: 0 }}
-                            transition={refreshing && !reduce ? { repeat: Infinity, ease: "linear", duration: 0.7 } : { type: "spring", stiffness: 260, damping: 18 }}
-                            style={{ color: refreshing ? BLUE : "#64748B" }}
-                        >
-                            <RefreshCw size={15} weight="bold" />
-                        </motion.span>
-                        {refreshing ? "Atualizando…" : "Atualizar"}
-                    </motion.button>
-                </div>
-            </div>
+                        <RefreshCw size={15} weight="bold" aria-hidden />
+                    </motion.span>
+                    {refreshing ? "Atualizando…" : "Atualizar"}
+                </motion.button>
+            </header>
 
             {waDown && <WhatsappDownCard neverConnected={waNeverConnected} lastInboundAt={lastInboundAt} />}
 
@@ -275,7 +276,7 @@ const Inicio = () => {
                 </div>
             )}
 
-            <div className="text-center text-[11.5px] py-4" style={{ color: SUB }}>
+            <div className="py-4 text-center text-[11.5px] text-[var(--vyz-text-muted)]">
                 Dados em tempo real {cc.lastUpdatedAt ? `· atualizado ${relativeTime(cc.lastUpdatedAt.toISOString())}` : ""}
             </div>
         </div>

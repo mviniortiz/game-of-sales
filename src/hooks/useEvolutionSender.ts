@@ -96,6 +96,8 @@ export interface UseEvolutionSender {
     /** Última vez que o status da Evolution foi verificado (mount, refresh
      *  manual, focus). null antes da primeira checagem. */
     lastStatusCheckedAt: Date | null;
+    /** O último check ao vivo deu erro (rede, função fora): status incerto. */
+    statusCheckFailed: boolean;
     sendMessage: (chatJid: string, text: string) => Promise<void>;
     sendAudioMessage: (chatJid: string, base64: string) => Promise<void>;
     sendMediaMessage: (
@@ -126,6 +128,7 @@ export function useEvolutionSender(): UseEvolutionSender {
     const [connecting, setConnecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [lastStatusCheckedAt, setLastStatusCheckedAt] = useState<Date | null>(null);
+    const [statusCheckFailed, setStatusCheckFailed] = useState(false);
 
     // Cache de áudio: messageId → data URI (espelha o do hook completo)
     const audioCache = useRef<Map<string, string>>(new Map());
@@ -175,12 +178,14 @@ export function useEvolutionSender(): UseEvolutionSender {
             const isOpen = data?.connected === true;
             setConnected(isOpen);
             setLastStatusCheckedAt(new Date());
+            setStatusCheckFailed(false);
             return isOpen;
         } catch (err) {
             console.warn("[EvolutionSender] status check failed:", err);
             // Falha no check NÃO seta lastStatusCheckedAt — UI deve sinalizar
             // "status incerto" em vez de cravar "desconectado".
             setConnected(false);
+            setStatusCheckFailed(true);
             return false;
         }
     }, [invokeProxy]);
@@ -345,6 +350,7 @@ export function useEvolutionSender(): UseEvolutionSender {
         connecting,
         error,
         lastStatusCheckedAt,
+        statusCheckFailed,
         sendMessage,
         sendAudioMessage,
         sendMediaMessage,

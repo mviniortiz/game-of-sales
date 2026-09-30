@@ -29,38 +29,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { toast } from "sonner";
 import {
-  Plus,
-  Target,
-  TrendingUp,
-  DollarSign,
-  Users,
   CheckCircle,
-  Sparkles,
-  Settings2,
-  AlertCircle,
-  Zap,
-  Star,
-  XCircle,
-  Search,
   Trash2,
   User,
-  LucideIcon,
-  Flame,
-  Clock,
   Filter,
   X,
-  CalendarDays,
-  ChevronDown,
-  CheckSquare,
   ArrowRightCircle,
   ArrowDownUp,
   UserPlus,
-  CheckCheck,
 } from "lucide-react";
 // F5P.4e — Phosphor duotone padronizado (mesmo set da sidebar).
 // Alias *Ph evita conflito com nomes lucide já em uso no arquivo.
 import {
-  Target as TargetPh,
   MagnifyingGlass as SearchPh,
   Plus as PlusPh,
   Sliders as SettingsPh,
@@ -82,9 +62,21 @@ import { NewDealModal } from "@/components/crm/NewDealModal";
 import { KanbanSkeleton } from "@/components/crm/KanbanSkeleton";
 import { PipelineConfigModal } from "@/components/crm/PipelineConfigModal";
 import { LostDealModal } from "@/components/crm/LostDealModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { WinCelebration } from "@/components/crm/WinCelebration";
 import { useDealTags } from "@/hooks/useDealTags";
 import { usePipelineContextData } from "@/hooks/usePipelineContextData";
+import { useQuoteBoard, type QuoteItem } from "@/hooks/useQuoteBoard";
+import { OPEN_QUOTE_STATES } from "@/lib/quoteText";
 import { useDealsTags } from "@/hooks/useDealsTags";
 import {
   configToStage,
@@ -142,6 +134,9 @@ export interface Deal {
     avatar_url?: string | null;
   } | null;
   is_hot?: boolean | null;
+  account_name?: string | null;
+  additional_contacts?: Array<{ phone?: string; name?: string }> | null;
+  sla_breach_at?: string | null;
   assignee_outside_company?: boolean;
   lastActivity?: DealLastActivity | null;
 }
@@ -173,6 +168,46 @@ const LIST_CELL_DESKTOP = "hidden sm:flex";
 const LIST_CELL_DESKTOP_BLOCK = "hidden sm:block";
 const LIST_TH = "text-[10.5px] uppercase font-semibold tracking-[0.07em] text-muted-foreground truncate";
 
+// Filtros, ordem e modo de exibição valem entre visitas (por navegador). Busca
+// não entra: texto digitado é da tarefa do momento.
+const FILTERS_KEY = "vyz:pipeline:filtros";
+type SavedFilters = {
+  view?: "kanban" | "list";
+  sort?: "position" | "az" | "za" | "value_desc" | "value_asc" | "created" | "updated";
+  sellers?: string[];
+  status?: "all" | "open" | "won" | "lost";
+  active?: "all" | "active" | "inactive";
+  hot?: boolean;
+  rotting?: boolean;
+  prob?: "all" | "high" | "medium" | "low";
+  date?: "all" | "this_week" | "this_month" | "overdue";
+  tags?: string[];
+  quote?: boolean;
+};
+function loadSavedFilters(): SavedFilters {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(FILTERS_KEY) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+const CHIP =
+  "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]";
+const CHIP_ON = "bg-[var(--vyz-accent-soft-10)] text-[var(--vyz-accent-text)] ring-1 ring-[var(--vyz-accent-border)]";
+const CHIP_OFF =
+  "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]";
+const PILL =
+  "inline-flex h-7 items-center gap-1 rounded-full pl-2.5 pr-1 text-[11px] font-medium bg-[var(--vyz-accent-soft-8)] text-[var(--vyz-accent-text)]";
+const PILL_X =
+  "ml-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full transition-colors duration-150 hover:bg-[var(--vyz-accent-soft-12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]";
+
+const PROB_LABELS = { high: "Prob. alta (70%+)", medium: "Prob. média (30 a 69%)", low: "Prob. baixa (até 29%)" } as const;
+const DATE_LABELS = { this_week: "Criadas esta semana", this_month: "Criadas este mês", overdue: "Previsão vencida" } as const;
+
+const foldText = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
 export default function CRM() {
   const { user, isSuperAdmin, companyId } = useAuth();
   const { activeCompanyId } = useTenant();
@@ -186,8 +221,9 @@ export default function CRM() {
   const [showLostModal, setShowLostModal] = useState(false);
   const [dealToLose, setDealToLose] = useState<Deal | null>(null);
   // Mobile-first: default to list on small screens
+  const [saved] = useState(loadSavedFilters);
   const [viewMode, setViewMode] = useState<"kanban" | "list">(() =>
-    typeof window !== "undefined" && window.innerWidth < 640 ? "list" : "kanban"
+    saved.view ?? (typeof window !== "undefined" && window.innerWidth < 640 ? "list" : "kanban")
   );
   // Mobile kanban: track visible column
   const [activeStageIndex, setActiveStageIndex] = useState(0);
@@ -196,10 +232,10 @@ export default function CRM() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState("");
   const [celebrationValue, setCelebrationValue] = useState(0);
-  const [selectedSellers, setSelectedSellers] = useState<string[]>([]); // vazio = todos
-  const [filterStatusKind, setFilterStatusKind] = useState<"all" | "open" | "won" | "lost">("all");
-  const [filterActive, setFilterActive] = useState<"all" | "active" | "inactive">("all");
-  const [sortBy, setSortBy] = useState<"position" | "az" | "za" | "value_desc" | "value_asc" | "created" | "updated">("position");
+  const [selectedSellers, setSelectedSellers] = useState<string[]>(saved.sellers ?? []); // vazio = todos
+  const [filterStatusKind, setFilterStatusKind] = useState<"all" | "open" | "won" | "lost">(saved.status ?? "all");
+  const [filterActive, setFilterActive] = useState<"all" | "active" | "inactive">(saved.active ?? "all");
+  const [sortBy, setSortBy] = useState<"position" | "az" | "za" | "value_desc" | "value_asc" | "created" | "updated">(saved.sort ?? "position");
   const [dealToDelete, setDealToDelete] = useState<Deal | null>(null);
 
   // Múltiplos funis (pipelines)
@@ -207,15 +243,27 @@ export default function CRM() {
   const [showNewPipeline, setShowNewPipeline] = useState(false);
 
   // Advanced filter state
-  const [filterHotDeals, setFilterHotDeals] = useState(false);
-  const [filterRottingDeals, setFilterRottingDeals] = useState(false);
-  const [filterProbability, setFilterProbability] = useState<"all" | "high" | "medium" | "low">("all");
-  const [filterDateRange, setFilterDateRange] = useState<"all" | "this_week" | "this_month" | "overdue">("all");
-  const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
+  const [filterHotDeals, setFilterHotDeals] = useState(saved.hot ?? false);
+  const [filterRottingDeals, setFilterRottingDeals] = useState(saved.rotting ?? false);
+  const [filterProbability, setFilterProbability] = useState<"all" | "high" | "medium" | "low">(saved.prob ?? "all");
+  const [filterDateRange, setFilterDateRange] = useState<"all" | "this_week" | "this_month" | "overdue">(saved.date ?? "all");
+  const [filterTagIds, setFilterTagIds] = useState<string[]>(saved.tags ?? []);
+  const [filterQuoteParked, setFilterQuoteParked] = useState(saved.quote ?? false);
   const [showFilters, setShowFilters] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
 
-  // Rotting notifications state
-  const [rottingBannerDismissed, setRottingBannerDismissed] = useState(false);
+  useEffect(() => {
+    const next: SavedFilters = {
+      view: viewMode, sort: sortBy, sellers: selectedSellers, status: filterStatusKind, active: filterActive,
+      hot: filterHotDeals, rotting: filterRottingDeals, prob: filterProbability, date: filterDateRange, tags: filterTagIds,
+      quote: filterQuoteParked,
+    };
+    try {
+      localStorage.setItem(FILTERS_KEY, JSON.stringify(next));
+    } catch {
+      /* navegador sem storage: filtros só valem nesta visita */
+    }
+  }, [viewMode, sortBy, selectedSellers, filterStatusKind, filterActive, filterHotDeals, filterRottingDeals, filterProbability, filterDateRange, filterTagIds, filterQuoteParked]);
 
   // Bulk actions state
   const [selectionMode, setSelectionMode] = useState(false);
@@ -229,25 +277,40 @@ export default function CRM() {
   const effectiveCompanyId = isSuperAdmin ? activeCompanyId : companyId;
 
   // Tags for filtering
-  const { data: companyTags = [] } = useDealTags(effectiveCompanyId);
+  const { data: companyTags = [], isSuccess: tagsLoaded } = useDealTags(effectiveCompanyId);
 
-  // Count active advanced filters
+  // Etiqueta salva que foi apagada filtraria tudo para zero sem mostrar pílula.
+  useEffect(() => {
+    if (!effectiveCompanyId || !tagsLoaded) return;
+    setFilterTagIds((prev) => {
+      const next = prev.filter((id) => companyTags.some((t: any) => t.id === id));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [effectiveCompanyId, tagsLoaded, companyTags]);
+
+  // Tudo que restringe a lista conta, inclusive responsável e status da barra de cima.
   const activeFilterCount = useMemo(() => {
     let count = 0;
+    if (selectedSellers.length > 0) count++;
+    if (filterStatusKind !== "all" || filterActive !== "all") count++;
     if (filterHotDeals) count++;
     if (filterRottingDeals) count++;
     if (filterProbability !== "all") count++;
     if (filterDateRange !== "all") count++;
     if (filterTagIds.length > 0) count++;
+    if (filterQuoteParked) count++;
     return count;
-  }, [filterHotDeals, filterRottingDeals, filterProbability, filterDateRange, filterTagIds]);
+  }, [selectedSellers, filterStatusKind, filterActive, filterHotDeals, filterRottingDeals, filterProbability, filterDateRange, filterTagIds, filterQuoteParked]);
 
   const clearAllFilters = useCallback(() => {
+    setSelectedSellers([]);
+    setSearchQuery("");
     setFilterHotDeals(false);
     setFilterRottingDeals(false);
     setFilterProbability("all");
     setFilterDateRange("all");
     setFilterTagIds([]);
+    setFilterQuoteParked(false);
     setFilterStatusKind("all");
     setFilterActive("all");
   }, []);
@@ -282,14 +345,6 @@ export default function CRM() {
 
     if (filterHotDeals) {
       result = result.filter((d) => d.is_hot === true);
-    }
-
-    if (filterRottingDeals) {
-      const threeDaysAgo = Date.now() - 3 * 24 * 60 * 60 * 1000;
-      result = result.filter((d) => {
-        const updatedAt = d.updated_at ? new Date(d.updated_at).getTime() : 0;
-        return updatedAt < threeDaysAgo;
-      });
     }
 
     if (filterProbability === "high") {
@@ -334,7 +389,7 @@ export default function CRM() {
     }
 
     return result;
-  }, [filterHotDeals, filterRottingDeals, filterProbability, filterDateRange, filterTagIds, dealTagMap]);
+  }, [filterHotDeals, filterProbability, filterDateRange, filterTagIds, dealTagMap]);
 
   // ── Funis (pipelines) — substituem o antigo localStorage de estágios ───────
   const { data: pipelines = [] } = usePipelines(effectiveCompanyId);
@@ -424,23 +479,52 @@ export default function CRM() {
     [sortBy],
   );
 
+  // Placar de orçamentos cruzado por card: o orçamento aberto mais recente de cada deal.
+  const { query: quoteQuery } = useQuoteBoard(30);
+  const quoteByDeal = useMemo(() => {
+    const m = new Map<string, QuoteItem>();
+    for (const q of quoteQuery.data?.items ?? []) {
+      if (!q.deal_id || !OPEN_QUOTE_STATES.includes(q.state)) continue;
+      const cur = m.get(q.deal_id);
+      if (!cur || new Date(q.sent_at) > new Date(cur.sent_at)) m.set(q.deal_id, q);
+    }
+    return m;
+  }, [quoteQuery.data]);
+
   // Pipeline único de filtragem (vendedor multi + busca + avançados + status + ativo).
   // Usado por dealsByStage, stageTotals, filteredDeals e allVisibleDealIds.
   const filterDeals = useCallback(
     (list: Deal[]): Deal[] => {
       let r = selectedSellers.length === 0 ? list : list.filter((d) => selectedSellers.includes(d.user_id));
       if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        r = r.filter((d) => d.title.toLowerCase().includes(q) || d.customer_name.toLowerCase().includes(q));
+        const q = foldText(searchQuery.trim());
+        const qDigits = searchQuery.replace(/\D/g, "");
+        r = r.filter(
+          (d) =>
+            foldText(d.title || "").includes(q) ||
+            foldText(d.customer_name || "").includes(q) ||
+            (qDigits.length >= 4 && (d.customer_phone || "").replace(/\D/g, "").includes(qDigits)),
+        );
       }
       r = applyAdvancedFilters(r);
+      if (filterQuoteParked) {
+        r = r.filter((d) => {
+          const q = quoteByDeal.get(d.id);
+          return !!q && (q.state === "no_reply" || q.state === "went_quiet");
+        });
+      }
+      if (filterRottingDeals) {
+        r = r.filter(
+          (d) => kindOf(d.stage_id) === "open" && !!d.updated_at && differenceInDays(new Date(), new Date(d.updated_at)) > 3,
+        );
+      }
       if (filterStatusKind !== "all") r = r.filter((d) => kindOf(d.stage_id) === filterStatusKind);
       if (filterActive !== "all") {
         r = r.filter((d) => (filterActive === "active" ? d.is_active !== false : d.is_active === false));
       }
       return r;
     },
-    [selectedSellers, searchQuery, applyAdvancedFilters, filterStatusKind, filterActive, kindOf],
+    [selectedSellers, searchQuery, applyAdvancedFilters, filterQuoteParked, quoteByDeal, filterRottingDeals, filterStatusKind, filterActive, kindOf],
   );
 
   // Optimized sensors for fast, responsive drag
@@ -580,6 +664,9 @@ export default function CRM() {
         created_at: d.created_at,
         updated_at: d.updated_at,
         is_hot: d.is_hot || false,
+        account_name: d.account_name ?? null,
+        additional_contacts: Array.isArray(d.additional_contacts) ? d.additional_contacts : null,
+        sla_breach_at: d.sla_breach_at ?? null,
         profiles: sellerProfile,
         assignee_outside_company: !!effectiveCompanyId && !!d.user_id && !sellerProfile,
         lastActivity: activitiesMap.get(d.id) || null,
@@ -964,6 +1051,18 @@ export default function CRM() {
     updateDealMutation.mutate({ id: deal.id, stage: targetStageId as StageId, position: 0, deal, previousDeals });
   }, [updateDealMutation, localDeals]);
 
+  // "Fechou" no menu do card: mesmo caminho do arraste até a etapa de ganho
+  // (comemoração e venda sincronizada inclusas).
+  const handleMarkWon = useCallback((deal: Deal) => {
+    const won = STAGES.find((s) => s.kind === "won");
+    if (!won) {
+      toast.error("Este funil não tem etapa de ganho. Crie uma em Configurar funil.");
+      return;
+    }
+    if (deal.stage_id === won.id) return;
+    handleSwipeMove(deal, won.id);
+  }, [STAGES, handleSwipeMove]);
+
   // Collision detection: rectIntersection cobre gaps entre colunas (FunnelConnector + flex gap)
   // pois usa o rect do card arrastado (~280px) ao invés do pointer pontual.
   // Ordem: pointerWithin (mais preciso quando pointer está dentro) → rectIntersection
@@ -1084,6 +1183,7 @@ export default function CRM() {
   );
 
   // Calculate pipeline total (from filtered deals)
+  const isFiltering = activeFilterCount > 0 || searchQuery.trim() !== "";
   const pipelineTotal = filteredDeals.reduce((acc, deal) => acc + (Number(deal.value) || 0), 0);
 
   const sortedDealsForList = useMemo(() => {
@@ -1095,6 +1195,34 @@ export default function CRM() {
     }
     return sortDeals(filteredDeals);
   }, [filteredDeals, sortBy, sortDeals]);
+
+  // Kanban/Lista: linha de cima no desktop (a barra de ferramentas não cabe em
+  // 1440px com ele), barra de ferramentas no celular.
+  const viewToggle = (
+    <div role="group" aria-label="Modo de exibição" className="inline-flex items-center gap-0.5 rounded-full border border-input bg-background p-0.5 flex-shrink-0 dark:border-white/10 dark:bg-white/[0.03]">
+      {([
+        { id: "kanban", label: "Kanban" },
+        { id: "list", label: "Lista" },
+      ] as const).map((v) => {
+        const active = viewMode === v.id;
+        return (
+          <button
+            key={v.id}
+            type="button"
+            aria-pressed={active}
+            onClick={() => setViewMode(v.id)}
+            className={`h-7 rounded-full px-3 text-[11.5px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
+              active
+                ? "bg-muted text-foreground shadow-sm ring-1 ring-border/60 dark:bg-white/10 dark:ring-white/15"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {v.label}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   const renderStageBadge = (stageId: string) => {
     const stage = STAGES.find((s) => s.id === stageId);
@@ -1109,44 +1237,47 @@ export default function CRM() {
 
   return (
     <>
-      {/* F5P.4f — fundo com gradient sutil pra tirar cinza chapado, sem ruído */}
-      <div className="vz-page-full -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6 flex flex-col text-foreground bg-gradient-to-b from-background via-background to-slate-50/40 dark:to-card/20 min-w-0 overflow-hidden">
+      <div className="vz-page-full -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6 flex flex-col text-foreground bg-background min-w-0 overflow-hidden">
         {/* F5P.4e — Header com Phosphor duotone + toolbar reestruturada.
             Row 1 = título / stats / ações. Row 2 = search à esquerda, controles à direita (sem spacer flex-1 que squeezava o search). */}
         <div className="flex flex-col gap-2.5 px-4 sm:px-6 py-3 sm:py-3.5 border-b border-border bg-card shadow-sm">
           {/* Row 1: Title + stats inline + action buttons */}
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-100 dark:ring-emerald-500/20 flex-shrink-0">
-                <TargetPh size={18} weight="duotone" className="text-emerald-600 dark:text-emerald-200" />
-              </div>
               <div className="flex items-center gap-2 min-w-0 flex-wrap">
                 <h1 className="text-base sm:text-lg font-bold text-foreground tracking-tight whitespace-nowrap">
-                  <span className="hidden sm:inline">Pipeline de Vendas</span>
-                  <span className="sm:hidden">Pipeline</span>
+                  Pipeline
                 </h1>
-                <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/20">
-                  <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                  Live
-                </span>
-                {/* F5P.4f — KPI inline: total, valor e stale (quando houver), estilo Central */}
-                <span className="hidden sm:flex items-center gap-1.5 text-[12.5px] text-muted-foreground/90 font-medium pl-2 ml-0.5 border-l border-border/60">
+                {/* KPI inline: o que está na tela (respeita filtros e busca), valor e parados */}
+                <span className="flex items-center gap-1.5 text-[12px] sm:text-[12.5px] text-muted-foreground/90 font-medium sm:pl-2 sm:ml-0.5 sm:border-l border-border/60" aria-live="polite">
                   {isLoading ? (
                     <span>Carregando...</span>
                   ) : (
                     <>
-                      <span className="tabular-nums text-foreground">{deals.length}</span>
-                      <span>{deals.length === 1 ? "oportunidade" : "oportunidades"}</span>
-                      <span className="text-muted-foreground/40">·</span>
-                      <span className="text-emerald-600 dark:text-emerald-300 tabular-nums font-semibold">{formatCurrency(pipelineTotal)}</span>
+                      <span className="tabular-nums text-foreground">{filteredDeals.length}</span>
+                      {isFiltering && <span>de <span className="tabular-nums">{deals.length}</span></span>}
+                      <span>{(isFiltering ? deals.length : filteredDeals.length) === 1 ? "oportunidade" : "oportunidades"}</span>
+                      <span className="hidden sm:inline text-muted-foreground/40">·</span>
+                      <span className="hidden sm:inline text-foreground tabular-nums font-semibold">{formatCurrency(pipelineTotal)}</span>
                       {rottingDealsCount > 0 && (
                         <>
                           <span className="text-muted-foreground/40">·</span>
-                          <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-300/90">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          <button
+                            type="button"
+                            aria-pressed={filterRottingDeals}
+                            onClick={() => setFilterRottingDeals((prev) => !prev)}
+                            title={filterRottingDeals ? "Mostrar todas" : "Ver só as sem movimento há mais de 3 dias"}
+                            className={`inline-flex h-6 items-center gap-1 rounded-full px-2 -mx-0.5 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
+                              filterRottingDeals
+                                ? "bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200"
+                                : "text-amber-700 hover:bg-amber-50 dark:text-amber-300/90 dark:hover:bg-amber-500/10"
+                            }`}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden />
                             <span className="tabular-nums font-semibold">{rottingDealsCount}</span>
                             <span>{rottingDealsCount === 1 ? "parada" : "paradas"}</span>
-                          </span>
+                            {filterRottingDeals && <XPh size={10} weight="bold" aria-hidden />}
+                          </button>
                         </>
                       )}
                     </>
@@ -1156,12 +1287,14 @@ export default function CRM() {
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="hidden sm:block">{viewToggle}</div>
               <Button
                 variant={selectionMode ? "default" : "outline"}
                 size="sm"
                 onClick={toggleSelectionMode}
                 aria-label={selectionMode ? "Selecionando" : "Selecionar"}
-                className={`min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9 ${selectionMode ? "bg-emerald-600 hover:bg-emerald-500 text-white" : "border-border hover:bg-muted text-foreground"}`}
+                aria-pressed={selectionMode}
+                className={`min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9 rounded-full ${selectionMode ? "bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90" : "border-border hover:bg-muted text-foreground"}`}
               >
                 <CheckSquarePh size={16} weight="duotone" className="sm:mr-2" />
                 <span className="hidden sm:inline">{selectionMode ? "Selecionando" : "Selecionar"}</span>
@@ -1173,7 +1306,7 @@ export default function CRM() {
                   size="sm"
                   onClick={selectedDeals.size === allVisibleDealIds.length ? deselectAll : selectAll}
                   aria-label={selectedDeals.size === allVisibleDealIds.length ? "Desmarcar todos" : "Selecionar todos"}
-                  className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9"
+                  className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9 rounded-full"
                 >
                   <CheckCheckPh size={16} weight="duotone" className="sm:mr-2" />
                   <span className="hidden sm:inline">
@@ -1186,8 +1319,8 @@ export default function CRM() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowConfig(true)}
-                aria-label="Configurações"
-                className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9"
+                aria-label="Configurar funil"
+                className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9 rounded-full"
               >
                 <SettingsPh size={16} weight="duotone" className="sm:mr-2" />
                 <span className="hidden sm:inline">Configurar</span>
@@ -1196,56 +1329,74 @@ export default function CRM() {
               <Button
                 size="sm"
                 onClick={() => setShowNewDeal(true)}
-                aria-label="Adicionar"
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all duration-200 min-h-[44px] sm:min-h-0 h-9"
+                aria-label="Nova oportunidade"
+                className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] font-semibold hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 active:scale-[0.98] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:active:scale-100 min-h-[44px] sm:min-h-0 h-9"
               >
-                <PlusPh size={16} weight="duotone" className="sm:mr-2" />
-                <span className="hidden sm:inline">Nova Negociação</span>
+                <PlusPh size={16} weight="bold" className="sm:mr-1.5" />
+                <span className="hidden sm:inline">Nova oportunidade</span>
               </Button>
             </div>
           </div>
 
           {/* Row 2: Toolbar — search à esquerda (largura fixa sensata), controles empurrados com ml-auto.
               F5P.4e: removido spacer flex-1 que squeezava o search no layout anterior. */}
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <div className="relative w-full sm:w-72 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative w-full sm:w-56 2xl:w-72 flex-shrink-0">
               <SearchPh size={15} weight="duotone" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 pointer-events-none" />
               <Input
-                type="text"
-                placeholder="Buscar negociações..."
+                ref={searchRef}
+                type="search"
+                aria-label="Buscar oportunidades"
+                placeholder="Buscar nome ou telefone"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 h-9 rounded-lg border border-input bg-background text-base md:text-[13px] text-foreground placeholder:text-muted-foreground/70 transition-colors hover:border-border focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/40 focus-visible:ring-1 focus-visible:ring-emerald-500/40 dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15"
+                onKeyDown={(e) => {
+                  if (e.key === "Escape" && searchQuery) {
+                    e.preventDefault();
+                    setSearchQuery("");
+                  }
+                }}
+                className="w-full pl-9 pr-8 h-9 rounded-full border border-input bg-background text-base md:text-[13px] text-foreground placeholder:text-muted-foreground/70 transition-[border-color,box-shadow] duration-150 hover:border-border focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[var(--vyz-accent)] focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] [&::-webkit-search-cancel-button]:hidden dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  aria-label="Limpar busca"
+                  onClick={() => {
+                    setSearchQuery("");
+                    searchRef.current?.focus();
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                >
+                  <XPh size={11} weight="bold" />
+                </button>
+              )}
             </div>
 
             {/* Controles empurrados à direita. No mobile QUEBRAM em linhas (antes
                 transbordavam pra fora da tela, deixando o filtro de vendedores
                 inacessível); no desktop seguem em linha única alinhados à direita. */}
-            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:ml-auto sm:flex-nowrap sm:flex-shrink-0">
-              <div className="inline-flex items-center gap-0.5 rounded-full border border-input bg-background p-0.5 flex-shrink-0 dark:border-white/10 dark:bg-white/[0.03]">
-                {[
-                  { id: "kanban", label: "Kanban" },
-                  { id: "list", label: "Lista" },
-                ].map((v) => {
-                  const active = viewMode === v.id;
-                  return (
-                    <button
-                      key={v.id}
-                      type="button"
-                      onClick={() => setViewMode(v.id as "kanban" | "list")}
-                      className={`h-7 rounded-full px-3 text-[11.5px] font-medium transition-colors ${
-                        active
-                          ? "bg-muted text-foreground shadow-sm ring-1 ring-border/60 dark:bg-white/10 dark:ring-white/15"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {v.label}
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:flex-1 sm:min-w-0 sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setShowFilters(!showFilters)}
+                aria-expanded={showFilters}
+                className={`${CHIP} h-9 ${activeFilterCount > 0 ? CHIP_ON : CHIP_OFF}`}
+              >
+                <FunnelPh size={13} weight="duotone" />
+                Filtros
+                {activeFilterCount > 0 && (
+                  <span className="inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-[var(--vyz-accent)] text-white text-[10px] font-bold tabular-nums">
+                    {activeFilterCount}
+                  </span>
+                )}
+                <CaretDownPh size={12} weight="bold" className={`transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${showFilters ? "rotate-180" : ""}`} />
+              </button>
 
+              <div className="sm:hidden">{viewToggle}</div>
+
+              {/* No celular os seletores ficam atrás de "Filtros"; no desktop, sempre à vista. */}
+              <div className={showFilters ? "contents" : "hidden sm:contents"}>
               {/* Seletor de funil (pipeline) */}
               {pipelines.length > 0 ? (
                 <FilterSelect
@@ -1262,7 +1413,7 @@ export default function CRM() {
                     { value: "__new__", label: "+ Novo funil" },
                   ]}
                   icon={Filter}
-                  minWidth="170px"
+                  minWidth="150px"
                 />
               ) : (
                 <Button
@@ -1282,8 +1433,8 @@ export default function CRM() {
                 onChange={setSelectedSellers}
                 options={vendors.map((v: any) => ({ value: v.id, label: v.nome }))}
                 icon={User}
-                allLabel="Todas as negociações"
-                minWidth="170px"
+                allLabel="Responsáveis"
+                minWidth="150px"
               />
 
               {/* Status (tipo de estágio + ativo/inativo) */}
@@ -1311,7 +1462,7 @@ export default function CRM() {
                 ]}
                 icon={CheckCircle}
                 neutralValue="all"
-                minWidth="160px"
+                minWidth="140px"
               />
 
               {/* Ordenação */}
@@ -1329,83 +1480,68 @@ export default function CRM() {
                 ]}
                 icon={ArrowDownUp}
                 neutralValue="position"
-                minWidth="170px"
+                minWidth="150px"
               />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Advanced Filters Bar — F5P.4d: bg-muted/30 light + card/30 dark pra tier visual */}
+        {/* Filtros avançados: abertos pelo botão "Filtros"; fechados, mostram só o que está ativo. */}
+        {(showFilters || activeFilterCount > 0) && (
         <div className="px-4 sm:px-6 py-2 border-b border-border bg-muted/30 dark:bg-card/30">
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Contador de negociações (estilo RD) */}
-            <span className="text-[12.5px] font-semibold text-foreground tabular-nums">
-              {filteredDeals.length} {filteredDeals.length === 1 ? "negociação" : "negociações"}
-            </span>
-            <div className="w-px h-5 bg-border mx-0.5" />
-
-            {/* Toggle filters button */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium transition-colors ${
-                activeFilterCount > 0
-                  ? "bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-500/30 dark:text-emerald-300"
-                  : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
-              }`}
-            >
-              <FunnelPh size={13} weight="duotone" />
-              Filtros
-              {activeFilterCount > 0 && (
-                <span className="inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
-                  {activeFilterCount}
-                </span>
-              )}
-              <CaretDownPh size={12} weight="bold" className={`transition-transform ${showFilters ? "rotate-180" : ""}`} />
-            </button>
 
             {/* Inline active filter pills (always visible when active) */}
             {!showFilters && activeFilterCount > 0 && (
               <>
                 {filterHotDeals && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-orange-500/15 text-orange-600 ring-1 ring-orange-500/30 dark:text-orange-400">
-                    <FlamePh size={12} weight="duotone" /> Hot
-                    <button onClick={() => setFilterHotDeals(false)} className="ml-0.5 hover:text-orange-700 dark:hover:text-orange-200"><XPh size={10} weight="bold" /></button>
+                  <span className={PILL}>
+                    <FlamePh size={12} weight="duotone" /> Quentes
+                    <button type="button" aria-label="Remover filtro Quentes" onClick={() => setFilterHotDeals(false)} className={PILL_X}><XPh size={10} weight="bold" /></button>
+                  </span>
+                )}
+                {filterQuoteParked && (
+                  <span className={PILL}>
+                    Orçamento parado
+                    <button type="button" aria-label="Remover filtro Orçamento parado" onClick={() => setFilterQuoteParked(false)} className={PILL_X}><XPh size={10} weight="bold" /></button>
                   </span>
                 )}
                 {filterRottingDeals && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-500/15 text-rose-600 ring-1 ring-rose-500/30 dark:text-rose-400">
-                    <ClockPh size={12} weight="duotone" /> Parados
-                    <button onClick={() => setFilterRottingDeals(false)} className="ml-0.5 hover:text-rose-700 dark:hover:text-rose-200"><XPh size={10} weight="bold" /></button>
+                  <span className={PILL}>
+                    <ClockPh size={12} weight="duotone" /> Sem movimento
+                    <button type="button" aria-label="Remover filtro Parados" onClick={() => setFilterRottingDeals(false)} className={PILL_X}><XPh size={10} weight="bold" /></button>
                   </span>
                 )}
                 {filterProbability !== "all" && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-500/15 text-blue-600 ring-1 ring-blue-500/30 dark:text-blue-400">
-                    {filterProbability === "high" ? "Alta 70%+" : filterProbability === "medium" ? "Média 30-69%" : "Baixa <30%"}
-                    <button onClick={() => setFilterProbability("all")} className="ml-0.5 hover:text-blue-700 dark:hover:text-blue-200"><XPh size={10} weight="bold" /></button>
+                  <span className={PILL}>
+                    {PROB_LABELS[filterProbability]}
+                    <button type="button" aria-label="Remover filtro de probabilidade" onClick={() => setFilterProbability("all")} className={PILL_X}><XPh size={10} weight="bold" /></button>
                   </span>
                 )}
                 {filterDateRange !== "all" && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-purple-500/15 text-purple-600 ring-1 ring-purple-500/30 dark:text-purple-400">
+                  <span className={PILL}>
                     <CalendarPh size={12} weight="duotone" />
-                    {filterDateRange === "this_week" ? "Esta semana" : filterDateRange === "this_month" ? "Este mês" : "Vencidos"}
-                    <button onClick={() => setFilterDateRange("all")} className="ml-0.5 hover:text-purple-700 dark:hover:text-purple-200"><XPh size={10} weight="bold" /></button>
+                    {DATE_LABELS[filterDateRange]}
+                    <button type="button" aria-label="Remover filtro de data" onClick={() => setFilterDateRange("all")} className={PILL_X}><XPh size={10} weight="bold" /></button>
                   </span>
                 )}
                 {filterTagIds.length > 0 && filterTagIds.map((tid) => {
                   const tag = companyTags.find((t: any) => t.id === tid);
                   if (!tag) return null;
                   return (
-                    <span key={tid} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ring-1" style={{ backgroundColor: `${tag.color}22`, color: tag.color, borderColor: `${tag.color}55` }}>
+                    <span key={tid} className="inline-flex h-7 items-center gap-1 rounded-full pl-2.5 pr-1 text-[11px] font-medium" style={{ backgroundColor: `${tag.color}1a`, color: tag.color, boxShadow: `inset 0 0 0 1px ${tag.color}40` }}>
                       {tag.name}
-                      <button onClick={() => setFilterTagIds((prev) => prev.filter((id) => id !== tid))} className="ml-0.5 hover:opacity-70"><XPh size={10} weight="bold" /></button>
+                      <button type="button" aria-label={`Remover etiqueta ${tag.name}`} onClick={() => setFilterTagIds((prev) => prev.filter((id) => id !== tid))} className="ml-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10"><XPh size={10} weight="bold" /></button>
                     </span>
                   );
                 })}
                 <button
+                  type="button"
                   onClick={clearAllFilters}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
                 >
-                  <XPh size={12} weight="bold" /> Limpar filtros
+                  Limpar tudo
                 </button>
               </>
             )}
@@ -1414,43 +1550,46 @@ export default function CRM() {
             {showFilters && (
               <>
                 <button
-                  onClick={() => setFilterHotDeals(!filterHotDeals)}
-                  className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium transition-colors ${
-                    filterHotDeals
-                      ? "bg-orange-500/15 text-orange-700 ring-1 ring-orange-500/30 dark:text-orange-300"
-                      : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
-                  }`}
+                  type="button"
+                  aria-pressed={filterQuoteParked}
+                  onClick={() => setFilterQuoteParked(!filterQuoteParked)}
+                  title="Orçamento enviado que o cliente nunca respondeu ou respondeu e sumiu"
+                  className={`${CHIP} ${filterQuoteParked ? CHIP_ON : CHIP_OFF}`}
                 >
-                  <FlamePh size={13} weight="duotone" /> Hot
+                  Orçamento parado
                 </button>
 
                 <button
-                  onClick={() => setFilterRottingDeals(!filterRottingDeals)}
-                  className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium transition-colors ${
-                    filterRottingDeals
-                      ? "bg-rose-500/15 text-rose-700 ring-1 ring-rose-500/30 dark:text-rose-300"
-                      : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
-                  }`}
+                  type="button"
+                  aria-pressed={filterHotDeals}
+                  onClick={() => setFilterHotDeals(!filterHotDeals)}
+                  className={`${CHIP} ${filterHotDeals ? CHIP_ON : CHIP_OFF}`}
                 >
-                  <ClockPh size={13} weight="duotone" /> Parados 3+ dias
+                  <FlamePh size={13} weight="duotone" /> Quentes
+                </button>
+
+                <button
+                  type="button"
+                  aria-pressed={filterRottingDeals}
+                  onClick={() => setFilterRottingDeals(!filterRottingDeals)}
+                  className={`${CHIP} ${filterRottingDeals ? CHIP_ON : CHIP_OFF}`}
+                >
+                  <ClockPh size={13} weight="duotone" /> Sem movimento há 3+ dias
                 </button>
 
                 <div className="w-px h-5 bg-border" />
 
                 {(["high", "medium", "low"] as const).map((level) => {
-                  const labels = { high: "Prob. alta", medium: "Prob. média", low: "Prob. baixa" };
                   const isActive = filterProbability === level;
                   return (
                     <button
                       key={level}
+                      type="button"
+                      aria-pressed={isActive}
                       onClick={() => setFilterProbability(isActive ? "all" : level)}
-                      className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium transition-colors ${
-                        isActive
-                          ? "bg-sky-500/15 text-sky-700 ring-1 ring-sky-500/30 dark:text-sky-300"
-                          : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
-                      }`}
+                      className={`${CHIP} ${isActive ? CHIP_ON : CHIP_OFF}`}
                     >
-                      {labels[level]}
+                      {PROB_LABELS[level]}
                     </button>
                   );
                 })}
@@ -1458,19 +1597,16 @@ export default function CRM() {
                 <div className="w-px h-5 bg-border" />
 
                 {(["this_week", "this_month", "overdue"] as const).map((range) => {
-                  const labels = { this_week: "Esta semana", this_month: "Este mês", overdue: "Vencidos" };
                   const isActive = filterDateRange === range;
                   return (
                     <button
                       key={range}
+                      type="button"
+                      aria-pressed={isActive}
                       onClick={() => setFilterDateRange(isActive ? "all" : range)}
-                      className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium transition-colors ${
-                        isActive
-                          ? "bg-violet-500/15 text-violet-700 ring-1 ring-violet-500/30 dark:text-violet-300"
-                          : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
-                      }`}
+                      className={`${CHIP} ${isActive ? CHIP_ON : CHIP_OFF}`}
                     >
-                      <CalendarPh size={13} weight="duotone" /> {labels[range]}
+                      <CalendarPh size={13} weight="duotone" /> {DATE_LABELS[range]}
                     </button>
                   );
                 })}
@@ -1483,16 +1619,14 @@ export default function CRM() {
                       return (
                         <button
                           key={tag.id}
+                          type="button"
+                          aria-pressed={isActive}
                           onClick={() =>
                             setFilterTagIds((prev) =>
                               isActive ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
                             )
                           }
-                          className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[11.5px] font-medium transition-colors ${
-                            isActive
-                              ? ""
-                              : "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
-                          }`}
+                          className={`${CHIP} ${isActive ? "" : CHIP_OFF}`}
                           style={
                             isActive
                               ? { backgroundColor: `${tag.color}1a`, color: tag.color, boxShadow: `inset 0 0 0 1px ${tag.color}55` }
@@ -1513,10 +1647,11 @@ export default function CRM() {
                   <>
                     <div className="w-px h-5 bg-border" />
                     <button
+                      type="button"
                       onClick={clearAllFilters}
-                      className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium text-rose-600 dark:text-rose-400 transition-colors hover:bg-rose-500/10"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
                     >
-                      <XPh size={13} weight="bold" /> Limpar filtros
+                      Limpar tudo
                     </button>
                   </>
                 )}
@@ -1524,36 +1659,33 @@ export default function CRM() {
             )}
           </div>
         </div>
+        )}
 
-        {/* F5P.4c — Rotting Banner com contraste decente em light + dark.
-            Antes: text-amber-200/95 em fundo claro = ilegível. */}
-        {rottingDealsCount > 0 && !rottingBannerDismissed && (
-          <div
-            className="flex items-center justify-between gap-3 px-4 sm:px-6 py-2.5 border-b border-amber-300/40 dark:border-amber-500/20 cursor-pointer transition-colors bg-amber-50 hover:bg-amber-100/70 dark:bg-amber-500/[0.06] dark:hover:bg-amber-500/[0.10]"
-            onClick={() => setFilterRottingDeals((prev) => !prev)}
-          >
-            <div className="flex items-center gap-2 text-[12.5px]">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
-              <span className="font-medium text-amber-900 dark:text-amber-200">
-                {rottingDealsCount} {rottingDealsCount === 1 ? "oportunidade" : "oportunidades"} sem atualização há mais de 3 dias
-              </span>
-              {filterRottingDeals && (
-                <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-200 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200">
-                  filtro ativo
-                </span>
-              )}
-            </div>
-            <button
-              className="p-1 rounded-md hover:bg-amber-200/60 dark:hover:bg-white/5 transition-colors text-amber-700/70 hover:text-amber-900 dark:text-amber-300/60 dark:hover:text-amber-200"
-              onClick={(e) => {
-                e.stopPropagation();
-                setRottingBannerDismissed(true);
-                setFilterRottingDeals(false);
-              }}
-              title="Fechar"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
+
+        {!isLoading && filteredDeals.length === 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-border bg-card" role="status">
+            <p className="text-[13px] text-muted-foreground">
+              {deals.length > 0
+                ? "Nenhuma oportunidade com esses filtros."
+                : "Nenhuma oportunidade neste funil ainda. Orçamento enviado pelo WhatsApp conectado vira card aqui sozinho."}
+            </p>
+            {deals.length > 0 ? (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="inline-flex h-8 items-center rounded-full border border-border px-3.5 text-[12px] font-medium text-foreground hover:bg-muted transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+              >
+                Limpar filtros
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowNewDeal(true)}
+                className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] px-3.5 text-[12px] font-semibold text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+              >
+                <PlusPh size={13} weight="bold" /> Nova oportunidade
+              </button>
+            )}
           </div>
         )}
 
@@ -1654,11 +1786,9 @@ export default function CRM() {
                       total={stageTotals[stage.id] || { count: 0, value: 0 }}
                       maxColumnValue={maxColumnValue}
                       formatCurrency={formatCurrency}
-                      onDeleteDeal={(deal) => {
-                        if (confirm(`Tem certeza que deseja excluir a negociação "${deal.title}"?`)) {
-                          deleteDealMutation.mutate(deal.id);
-                        }
-                      }}
+                      onDeleteDeal={setDealToDelete}
+                      onMarkWon={handleMarkWon}
+                      quoteByDeal={quoteByDeal}
                       showConversionRate={idx > 0}
                       previousStageCount={idx > 0 ? stageTotals[STAGES[idx - 1].id]?.count : undefined}
                       isLast={idx === STAGES.length - 1}
@@ -1714,10 +1844,6 @@ export default function CRM() {
             </DndContext>
           ) : (
             <div className="p-4 sm:p-6">
-              {sortedDealsForList.length === 0 && (
-                <div className="text-muted-foreground text-sm">Nenhuma negociação cadastrada.</div>
-              )}
-
               {sortedDealsForList.length > 0 && (
                 <div className="rounded-xl border border-border bg-white dark:bg-card overflow-hidden">
                   {/* Cabeçalho de colunas. Sem ele, "50%" e "24 de ago." eram
@@ -1748,7 +1874,7 @@ export default function CRM() {
                         key={deal.id}
                         onClick={selectionMode ? () => toggleSelectDeal(deal.id) : () => navigate(`/deals/${deal.id}`)}
                         className={`${LIST_GRID} group items-center px-4 py-2.5 border-b border-border/60 last:border-b-0 cursor-pointer transition-colors duration-150 ${
-                          isSel ? "bg-[#2563EB]/[0.06]" : "hover:bg-muted/50"
+                          isSel ? "bg-[var(--vyz-accent-soft-6)]" : "hover:bg-muted/50"
                         }`}
                       >
                         {/* Negociação */}
@@ -1756,7 +1882,7 @@ export default function CRM() {
                           {selectionMode && (
                             <div
                               className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
-                                isSel ? "bg-[#2563EB] border-[#2563EB]" : "bg-muted border-border"
+                                isSel ? "bg-[var(--vyz-accent)] border-[var(--vyz-accent)]" : "bg-muted border-border"
                               }`}
                             >
                               {isSel && (
@@ -1793,7 +1919,7 @@ export default function CRM() {
                           ) : (
                             <span
                               className="h-5 w-5 rounded-full shrink-0 flex items-center justify-center text-white text-[9.5px] font-semibold"
-                              style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)" }}
+                              style={{ background: "var(--vyz-gradient-accent)" }}
                             >
                               {initials}
                             </span>
@@ -1820,9 +1946,7 @@ export default function CRM() {
                           className="hidden sm:block justify-self-end opacity-50 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 text-rose-500 hover:text-rose-600 p-1 rounded transition-opacity"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (confirm(`Tem certeza que deseja excluir a negociação "${deal.title}"?`)) {
-                              deleteDealMutation.mutate(deal.id);
-                            }
+                            setDealToDelete(deal);
                           }}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -1906,6 +2030,36 @@ export default function CRM() {
           );
         }}
       />
+
+      <AlertDialog
+        open={!!dealToDelete}
+        onOpenChange={(open) => {
+          if (!open && !deleteDealMutation.isPending) setDealToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir esta oportunidade?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {dealToDelete?.title ? `“${dealToDelete.title}” sai do funil. ` : ""}Não dá para desfazer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteDealMutation.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteDealMutation.isPending}
+              onClick={(e) => {
+                // Fica aberto até o banco confirmar; o onSuccess fecha.
+                e.preventDefault();
+                if (dealToDelete) deleteDealMutation.mutate(dealToDelete.id);
+              }}
+              className="rounded-full bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600"
+            >
+              {deleteDealMutation.isPending ? "Excluindo…" : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Lost Deal Modal */}
       <LostDealModal

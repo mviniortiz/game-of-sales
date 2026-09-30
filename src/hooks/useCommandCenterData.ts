@@ -11,7 +11,6 @@
 //   - channel_contacts       → nome dos contatos
 //   - conversation_summaries → hotLeads + eva highlights (qualification jsonb)
 //   - deals                  → opportunitiesOpen + attention sem update
-//   - eva_knowledge_gaps     → eva highlights "info faltando"
 //   - agendamentos           → meetingsToday
 // ─────────────────────────────────────────────────────────────────────────────
 import { useMemo } from "react";
@@ -40,12 +39,11 @@ export interface AttentionItem {
         | "unread_conversation"
         | "hot_lead_waiting"
         | "stale_conversation"
-        | "stale_deal"
-        | "knowledge_gap";
+        | "stale_deal";
     title: string;
     description: string;
     priority: "high" | "medium" | "low";
-    source: "channel" | "deal" | "summary" | "knowledge_gap";
+    source: "channel" | "deal" | "summary";
     conversationId?: string;
     contactId?: string;
     dealId?: string;
@@ -70,7 +68,6 @@ export type EvaHighlightType =
     | "meeting_intent_without_meeting"
     | "high_intent_unanswered"
     | "recurring_objection"
-    | "missing_information"
     | "services_requested";
 
 export interface EvaHighlight {
@@ -81,7 +78,7 @@ export interface EvaHighlight {
     severity: "high" | "medium" | "low";
     /** Mantido pra compat — espelha severity */
     confidence?: "high" | "medium" | "low";
-    source: "summary" | "knowledge_gap";
+    source: "summary";
     /** Quando faz sentido drilldown direto numa conversa específica */
     conversationId?: string;
     dealId?: string;
@@ -267,7 +264,6 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
         recentMsgsRes,
         dealsRes,
         summariesRes,
-        gapsRes,
         meetingsRes,
         upcomingMeetingsRes,
     ] = await Promise.all([
@@ -311,14 +307,6 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
             .not("qualification", "is", null)
             .order("analyzed_at", { ascending: false })
             .limit(200),
-        // 5. Knowledge gaps abertos
-        supabase
-            .from("eva_knowledge_gaps")
-            .select("id, source_type, gap_description, occurrence_count, status, detected_at")
-            .eq("company_id", companyId)
-            .eq("status", "open")
-            .order("occurrence_count", { ascending: false })
-            .limit(20),
         // 6. Meetings de hoje (count)
         supabase
             .from("agendamentos")
@@ -340,8 +328,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
     if (recentMsgsRes.error) throw recentMsgsRes.error;
     if (dealsRes.error) throw dealsRes.error;
     if (summariesRes.error) throw summariesRes.error;
-    // gaps e meetings podem falhar silenciosamente se tabela/permissão problema
-    if (gapsRes.error && import.meta.env.DEV) console.warn("[CommandCenter] gaps query failed:", gapsRes.error.message);
+    // meetings pode falhar silenciosamente se tabela/permissão der problema
     if (meetingsRes.error && import.meta.env.DEV) console.warn("[CommandCenter] meetings query failed:", meetingsRes.error.message);
 
     type ConvRow = {
@@ -383,20 +370,11 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
         qualification: Qualification;
         analyzed_at: string;
     };
-    type GapRow = {
-        id: string;
-        source_type: string | null;
-        gap_description: string | null;
-        occurrence_count: number | null;
-        status: string;
-        detected_at: string;
-    };
 
     const convs    = (convsRes.data ?? []) as unknown as ConvRow[];
     const msgs     = (recentMsgsRes.data ?? []) as unknown as MsgRow[];
     const deals    = (dealsRes.data ?? []) as DealRow[];
     const summaries = (summariesRes.data ?? []) as unknown as SummaryRow[];
-    const gaps     = (gapsRes.data ?? []) as GapRow[];
     const meetingsCount = meetingsRes.count ?? null;
     const upcomingMeetings = (upcomingMeetingsRes.data ?? []) as Array<{
         cliente_nome: string | null;
@@ -498,18 +476,6 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
         });
     }
 
-    // (c) Knowledge gaps com mais ocorrências
-    for (const g of gaps.slice(0, 2)) {
-        attention.push({
-            id: `gap-${g.id}`,
-            type: "knowledge_gap",
-            title: g.gap_description?.slice(0, 80) || `Lacuna ${g.source_type || "desconhecida"}`,
-            description: `Apareceu ${g.occurrence_count ?? 1}× nas conversas analisadas pela EVA.`,
-            priority: (g.occurrence_count ?? 0) >= 3 ? "medium" : "low",
-            source: "knowledge_gap",
-            createdAt: g.detected_at,
-        });
-    }
 
     // Ordena por prioridade depois timestamp desc
     const priorityRank: Record<AttentionItem["priority"], number> = { high: 0, medium: 1, low: 2 };
@@ -679,20 +645,6 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
         }
     }
 
-    // (5) missing_information — knowledge_gaps abertos
-    if (gaps.length > 0) {
-        const totalOcc = gaps.reduce((acc, g) => acc + (g.occurrence_count ?? 0), 0);
-        highlights.push({
-            id: "hl-missing-info",
-            type: "missing_information",
-            title: `${gaps.length} ${gaps.length === 1 ? "lacuna" : "lacunas"} no contexto da EVA`,
-            description: `Reincidência total: ${totalOcc}×. Resolva no contexto da EVA pra ela responder melhor.`,
-            severity: "medium",
-            confidence: "high",
-            source: "knowledge_gap",
-            count: gaps.length,
-        });
-    }
 
     // (6) services_requested — top 3 serviços citados
     {
@@ -969,23 +921,6 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
         }
     }
 
-    // 3c. missing_information com occurrence_count >= 3
-    {
-        const heavyGap = gaps.find((g) => (g.occurrence_count ?? 0) >= 3);
-        if (heavyGap) {
-            addPriority({
-                id: topicKey("missing_info_heavy"),
-                title: "Lacuna no contexto da EVA com alta reincidência",
-                description: heavyGap.gap_description?.slice(0, 90) || "Resolva no contexto pra a EVA responder melhor.",
-                reason: `Reincidência ${heavyGap.occurrence_count}×`,
-                priority: "medium",
-                actionLabel: "Resolver contexto",
-                href: "/configuracoes/eva?tab=contexto",
-                source: "eva",
-            });
-        }
-    }
-
     // ── LOW ───────────────────────────────────────────────────────────────
     // 4a. services_requested
     {
@@ -1005,23 +940,6 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
                 priority: "low",
                 actionLabel: null as unknown as string,
                 href: null,
-                source: "eva",
-            });
-        }
-    }
-
-    // 4b. gaps menores (occurrence_count < 3)
-    {
-        const smallGap = gaps.find((g) => (g.occurrence_count ?? 0) < 3);
-        if (smallGap) {
-            addPriority({
-                id: topicKey("missing_info_small"),
-                title: "Lacuna pontual no contexto da EVA",
-                description: smallGap.gap_description?.slice(0, 90) || "Pequeno gap detectado uma vez.",
-                reason: "Reincidência baixa",
-                priority: "low",
-                actionLabel: "Resolver contexto",
-                href: "/configuracoes/eva?tab=contexto",
                 source: "eva",
             });
         }

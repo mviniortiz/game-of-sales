@@ -63,7 +63,6 @@ import {
     Plus,
     Lock,
     User,
-    ExternalLink,
     Building2,
     Tag as TagIcon,
     Users,
@@ -72,7 +71,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { toast } from "sonner";
-import { syncWonDealToSale } from "@/utils/salesSync";
+import { proximaAcaoLabel } from "@/lib/eva/qualificationSchema";
+import { syncWonDealToSale, unsyncDealSale } from "@/utils/salesSync";
+import { usePipelineStages, DEFAULT_STAGE_CONFIGS } from "@/hooks/usePipelines";
+import { deriveLegacyStage, type StageConfig } from "@/lib/pipelineStyles";
+import { EvaNode } from "@/components/landing/EvaNode";
+import { useQuoteBoard } from "@/hooks/useQuoteBoard";
+import { OPEN_QUOTE_STATES } from "@/lib/quoteText";
 
 // Lazy: modais e widgets que só renderizam quando o user clica em algo específico
 const InBrowserDialer = lazy(() => import("@/components/crm/InBrowserDialer"));
@@ -91,7 +96,6 @@ import { useDealTagsSingle } from "@/hooks/useDealsTags";
 import { getTagColorClass, isHexColor } from "@/lib/tags";
 import type { Tag } from "@/types/tags";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
-import { stageLabelFor } from "@/lib/demoPipeline";
 import { DealDetailSkeleton } from "@/components/ui/skeletons";
 import { DecisionMapCard, getDecisionMap } from "@/components/deals/DecisionMapCard";
 import {
@@ -103,13 +107,6 @@ import {
 
 // â"€â"€â"€ Constants â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
-const PIPELINE_STAGES = [
-    { id: "lead", label: "Lead", shortLabel: "L", color: "bg-slate-500", ring: "ring-slate-400" },
-    { id: "qualification", label: "Qualificação", shortLabel: "Q", color: "bg-blue-500", ring: "ring-blue-400" },
-    { id: "proposal", label: "Proposta", shortLabel: "P", color: "bg-violet-500", ring: "ring-violet-400" },
-    { id: "negotiation", label: "Negociação", shortLabel: "N", color: "bg-amber-500", ring: "ring-amber-400" },
-    { id: "closed_won", label: "Ganho", shortLabel: "✓", color: "bg-emerald-500", ring: "ring-emerald-400" },
-];
 
 const EVENT_ICONS: Record<string, { icon: typeof StickyNote; color: string; bg: string; title: string }> = {
     note:           { icon: StickyNote,    color: "text-[#7C3AED]", bg: "bg-[#7C3AED]/10", title: "Nota adicionada" },
@@ -133,9 +130,11 @@ const inferNoteType = (content: string): string => {
 
 // â"€â"€â"€ Helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
-const getHealthStatus = (days: number) => {
-    if (days > 7) return { icon: ShieldOff, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20", hex: "#F43F5E", label: "Crítico", subtitle: `${days}d sem contato` };
-    if (days > 3) return { icon: ShieldAlert, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", hex: "#F59E0B", label: "Atenção", subtitle: `${days}d sem contato` };
+// Dias desde a última mensagem da conversa; sem conversa, desde a última edição do card.
+const getHealthStatus = (days: number, fromConversation: boolean) => {
+    const quiet = fromConversation ? `${days}d sem conversa` : `${days}d sem movimento no card`;
+    if (days > 7) return { icon: ShieldOff, color: "text-rose-600", bg: "bg-rose-500/10", border: "border-rose-500/20", hex: "#F43F5E", label: "Crítico", subtitle: quiet };
+    if (days > 3) return { icon: ShieldAlert, color: "text-amber-700", bg: "bg-amber-500/10", border: "border-amber-500/20", hex: "#F59E0B", label: "Atenção", subtitle: quiet };
     return { icon: Shield, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", hex: "#10B981", label: "Saudável", subtitle: "Engajamento ativo" };
 };
 
@@ -216,31 +215,37 @@ const getCallStatusBadge = (status?: string) => {
 
 // â"€â"€â"€ Sub-components â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
-/** Linear-style stage chips */
-const StageChips = ({ currentStage, onStageChange, companyId }: { currentStage: string; onStageChange: (id: string) => void; companyId?: string | null }) => {
-    const idx = PIPELINE_STAGES.findIndex(s => s.id === currentStage);
+/** Etapas do funil do próprio card (pipeline_stages). Perdido fica de fora:
+ *  tem botão próprio, que pede o motivo. */
+const StageChips = ({ stages, currentId, onStageChange, disabled }: { stages: StageConfig[]; currentId: string | null; onStageChange: (stage: StageConfig) => void; disabled?: boolean }) => {
+    const visible = stages.filter((st) => st.kind !== "lost");
+    const idx = visible.findIndex((st) => st.id === currentId);
     return (
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-            {PIPELINE_STAGES.map((stage, i) => {
-                const done = i < idx;
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar" role="group" aria-label="Etapa da oportunidade">
+            {visible.map((stage, i) => {
+                const done = idx >= 0 && i < idx;
                 const active = i === idx;
                 return (
                     <button
                         key={stage.id}
-                        onClick={() => onStageChange(stage.id)}
+                        type="button"
+                        disabled={disabled || active}
+                        aria-current={active ? "step" : undefined}
+                        onClick={() => onStageChange(stage)}
                         className={`
-                            flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium
-                            transition-colors whitespace-nowrap
-                            ${active ? "bg-foreground/10 text-foreground ring-1 ring-border" : ""}
-                            ${done ? "text-emerald-400 hover:text-emerald-300" : ""}
-                            ${!done && !active ? "text-muted-foreground hover:text-foreground" : ""}
+                            flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium
+                            transition-colors duration-150 whitespace-nowrap disabled:cursor-default
+                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]
+                            ${active ? "bg-[var(--vyz-surface-2)] text-[var(--vyz-text-primary)] ring-1 ring-[var(--vyz-border-strong)]" : ""}
+                            ${done ? "text-[var(--vyz-success)] hover:bg-[var(--vyz-surface-2)]" : ""}
+                            ${!done && !active ? "text-[var(--vyz-text-muted)] hover:text-[var(--vyz-text-primary)] hover:bg-[var(--vyz-surface-2)]" : ""}
                         `}
                     >
                         {done
-                            ? <CheckCircle2 className="h-3 w-3" />
-                            : <span className={`w-1.5 h-1.5 rounded-full ${active ? stage.color : "bg-muted-foreground/40"}`} />
+                            ? <CheckCircle2 className="h-3 w-3" aria-hidden />
+                            : <span className={`w-1.5 h-1.5 rounded-full ${active ? "bg-[var(--vyz-accent)]" : "bg-[var(--vyz-border-strong)]"}`} aria-hidden />
                         }
-                        <span>{stageLabelFor(companyId, stage.id, stage.label)}</span>
+                        <span>{stage.title}</span>
                     </button>
                 );
             })}
@@ -284,15 +289,6 @@ const TimelineEntry = ({ event, isLast }: { event: any; isLast: boolean }) => {
 
 // Ações recomendadas: a EVA sugere (proxima_acao da análise); o time executa,
 // edita ou conclui. Origem fica explícita no card.
-const PROXIMA_ACAO_LABELS: Record<string, string> = {
-    responder: "Responder agora",
-    qualificar: "Coletar mais informação",
-    criar_oportunidade: "Criar oportunidade no pipeline",
-    marcar_demo: "Marcar demo",
-    handoff_humano: "Passar pra um humano",
-    aguardar: "Aguardar resposta",
-};
-
 type NextAction = {
     title: string;
     source: "eva" | "deal" | "manual";
@@ -343,16 +339,16 @@ const FocusCard = ({ action, onComplete, onExecute }: {
     return (
         <div className={`rounded-2xl border shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors ${done ? "bg-[#10B981]/5 border-[#10B981]/30" : "bg-white border-[#E5E7EB]"}`}>
             <div className="flex items-center gap-3 px-4 py-3.5">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 ${isEva ? "bg-[#7C3AED]/10" : "bg-[#1556C0]/10"}`}>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 bg-[var(--vyz-surface-2)]">
                     {isEva
-                        ? <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#7C3AED] text-white text-[9px] font-bold leading-none">E</span>
-                        : <Calendar className="h-5 w-5 text-[#1556C0]" />}
+                        ? <EvaNode size={18} color="var(--vyz-eva)" />
+                        : <Calendar className="h-5 w-5 text-[var(--vyz-text-muted)]" aria-hidden />}
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                         <p className="text-[11px] font-semibold text-slate-500">Próxima ação</p>
-                        <span className={`inline-flex items-center px-1.5 py-px rounded text-[10px] font-semibold ${isEva ? "bg-[#7C3AED]/10 text-[#7C3AED]" : "bg-slate-100 text-slate-500"}`}>
-                            {isEva ? "Sugerida pela EVA" : "Tarefa do time"}
+                        <span className={`inline-flex items-center px-1.5 py-px rounded text-[10px] font-semibold bg-[var(--vyz-surface-2)] ${isEva ? "text-[var(--vyz-eva)]" : "text-[var(--vyz-text-muted)]"}`}>
+                            {isEva ? "Sugerida pela EVA" : action.source === "deal" ? "Do cadastro" : "Passo do time"}
                         </span>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
@@ -371,7 +367,7 @@ const FocusCard = ({ action, onComplete, onExecute }: {
                         {onExecute && action.canWhatsApp && !picking && (
                             <button
                                 onClick={onExecute}
-                                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold bg-[#1556C0] text-white hover:brightness-110 transition"
+                                className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full text-[12px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                                 title={action.suggestedReply ? "Abre o WhatsApp com a resposta sugerida pela EVA" : "Abrir conversa no WhatsApp"}
                             >
                                 <WhatsAppIcon className="h-3.5 w-3.5" />
@@ -579,7 +575,7 @@ export default function DealCommandCenter() {
 
     // â"€â"€ Queries â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
-    const { data: deal, isLoading } = useQuery({
+    const { data: deal, isLoading, error: dealError, refetch: refetchDeal } = useQuery({
         queryKey: ["deal", id],
         queryFn: async () => {
             const { data, error } = await supabase.from("deals").select("*").eq("id", id).single();
@@ -588,6 +584,20 @@ export default function DealCommandCenter() {
         },
         enabled: !!id,
     });
+
+    // Etapas do funil deste card. Card sem funil (dado antigo) cai nas etapas
+    // padrão e grava só o `stage` legado, porque os ids padrão não existem no banco.
+    const { data: pipelineStages = [] } = usePipelineStages((deal as any)?.pipeline_id);
+    const hasRealStages = pipelineStages.length > 0;
+    const stageList: StageConfig[] = hasRealStages ? pipelineStages : DEFAULT_STAGE_CONFIGS;
+    const currentStage =
+        stageList.find((st) => st.id === (deal as any)?.stage_id) ??
+        stageList.find((st) => deriveLegacyStage(st) === deal?.stage) ??
+        null;
+    const isWon = currentStage ? currentStage.kind === "won" : deal?.stage === "closed_won";
+    const isLost = currentStage ? currentStage.kind === "lost" : deal?.stage === "closed_lost";
+    const stagePatch = (target: StageConfig) =>
+        hasRealStages ? { stage_id: target.id, stage: deriveLegacyStage(target) } : { stage: deriveLegacyStage(target) };
 
     // Propostas + marca da empresa (logo/nome p/ o PDF)
     const [showProposta, setShowProposta] = useState(false);
@@ -654,7 +664,7 @@ export default function DealCommandCenter() {
                         id: "msg-" + m.id,
                         type: "message",
                         title: m.direction === "outbound" ? "Resposta enviada no WhatsApp" : "Mensagem recebida no WhatsApp",
-                        content: m.body || (m.media_ref?.caption) || "[mídia]",
+                        content: "",
                         created_at: m.message_timestamp,
                     }));
                 }
@@ -708,10 +718,47 @@ export default function DealCommandCenter() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["deal", id] });
             queryClient.invalidateQueries({ queryKey: ["deals"] });
-            toast.success("Deal atualizado!");
         },
-        onError: () => toast.error("Erro ao atualizar deal"),
+        onError: () => toast.error("Não consegui atualizar a oportunidade. Tente de novo."),
     });
+
+    // Volta etapa e probabilidade ao que eram e desfaz a venda sincronizada.
+    const restoreStage = async (prev: Record<string, unknown>, undoSale: boolean) => {
+        await updateDeal.mutateAsync(prev);
+        if (undoSale && deal) await unsyncDealSale(deal.id, deal.user_id, queryClient).catch(() => {});
+    };
+    const snapshot = () => ({
+        ...(hasRealStages ? { stage_id: (deal as any)?.stage_id ?? null } : {}),
+        stage: deal?.stage,
+        probability: deal?.probability,
+    });
+
+    const handleWon = async () => {
+        const won = stageList.find((st) => st.kind === "won");
+        if (!won) {
+            toast.error("Este funil não tem etapa de ganho. Crie uma em Configurar, no Pipeline.");
+            return;
+        }
+        const prev = snapshot();
+        await updateDeal.mutateAsync({ ...stagePatch(won), probability: 100 });
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3000);
+        toast.success("Oportunidade marcada como fechada.", {
+            action: { label: "Desfazer", onClick: () => { void restoreStage(prev, true); } },
+        });
+    };
+
+    const handleStageChange = async (target: StageConfig) => {
+        if (target.kind === "lost") { setShowLostModal(true); return; }
+        if (target.kind === "won") { await handleWon(); return; }
+        const prev = snapshot();
+        const wasWon = isWon;
+        await updateDeal.mutateAsync(stagePatch(target));
+        if (wasWon && deal) await unsyncDealSale(deal.id, deal.user_id, queryClient).catch(() => {});
+        toast.success(`Movida para ${target.title}.`, {
+            action: { label: "Desfazer", onClick: () => { void restoreStage(prev, false); } },
+        });
+    };
 
     const addNote = useMutation({
         mutationFn: async (content: string) => {
@@ -862,34 +909,65 @@ export default function DealCommandCenter() {
 
     // â"€â"€ Derived â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
-    const daysSince = deal?.updated_at
-        ? Math.floor((Date.now() - new Date(deal.updated_at).getTime()) / 86_400_000) : 0;
-    const health = getHealthStatus(daysSince);
-    const HealthIcon = health.icon;
-
     // Próxima ação recomendada pela EVA (proxima_acao da análise da conversa).
     // Fallback: ação registrada no deal (imobiliário) e depois genérica.
     // useDealContextData compartilha cache com o bloco de contexto (sem fetch duplo).
     const dealCtx = useDealContextData(id, (deal as any)?.company_id);
+    const lastTouchAt = dealCtx.conversation?.last_message_at ?? deal?.updated_at ?? null;
+    const daysSince = lastTouchAt ? Math.floor((Date.now() - new Date(lastTouchAt).getTime()) / 86_400_000) : 0;
+    const health = getHealthStatus(daysSince, !!dealCtx.conversation?.last_message_at);
+    const HealthIcon = health.icon;
     const evaProxAcao = dealCtx.qualification?.proxima_acao;
     const evaSuggestedReply = dealCtx.qualification?.resposta_sugerida ?? null;
     const realEstateNextAction = getRealEstateInterest((deal as any)?.source_data)?.proxima_acao;
-    const inOneDay = new Date(Date.now() + 86_400_000).toISOString();
     // Próximo passo definido pela última conclusão+resultado (prioridade máxima).
     const persistedNext = (deal as any)?.source_data?.next_action;
     const hasPersistedNext = persistedNext && typeof persistedNext.title === "string" && persistedNext.title.trim();
+    // Orçamento aberto deste card no placar: dá o passo e o prazo reais (a
+    // retomada vale 2 dias sem o cliente escrever, a mesma regra do placar).
+    const { query: quoteQuery } = useQuoteBoard(30);
+    const openQuote = (quoteQuery.data?.items ?? [])
+        .filter((q) => q.deal_id === id && OPEN_QUOTE_STATES.includes(q.state))
+        .sort((a, b) => new Date(b.sent_at).getTime() - new Date(a.sent_at).getTime())[0];
+    const quoteNext: NextAction | null = !openQuote
+        ? null
+        : openQuote.state === "your_turn"
+        ? { title: "Responder o cliente sobre o orçamento", source: "eva", dueDate: new Date().toISOString(), suggestedReply: evaSuggestedReply, canWhatsApp: !!(deal as any)?.customer_phone }
+        : openQuote.state === "no_reply" || openQuote.state === "went_quiet"
+        ? {
+              title: "Retomar o orçamento",
+              source: "eva",
+              dueDate: new Date(Date.now() - openQuote.days * 86_400_000 + 2 * 86_400_000).toISOString(),
+              suggestedReply: evaSuggestedReply,
+              canWhatsApp: !!(deal as any)?.customer_phone,
+          }
+        : null;
+    const evaNext = evaProxAcao && evaProxAcao !== "criar_oportunidade" ? evaProxAcao : null;
+    // Cliente mandou a última mensagem: a vez é do time, hoje.
+    const conv = dealCtx.conversation;
+    const clientWaiting = !!conv?.last_inbound_at && (conv.last_inbound_at ?? "") > (conv.last_outbound_at ?? "");
     const nextAction: NextAction = hasPersistedNext
-        ? { title: persistedNext.title, source: "eva", dueDate: inOneDay, canWhatsApp: !!(deal as any)?.customer_phone }
-        : evaProxAcao
+        ? { title: persistedNext.title, source: "manual", dueDate: null, canWhatsApp: !!(deal as any)?.customer_phone }
+        : quoteNext
+            ? quoteNext
+            : clientWaiting
             ? {
-                  title: PROXIMA_ACAO_LABELS[evaProxAcao] ?? evaProxAcao,
+                  title: "Responder o cliente",
+                  source: evaSuggestedReply ? "eva" : "manual",
+                  dueDate: new Date().toISOString(),
+                  suggestedReply: evaSuggestedReply,
+                  canWhatsApp: !!(deal as any)?.customer_phone,
+              }
+            : evaNext
+            ? {
+                  title: proximaAcaoLabel(evaNext),
                   source: "eva",
-                  dueDate: inOneDay,
+                  dueDate: null,
                   suggestedReply: evaSuggestedReply,
                   canWhatsApp: !!(deal as any)?.customer_phone,
               }
             : (typeof realEstateNextAction === "string" && realEstateNextAction.trim())
-                ? { title: realEstateNextAction, source: "deal", dueDate: inOneDay, canWhatsApp: !!(deal as any)?.customer_phone }
+                ? { title: realEstateNextAction, source: "deal", dueDate: null, canWhatsApp: !!(deal as any)?.customer_phone }
                 : { title: "Definir o próximo passo com o lead", source: "manual", canWhatsApp: false };
 
     const TABS = [
@@ -907,11 +985,22 @@ export default function DealCommandCenter() {
     }
 
     if (!deal) {
+        // PGRST116 = o card não existe (ou não é desta empresa). O resto é falha de rede/servidor.
+        const notFound = !dealError || (dealError as { code?: string }).code === "PGRST116";
         return (
-            <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 bg-background">
-                <AlertTriangle className="h-12 w-12 text-amber-500" />
-                <p className="text-muted-foreground">Deal não encontrado</p>
-                <Button onClick={() => navigate("/crm")} variant="outline">Voltar ao Pipeline</Button>
+            <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 bg-background" role="alert">
+                <AlertTriangle className="h-10 w-10 text-amber-500" aria-hidden />
+                <p className="text-[var(--vyz-text-strong)]">
+                    {notFound ? "Esta oportunidade não existe mais ou é de outra empresa." : "Não deu para carregar esta oportunidade."}
+                </p>
+                <div className="flex gap-2">
+                    {!notFound && (
+                        <Button onClick={() => { void refetchDeal(); }} className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90">
+                            Tentar de novo
+                        </Button>
+                    )}
+                    <Button onClick={() => navigate("/pipeline")} variant="outline" className="rounded-full">Voltar ao Pipeline</Button>
+                </div>
             </div>
         );
     }
@@ -934,7 +1023,7 @@ export default function DealCommandCenter() {
                         {/* Breadcrumb row */}
                         <div className="flex items-center gap-1.5 pt-3 text-[11px] text-muted-foreground">
                             <button
-                                onClick={() => navigate("/crm")}
+                                onClick={() => navigate("/pipeline")}
                                 className="flex items-center gap-1 hover:text-foreground transition-colors"
                             >
                                 <ArrowLeft className="h-3 w-3" />
@@ -973,46 +1062,44 @@ export default function DealCommandCenter() {
                                 {/* Value */}
                                 <div className="text-right hidden sm:block">
                                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Valor</p>
-                                    <p className="text-lg font-semibold text-emerald-400 tabular-nums leading-tight">
+                                    <p className="text-lg font-semibold text-[var(--vyz-text-primary)] tabular-nums leading-tight">
                                         {formatCurrency(deal.value || 0)}
                                     </p>
                                 </div>
 
                                 {/* CTA buttons */}
-                                {deal.stage !== "closed_won" && deal.stage !== "closed_lost" && (
+                                {!isWon && !isLost && (
                                     <div className="flex gap-1.5">
                                         <Button size="sm"
-                                            className="bg-emerald-500 hover:bg-emerald-400 text-white font-medium h-8 px-3 gap-1.5"
-                                            onClick={async () => {
-                                                await updateDeal.mutateAsync({ stage: "closed_won", probability: 100 });
-                                                setShowConfetti(true);
-                                                setTimeout(() => setShowConfetti(false), 3000);
-                                            }}
+                                            aria-label="Marcar como fechada"
+                                            className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 font-semibold h-8 px-3.5 gap-1.5"
+                                            onClick={() => { void handleWon(); }}
                                             disabled={updateDeal.isPending}
                                         >
-                                            <Trophy className="h-3.5 w-3.5" />
-                                            <span className="hidden sm:inline">Ganho</span>
+                                            <Trophy className="h-3.5 w-3.5" aria-hidden />
+                                            <span className="hidden sm:inline">Fechou</span>
                                         </Button>
                                         <Button size="sm" variant="outline"
-                                            className="border-border text-muted-foreground hover:text-rose-400 hover:border-rose-500/40 h-8 px-3 gap-1.5"
+                                            aria-label="Marcar como perdida"
+                                            className="rounded-full border-border text-muted-foreground hover:text-[var(--vyz-danger)] hover:border-[var(--vyz-danger)]/40 h-8 px-3.5 gap-1.5"
                                             onClick={() => setShowLostModal(true)}
                                             disabled={updateDeal.isPending}
                                         >
-                                            <XCircle className="h-3.5 w-3.5" />
-                                            <span className="hidden sm:inline">Perdido</span>
+                                            <XCircle className="h-3.5 w-3.5" aria-hidden />
+                                            <span className="hidden sm:inline">Perdeu</span>
                                         </Button>
                                     </div>
                                 )}
 
                                 {/* Closed badges */}
-                                {deal.stage === "closed_won" && (
-                                    <div className="flex items-center gap-1.5 bg-emerald-500/15 text-emerald-400 px-3 py-1.5 rounded-md text-xs font-medium ring-1 ring-emerald-500/25">
-                                        <Trophy className="h-3.5 w-3.5" /> Ganho
+                                {isWon && (
+                                    <div className="flex items-center gap-1.5 bg-[var(--vyz-success-bg)] text-[var(--vyz-success)] px-3 py-1.5 rounded-full text-xs font-semibold">
+                                        <Trophy className="h-3.5 w-3.5" aria-hidden /> Fechou
                                     </div>
                                 )}
-                                {deal.stage === "closed_lost" && (
-                                    <div className="flex items-center gap-1.5 bg-rose-500/15 text-rose-400 px-3 py-1.5 rounded-md text-xs font-medium ring-1 ring-rose-500/25">
-                                        <XCircle className="h-3.5 w-3.5" /> Perdido
+                                {isLost && (
+                                    <div className="flex items-center gap-1.5 bg-[var(--vyz-danger-bg)] text-[var(--vyz-danger)] px-3 py-1.5 rounded-full text-xs font-semibold">
+                                        <XCircle className="h-3.5 w-3.5" aria-hidden /> Perdeu
                                     </div>
                                 )}
                             </div>
@@ -1021,12 +1108,10 @@ export default function DealCommandCenter() {
                         {/* Stage chips row */}
                         <div className="pb-3">
                             <StageChips
-                                currentStage={deal.stage || "lead"}
-                                companyId={deal.company_id}
-                                onStageChange={(s) => {
-                                    if (s === "closed_lost") { setShowLostModal(true); return; }
-                                    updateDeal.mutate({ stage: s });
-                                }}
+                                stages={stageList}
+                                currentId={currentStage?.id ?? null}
+                                disabled={updateDeal.isPending}
+                                onStageChange={(st) => { void handleStageChange(st); }}
                             />
                         </div>
                     </div>
@@ -1047,8 +1132,6 @@ export default function DealCommandCenter() {
                                     const r = ACTION_RESULTS.find((x) => x.key === resultKey);
                                     const resultLabel = r?.label ?? resultKey;
                                     const nextTitle = r?.next ?? "Definir o próximo passo com o lead";
-                                    setShowConfetti(true);
-                                    setTimeout(() => setShowConfetti(false), 2000);
                                     try {
                                         await supabase.from("deal_notes" as any).insert({
                                             deal_id: id, user_id: user?.id,
@@ -1066,6 +1149,12 @@ export default function DealCommandCenter() {
                                     }
                                 }}
                                 onExecute={() => {
+                                    const convId = dealCtx.conversation?.id;
+                                    if (convId) {
+                                        const texto = nextAction.suggestedReply ? `&texto=${encodeURIComponent(nextAction.suggestedReply)}` : "";
+                                        navigate(`/inbox?conversationId=${convId}${texto}`);
+                                        return;
+                                    }
                                     const raw = ((deal as any)?.customer_phone || "").replace(/\D/g, "");
                                     if (!raw) { toast.error("Sem telefone de WhatsApp neste deal"); return; }
                                     const wa = raw.startsWith("55") ? raw : "55" + raw;
@@ -1672,7 +1761,12 @@ export default function DealCommandCenter() {
                                             ? <a href={`mailto:${deal.customer_email}`} className="text-[#1556C0] hover:underline">{deal.customer_email}</a>
                                             : "—"} />
                                         <SidebarRow label="Origem" value={(deal as any).lead_source || (deal as any).source || "—"} />
-                                        <SidebarRow label="Último contato" value={deal.updated_at ? safeFormatDistance(deal.updated_at) : "—"} />
+                                        <SidebarRow
+                                            label="Última mensagem"
+                                            value={dealCtx.conversation?.last_message_at
+                                                ? `${safeFormatDistance(dealCtx.conversation.last_message_at)}${(dealCtx.conversation.last_inbound_at ?? "") >= (dealCtx.conversation.last_outbound_at ?? "") ? " · do cliente" : " · sua"}`
+                                                : "—"}
+                                        />
                                     </div>
                                 </div>
 
@@ -1860,8 +1954,16 @@ export default function DealCommandCenter() {
                             open={showLostModal}
                             onClose={() => setShowLostModal(false)}
                             onConfirm={async (reason) => {
-                                await updateDeal.mutateAsync({ stage: "closed_lost", loss_reason: reason, probability: 0 });
+                                const lost = stageList.find((st) => st.kind === "lost");
+                                const wasWon = isWon;
+                                await updateDeal.mutateAsync({
+                                    ...(lost ? stagePatch(lost) : { stage: "closed_lost" }),
+                                    loss_reason: reason,
+                                    probability: 0,
+                                });
+                                if (wasWon) await unsyncDealSale(deal.id, deal.user_id, queryClient).catch(() => {});
                                 setShowLostModal(false);
+                                toast.success("Oportunidade marcada como perdida.");
                             }}
                             dealTitle={deal.title || "Deal"}
                         />
@@ -1976,10 +2078,9 @@ function DealConversationContextBlock({
                         <button
                             type="button"
                             onClick={() => onOpenConversation(openConversationHref)}
-                            className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#10B981] hover:underline"
+                            className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[var(--vyz-accent)] hover:underline"
                         >
-                            Abrir no WhatsApp
-                            <ExternalLink className="h-3 w-3" />
+                            Abrir conversa
                         </button>
                     )}
                 </div>
@@ -1991,29 +2092,19 @@ function DealConversationContextBlock({
                     </span>
                 </div>
 
-                {lastMessages.length > 0 ? (
-                    <div className="space-y-2">
-                        {lastMessages.map((m) => {
-                            const text = m.body || m.media_caption || `[${m.message_type}]`;
-                            const out = m.direction === "outbound";
-                            const time = safeFormatDate(m.message_timestamp, "HH:mm");
-                            return (
-                                <div key={m.id} className={`flex ${out ? "justify-end" : "justify-start"}`}>
-                                    <div
-                                        className={`max-w-[82%] rounded-2xl px-3 py-2 text-[12.5px] leading-snug ${
-                                            out
-                                                ? "bg-[#E7F9EF] text-[#0B1220] rounded-br-sm"
-                                                : "bg-[#F1F5F9] text-[#0B1220] rounded-bl-sm"
-                                        }`}
-                                    >
-                                        <p>{text}</p>
-                                        <p className="text-[10px] text-slate-400 text-right mt-0.5 tabular-nums">{time}</p>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                ) : (
+                {/* Sem texto das mensagens aqui (regra de 20/06: conversa crua só no
+                    Inbox). O resumo diz quem falou por último e quando. */}
+                {lastMessages.length > 0 ? (() => {
+                    const latest = lastMessages.reduce((a, b) => (a.message_timestamp > b.message_timestamp ? a : b));
+                    const fromClient = latest.direction !== "outbound";
+                    return (
+                        <p className="text-[12.5px] leading-relaxed text-[var(--vyz-text-strong)]">
+                            {fromClient ? "O cliente falou por último" : "Você falou por último"}{" "}
+                            <span className="text-[var(--vyz-text-muted)]">{safeFormatDistance(latest.message_timestamp)}</span>.
+                            {fromClient && " A vez de responder é sua."}
+                        </p>
+                    );
+                })() : (
                     <p className="text-sm text-slate-500">Sem mensagens recentes nesta conversa.</p>
                 )}
 
@@ -2023,17 +2114,17 @@ function DealConversationContextBlock({
                         onClick={() => onOpenConversation(openConversationHref)}
                         className="w-full text-center text-[12px] font-medium text-[#1556C0] hover:underline mt-3 pt-3 border-t border-[#F1F5F9]"
                     >
-                        Ver todas as mensagens
+                        Ver a conversa no Inbox
                     </button>
                 )}
             </div>
 
             {/* ── Leitura da EVA (3 colunas) ──────────────────────────── */}
-            <div className="bg-[#FAF5FF] rounded-2xl p-4 border border-[#E9D5FF] shadow-[0_1px_2px_rgba(124,58,237,0.05)]">
+            <div className="bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#7C3AED] text-white text-[8px] font-bold leading-none">E</span>
-                        <p className="text-[13px] font-semibold text-[#7C3AED]">Leitura da EVA</p>
+                        <EvaNode size={14} color="var(--vyz-eva)" />
+                        <p className="text-[13px] font-semibold text-[#0B1220]">Leitura da EVA</p>
                     </div>
                     {hasAnalysis && (
                         <span className="text-[11px] text-slate-400">

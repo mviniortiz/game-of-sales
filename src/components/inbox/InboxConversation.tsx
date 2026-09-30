@@ -72,6 +72,8 @@ interface InboxConversationProps {
     ) => Promise<void> | void;
     getAudioMedia: (messageId: string) => Promise<string | null>;
     isLoading?: boolean;
+    /** Carga das mensagens falhou: mostrar erro, não "sem mensagens". */
+    messagesError?: string | null;
     onBack?: () => void;
     /** F4W.4.1 — Refresh manual no header da conversa (útil em mobile). */
     onRefresh?: () => void;
@@ -104,6 +106,7 @@ export function InboxConversation({
     onSendMedia,
     getAudioMedia,
     isLoading,
+    messagesError,
     onBack,
     onRefresh,
     isRefreshing,
@@ -141,6 +144,7 @@ export function InboxConversation({
             onSendMedia={onSendMedia}
             getAudioMedia={getAudioMedia}
             isLoading={isLoading}
+            messagesError={messagesError}
             onBack={onBack}
             onRefresh={onRefresh}
             isRefreshing={isRefreshing}
@@ -201,6 +205,8 @@ interface ConversationViewProps {
     onSendMedia?: SendMediaFn;
     getAudioMedia: (messageId: string) => Promise<string | null>;
     isLoading?: boolean;
+    /** Carga das mensagens falhou: mostrar erro, não "sem mensagens". */
+    messagesError?: string | null;
     onBack?: () => void;
     onRefresh?: () => void;
     isRefreshing?: boolean;
@@ -249,6 +255,7 @@ function ConversationView({
     onSendMedia,
     getAudioMedia,
     isLoading,
+    messagesError,
     onBack,
     onRefresh,
     isRefreshing,
@@ -464,11 +471,13 @@ function ConversationView({
             <MessageThread
                 messages={messages}
                 isLoading={isLoading}
+                messagesError={messagesError}
                 scrollRef={scrollRef}
                 getAudioMedia={getAudioMedia}
                 hasMoreMessages={hasMoreMessages}
                 loadingOlder={loadingOlder}
                 onLoadOlder={handleLoadOlder}
+                onRetry={onRefresh}
             />
 
             {/* V1.0.1 — EvaSuggestionBox removido (sugestão era mock determinístico
@@ -511,9 +520,10 @@ function ConversationView({
                 </div>
             )}
 
-            {/* Sugestão da EVA inline (balão no fim da conversa) — só quando há
-                rascunho real e a conversa não está com mídia pendente. */}
-            {evaSuggestionText && !suggestionDismissed && !pendingMedia && !showAudio && (
+            {/* Sugestão da EVA inline (balão no fim da conversa): só no celular, onde
+                o painel da EVA fica numa gaveta (onOpenEva). No desktop o painel ao
+                lado já mostra a mesma resposta com o mesmo botão. */}
+            {onOpenEva && evaSuggestionText && !suggestionDismissed && !pendingMedia && !showAudio && (
                 <EvaInlineSuggestion
                     text={evaSuggestionText}
                     onUse={() => {
@@ -715,8 +725,7 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                     <button
                         type="button"
                         onClick={handleOpen}
-                        className="mt-2.5 w-full h-8 rounded-lg text-[12px] font-semibold text-white inline-flex items-center justify-center gap-1.5 transition-all hover:brightness-110"
-                        style={{ background: "linear-gradient(135deg, #6D28D9, #8B5CF6)", boxShadow: "0 6px 16px -8px rgba(109,40,217,0.5)" }}
+                        className="mt-2.5 w-full h-8 rounded-full text-[12px] font-semibold inline-flex items-center justify-center gap-1.5 bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                     >
                         Ver análise da EVA
                         <ArrowUp className="h-3.5 w-3.5" />
@@ -807,14 +816,7 @@ function ConversationHeader({
                             </span>
                         </span>
                     ) : (
-                        <span
-                            className="inline-flex items-center gap-1 text-[10.5px]"
-                            style={{ color: "#64748B" }}
-                        >
-                            <span
-                                className="h-1.5 w-1.5 rounded-full"
-                                style={{ background: "#10B981" }}
-                            />
+                        <span className="inline-flex items-center gap-1 text-[10.5px] text-[var(--vyz-text-muted)]">
                             WhatsApp
                         </span>
                     )}
@@ -854,14 +856,19 @@ function ConversationHeader({
 function MessageThread({
     messages,
     isLoading,
+    messagesError,
     scrollRef,
     getAudioMedia,
     hasMoreMessages,
     loadingOlder,
     onLoadOlder,
+    onRetry,
 }: {
+    onRetry?: () => void;
     messages: MessageLine[];
     isLoading?: boolean;
+    /** Carga das mensagens falhou: mostrar erro, não "sem mensagens". */
+    messagesError?: string | null;
     scrollRef: React.RefObject<HTMLDivElement>;
     getAudioMedia: (messageId: string) => Promise<string | null>;
     hasMoreMessages?: boolean;
@@ -875,6 +882,29 @@ function MessageThread({
                 style={{ background: "var(--ibx-paper)" }}
             >
                 <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#2563EB" }} />
+            </div>
+        );
+    }
+
+    if (messages.length === 0 && messagesError) {
+        return (
+            <div
+                className="flex-1 flex flex-col items-center justify-center gap-3 px-6"
+                style={{ background: "var(--ibx-paper)" }}
+                role="alert"
+            >
+                <p className="text-[12.5px] text-center text-[var(--vyz-text-strong)]">
+                    Não deu para carregar as mensagens desta conversa.
+                </p>
+                {onRetry && (
+                    <button
+                        type="button"
+                        onClick={onRetry}
+                        className="inline-flex h-8 items-center rounded-full border border-[var(--vyz-border-strong)] px-3.5 text-[12px] font-medium text-[var(--vyz-text-strong)] hover:bg-[var(--vyz-surface-2)] transition-colors duration-150"
+                    >
+                        Tentar de novo
+                    </button>
+                )}
             </div>
         );
     }
@@ -1116,18 +1146,17 @@ function EvaInlineSuggestion({ text, onUse, onDismiss }: { text: string; onUse: 
         <div className="px-3 sm:px-5 pt-1 pb-1" style={{ background: "var(--ibx-paper)" }}>
             <div className="max-w-[720px] mx-auto">
                 <div
-                    className="overflow-hidden"
+                    className="overflow-hidden border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] motion-reduce:[animation:none]"
                     style={{
-                        background: "#F7F5FE",
-                        border: "1px solid rgba(124,58,237,0.18)",
+                        borderLeft: "2px solid var(--vyz-eva)",
                         borderRadius: "16px 16px 16px 5px",
-                        boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 28px -18px rgba(124,58,237,0.35)",
+                        boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 28px -18px rgba(15,23,42,0.25)",
                         animation: "vz-evassist-in 0.3s cubic-bezier(0.22,1,0.36,1)",
                     }}
                 >
                     <div className="flex items-center gap-1.5 px-3.5 pt-2.5">
-                        <EvaNode size={12} color="#6D28D9" />
-                        <span className="text-[10px] uppercase font-bold" style={{ color: "#6D28D9", letterSpacing: "0.08em" }}>
+                        <EvaNode size={12} color="var(--vyz-eva)" />
+                        <span className="text-[10px] uppercase font-bold text-[var(--vyz-text-muted)]" style={{ letterSpacing: "0.08em" }}>
                             Sugestão da EVA
                         </span>
                         <button
@@ -1147,8 +1176,7 @@ function EvaInlineSuggestion({ text, onUse, onDismiss }: { text: string; onUse: 
                         <button
                             type="button"
                             onClick={onUse}
-                            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-[12px] font-semibold text-white transition-all"
-                            style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)", boxShadow: "0 6px 16px -8px rgba(37,99,235,0.5)" }}
+                            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full whitespace-nowrap text-[12px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                         >
                             <ArrowRight className="h-3.5 w-3.5" />
                             Usar resposta

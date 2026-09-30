@@ -92,7 +92,7 @@ export default function Seguranca() {
             </div>
           </div>
           <div className="flex justify-end">
-            <Button onClick={handleChange} disabled={changing || !newPassword || !confirmPassword} size="sm" className="rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white">
+            <Button onClick={handleChange} disabled={changing || !newPassword || !confirmPassword} size="sm" className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90">
               {changing && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Alterar senha
             </Button>

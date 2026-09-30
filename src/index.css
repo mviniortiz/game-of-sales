@@ -1478,26 +1478,26 @@ All colors MUST be HSL.
   gap: 10px;
   width: 100%;
   text-align: left;
-  padding: 12px 16px;
-  background: #eef4ff;
-  border-bottom: 1px solid rgba(37, 99, 235, 0.18);
+  padding: 10px 16px;
+  background: var(--ibx-sunken);
+  border-bottom: 1px solid var(--ibx-line);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s var(--vyz-ease);
   flex-shrink: 0;
 }
-.vz-evlist-bridge:hover { background: #e5e3fc; }
+.vz-evlist-bridge:hover { background: var(--ibx-line); }
 .vz-evlist-bridge-title {
   display: block;
   font-size: 12px;
   font-weight: 700;
-  color: #3a3390;
+  color: var(--vyz-text-primary);
   line-height: 1.3;
 }
 .vz-evlist-bridge-sub {
   display: block;
   font-size: 10.5px;
   font-weight: 500;
-  color: #5b51c4;
+  color: var(--vyz-text-muted);
   line-height: 1.4;
   margin-top: 1px;
 }
@@ -1622,13 +1622,6 @@ All colors MUST be HSL.
 .vz-evlist-tag--frio { background: rgba(148, 163, 184, 0.14); color: var(--evlist-cold-deep); }
 /* Estado B: o SLOT da etiqueta existe mas está trancado — a ausência visível
    é o que vende o Studio. Vazio e tracejado, sem fingir valor calculado. */
-.vz-evlist-tag--locked {
-  background: transparent;
-  border: 1px dashed #cbd5e1;
-  color: #94a3b8;
-  font-weight: 600;
-}
-
 /* Sinal neutro de tempo (estado B) + contador rebaixado (mede volume, não valor) */
 .vz-evlist-wait {
   font-size: 10.5px;

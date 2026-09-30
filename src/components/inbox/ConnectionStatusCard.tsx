@@ -1,30 +1,31 @@
-// F4W.7.1 — Card de status da conexão WhatsApp.
-// Extraído de InboxList.tsx (EVA.INBOX, 2026-06-25) pra ser reaproveitado como
-// headerSlot do InboxPriorityList quando o Inbox passou a usar a lista
-// priorizada pela EVA. InboxList continua importando daqui (sem duplicar).
+// F4W.7.1 — Card de status da conexão WhatsApp, no topo da lista do Inbox
+// (headerSlot do InboxPriorityList).
 import { useState } from "react";
-import { Wifi, WifiOff, QrCode, AlertCircle, Loader2, RefreshCw, ChevronDown } from "lucide-react";
+import { WifiOff, QrCode, AlertCircle, Loader2, RefreshCw, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isDemoSession } from "@/lib/analytics";
 import type { InboxConnectionStatus } from "@/hooks/useInboxConnectionStatus";
 
-function formatTimeAgo(timeStr: string): string {
-    if (!timeStr) return "";
-    const date = new Date(timeStr);
-    if (isNaN(date.getTime())) return timeStr;
-    const diffMs = Date.now() - date.getTime();
-    const minutes = Math.floor(diffMs / 60000);
+/** Sem mensagem de cliente há mais que isso, a régua avisa: sessão caída costuma aparecer assim. */
+const INBOUND_STALE_HOURS = 48;
+
+function timeAgo(date: Date): string {
+    const minutes = Math.floor((Date.now() - date.getTime()) / 60000);
     if (minutes < 1) return "agora";
-    if (minutes < 60) return `${minutes}min`;
+    if (minutes < 60) return `há ${minutes} min`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h`;
+    if (hours < 24) return `há ${hours} h`;
     const days = Math.floor(hours / 24);
-    return `${days}d`;
+    return days === 1 ? "ontem" : `há ${days} dias`;
 }
 
 export interface ConnectionStatusCardProps {
     status: InboxConnectionStatus;
     onConnectClick?: () => void;
+    /** API oficial via Kapso (beta, só super_admin por enquanto). */
+    onOfficialConnectClick?: () => void;
+    /** Refaz o check ao vivo quando ele falhou. */
+    onRetryCheck?: () => void;
     onSyncHistory?: () => void;
     historySyncing?: boolean;
     adminScopeLabel?: string;
@@ -34,9 +35,16 @@ export interface ConnectionStatusCardProps {
     disconnecting?: boolean;
 }
 
+const SMALL_BTN =
+    "inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-[11px] font-semibold transition-colors duration-150 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]";
+const BTN_SOLID = `${SMALL_BTN} bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90`;
+const BTN_OUTLINE = `${SMALL_BTN} border border-[var(--vyz-border-strong)] text-[var(--vyz-text-strong)] hover:bg-[var(--vyz-surface-2)]`;
+
 export function ConnectionStatusCard({
     status,
     onConnectClick,
+    onOfficialConnectClick,
+    onRetryCheck,
     onSyncHistory,
     historySyncing,
     adminScopeLabel,
@@ -45,147 +53,113 @@ export function ConnectionStatusCard({
     resyncing,
     disconnecting,
 }: ConnectionStatusCardProps) {
+    // Antes de qualquer return: hook depois de return condicional quebra o React
+    // quando o status muda na mesma sessão.
+    const [expanded, setExpanded] = useState(false);
+
     // Na demo embutida da landing a conta nunca tem Evolution viva: o card de
-    // conexão viraria "produto quebrado" pro visitante. Só o estado conectado
-    // (impossível hoje na demo) passaria.
+    // conexão viraria "produto quebrado" pro visitante.
     if (isDemoSession() && status.status !== "connected") return null;
+
     const showSync = status.status === "connected" && status.provider === "evolution" && !!onSyncHistory;
-    const tone =
-        status.status === "connected"
-            ? { bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.22)", dot: "#10B981", text: "#047857", Icon: Wifi }
-            : status.status === "pending"
-            ? { bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.24)", dot: "#F59E0B", text: "#B45309", Icon: QrCode }
-            : status.status === "unknown"
-            ? { bg: "rgba(148,163,184,0.12)", border: "rgba(148,163,184,0.28)", dot: "#94A3B8", text: "#64748B", Icon: AlertCircle }
-            : { bg: "rgba(148,163,184,0.12)", border: "rgba(148,163,184,0.28)", dot: "#94A3B8", text: "#64748B", Icon: WifiOff };
+    const hasManageActions = showSync || !!onResyncWebhook || !!onDisconnect;
+    const inbound = status.lastInboundAt;
+    const inboundStale = !!inbound && Date.now() - inbound.getTime() > INBOUND_STALE_HOURS * 3_600_000;
 
-    const agoStr = status.lastUpdatedAt ? formatTimeAgo(status.lastUpdatedAt.toISOString()) : null;
-
-    let subtitle: string;
-    if (status.status === "connected") {
-        subtitle = agoStr ? `Histórico salvo · atualizado ${agoStr}` : "Histórico salvo.";
-    } else if (status.status === "pending") {
-        subtitle = "Leia o QR Code para conectar.";
-    } else if (status.status === "unknown") {
-        subtitle = "Atualize ou verifique a conexão.";
-    } else {
-        subtitle = status.isHistoryOnly
-            ? "Você está vendo apenas o histórico salvo."
-            : "Conecte o WhatsApp para começar.";
+    if (status.status === "checking") {
+        return (
+            <div className="mb-2 flex items-center gap-2 rounded-[10px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-2)] px-3 py-2" role="status">
+                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-[var(--vyz-text-muted)] motion-reduce:animate-none" aria-hidden />
+                <span className="text-[12px] font-medium text-[var(--vyz-text-strong)]">{status.connectionLabel}</span>
+            </div>
+        );
     }
 
-    const showCta = status.canConnect || status.canReconnect;
-    const ctaLabel = status.canReconnect ? "Reconectar" : "Conectar WhatsApp";
-    const Icon = tone.Icon;
-
-    // Conexão saudável não merece um card permanente ocupando o topo da lista:
-    // colapsa numa régua fina (dot + número) e revela as ações de gestão
-    // (sincronizar histórico, re-sincronizar webhook, desconectar) sob demanda.
-    // Estados de problema (pending/unknown/disconnected) seguem no card cheio,
-    // que carrega o CTA e a explicação — aí o espaço se justifica.
-    const [expanded, setExpanded] = useState(false);
-    const hasManageActions = showSync || !!onResyncWebhook || !!onDisconnect;
-
+    // Conexão saudável não merece um card permanente: régua fina com o número e
+    // a última mensagem recebida; as ações de gestão abrem sob demanda.
     if (status.status === "connected") {
         return (
-            <div
-                className="rounded-lg mb-2 overflow-hidden"
-                style={{ background: tone.bg, border: `1px solid ${tone.border}` }}
-            >
+            <div className="mb-2 overflow-hidden rounded-[10px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)]">
                 <button
                     type="button"
                     onClick={() => hasManageActions && setExpanded((v) => !v)}
                     aria-expanded={hasManageActions ? expanded : undefined}
                     className={cn(
-                        "w-full flex items-center gap-2 px-3 py-2 text-left transition-colors",
-                        hasManageActions && "hover:bg-[rgba(16,185,129,0.06)] cursor-pointer",
+                        "flex w-full items-center gap-2 px-3 py-2 text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--vyz-accent)]",
+                        hasManageActions && "cursor-pointer hover:bg-[var(--vyz-surface-2)]",
                     )}
                 >
-                    <span
-                        className="h-1.5 w-1.5 rounded-full shrink-0 animate-pulse"
-                        style={{ background: tone.dot }}
-                    />
-                    <span className="flex-1 min-w-0 flex items-baseline gap-1.5">
-                        <span className="text-[12px] font-semibold truncate" style={{ color: "#0B1220" }}>
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--vyz-success)]" aria-hidden />
+                    <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="truncate text-[12px] font-semibold text-[var(--vyz-text-primary)]">
                             {status.connectionLabel}
                         </span>
-                        {status.displayPhone && (
-                            <span className="text-[10.5px] tabular-nums truncate" style={{ color: "#64748B" }}>
-                                {status.displayPhone}
-                            </span>
-                        )}
+                        <span
+                            className={cn(
+                                "text-[10.5px] leading-snug",
+                                inboundStale ? "font-medium text-[var(--vyz-warning)]" : "text-[var(--vyz-text-muted)]",
+                            )}
+                        >
+                            {inbound
+                                ? inboundStale
+                                    ? `Nenhuma mensagem de cliente ${timeAgo(inbound)}. Se estranhar, reconecte.`
+                                    : `Última mensagem de cliente ${timeAgo(inbound)}`
+                                : "Nenhuma mensagem de cliente ainda"}
+                        </span>
                     </span>
                     {hasManageActions && (
                         <ChevronDown
-                            className="h-3.5 w-3.5 shrink-0 transition-transform duration-200"
-                            style={{
-                                color: "#94A3B8",
-                                transform: expanded ? "rotate(180deg)" : "none",
-                                transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
-                            }}
+                            className={cn(
+                                "h-3.5 w-3.5 shrink-0 text-[var(--vyz-text-soft)] transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+                                expanded && "rotate-180",
+                            )}
+                            aria-hidden
                         />
                     )}
                 </button>
 
                 {expanded && hasManageActions && (
-                    <div className="px-3 pb-2.5 pt-0.5">
-                        <p className="text-[10.5px] leading-snug mb-2" style={{ color: "#64748B" }}>
-                            {subtitle}
-                        </p>
+                    <div className="flex flex-wrap items-center gap-1.5 px-3 pb-2.5 pt-0.5">
+                        {status.displayPhone && (
+                            <p className="mb-1 w-full text-[10.5px] tabular-nums text-[var(--vyz-text-muted)]">
+                                Número conectado: {status.displayPhone}
+                            </p>
+                        )}
                         {showSync && (
-                            <button
-                                type="button"
-                                onClick={onSyncHistory}
-                                disabled={historySyncing}
-                                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                                style={{ background: "rgba(37,99,235,0.08)", color: "#1D4ED8", border: "1px solid rgba(37,99,235,0.20)" }}
-                            >
+                            <button type="button" onClick={onSyncHistory} disabled={historySyncing} className={BTN_OUTLINE}>
                                 {historySyncing ? (
-                                    <>
-                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                        Sincronizando histórico…
-                                    </>
+                                    <Loader2 className="h-3 w-3 animate-spin motion-reduce:animate-none" aria-hidden />
                                 ) : (
-                                    <>
-                                        <RefreshCw className="h-3 w-3" />
-                                        Sincronizar histórico
-                                    </>
+                                    <RefreshCw className="h-3 w-3" aria-hidden />
                                 )}
+                                {historySyncing ? "Puxando conversas…" : "Puxar conversas recentes"}
                             </button>
                         )}
-                        {(onResyncWebhook || onDisconnect) && (
-                            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                                {onResyncWebhook && (
-                                    <button
-                                        type="button"
-                                        onClick={onResyncWebhook}
-                                        disabled={resyncing}
-                                        title="Re-aplica a configuração do webhook (ativa os checks de entrega/leitura sem reconectar)"
-                                        className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                                        style={{ background: "rgba(37,99,235,0.06)", color: "#1D4ED8", border: "1px solid rgba(37,99,235,0.18)" }}
-                                    >
-                                        {resyncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                                        Re-sincronizar webhook
-                                    </button>
-                                )}
-                                {onDisconnect && (
-                                    <button
-                                        type="button"
-                                        onClick={onDisconnect}
-                                        disabled={disconnecting}
-                                        className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11px] font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                                        style={{ background: "rgba(244,63,94,0.06)", color: "#BE123C", border: "1px solid rgba(244,63,94,0.20)" }}
-                                    >
-                                        {disconnecting ? <Loader2 className="h-3 w-3 animate-spin" /> : <WifiOff className="h-3 w-3" />}
-                                        Desconectar
-                                    </button>
-                                )}
-                            </div>
+                        {onResyncWebhook && (
+                            <button
+                                type="button"
+                                onClick={onResyncWebhook}
+                                disabled={resyncing}
+                                title="Religa os avisos de entregue e lido sem precisar reconectar"
+                                className={BTN_OUTLINE}
+                            >
+                                {resyncing ? <Loader2 className="h-3 w-3 animate-spin motion-reduce:animate-none" aria-hidden /> : <RefreshCw className="h-3 w-3" aria-hidden />}
+                                Religar confirmação de leitura
+                            </button>
+                        )}
+                        {onDisconnect && (
+                            <button
+                                type="button"
+                                onClick={onDisconnect}
+                                disabled={disconnecting}
+                                className={`${SMALL_BTN} text-[var(--vyz-danger)] hover:bg-[var(--vyz-danger-bg)]`}
+                            >
+                                {disconnecting ? <Loader2 className="h-3 w-3 animate-spin motion-reduce:animate-none" aria-hidden /> : <WifiOff className="h-3 w-3" aria-hidden />}
+                                Desconectar
+                            </button>
                         )}
                         {adminScopeLabel && (
-                            <p className="text-[10px] mt-2" style={{ color: "#94A3B8" }}>
-                                {adminScopeLabel}
-                            </p>
+                            <p className="mt-1 w-full text-[10px] text-[var(--vyz-text-soft)]">{adminScopeLabel}</p>
                         )}
                     </div>
                 )}
@@ -193,42 +167,56 @@ export function ConnectionStatusCard({
         );
     }
 
+    const isPending = status.status === "pending";
+    const Icon = isPending ? QrCode : status.status === "unknown" ? AlertCircle : WifiOff;
+    const subtitle = isPending
+        ? "Leia o QR Code para conectar."
+        : status.status === "unknown"
+        ? "A verificação não respondeu agora."
+        : status.isHistoryOnly
+        ? "Você está vendo só o histórico salvo. Mensagens novas não chegam até reconectar."
+        : "Conecte o WhatsApp da empresa para as conversas aparecerem aqui.";
+    const showCta = status.canConnect || status.canReconnect;
+
     return (
         <div
-            className="rounded-lg px-3 py-2.5 mb-2"
-            style={{ background: tone.bg, border: `1px solid ${tone.border}` }}
+            className={cn(
+                "mb-2 rounded-[10px] border px-3 py-2.5",
+                isPending
+                    ? "border-[color-mix(in_srgb,var(--vyz-warning)_30%,transparent)] bg-[var(--vyz-warning-bg)]"
+                    : "border-[var(--vyz-border)] bg-[var(--vyz-surface-2)]",
+            )}
+            role="status"
         >
             <div className="flex items-start gap-2">
-                <Icon className="h-3.5 w-3.5 mt-0.5 shrink-0" style={{ color: tone.text }} />
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                        <span
-                            className="h-1.5 w-1.5 rounded-full shrink-0"
-                            style={{ background: tone.dot }}
-                        />
-                        <span className="text-[12px] font-semibold truncate" style={{ color: "#0B1220" }}>
-                            {status.connectionLabel}
-                        </span>
-                    </div>
-                    <p className="text-[10.5px] mt-0.5 leading-snug" style={{ color: "#64748B" }}>
-                        {subtitle}
-                    </p>
-                    {showCta && onConnectClick && (
-                        <button
-                            type="button"
-                            onClick={onConnectClick}
-                            className="inline-flex items-center h-7 px-2.5 mt-2 rounded-md text-[11px] font-semibold text-white transition-all hover:brightness-110"
-                            style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)" }}
-                        >
-                            {ctaLabel}
-                        </button>
+                <Icon
+                    className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", isPending ? "text-[var(--vyz-warning)]" : "text-[var(--vyz-text-muted)]")}
+                    aria-hidden
+                />
+                <div className="min-w-0 flex-1">
+                    <p className="truncate text-[12px] font-semibold text-[var(--vyz-text-primary)]">{status.connectionLabel}</p>
+                    <p className="mt-0.5 text-[10.5px] leading-snug text-[var(--vyz-text-muted)]">{subtitle}</p>
+                    {(showCta || (status.status === "unknown" && onRetryCheck)) && (
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                            {status.status === "unknown" && onRetryCheck && (
+                                <button type="button" onClick={onRetryCheck} className={BTN_OUTLINE}>
+                                    Verificar de novo
+                                </button>
+                            )}
+                            {showCta && onConnectClick && (
+                                <button type="button" onClick={onConnectClick} className={BTN_SOLID}>
+                                    {status.canReconnect ? "Reconectar" : "Conectar WhatsApp"}
+                                </button>
+                            )}
+                            {showCta && onOfficialConnectClick && (
+                                <button type="button" onClick={onOfficialConnectClick} className={BTN_OUTLINE}>
+                                    API oficial (beta)
+                                </button>
+                            )}
+                        </div>
                     )}
-                    {/* Ações de gestão (sincronizar/resync/desconectar) vivem só no
-                        estado conectado — tratado no early-return colapsável acima. */}
                     {adminScopeLabel && (
-                        <p className="text-[10px] mt-1.5" style={{ color: "#94A3B8" }}>
-                            {adminScopeLabel}
-                        </p>
+                        <p className="mt-1.5 text-[10px] text-[var(--vyz-text-soft)]">{adminScopeLabel}</p>
                     )}
                 </div>
             </div>

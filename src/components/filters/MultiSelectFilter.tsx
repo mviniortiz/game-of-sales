@@ -48,9 +48,9 @@ export const MultiSelectFilter = ({
         <button
           type="button"
           className={cn(
-            "inline-flex h-9 items-center gap-1.5 rounded-lg border bg-white px-3 text-[12.5px] font-medium transition-colors",
-            "border-[#E6EDF5] hover:border-[#D7DEE9] hover:bg-[#F8FAFC]",
-            isActive ? "text-[#0B1220] border-[#2563EB] ring-2 ring-[rgba(37,99,235,0.18)]" : "text-[#64748B]",
+            "inline-flex h-9 items-center gap-1.5 rounded-full border bg-[var(--vyz-surface-1)] px-3 text-[12.5px] font-medium transition-[border-color,background-color,box-shadow] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]",
+            "border-[var(--vyz-border)] hover:border-[var(--vyz-border-strong)] hover:bg-[var(--vyz-surface-2)]",
+            isActive ? "text-[var(--vyz-text-primary)] border-[var(--vyz-accent)] ring-2 ring-[var(--vyz-accent-soft-12)]" : "text-[var(--vyz-text-muted)]",
           )}
           style={{ minWidth }}
         >
@@ -59,18 +59,18 @@ export const MultiSelectFilter = ({
           <ChevronDown className="h-3.5 w-3.5 opacity-60 ml-auto shrink-0" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-56 p-1.5 bg-white border border-[#E6EDF5] shadow-lg">
+      <PopoverContent align="start" className="w-56 p-1.5 bg-popover border border-[var(--vyz-border)] shadow-lg">
         <button
           type="button"
           onClick={() => onChange([])}
-          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] text-[#475569] hover:bg-[#F1F5F9] transition-colors"
+          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] text-[var(--vyz-text-strong)] hover:bg-[var(--vyz-surface-2)] transition-colors"
         >
-          <span className={cn("h-4 w-4 rounded border flex items-center justify-center", !isActive ? "bg-[#2563EB] border-[#2563EB]" : "border-[#CBD5E1]")}>
+          <span className={cn("h-4 w-4 rounded border flex items-center justify-center", !isActive ? "bg-[var(--vyz-accent)] border-[var(--vyz-accent)]" : "border-[var(--vyz-border-strong)]")}>
             {!isActive && <Check className="h-3 w-3 text-white" />}
           </span>
           {allLabel}
         </button>
-        <div className="my-1 h-px bg-[#EEF2F7]" />
+        <div className="my-1 h-px bg-[var(--vyz-border-subtle)]" />
         <div className="max-h-64 overflow-y-auto">
           {options.map((opt) => {
             const checked = selected.includes(opt.value);
@@ -79,9 +79,9 @@ export const MultiSelectFilter = ({
                 key={opt.value}
                 type="button"
                 onClick={() => toggle(opt.value)}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] text-[#0B1220] hover:bg-[#F1F5F9] transition-colors"
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] text-[var(--vyz-text-primary)] hover:bg-[var(--vyz-surface-2)] transition-colors"
               >
-                <span className={cn("h-4 w-4 rounded border flex items-center justify-center", checked ? "bg-[#2563EB] border-[#2563EB]" : "border-[#CBD5E1]")}>
+                <span className={cn("h-4 w-4 rounded border flex items-center justify-center", checked ? "bg-[var(--vyz-accent)] border-[var(--vyz-accent)]" : "border-[var(--vyz-border-strong)]")}>
                   {checked && <Check className="h-3 w-3 text-white" />}
                 </span>
                 <span className="truncate text-left">{opt.label}</span>

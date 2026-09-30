@@ -35,6 +35,24 @@ export const proximaAcaoEnum = z.enum([
   "aguardar",
 ]);
 
+const PROXIMA_ACAO_LABELS: Record<z.infer<typeof proximaAcaoEnum>, string> = {
+  responder: "Responder agora",
+  qualificar: "Coletar mais informação",
+  criar_oportunidade: "Criar oportunidade no pipeline",
+  marcar_demo: "Agendar visita ou reunião",
+  handoff_humano: "Passar para um vendedor",
+  aguardar: "Aguardar resposta",
+};
+
+/** Rótulo de tela da próxima ação. Valor fora do enum (análise antiga) vira
+ *  texto legível em vez de aparecer com underline. */
+export function proximaAcaoLabel(value: string): string {
+  const known = PROXIMA_ACAO_LABELS[value as keyof typeof PROXIMA_ACAO_LABELS];
+  if (known) return known;
+  const text = value.replace(/_/g, " ").trim();
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 export const knowledgeGapTypeEnum = z.enum([
   "agency_context",
   "service",

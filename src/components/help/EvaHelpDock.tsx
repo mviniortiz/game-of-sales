@@ -20,7 +20,6 @@ const ROUTE_LABELS: { prefix: string; label: string }[] = [
     { prefix: "/pulse", label: "Pulse (conversas de WhatsApp)" },
     { prefix: "/pipeline", label: "Pipeline (funil de oportunidades)" },
     { prefix: "/deal", label: "Oportunidade (detalhe do negócio)" },
-    { prefix: "/configuracoes/eva", label: "Configurações da EVA (contexto da empresa)" },
     { prefix: "/configuracoes", label: "Configurações" },
     { prefix: "/integracoes", label: "Integrações" },
     { prefix: "/metas", label: "Metas" },

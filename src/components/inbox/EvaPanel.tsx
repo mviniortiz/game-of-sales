@@ -17,7 +17,11 @@
 // recomendando ao humano. CTA "Criar oportunidade" continua manual.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import type { QuoteItem } from "@/hooks/useQuoteBoard";
+import { brl, evaLine, stateLine } from "@/lib/quoteText";
+import { supabase } from "@/integrations/supabase/client";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { trackBehavior, clarityUpgrade, DEMO_EVENTS } from "@/lib/analytics";
 import {
@@ -68,6 +72,7 @@ import type {
     Temperatura,
     Urgencia,
 } from "@/lib/eva/qualificationSchema";
+import { proximaAcaoLabel } from "@/lib/eva/qualificationSchema";
 
 // ─── Movimento (disciplinado, com fallback de reduced-motion) ───────────────
 // LP-INBOX.2 2026-06-21: as seções entram com fade+rise em stagger curto, o
@@ -173,20 +178,11 @@ const URGENCIA_META: Record<Urgencia, { label: string; tone: ToneKey }> = {
 
 const INTENCAO_LABELS: Record<string, string> = {
     preco: "Preço",
-    demo: "Demo",
+    demo: "Visita ou reunião",
     duvida: "Dúvida",
     suporte: "Suporte",
     compra: "Compra",
     outro: "Outro",
-};
-
-const PROXIMA_ACAO_LABELS: Record<string, string> = {
-    responder: "Responder agora",
-    qualificar: "Coletar mais informação",
-    criar_oportunidade: "Criar oportunidade no pipeline",
-    marcar_demo: "Marcar demo",
-    handoff_humano: "Passar pra um humano",
-    aguardar: "Aguardar resposta",
 };
 
 // ─── Tipo principal ─────────────────────────────────────────────────────────
@@ -208,13 +204,45 @@ interface EvaPanelProps {
     /** Mobile (bottom sheet): fecha a sheet. Ausente no desktop (coluna fixa) —
      *  aí não há X (a coluna não se fecha). */
     onClose?: () => void;
+    /** Orçamento aberto desta conversa no placar, quando houver. */
+    quote?: QuoteItem | null;
 }
 
-export function EvaPanel({ chat, messages, onDealLinked, onSendReply, objective, onUseReply, onClose }: EvaPanelProps) {
+export function EvaPanel({ chat, messages, onDealLinked, onSendReply, objective, onUseReply, onClose, quote }: EvaPanelProps) {
     if (!chat) return <EmptyPanel reason="no-chat" onClose={onClose} />;
     // key={chat.id} — remonta por conversa pra não vazar estado local
     // (createOpen / localLinkedDealId) entre chats diferentes.
-    return <PanelContent key={chat.id} chat={chat} messages={messages} onDealLinked={onDealLinked} onSendReply={onSendReply} objective={objective} onUseReply={onUseReply} onClose={onClose} />;
+    return <PanelContent key={chat.id} chat={chat} messages={messages} onDealLinked={onDealLinked} onSendReply={onSendReply} objective={objective} onUseReply={onUseReply} onClose={onClose} quote={quote} />;
+}
+
+// Orçamento desta conversa: o que aconteceu e o que a EVA já fez. É o fato mais
+// útil do painel quando existe, por isso vem logo abaixo do vínculo com o card.
+function QuoteStatusCard({ quote }: { quote: QuoteItem }) {
+    const parked = quote.state === "no_reply" || quote.state === "went_quiet";
+    const eva = evaLine(quote);
+    return (
+        <div
+            className={`mx-4 mt-3 rounded-[10px] border px-3 py-2.5 ${
+                parked
+                    ? "border-[color-mix(in_srgb,var(--vyz-warning)_30%,transparent)] bg-[var(--vyz-warning-bg)]"
+                    : "border-[var(--ibx-line)] bg-[var(--vyz-surface-1)]"
+            }`}
+        >
+            <p className="flex items-baseline justify-between gap-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--vyz-text-muted)]">
+                Orçamento
+                {quote.amount ? <span className="text-[12px] normal-case tracking-normal tabular-nums text-[var(--vyz-text-primary)]">{brl(quote.amount)}</span> : null}
+            </p>
+            <p className={`mt-1 text-[12.5px] leading-snug ${parked ? "font-medium text-[var(--vyz-warning)]" : "text-[var(--vyz-text-strong)]"}`}>
+                {stateLine(quote)}
+            </p>
+            {eva && (
+                <p className="mt-1.5 flex items-baseline gap-1.5 text-[11.5px] leading-snug text-[var(--vyz-text-strong)]">
+                    <span className="text-[9px] font-semibold uppercase tracking-wide text-[var(--vyz-eva)]">EVA</span>
+                    {eva}
+                </p>
+            )}
+        </div>
+    );
 }
 
 // Botão de fechar a sheet (só mobile). X discreto no canto; o grabber do Drawer
@@ -288,7 +316,7 @@ function LoadingState({ message }: { message?: string }) {
                 className="text-[11.5px]"
                 style={{ color: "#64748B", lineHeight: 1.55, maxWidth: "240px" }}
             >
-                Buscando contexto da agência, mensagens e pipeline.
+                Buscando contexto da empresa, mensagens e pipeline.
             </p>
         </div>
     );
@@ -373,6 +401,7 @@ function PanelContent({
     objective,
     onUseReply,
     onClose,
+    quote,
 }: {
     chat: Chat;
     messages: MessageLine[];
@@ -381,6 +410,7 @@ function PanelContent({
     objective?: string;
     onUseReply?: (text: string) => void;
     onClose?: () => void;
+    quote?: QuoteItem | null;
 }) {
     const navigate = useNavigate();
     const chatPhone = chat.phone || chat.id;
@@ -422,7 +452,7 @@ function PanelContent({
             ? `Atendimento - ${safeName}`
             : "Novo lead WhatsApp";
         const proxima = qual?.proxima_acao
-            ? PROXIMA_ACAO_LABELS[qual.proxima_acao] ?? qual.proxima_acao
+            ? proximaAcaoLabel(qual.proxima_acao)
             : null;
         const observacoes = [
             "Origem: WhatsApp (conversa vinculada pela Inbox).",
@@ -539,7 +569,7 @@ function PanelContent({
                     phone: prefill.clienteTelefone || null,
                     value: prefill.valorEstimado ?? undefined,
                     leadSource: "whatsapp",
-                    notes: `${prefill.observacoes} (Card criado automaticamente pela EVA — modo híbrido.)`,
+                    notes: `${prefill.observacoes} (Criado pela EVA a partir da conversa.)`,
                     conversationId,
                 });
                 setLocalLinkedDealId(dealId);
@@ -714,11 +744,8 @@ function PanelContent({
                         className="shrink-0"
                         aria-label="EVA Comercial"
                     />
-                    <p
-                        className="flex-1 min-w-0 truncate text-[14px] font-semibold leading-tight"
-                        style={{ color: "#0B1220" }}
-                    >
-                        EVA Comercial
+                    <p className="flex-1 min-w-0 truncate text-[14px] font-semibold leading-tight text-[var(--vyz-text-primary)]">
+                        EVA
                     </p>
                     {insight.hasAnalysis && !insight.analyzing && (
                         <button
@@ -733,17 +760,11 @@ function PanelContent({
                         </button>
                     )}
                     <span
-                        className="inline-flex items-center gap-1 text-[11.5px] px-2 py-0.5 rounded-full shrink-0"
-                        title="A EVA sugere. Seu time aprova antes de qualquer ação."
-                        style={{
-                            background: "rgba(124,58,237,0.10)",
-                            color: "#6D28D9",
-                            fontWeight: 600,
-                            letterSpacing: "0.01em",
-                        }}
+                        className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-0.5 rounded-full shrink-0 bg-[var(--vyz-surface-2)] text-[var(--vyz-text-strong)]"
+                        title="A EVA sugere. Nada sai para o cliente sem o seu ok."
                     >
-                        <EvaNode size={9} color="#6D28D9" />
-                        Assistida
+                        <EvaNode size={9} color="var(--vyz-eva)" />
+                        Você aprova
                     </span>
                     {/* Mobile: fecha a bottom sheet (no desktop a coluna é fixa). */}
                     {onClose && <SheetCloseButton onClose={onClose} />}
@@ -790,6 +811,8 @@ function PanelContent({
                 onLinkExisting={() => setLinkOpen(true)}
                 onOpenDeal={(id) => navigate(`/deals/${id}`)}
             />
+
+            {quote && <QuoteStatusCard quote={quote} />}
 
             {/* Micro-interações: pulso do "desatualizada" + hover dos cards/botões.
                 Curva custom do projeto; tudo desliga sob prefers-reduced-motion. */}
@@ -1082,20 +1105,13 @@ function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
             <button
                 type="button"
                 onClick={onAnalyze}
-                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold text-white transition-all hover:brightness-110"
-                style={{
-                    background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
-                    boxShadow: "0 6px 16px -4px rgba(37,99,235,0.40), 0 1px 0 rgba(255,255,255,0.20) inset",
-                }}
+                className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-full whitespace-nowrap text-[13px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 active:scale-[0.98] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2"
             >
-                <EvaNode size={13} color="#FFFFFF" />
+                <EvaNode size={13} color="currentColor" />
                 Analisar conversa
             </button>
-            {/* FIO 3 — a análise é manual por escolha de produto (EVA assistida).
-                Deixar explícito responde a expectativa de "automático" sem abrir
-                mão do controle do time. */}
             <p className="text-[10.5px] mt-3" style={{ color: "#94A3B8", lineHeight: 1.5, maxWidth: "260px" }}>
-                Nada roda sozinho: você decide quando a EVA analisa.
+                A EVA sugere; nada sai para o cliente sem o seu ok.
             </p>
         </div>
     );
@@ -1189,21 +1205,18 @@ function RealContent({
     // EVA.AUTO.1 — leitura feita automaticamente no 1º contato (carimbo do
     // modo serviço). Some quando o humano reanalisa manualmente.
     const autoQualified = Boolean((analysis as { auto_qualified?: boolean }).auto_qualified);
-    const proximaAcaoLabel = qualification.proxima_acao
-        ? PROXIMA_ACAO_LABELS[qualification.proxima_acao] ?? qualification.proxima_acao
-        : null;
-
-    // Checa se há knowledge_gap de agency_context → mostra aviso leve
-    const hasAgencyGap = qualification.knowledge_gaps.some(
-        (g) => g.type === "agency_context",
-    );
+    const nextActionLabel =
+        qualification.proxima_acao &&
+        !(qualification.proxima_acao === "criar_oportunidade" && dealState.hasLinkedOpportunity)
+            ? proximaAcaoLabel(qualification.proxima_acao)
+            : null;
 
     const gaps = qualification.knowledge_gaps.filter((g) => g.type !== "agency_context");
     const hasInfo = qualification.info_coletada.length > 0 || qualification.info_faltante.length > 0;
 
     const reduce = useReducedMotion();
     const hasHero = Boolean(
-        proximaAcaoLabel || analysis.nextAction || qualification.resposta_sugerida || analysis.draft,
+        nextActionLabel || analysis.nextAction || qualification.resposta_sugerida || analysis.draft,
     );
     const hasDiagnosis = Boolean(
         qualification.score_sugerido !== null ||
@@ -1235,11 +1248,6 @@ function RealContent({
                 </RevealItem>
             )}
             {/* Avisos finos */}
-            {hasAgencyGap && (
-                <RevealItem>
-                    <ContextGapBanner />
-                </RevealItem>
-            )}
             {legacy && (
                 <RevealItem
                     className="px-3 py-2 flex items-start gap-2 rounded-md"
@@ -1287,15 +1295,15 @@ function RealContent({
                             O que fazer agora
                         </p>
                     </div>
-                    {(proximaAcaoLabel || analysis.nextAction) && (
+                    {(nextActionLabel || analysis.nextAction) && (
                         <div className="px-4 pb-0.5">
                             <p
                                 className="text-[14px] font-semibold"
                                 style={{ color: "#0B1220", lineHeight: 1.35 }}
                             >
-                                {proximaAcaoLabel || analysis.nextAction}
+                                {nextActionLabel || analysis.nextAction}
                             </p>
-                            {proximaAcaoLabel && analysis.nextAction && analysis.nextAction !== proximaAcaoLabel && (
+                            {nextActionLabel && analysis.nextAction && analysis.nextAction !== nextActionLabel && (
                                 <p className="text-[11.5px] mt-1" style={{ color: "#64748B", lineHeight: 1.45 }}>
                                     {analysis.nextAction}
                                 </p>
@@ -1307,7 +1315,7 @@ function RealContent({
                             text={qualification.resposta_sugerida || analysis.draft || ""}
                             onSend={onSendReply}
                             onUseReply={onUseReply}
-                            hasAction={Boolean(proximaAcaoLabel || analysis.nextAction)}
+                            hasAction={Boolean(nextActionLabel || analysis.nextAction)}
                             onResolveSuggestion={onResolveSuggestion}
                         />
                     )}
@@ -1324,8 +1332,8 @@ function RealContent({
                     <RecommendationCallout
                         icon={UserCog}
                         tone="amber"
-                        title="A EVA recomenda handoff humano"
-                        body="Esta conversa bate em regras de handoff cadastradas. Considere passar para um vendedor."
+                        title="A EVA sugere passar para um vendedor"
+                        body="Esta conversa pede atenção de alguém do time antes da próxima resposta."
                     />
                 </RevealItem>
             )}
@@ -1497,36 +1505,6 @@ function DossierRow({
 // Sub-componentes
 // ─────────────────────────────────────────────────────────────────────────────
 
-function ContextGapBanner() {
-    return (
-        <div
-            className="rounded-md px-3 py-2.5 flex items-start gap-2"
-            style={{
-                background: "rgba(245,158,11,0.06)",
-                borderLeft: "2px solid rgba(245,158,11,0.5)",
-            }}
-        >
-            <AlertTriangle
-                className="h-3.5 w-3.5 mt-0.5 shrink-0"
-                style={{ color: "#B45309" }}
-            />
-            <p
-                className="text-[11.5px]"
-                style={{ color: "#92400E", lineHeight: 1.4 }}
-            >
-                Contexto da agência incompleto. Sugestões da EVA ficam genéricas até
-                cadastrar serviços, ICP e regras.{" "}
-                <a
-                    href="/configuracoes/eva"
-                    className="font-semibold underline"
-                    style={{ color: "#92400E" }}
-                >
-                    Configurar agora
-                </a>
-            </p>
-        </div>
-    );
-}
 
 type ToneKey = "blue" | "green" | "amber" | "orange" | "rose" | "purple" | "neutral";
 
@@ -1923,11 +1901,7 @@ function SuggestedReply({
                         type="button"
                         onClick={handleSend}
                         disabled={sending}
-                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold text-white flex-1 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                        style={{
-                            background: "linear-gradient(135deg, #10B981, #34D399)",
-                            boxShadow: "0 6px 16px -6px rgba(16,185,129,0.45), 0 1px 0 rgba(255,255,255,0.20) inset",
-                        }}
+                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-full whitespace-nowrap text-[13px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 active:scale-[0.98] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 flex-1 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         <ArrowUp className="h-3.5 w-3.5" />
                         {sending ? "Enviando..." : "Enviar resposta"}
@@ -1936,11 +1910,7 @@ function SuggestedReply({
                     <button
                         type="button"
                         onClick={handleUse}
-                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold text-white flex-1 transition-all"
-                        style={{
-                            background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
-                            boxShadow: "0 6px 16px -6px rgba(37,99,235,0.40), 0 1px 0 rgba(255,255,255,0.20) inset",
-                        }}
+                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-full whitespace-nowrap text-[13px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 active:scale-[0.98] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 flex-1"
                     >
                         <ArrowRight className="h-3.5 w-3.5" />
                         Usar resposta
@@ -1949,11 +1919,7 @@ function SuggestedReply({
                     <button
                         type="button"
                         onClick={handleCopy}
-                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold text-white flex-1 transition-all"
-                        style={{
-                            background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
-                            boxShadow: "0 6px 16px -6px rgba(37,99,235,0.40), 0 1px 0 rgba(255,255,255,0.20) inset",
-                        }}
+                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-full whitespace-nowrap text-[13px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 active:scale-[0.98] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 flex-1"
                     >
                         <Copy className="h-3.5 w-3.5" />
                         Copiar resposta
@@ -1966,8 +1932,7 @@ function SuggestedReply({
                         onClick={handleCopy}
                         title="Copiar resposta"
                         aria-label="Copiar resposta"
-                        className="vz-eva-ghost inline-flex items-center justify-center h-9 w-9 rounded-lg transition-all shrink-0"
-                        style={{ color: "#1D4ED8", border: "1px solid rgba(37,99,235,0.22)" }}
+                        className="vz-eva-ghost inline-flex items-center justify-center h-9 rounded-full border border-[var(--vyz-border-strong)] text-[var(--vyz-text-strong)] hover:bg-[var(--vyz-surface-2)] transition-colors duration-150 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] w-9"
                     >
                         <Copy className="h-3.5 w-3.5" />
                     </button>
@@ -1977,11 +1942,10 @@ function SuggestedReply({
                     onClick={() => setEdited(edited === null ? text : null)}
                     title={edited === null ? "Editar resposta" : "Cancelar edição"}
                     aria-label={edited === null ? "Editar resposta" : "Cancelar edição"}
-                    className="vz-eva-ghost inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-lg text-[11.5px] font-semibold transition-all shrink-0"
-                    style={{ color: "#6D28D9", border: "1px solid rgba(124,58,237,0.22)" }}
+                    className={`vz-eva-ghost inline-flex items-center justify-center h-9 rounded-full border border-[var(--vyz-border-strong)] text-[var(--vyz-text-strong)] hover:bg-[var(--vyz-surface-2)] transition-colors duration-150 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${edited === null ? "w-9" : "gap-1.5 px-3 text-[11.5px] font-semibold"}`}
                 >
                     <Edit3 className="h-3.5 w-3.5" />
-                    {edited === null ? "Editar" : "Cancelar"}
+                    {edited !== null && "Cancelar"}
                 </button>
             </div>
             {/* Legenda do bloco inteiro: o controle continua humano. */}
@@ -2055,8 +2019,8 @@ function KnowledgeGapsList({ gaps }: { gaps: KnowledgeGap[] }) {
     const TYPE_LABELS: Record<string, string> = {
         service: "Serviço",
         pricing: "Preço",
-        icp: "ICP",
-        handoff_rule: "Regra de handoff",
+        icp: "Perfil de cliente",
+        handoff_rule: "Quando passar para um vendedor",
         tone: "Tom de voz",
         other: "Outro",
     };
@@ -2172,14 +2136,33 @@ function EvaTagsSection({
 
 // ─── CRM Block ──────────────────────────────────────────────────────────────
 
-const STAGE_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-    lead: { label: "Novo lead", color: "#64748B", bg: "rgba(148,163,184,0.14)" },
-    qualification: { label: "Qualificação", color: "#1D4ED8", bg: "rgba(37,99,235,0.10)" },
-    proposal: { label: "Proposta", color: "#6D28D9", bg: "rgba(124,58,237,0.10)" },
-    negotiation: { label: "Negociação", color: "#B45309", bg: "rgba(245,158,11,0.10)" },
-    closed_won: { label: "Ganho", color: "#047857", bg: "rgba(16,185,129,0.10)" },
-    closed_lost: { label: "Perdido", color: "#DC2626", bg: "rgba(220,38,38,0.08)" },
+// Rótulo de reserva quando o card ainda não tem stage_id (dado antigo). O título
+// de verdade vem do funil da empresa (pipeline_stages), que muda por segmento.
+const LEGACY_STAGE_LABEL: Record<string, string> = {
+    lead: "Novo lead",
+    qualification: "Qualificação",
+    proposal: "Proposta",
+    negotiation: "Negociação",
+    closed_won: "Ganho",
+    closed_lost: "Perdido",
 };
+const STAGE_TONE = {
+    open: "bg-[var(--vyz-surface-2)] text-[var(--vyz-text-strong)]",
+    won: "bg-[var(--vyz-success-bg)] text-[var(--vyz-success)]",
+    lost: "bg-[var(--vyz-danger-bg)] text-[var(--vyz-danger)]",
+} as const;
+
+function useStageInfo(stageId: string | null | undefined) {
+    return useQuery({
+        queryKey: ["pipeline-stage", stageId],
+        enabled: !!stageId,
+        staleTime: 5 * 60_000,
+        queryFn: async () => {
+            const { data } = await supabase.from("pipeline_stages").select("title, kind").eq("id", stageId!).maybeSingle();
+            return (data as { title: string; kind: "open" | "won" | "lost" } | null) ?? null;
+        },
+    });
+}
 
 function CrmBlock({
     matchedDeal,
@@ -2192,6 +2175,9 @@ function CrmBlock({
     effectiveDealId: string | null;
     loading: boolean;
 }) {
+    const stageDeal = hasLinkedOpportunity ? (matchedDeal?.id === effectiveDealId ? matchedDeal : null) : matchedDeal;
+    const stageInfo = useStageInfo(stageDeal?.stage_id).data;
+
     if (loading) {
         return (
             <div
@@ -2251,21 +2237,22 @@ function CrmBlock({
                 <p className="text-[13px] font-semibold" style={{ color: noteColor }}>
                     {noteText}
                 </p>
-                {href && (
-                    <a
-                        href={href}
-                        className="inline-flex items-center gap-1 text-[11.5px] font-semibold mt-2 transition-colors hover:text-[#1D4ED8]"
-                        style={{ color: "#2563EB" }}
+                {href && !hasLinkedOpportunity && (
+                    <Link
+                        to={href}
+                        className="inline-flex items-center gap-1 text-[11.5px] font-semibold mt-2 text-[var(--vyz-accent)] transition-colors hover:text-[var(--vyz-accent-dark)]"
                     >
-                        Abrir no CRM
-                        <ArrowRight className="h-3 w-3" />
-                    </a>
+                        Abrir no pipeline
+                        <ArrowRight className="h-3 w-3" aria-hidden />
+                    </Link>
                 )}
             </div>
         );
     }
 
-    const stage = STAGE_LABELS[detailDeal.stage as string] || STAGE_LABELS.lead;
+    const legacyStage = detailDeal.stage as string;
+    const stageLabel = stageInfo?.title ?? LEGACY_STAGE_LABEL[legacyStage] ?? "Novo lead";
+    const stageKind = stageInfo?.kind ?? (legacyStage === "closed_won" ? "won" : legacyStage === "closed_lost" ? "lost" : "open");
     const value = typeof detailDeal.value === "number" ? detailDeal.value : Number(detailDeal.value) || 0;
     const valueStr =
         value > 0
@@ -2302,11 +2289,8 @@ function CrmBlock({
                 >
                     {detailDeal.title}
                 </p>
-                <span
-                    className="inline-flex items-center text-[11.5px] px-1.5 py-0.5 rounded shrink-0"
-                    style={{ background: stage.bg, color: stage.color, fontWeight: 600 }}
-                >
-                    {stage.label}
+                <span className={`inline-flex items-center text-[11.5px] font-semibold px-1.5 py-0.5 rounded shrink-0 ${STAGE_TONE[stageKind]}`}>
+                    {stageLabel}
                 </span>
             </div>
             <div className="grid grid-cols-2 gap-2 text-[11.5px]">
@@ -2321,15 +2305,15 @@ function CrmBlock({
                     />
                 )}
             </div>
-            {href && (
-                <a
-                    href={href}
-                    className="inline-flex items-center gap-1 text-[11.5px] font-semibold mt-2.5 transition-colors hover:text-[#1D4ED8]"
-                    style={{ color: "#2563EB" }}
+            {/* Vinculado, a régua do topo do painel já leva ao card. */}
+            {href && !hasLinkedOpportunity && (
+                <Link
+                    to={href}
+                    className="inline-flex items-center gap-1 text-[11.5px] font-semibold mt-2.5 text-[var(--vyz-accent)] transition-colors hover:text-[var(--vyz-accent-dark)]"
                 >
-                    Abrir no CRM
-                    <ArrowRight className="h-3 w-3" />
-                </a>
+                    Abrir no pipeline
+                    <ArrowRight className="h-3 w-3" aria-hidden />
+                </Link>
             )}
         </div>
     );

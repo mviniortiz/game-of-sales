@@ -6,6 +6,7 @@ import { DealCard, StageNeighbors } from "./DealCard";
 import type { Deal } from "@/pages/CRM";
 import type { Stage } from "@/lib/pipelineStyles";
 import type { PipelineDealContext } from "@/hooks/usePipelineContextData";
+import type { QuoteItem } from "@/hooks/useQuoteBoard";
 import type { Tag } from "@/types/tags";
 // F5P.4e — Phosphor duotone padronizado (consistente com sidebar e header).
 import { Tray as TrayPh, ArrowRight as ArrowRightPh } from "@phosphor-icons/react";
@@ -16,6 +17,8 @@ interface KanbanColumnProps {
   total: { count: number; value: number };
   formatCurrency: (value: number) => string;
   onDeleteDeal?: (deal: Deal) => void;
+  onMarkWon?: (deal: Deal) => void;
+  quoteByDeal?: Map<string, QuoteItem>;
   previousStageCount?: number; // for funnel conversion rate
   showConversionRate?: boolean;
   isLast?: boolean;
@@ -59,6 +62,8 @@ export const KanbanColumn = memo(({
   total,
   formatCurrency,
   onDeleteDeal,
+  onMarkWon,
+  quoteByDeal,
   previousStageCount,
   showConversionRate = false,
   isLast = false,
@@ -112,18 +117,16 @@ export const KanbanColumn = memo(({
         ref={setNodeRef}
         className={`
           relative flex flex-col w-[88vw] max-w-[380px] sm:w-[280px] sm:max-w-none flex-shrink-0 h-full rounded-2xl
-          border transition-colors duration-150 overflow-hidden
+          border transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] overflow-hidden
           ${isOver
-            ? "border-emerald-400/60 bg-emerald-50 dark:bg-emerald-500/[0.05]"
+            ? "border-[var(--vyz-accent-border-strong)] bg-[var(--vyz-accent-soft-4)]"
             : "border-slate-200/70 bg-slate-100/70 dark:border-border/40 dark:bg-card/40"
           }
         `}
       >
-        {/* F5P.4e — Accent bar superior PERMANENTE com cor do stage (assina visualmente
-            cada coluna). Anima pra emerald quando isOver. */}
+        {/* Barra superior com a cor da etapa; vira azul enquanto um card passa por cima. */}
         <div
-          className={`absolute top-0 left-0 right-0 h-[3px] ${isOver ? "" : accentBg} transition-colors duration-150`}
-          style={isOver ? { background: "linear-gradient(90deg, #00E37A, #34d399, #00E37A)" } : undefined}
+          className={`absolute top-0 left-0 right-0 h-[3px] ${isOver ? "bg-[var(--vyz-accent)]" : accentBg} transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]`}
         />
 
         {/* F5P.4e — Column Header com bg distinto (white em light / card em dark)
@@ -142,52 +145,47 @@ export const KanbanColumn = memo(({
               {total.count}
             </span>
             {total.count > 0 && (
-              <span className="ml-auto text-[13px] font-bold text-slate-900 dark:text-emerald-300 tabular-nums tracking-tight">
+              <span className="ml-auto text-[13px] font-bold text-[var(--vyz-text-primary)] tabular-nums tracking-tight">
                 {formatCurrency(total.value)}
               </span>
             )}
           </div>
-          {total.count > 0 ? (
-            <div className="mt-2 flex flex-col gap-1.5">
-              {/* LP-PIPE.2 — barra de proporção (valor da coluna vs maior coluna) */}
-              {valueRatio > 0 && (
-                <div
-                  className="h-[3px] w-full rounded-full bg-slate-200/70 dark:bg-white/[0.06] overflow-hidden"
-                  role="presentation"
-                >
-                  <div
-                    className={`h-full rounded-full ${dotBg} transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]`}
-                    style={{ width: `${valueRatio * 100}%` }}
-                  />
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="mt-1.5 text-[11px] text-muted-foreground/70">
-              vazio
-            </div>
-          )}
+          {/* LP-PIPE.2 — barra de proporção (valor da coluna vs maior coluna).
+              O trilho aparece mesmo vazio para os cabeçalhos terem a mesma altura. */}
+          <div
+            className="mt-2 h-[3px] w-full rounded-full bg-slate-200/70 dark:bg-white/[0.06] overflow-hidden"
+            role="presentation"
+          >
+            {total.count > 0 && valueRatio > 0 && (
+              <div
+                className={`h-full rounded-full ${dotBg} transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none`}
+                style={{ width: `${valueRatio * 100}%` }}
+              />
+            )}
+          </div>
         </div>
 
         {/* ── Cards Track ──────────────────────────────────────
             Altura vem da cadeia flex (coluna h-full ← board ← .vz-page-full);
             sem cap em 100vh, que no Safari iOS cortava os últimos cards. */}
         <div className="flex-1 p-2.5 overflow-hidden">
-          <ScrollArea className="h-full pr-1">
+          {/* O Radix embrulha o conteúdo em display:table, que cresce com texto
+              sem quebra e empurra o card para fora da coluna. Bloco mantém a largura. */}
+          <ScrollArea className="h-full pr-1 [&_[data-radix-scroll-area-viewport]>div]:!block">
             <SortableContext items={dealIds} strategy={verticalListSortingStrategy}>
               <div className="space-y-2 pt-1 pb-2">
                 {deals.length === 0 ? (
                   // F5P.4 — empty state mais discreto, menor altura
                   <div className={`
                     flex flex-col items-center justify-center py-8 px-3 rounded-xl border border-dashed
-                    transition-colors duration-150
-                    ${isOver ? "border-emerald-400/50 bg-emerald-500/[0.04]" : "border-border/30"}
+                    transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]
+                    ${isOver ? "border-[var(--vyz-accent-border-strong)] bg-[var(--vyz-accent-soft-6)]" : "border-border/30"}
                   `}>
-                    <TrayPh size={14} weight="duotone" className={`mb-1.5 ${isOver ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/50"}`} />
-                    <p className={`text-[10.5px] text-center leading-relaxed ${isOver ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/60"}`}>
+                    <TrayPh size={14} weight="duotone" className={`mb-1.5 ${isOver ? "text-[var(--vyz-accent)]" : "text-muted-foreground/50"}`} />
+                    <p className={`text-[10.5px] text-center leading-relaxed ${isOver ? "text-[var(--vyz-accent)] font-medium" : "text-muted-foreground/60"}`}>
                       {isOver
                         ? "Solte aqui"
-                        : "Quando a conversa avançar, a EVA traz o card pra cá."}
+                        : "Arraste um card pra cá. A EVA também move quando a conversa avança."}
                     </p>
                   </div>
                 ) : (
@@ -197,6 +195,8 @@ export const KanbanColumn = memo(({
                       deal={deal}
                       formatCurrency={formatCurrency}
                       onDelete={onDeleteDeal}
+                      onMarkWon={onMarkWon}
+                      quote={quoteByDeal?.get(deal.id)}
                       selectionMode={selectionMode}
                       isSelected={selectedDeals?.has(deal.id) ?? false}
                       onToggleSelect={onToggleSelect}

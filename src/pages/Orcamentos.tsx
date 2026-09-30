@@ -6,11 +6,14 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowUpRight, Check, FileText, MessageCircle, MoreHorizontal, RotateCcw, X } from "lucide-react";
+import { ArrowUpDown, ArrowUpRight, Check, FileText, MessageCircle, MoreHorizontal, RotateCcw, Search, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -22,6 +25,27 @@ const PERIODS = [7, 30, 90] as const;
 type Period = (typeof PERIODS)[number];
 
 type Tab = "parked" | "your_turn" | "talking" | "closed";
+// A aba fica no endereço (?aba=) para o Início e os avisos levarem direto a ela.
+const TAB_PARAM: Record<Tab, string> = { parked: "parados", your_turn: "esperando", talking: "conversa", closed: "encerrados" };
+const tabFromParam = (v: string | null): Tab | null =>
+  (Object.entries(TAB_PARAM).find(([, p]) => p === v)?.[0] as Tab | undefined) ?? null;
+
+type Sort = "valor" | "tempo" | "recente";
+const SORTS: Array<{ key: Sort; label: string }> = [
+  { key: "valor", label: "Maior valor" },
+  { key: "tempo", label: "Há mais tempo" },
+  { key: "recente", label: "Mais recente" },
+];
+const SORT_KEY = "vyz:orcamentos:ordem";
+function loadSort(): Sort {
+  try {
+    const v = localStorage.getItem(SORT_KEY);
+    return SORTS.some((o) => o.key === v) ? (v as Sort) : "valor";
+  } catch {
+    return "valor";
+  }
+}
+const fold = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 const TAB_STATES: Record<Tab, QuoteState[]> = {
   parked: ["no_reply", "went_quiet"],
   your_turn: ["your_turn"],
@@ -36,10 +60,22 @@ const SURFACE_SHADOW = "0 1px 2px rgba(15,23,42,0.04), 0 12px 32px -18px rgba(15
 
 // ─── Página ────────────────────────────────────────────────────────────────
 export default function Orcamentos() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const preview = import.meta.env.DEV ? searchParams.get("preview") : null;
   const [days, setDays] = useState<Period>(30);
-  const [tab, setTab] = useState<Tab | null>(null);
+  const tab = tabFromParam(searchParams.get("aba"));
+  const setTab = (t: Tab) =>
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("aba", TAB_PARAM[t]);
+      return next;
+    }, { replace: true });
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<Sort>(loadSort);
+  const changeSort = (s: Sort) => {
+    setSort(s);
+    try { localStorage.setItem(SORT_KEY, s); } catch { /* sem storage: vale só nesta visita */ }
+  };
   const qc = useQueryClient();
   const { query: board, queryKey } = useQuoteBoard(days, preview);
 
@@ -73,7 +109,13 @@ export default function Orcamentos() {
       toast.error("Não consegui salvar. Tente de novo.");
     },
     onSuccess: (_d, vars) => {
-      toast.success(vars.outcome === "won" ? "Marcado como fechado." : vars.outcome === "lost" ? "Marcado como perdido." : "Desfeito.");
+      if (!vars.outcome) {
+        toast.success("Desfeito.");
+        return;
+      }
+      toast.success(vars.outcome === "won" ? "Marcado como fechado." : "Marcado como perdido.", {
+        action: { label: "Desfazer", onClick: () => outcome.mutate({ id: vars.id, outcome: null }) },
+      });
     },
     onSettled: () => {
       if (!preview) qc.invalidateQueries({ queryKey: ["quote-board"] });
@@ -111,6 +153,10 @@ export default function Orcamentos() {
             tab={activeTab}
             onTab={setTab}
             days={days}
+            query={query}
+            onQuery={setQuery}
+            sort={sort}
+            onSort={changeSort}
             pendingId={outcome.isPending ? outcome.variables?.id ?? null : null}
             onOutcome={(id, o) => outcome.mutate({ id, outcome: o })}
           />
@@ -218,14 +264,24 @@ function Figure({
   );
 }
 
+const SORTERS: Record<Sort, (a: QuoteItem, b: QuoteItem) => number> = {
+  valor: (a, b) => (b.amount ?? -1) - (a.amount ?? -1),
+  tempo: (a, b) => b.days - a.days,
+  recente: (a, b) => a.days - b.days,
+};
+
 function QuoteList({
-  items, totals, tab, onTab, days, pendingId, onOutcome,
+  items, totals, tab, onTab, days, query, onQuery, sort, onSort, pendingId, onOutcome,
 }: {
   items: QuoteItem[];
   totals: QuoteBoard["totals"];
   tab: Tab;
   onTab: (t: Tab) => void;
   days: number;
+  query: string;
+  onQuery: (q: string) => void;
+  sort: Sort;
+  onSort: (s: Sort) => void;
   pendingId: string | null;
   onOutcome: (id: string, o: QuoteOutcome) => void;
 }) {
@@ -236,7 +292,11 @@ function QuoteList({
     { key: "talking", label: "Em conversa", count: totals.talking_count },
     { key: "closed", label: "Encerrados", count: closedCount },
   ];
-  const visible = items.filter((q) => TAB_STATES[tab].includes(q.state));
+  const needle = fold(query.trim());
+  const inTab = items.filter((q) => TAB_STATES[tab].includes(q.state));
+  const visible = inTab
+    .filter((q) => !needle || fold(`${q.contact_name ?? ""} ${q.contact_phone ?? ""}`).includes(needle))
+    .sort(SORTERS[sort]);
 
   // Parados vêm em duas pilhas: cada uma pede uma retomada diferente.
   const groups: Array<{ title: string | null; rows: QuoteItem[] }> =
@@ -251,6 +311,7 @@ function QuoteList({
 
   return (
     <section aria-label="Orçamentos por situação" className="mt-8">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
       <div role="tablist" aria-label="Situação" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-px">
         {tabs.map((t) => {
           const active = t.key === tab;
@@ -273,9 +334,61 @@ function QuoteList({
           );
         })}
       </div>
+      <div className="flex w-full items-center gap-2 sm:w-auto">
+        <label className="relative flex h-9 min-w-0 flex-1 items-center sm:w-60 sm:flex-none">
+          <span className="sr-only">Buscar cliente ou telefone</span>
+          <Search aria-hidden className="pointer-events-none absolute left-3 h-4 w-4 text-[var(--vyz-text-soft)]" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => onQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Escape") onQuery(""); }}
+            placeholder="Buscar cliente ou telefone"
+            className={`h-9 w-full rounded-full border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] pl-9 pr-8 text-[13.5px] text-[var(--vyz-text-primary)] placeholder:text-[var(--vyz-text-soft)] transition-[border-color,box-shadow] duration-150 ${EASE} hover:border-[var(--vyz-border-strong)] focus:border-[var(--vyz-accent)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] [&::-webkit-search-cancel-button]:hidden`}
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => onQuery("")}
+              aria-label="Limpar busca"
+              className={`absolute right-1.5 flex h-6 w-6 items-center justify-center rounded-full text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-3)] hover:text-[var(--vyz-text-primary)] ${FOCUS}`}
+            >
+              <X className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          )}
+        </label>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-3.5 text-[13px] font-medium text-[var(--vyz-text)] transition-colors duration-150 ${EASE} hover:border-[var(--vyz-border-strong)] hover:text-[var(--vyz-text-primary)] data-[state=open]:border-[var(--vyz-border-strong)] ${FOCUS}`}
+          >
+            <ArrowUpDown className="h-3.5 w-3.5" aria-hidden />
+            {SORTS.find((o) => o.key === sort)?.label}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuLabel className="text-[12px] font-medium text-[var(--vyz-text-muted)]">Ordenar por</DropdownMenuLabel>
+            <DropdownMenuRadioGroup value={sort} onValueChange={(v) => onSort(v as Sort)}>
+              {SORTS.map((o) => (
+                <DropdownMenuRadioItem key={o.key} value={o.key}>{o.label}</DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      </div>
 
       <div className="mt-3 overflow-hidden rounded-[12px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)]" style={{ boxShadow: SURFACE_SHADOW }}>
-        {visible.length === 0 ? (
+        {visible.length === 0 && needle && inTab.length > 0 ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-6">
+            <p className="text-[14px] text-[var(--vyz-text-muted)]">Nenhum orçamento com “{query.trim()}” nesta aba.</p>
+            <button
+              type="button"
+              onClick={() => onQuery("")}
+              className={`h-8 rounded-full border border-[var(--vyz-border-strong)] px-3.5 text-[13px] font-medium text-[var(--vyz-text-primary)] transition-colors duration-150 ${EASE} hover:bg-[var(--vyz-surface-2)] ${FOCUS}`}
+            >
+              Limpar busca
+            </button>
+          </div>
+        ) : visible.length === 0 ? (
           <p className="px-5 py-8 text-[14px] leading-relaxed text-[var(--vyz-text-muted)]">{emptyTabText(tab, days)}</p>
         ) : (
           groups.map((g) => (

@@ -17,12 +17,10 @@
 // PRESENTATIONAL: score/temperatura são MOCK — chegam prontos via `signals`
 // (placeholder). O cálculo real (EVA Studio) entra depois trocando só a
 // origem das props; este componente NÃO calcula prioridade.
-//
-// Validação: /inbox-list-preview com os dois estados. InboxList.tsx antigo
-// intocado até o Markus aprovar.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useMemo, useState, type ReactNode } from "react";
-import { ArrowRight, ChevronDown, ChevronRight, Clock3, ListOrdered, Lock, Search } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronRight, Clock3, ListOrdered, Search, X } from "lucide-react";
+import type { QuoteItem } from "@/hooks/useQuoteBoard";
 import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import type { Chat } from "@/hooks/useEvolutionAPI";
 
@@ -51,6 +49,28 @@ export interface InboxPriorityListProps {
     onOpenStudio: () => void;
     /** Conteúdo injetado abaixo do header/busca (ex: card de conexão WhatsApp no Inbox). */
     headerSlot?: ReactNode;
+    /** Primeira carga ainda não voltou: mostra esqueleto, não "nenhuma conversa". */
+    loading?: boolean;
+    /** Texto da lista vazia, dito pelo host conforme o motivo (sem WhatsApp, sem conversa). */
+    emptyMessage?: string;
+    /** Orçamento aberto de cada conversa (placar), por id da conversa. */
+    quoteByChat?: Map<string, QuoteItem>;
+}
+
+type ListFilter = "all" | "unread" | "quote";
+const isParkedQuote = (q?: QuoteItem) => !!q && (q.state === "no_reply" || q.state === "went_quiet");
+const QUOTE_ROW_LABEL: Partial<Record<QuoteItem["state"], string>> = {
+    no_reply: "Orçamento sem resposta",
+    went_quiet: "Sumiu depois do orçamento",
+};
+
+const ORDER_KEY = "vyz:inbox:ordem";
+function loadOrder(): "eva" | "time" {
+    try {
+        return localStorage.getItem(ORDER_KEY) === "time" ? "time" : "eva";
+    } catch {
+        return "eva";
+    }
 }
 
 const PRIORITY_LABEL: Record<LeadPriority, string> = {
@@ -109,10 +129,22 @@ export function InboxPriorityList({
     onSelect,
     onOpenStudio,
     headerSlot,
+    loading = false,
+    emptyMessage = "Nenhuma conversa ainda.",
+    quoteByChat,
 }: InboxPriorityListProps) {
+    const [filter, setFilter] = useState<ListFilter>("all");
     const [query, setQuery] = useState("");
-    // A EVA propõe a ordem; "time" é o humano revogando pro cronológico.
-    const [order, setOrder] = useState<"eva" | "time">("eva");
+    // A EVA propõe a ordem; "time" é o humano revogando pro cronológico. Vale entre visitas.
+    const [order, setOrderState] = useState<"eva" | "time">(loadOrder);
+    const setOrder = (next: "eva" | "time") => {
+        setOrderState(next);
+        try {
+            localStorage.setItem(ORDER_KEY, next);
+        } catch {
+            /* sem storage: vale só nesta visita */
+        }
+    };
     const [junkOpen, setJunkOpen] = useState(false);
     const [groupsOpen, setGroupsOpen] = useState(false);
 
@@ -125,7 +157,11 @@ export function InboxPriorityList({
                       c.phone?.toLowerCase().includes(q),
               )
             : chats;
-        const visible = matched.filter((c) => !c.isGroup);
+        const visible = matched
+            .filter((c) => !c.isGroup)
+            .filter((c) =>
+                filter === "unread" ? c.unreadCount > 0 : filter === "quote" ? isParkedQuote(quoteByChat?.get(c.id)) : true,
+            );
         return {
             active: visible.filter(hasConversation),
             junk: visible.filter((c) => !hasConversation(c)),
@@ -134,7 +170,10 @@ export function InboxPriorityList({
                 .filter((c) => c.isGroup)
                 .sort((a, b) => lastTime(b) - lastTime(a)),
         };
-    }, [chats, query]);
+    }, [chats, query, filter, quoteByChat]);
+
+    const unreadCount = chats.filter((c) => !c.isGroup && c.unreadCount > 0).length;
+    const parkedCount = chats.filter((c) => !c.isGroup && isParkedQuote(quoteByChat?.get(c.id))).length;
 
     // Ordenações. waitingMinutes desc = quem espera VOCÊ há mais tempo primeiro.
     const byWaiting = (a: Chat, b: Chat) => {
@@ -195,7 +234,7 @@ export function InboxPriorityList({
                         aria-hidden
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                        <p className="vz-evlist-title">Inbox Comercial</p>
+                        <p className="vz-evlist-title">Conversas</p>
                         <p className="vz-evlist-subtitle">
                             {order === "time"
                                 ? "Ordem cronológica"
@@ -242,42 +281,81 @@ export function InboxPriorityList({
                         }}
                     />
                     <input
-                        type="text"
+                        type="search"
+                        aria-label="Buscar conversa"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Buscar lead ou telefone…"
-                        className="text-base md:text-[12px]"
+                        onKeyDown={(e) => {
+                            if (e.key === "Escape" && query) {
+                                e.preventDefault();
+                                setQuery("");
+                            }
+                        }}
+                        placeholder="Buscar nome ou telefone"
+                        className="text-base md:text-[12px] border border-[var(--ibx-line)] outline-none transition-[border-color,box-shadow] duration-150 focus:border-[var(--vyz-accent)] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] [&::-webkit-search-cancel-button]:hidden"
                         style={{
                             width: "100%",
                             height: 34,
                             paddingLeft: 32,
-                            paddingRight: 12,
-                            borderRadius: 8,
-                            outline: "none",
+                            paddingRight: query ? 30 : 12,
+                            borderRadius: 999,
                             background: "var(--ibx-sunken)",
-                            border: "1px solid var(--ibx-line)",
                             color: "#0B1220",
                         }}
                     />
+                    {query && (
+                        <button
+                            type="button"
+                            aria-label="Limpar busca"
+                            onClick={() => setQuery("")}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded-full text-[var(--vyz-text-muted)] hover:bg-[var(--ibx-line)] transition-colors duration-150"
+                        >
+                            <X style={{ width: 11, height: 11 }} />
+                        </button>
+                    )}
                 </div>
             </div>
+
+            {chats.length > 0 && (
+                <div role="group" aria-label="Filtrar conversas" className="flex flex-wrap gap-1.5 px-3 pt-2">
+                    {([
+                        { id: "all", label: "Todas" },
+                        { id: "unread", label: `Não lidas${unreadCount ? ` (${unreadCount})` : ""}` },
+                        { id: "quote", label: `Orçamento parado${parkedCount ? ` (${parkedCount})` : ""}` },
+                    ] as const).map((f) => (
+                        <button
+                            key={f.id}
+                            type="button"
+                            aria-pressed={filter === f.id}
+                            onClick={() => setFilter(f.id)}
+                            className={`inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[11px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
+                                filter === f.id
+                                    ? "bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)]"
+                                    : "border border-[var(--ibx-line)] text-[var(--vyz-text-strong)] hover:bg-[var(--ibx-sunken)]"
+                            }`}
+                        >
+                            {f.label}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             {/* Slot injetado pelo host (ex: card de conexão WhatsApp no Inbox). */}
             {headerSlot && <div className="vz-evlist-headerslot" style={{ padding: "10px 12px 0" }}>{headerSlot}</div>}
 
             {/* Estado B — ponte com presença, não erro. O fallback funciona,
                 mas o valor de verdade está trancado atrás do Studio. */}
-            {!studioConfigured && order === "eva" && (
+            {!studioConfigured && order === "eva" && chats.length > 0 && (
                 <button type="button" className="vz-evlist-bridge" onClick={onOpenStudio}>
                     <span style={{ flex: 1, minWidth: 0 }}>
                         <span className="vz-evlist-bridge-title">
-                            Você está priorizando no escuro
+                            Lista por tempo de espera
                         </span>
                         <span className="vz-evlist-bridge-sub">
-                            Configure o EVA Studio pra eu ordenar por valor de verdade
+                            Para a EVA ordenar por valor, configure o EVA Studio
                         </span>
                     </span>
-                    <ArrowRight style={{ width: 14, height: 14, flexShrink: 0, color: "#423A9C" }} />
+                    <ArrowRight style={{ width: 14, height: 14, flexShrink: 0, color: "var(--vyz-text-muted)" }} />
                 </button>
             )}
 
@@ -302,23 +380,47 @@ export function InboxPriorityList({
                                     showValue={studioConfigured}
                                     isSelected={chat.id === selectedChatId}
                                     onSelect={() => onSelect(chat.id)}
+                                    quote={quoteByChat?.get(chat.id)}
                                 />
                             ))}
                         </ul>
                     </div>
                 ))}
 
-                {active.length === 0 && (
-                    <p
-                        style={{
-                            textAlign: "center",
-                            padding: "40px 24px",
-                            fontSize: 12,
-                            color: "#64748B",
-                        }}
-                    >
-                        Nenhuma conversa ativa encontrada.
-                    </p>
+                {active.length === 0 && loading && chats.length === 0 && (
+                    <ul aria-label="Carregando conversas" className="px-3 pt-2 space-y-2">
+                        {[0, 1, 2, 3].map((i) => (
+                            <li key={i} className="flex items-center gap-3 rounded-[10px] px-2 py-2">
+                                <span className="h-9 w-9 shrink-0 rounded-full bg-[var(--ibx-sunken)] animate-pulse motion-reduce:animate-none" />
+                                <span className="flex-1 space-y-1.5">
+                                    <span className="block h-2.5 w-2/5 rounded bg-[var(--ibx-sunken)] animate-pulse motion-reduce:animate-none" />
+                                    <span className="block h-2.5 w-4/5 rounded bg-[var(--ibx-sunken)] animate-pulse motion-reduce:animate-none" />
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+                {active.length === 0 && !loading && (
+                    <div className="px-6 py-10 text-center">
+                        <p className="text-[12px] text-[var(--vyz-text-muted)]">
+                            {query.trim()
+                                ? `Nada encontrado para “${query.trim()}”.`
+                                : filter === "unread"
+                                ? "Nenhuma conversa não lida."
+                                : filter === "quote"
+                                ? "Nenhum orçamento parado agora."
+                                : emptyMessage}
+                        </p>
+                        {query.trim() && (
+                            <button
+                                type="button"
+                                onClick={() => setQuery("")}
+                                className="mt-3 inline-flex h-8 items-center rounded-full border border-[var(--ibx-line)] px-3.5 text-[12px] font-medium text-[var(--vyz-text-strong)] hover:bg-[var(--ibx-sunken)] transition-colors duration-150"
+                            >
+                                Limpar busca
+                            </button>
+                        )}
+                    </div>
                 )}
 
                 {/* Grupos: fora do fluxo de venda, recolhidos mas acessíveis */}
@@ -447,7 +549,9 @@ function LeadRow({
     showValue,
     isSelected,
     onSelect,
+    quote,
 }: {
+    quote?: QuoteItem;
     chat: Chat;
     signal?: InboxLeadSignal;
     /** false = estado B: nada de etiqueta/cor de valor, só o sinal de tempo. */
@@ -510,15 +614,14 @@ function LeadRow({
                             ) : (
                                 <span className="vz-evlist-wait">sem leitura ainda</span>
                             )
-                        ) : (
-                            <span
-                                className="vz-evlist-tag vz-evlist-tag--locked"
-                                style={{ flexShrink: 0 }}
-                                title="A prioridade por valor está trancada. Configure o EVA Studio pra destravar."
-                            >
-                                <Lock style={{ width: 9, height: 9 }} />
-                                prioridade
+                        ) : quote && QUOTE_ROW_LABEL[quote.state] ? (
+                            <span className="inline-flex min-w-0 items-center gap-1 truncate text-[10.5px] font-medium text-[var(--vyz-warning)]">
+                                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--vyz-warning)]" aria-hidden />
+                                {QUOTE_ROW_LABEL[quote.state]}
                             </span>
+                        ) : (
+                            // Sem Studio, a faixa do topo já explica; a linha não repete o aviso.
+                            <span aria-hidden />
                         )}
                         <span
                             style={{

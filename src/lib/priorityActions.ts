@@ -94,6 +94,13 @@ export function snoozePriority(companyId: string, id: string, untilIso: string):
     return next;
 }
 
+export function unsnoozePriority(companyId: string, id: string): PriorityActionState {
+    const state = read(companyId);
+    const next: PriorityActionState = { resolved: state.resolved, snoozed: omit(state.snoozed, id) };
+    write(companyId, next);
+    return next;
+}
+
 export function isResolved(state: PriorityActionState, id: string): boolean {
     return !!state.resolved[id];
 }

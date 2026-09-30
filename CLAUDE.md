@@ -88,9 +88,11 @@ está BLOQUEADO por billing; não criar workflows.
 - Contexto do negócio: a EVA deduz sozinha das conversas
   (`eva-learn-from-conversations`, cron `eva-learn-context` toda segunda 10h
   BRT) e propõe em `eva_context_suggestions` com `source='conversations'` e
-  `evidence` obrigatória. Quem aprova é o humano, na Base de Conhecimento ou no
-  EVA Studio. O `eva-agent-loop` passou a ler `eva_business_context` no system
-  prompt: sem isso o rascunho saía sem a voz da empresa.
+  `evidence` obrigatória. Quem aprova é o humano, no EVA Studio. A tela de
+  contexto em Configurações saiu em 30/09/2026: o dono não configura contexto,
+  a EVA parte do pacote do segmento (`src/lib/eva/blueprint.ts`). O
+  `eva-agent-loop` lê `eva_business_context` no system prompt: sem isso o
+  rascunho saía sem a voz da empresa.
 - Fila ÚNICA de sugestão: `agent_suggestions`. Escrevem nela o
   `eva-agent-loop` e o `eva-stale-deal-followup` (kind='followup'), e as duas
   passam pela aprovação por WhatsApp (UNIFY.1, 2026-08-24).

@@ -4,21 +4,29 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Clock, Phone, Calendar, CheckCircle2, Flame, Trash2, Copy,
   Pencil, MessageSquare, ArrowRight, ChevronLeft, ChevronRight, GripVertical,
-  Building2, AlertTriangle
+  Building2, AlertTriangle, MoreHorizontal
 } from "lucide-react";
-import { format, differenceInDays, isPast, parseISO, formatDistanceToNow } from "date-fns";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { format, differenceInDays, isPast, parseISO, formatDistanceToNow, formatDistanceToNowStrict } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import type { Deal } from "@/pages/CRM";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useSwipeToMove } from "@/hooks/useSwipeToMove";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { proximaAcaoLabel } from "@/lib/eva/qualificationSchema";
+import type { QuoteItem } from "@/hooks/useQuoteBoard";
+import { ago, evaLine, stateLine } from "@/lib/quoteText";
 import { useTagsForDeal } from "@/hooks/useDealTags";
 import { DealTagBadge } from "./DealTagBadge";
 import type { PipelineDealContext } from "@/hooks/usePipelineContextData";
@@ -37,6 +45,10 @@ interface DealCardProps {
   formatCurrency: (value: number) => string;
   onClick?: () => void;
   onDelete?: (deal: Deal) => void;
+  /** Move o card para a etapa de ganho do funil (mesmo caminho do arraste). */
+  onMarkWon?: (deal: Deal) => void;
+  /** Orçamento aberto deste card no placar (quote_tracking), quando houver. */
+  quote?: QuoteItem | null;
   selectionMode?: boolean;
   isSelected?: boolean;
   onToggleSelect?: (dealId: string) => void;
@@ -59,35 +71,21 @@ const EVA_DERIVED_READ: Record<string, string> = {
   unknown: "Aguardando leitura",
 };
 
-// F5P.3 — Rotting status (visual mais sutil: borda âmbar discreta, sem rose
-// gritante. Severidade fica diferenciada por tonalidade, não por pulse).
-const getRottingStatus = (days: number) => {
-  if (days > 7) return { border: "border-l-amber-500/70", dot: "bg-amber-500", label: `${days}d`, severity: "high" as const };
-  if (days > 3) return { border: "border-l-amber-400/50", dot: "bg-amber-400", label: `${days}d`, severity: "mid" as const };
-  return { border: "border-l-transparent", dot: "bg-emerald-500", label: "", severity: "ok" as const };
-};
-
-// CSS keyframes for pulsing rotting badge (injected once)
-if (typeof document !== "undefined" && !document.getElementById("rotting-pulse-style")) {
-  const style = document.createElement("style");
-  style.id = "rotting-pulse-style";
-  style.textContent = `
-    @keyframes rotting-pulse {
-      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
-      50% { opacity: 0.85; box-shadow: 0 0 8px 2px rgba(244, 63, 94, 0.25); }
-    }
-    .rotting-pulse {
-      animation: rotting-pulse 2s ease-in-out infinite;
-    }
-  `;
-  document.head.appendChild(style);
+// Estado do orçamento em linguagem de dono. Âmbar = parado; azul = a vez é sua.
+function quoteStatus(q: QuoteItem): { text: string; tone: string; dot: string } | null {
+  switch (q.state) {
+    case "no_reply":
+      return { text: `Sem resposta ao orçamento · ${ago(q.days)}`, tone: "text-amber-700 dark:text-amber-300", dot: "bg-amber-500" };
+    case "went_quiet":
+      return { text: `Cliente sumiu · ${ago(q.days)}`, tone: "text-amber-700 dark:text-amber-300", dot: "bg-amber-500" };
+    case "your_turn":
+      return { text: `Cliente esperando você · ${ago(q.days)}`, tone: "text-[var(--vyz-accent-text)]", dot: "bg-[var(--vyz-accent)]" };
+    case "talking":
+      return { text: "Em conversa sobre o orçamento", tone: "text-[var(--vyz-text-muted)]", dot: "bg-emerald-500" };
+    default:
+      return null;
+  }
 }
-
-// Probability bar color
-const getProbabilityColor = (p: number) =>
-  p >= 70 ? "from-emerald-500 to-emerald-400" :
-    p >= 40 ? "from-amber-500 to-amber-400" :
-      "from-slate-600 to-slate-500";
 
 // Format BRL as user types (same as NewDealModal)
 const formatBRL = (raw: string) => {
@@ -102,19 +100,15 @@ const parseBRL = (formatted: string) =>
 
 type EditableField = "title" | "customer_name" | "value";
 
-export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDelete, selectionMode = false, isSelected = false, onToggleSelect, stageNeighbors, onSwipeMove, context, tags = [] }: DealCardProps) => {
+export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDelete, onMarkWon, quote = null, selectionMode = false, isSelected = false, onToggleSelect, stageNeighbors, onSwipeMove, context, tags = [] }: DealCardProps) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data: dealTags = [] } = useTagsForDeal(deal.id);
-  const clickStartTime = useRef<number>(0);
+  const pressStart = useRef<{ x: number; y: number } | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const swipeRef = useRef<HTMLDivElement | null>(null);
-  const hideActionsTimerRef = useRef<number | null>(null);
-  const [actionsVisible, setActionsVisible] = useState(false);
-  const [actionsPlacement, setActionsPlacement] = useState<"above" | "below" | "inside">("above");
-  const [actionsCoords, setActionsCoords] = useState<{ top: number; left: number } | null>(null);
 
   // Inline edit state
   const [editingField, setEditingField] = useState<EditableField | null>(null);
@@ -188,8 +182,10 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
   const daysSince = deal.updated_at
     ? differenceInDays(new Date(), new Date(deal.updated_at)) : 0;
 
-  const rotting = getRottingStatus(daysSince);
-  const probabilityColor = getProbabilityColor(deal.probability);
+
+  // "Sem movimento" só quando não há orçamento dizendo algo melhor sobre o card.
+  const showNoMovement =
+    !(quote && quoteStatus(quote)) && daysSince > 3 && deal.stage !== "closed_won" && deal.stage !== "closed_lost";
 
   // Is close date overdue?
   const isOverdue = deal.expected_close_date
@@ -198,7 +194,9 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
   // Whether inline editing is allowed (disabled in selection mode)
   const canInlineEdit = !selectionMode;
 
-  const handleMouseDown = useCallback(() => { clickStartTime.current = Date.now(); }, []);
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    pressStart.current = { x: e.clientX, y: e.clientY };
+  }, []);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (isBeingDragged) return;
@@ -208,25 +206,31 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
       return;
     }
     if (editingField) return; // Don't navigate while editing
-    const dur = Date.now() - clickStartTime.current;
-    if (dur < 200) {
-      e.stopPropagation();
-      navigate(`/deals/${deal.id}`);
-    }
+    // Mesmo limiar do PointerSensor do CRM (6px): abaixo disso foi clique, não arraste.
+    const start = pressStart.current;
+    if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) >= 6) return;
+    e.stopPropagation();
+    navigate(`/deals/${deal.id}`);
   }, [isBeingDragged, deal.id, navigate, selectionMode, onToggleSelect, editingField]);
 
-  const handleQuickAction = useCallback((e: React.MouseEvent, action: string) => {
-    e.stopPropagation();
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.target !== e.currentTarget || (e.key !== "Enter" && e.key !== " ")) return;
     e.preventDefault();
+    if (selectionMode) onToggleSelect?.(deal.id);
+    else navigate(`/deals/${deal.id}`);
+  }, [deal.id, navigate, selectionMode, onToggleSelect]);
+
+  const handleQuickAction = useCallback((action: "phone" | "calendar" | "won" | "delete" | "duplicate") => {
     switch (action) {
       case "phone":
         if (deal.customer_phone) window.open(`tel:${deal.customer_phone}`, "_self");
+        else toast.info("Este card não tem telefone cadastrado.");
         break;
       case "calendar":
         navigate(`/calendario?deal=${deal.id}`);
         break;
-      case "check":
-        navigate(`/deals/${deal.id}?action=win`);
+      case "won":
+        onMarkWon?.(deal);
         break;
       case "delete":
         onDelete?.(deal);
@@ -278,7 +282,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
         })();
         break;
     }
-  }, [deal, navigate, onDelete, user, queryClient]);
+  }, [deal, navigate, onDelete, onMarkWon, user, queryClient]);
 
   // ── Inline editing logic ──────────────────────────────────
   const startEditing = useCallback((field: EditableField, e: React.MouseEvent) => {
@@ -359,97 +363,9 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
     setEditValue(e.target.value);
   }, []);
 
-  // ── Actions placement logic ───────────────────────────────
-  const updateActionsPlacement = useCallback(() => {
-    const node = cardRef.current;
-    if (!node) return;
-
-    const viewport =
-      (node.closest("[data-radix-scroll-area-viewport]") as HTMLElement | null) ??
-      node.parentElement;
-
-    if (!viewport) return;
-
-    const cardRect = node.getBoundingClientRect();
-    const viewportRect = viewport.getBoundingClientRect();
-    const menuHeight = 40;
-    const menuWidth = onDelete ? 210 : 164;
-    const gap = 8;
-
-    const topSpace = cardRect.top - viewportRect.top;
-    const bottomSpace = viewportRect.bottom - cardRect.bottom;
-
-    if (topSpace >= menuHeight + gap) {
-      setActionsPlacement("above");
-      setActionsCoords({
-        top: cardRect.top - menuHeight - 6,
-        left: Math.max(8, Math.min(cardRect.left + cardRect.width / 2 - menuWidth / 2, window.innerWidth - menuWidth - 8)),
-      });
-      return;
-    }
-
-    if (bottomSpace >= menuHeight + gap) {
-      setActionsPlacement("below");
-      setActionsCoords({
-        top: cardRect.bottom + 6,
-        left: Math.max(8, Math.min(cardRect.left + cardRect.width / 2 - menuWidth / 2, window.innerWidth - menuWidth - 8)),
-      });
-      return;
-    }
-
-    setActionsPlacement("inside");
-    setActionsCoords({
-      top: cardRect.top + 8,
-      left: Math.max(8, Math.min(cardRect.right - menuWidth - 8, window.innerWidth - menuWidth - 8)),
-    });
-  }, []);
-
-  const clearHideTimer = useCallback(() => {
-    if (hideActionsTimerRef.current !== null) {
-      window.clearTimeout(hideActionsTimerRef.current);
-      hideActionsTimerRef.current = null;
-    }
-  }, []);
-
-  const showActions = useCallback(() => {
-    clearHideTimer();
-    updateActionsPlacement();
-    setActionsVisible(true);
-  }, [clearHideTimer, updateActionsPlacement]);
-
-  const hideActionsSoon = useCallback(() => {
-    clearHideTimer();
-    hideActionsTimerRef.current = window.setTimeout(() => {
-      setActionsVisible(false);
-      hideActionsTimerRef.current = null;
-    }, 120);
-  }, [clearHideTimer]);
-
-  useEffect(() => {
-    if (!actionsVisible) return;
-
-    updateActionsPlacement();
-
-    const handleReposition = () => updateActionsPlacement();
-    window.addEventListener("resize", handleReposition);
-    window.addEventListener("scroll", handleReposition, true);
-
-    return () => {
-      window.removeEventListener("resize", handleReposition);
-      window.removeEventListener("scroll", handleReposition, true);
-    };
-  }, [actionsVisible, updateActionsPlacement]);
-
-  const actionsMotion =
-    actionsPlacement === "above"
-      ? { initial: { opacity: 0, y: 6, scale: 0.92 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, y: 6, scale: 0.92 } }
-      : actionsPlacement === "below"
-        ? { initial: { opacity: 0, y: -6, scale: 0.92 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, y: -6, scale: 0.92 } }
-        : { initial: { opacity: 0, y: -4, scale: 0.95 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, y: -4, scale: 0.95 } };
-
   // Shared inline input classes
   const inlineInputClass =
-    "w-full bg-muted border border-emerald-500/60 rounded px-1.5 py-0.5 text-foreground outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/40 transition-colors";
+    "w-full bg-[var(--vyz-surface-1)] border border-[var(--vyz-accent)] rounded px-1.5 py-0.5 text-foreground outline-none shadow-[0_0_0_3px_rgba(37,99,235,0.15)] transition-colors";
 
   return (
     <div className="relative" data-demo-deal={deal.id}>
@@ -488,18 +404,22 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
         dark:bg-card dark:border-border/50
         rounded-xl p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_2px_8px_-4px_rgba(15,23,42,0.05)]
         ${selectionMode ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"}
-        transition-[border-color,background-color,transform,box-shadow] duration-200 will-change-transform
+        transition-[border-color,background-color,transform,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform
+        motion-reduce:transition-none
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-1
         ${isBeingDragged
-          ? "scale-[1.025] -translate-y-0.5 shadow-[0_12px_32px_-6px_rgba(15,23,42,0.25)] border-emerald-500/70 ring-1 ring-emerald-500/30 z-50 !opacity-100"
-          : "hover:border-slate-300 dark:hover:border-border hover:-translate-y-px hover:shadow-[0_8px_20px_-8px_rgba(15,23,42,0.18)]"
+          ? "scale-[1.025] -translate-y-0.5 shadow-[0_12px_32px_-6px_rgba(15,23,42,0.25)] border-[var(--vyz-accent)] ring-1 ring-[var(--vyz-accent-border)] z-50 !opacity-100 motion-reduce:scale-100 motion-reduce:translate-y-0"
+          : "hover:border-slate-300 dark:hover:border-border hover:-translate-y-px hover:shadow-[0_8px_20px_-8px_rgba(15,23,42,0.18)] motion-reduce:hover:translate-y-0"
         }
         ${isSortableDragging ? "opacity-30" : "opacity-100"}
-        ${isSelected ? "!border-emerald-500 ring-2 ring-emerald-500/40" : ""}
+        ${isSelected ? "!border-[var(--vyz-accent)] ring-2 ring-[var(--vyz-accent-border-strong)]" : ""}
       `}
+      role="button"
+      tabIndex={0}
+      aria-label={selectionMode ? `${isSelected ? "Desmarcar" : "Selecionar"} ${deal.title}` : `Abrir ${deal.title}`}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
-      onMouseEnter={showActions}
-      onMouseLeave={hideActionsSoon}
+      onKeyDown={handleKeyDown}
       {...(selectionMode || isMobile ? {} : { ...attributes, ...listeners })}
     >
       {/* ── Selection checkbox ─────────────────────────────── */}
@@ -507,10 +427,10 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
         <div className="absolute top-2.5 left-2.5 z-10">
           <div
             className={`
-              w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-150
+              w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors duration-150
               ${isSelected
-                ? "bg-emerald-500 border-emerald-500"
-                : "bg-muted/50 border-muted-foreground hover:border-emerald-400"
+                ? "bg-[var(--vyz-accent)] border-[var(--vyz-accent)]"
+                : "bg-[var(--vyz-surface-1)] border-[var(--vyz-border-strong)]"
               }
             `}
           >
@@ -526,78 +446,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
       {/* F5P.4b — Hot deal ring agressivo REMOVIDO.
           O Flame icon ao lado do título (Row 1) basta como sinal de hot. */}
 
-      {/* ── Hover quick-action bar ────────────────────────── */}
-      {typeof document !== "undefined" && !selectionMode && createPortal(
-        <AnimatePresence>
-          {actionsVisible && !isBeingDragged && actionsCoords && (
-            <motion.div
-              initial={actionsMotion.initial}
-              animate={actionsMotion.animate}
-              exit={actionsMotion.exit}
-              transition={{ duration: 0.16, ease: "easeOut" }}
-              style={{
-                position: "fixed",
-                top: actionsCoords.top,
-                left: actionsCoords.left,
-              }}
-              className="flex items-center gap-0.5 px-2 py-1.5 rounded-xl bg-white dark:bg-secondary shadow-lg shadow-slate-900/15 dark:shadow-black/40 ring-1 ring-slate-200 dark:ring-border z-[9999] whitespace-nowrap"
-              onMouseEnter={showActions}
-              onMouseLeave={hideActionsSoon}
-              onClick={e => e.stopPropagation()}
-            >
-              <button
-                onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "phone"); }}
-                className="p-1.5 rounded-lg hover:bg-emerald-500/20 transition-colors group/b"
-                title="Ligar"
-                aria-label="Ligar"
-              >
-                <Phone className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-emerald-600 dark:group-hover/b:text-emerald-400" />
-              </button>
-              <div className="w-px h-4 bg-border" />
-              <button
-                onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "calendar"); }}
-                className="p-1.5 rounded-lg hover:bg-emerald-500/20 transition-colors group/b"
-                title="Agendar"
-                aria-label="Agendar"
-              >
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-emerald-600 dark:group-hover/b:text-emerald-400" />
-              </button>
-              <div className="w-px h-4 bg-border" />
-              <button
-                onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "check"); }}
-                className="p-1.5 rounded-lg hover:bg-emerald-500/20 transition-colors group/b"
-                title="Marcar como Ganho"
-                aria-label="Marcar como Ganho"
-              >
-                <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-emerald-600 dark:group-hover/b:text-emerald-400" />
-              </button>
-              <div className="w-px h-4 bg-border" />
-              <button
-                onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "duplicate"); }}
-                className="p-1.5 rounded-lg hover:bg-blue-500/20 transition-colors group/b"
-                title="Duplicar negociação"
-                aria-label="Copiar"
-              >
-                <Copy className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-blue-600 dark:group-hover/b:text-blue-400" />
-              </button>
-              {onDelete && (
-                <>
-                  <div className="w-px h-4 bg-border" />
-                  <button
-                    onPointerDown={e => { e.stopPropagation(); handleQuickAction(e as any, "delete"); }}
-                    className="p-1.5 rounded-lg hover:bg-rose-500/20 transition-colors group/b"
-                    title="Excluir negociação"
-                    aria-label="Excluir"
-                  >
-                    <Trash2 className="h-3.5 w-3.5 text-muted-foreground group-hover/b:text-rose-600 dark:group-hover/b:text-rose-400" />
-                  </button>
-                </>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
+
 
       <div className="relative">
         {/* Drag handle (hover only, desktop) */}
@@ -680,18 +529,70 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               </span>
             )}
           </div>
+
+          {/* Ações do card: dentro dele, por teclado e toque, sem cobrir o vizinho. */}
+          {!selectionMode && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                aria-label={`Ações de ${deal.title}`}
+                onClick={e => e.stopPropagation()}
+                onPointerDown={e => e.stopPropagation()}
+                onMouseDown={e => e.stopPropagation()}
+                className={`-mr-1.5 -mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-[var(--vyz-text-muted)] transition-[opacity,background-color,color] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[var(--vyz-surface-3)] hover:text-[var(--vyz-text-primary)] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] data-[state=open]:bg-[var(--vyz-surface-3)] data-[state=open]:opacity-100 ${isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+              >
+                <MoreHorizontal className="h-4 w-4" aria-hidden />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-48"
+                onClick={e => e.stopPropagation()}
+                onPointerDown={e => e.stopPropagation()}
+              >
+                {onMarkWon && (
+                  <DropdownMenuItem onSelect={() => handleQuickAction("won")}>
+                    <CheckCircle2 className="mr-2 h-4 w-4" aria-hidden />
+                    Fechou
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onSelect={() => handleQuickAction("calendar")}>
+                  <Calendar className="mr-2 h-4 w-4" aria-hidden />
+                  Agendar
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => handleQuickAction("phone")}>
+                  <Phone className="mr-2 h-4 w-4" aria-hidden />
+                  Ligar
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => handleQuickAction("duplicate")}>
+                  <Copy className="mr-2 h-4 w-4" aria-hidden />
+                  Duplicar
+                </DropdownMenuItem>
+                {onDelete && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onSelect={() => handleQuickAction("delete")}
+                      className="text-red-700 focus:bg-red-50 focus:text-red-700"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" aria-hidden />
+                      Excluir
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         {/* ── Row 1.5: Account (empresa B2B) ─────────────── */}
-        {(deal as any).account_name && (
+        {deal.account_name && (
           <div className="flex items-center gap-1.5 mb-1.5 min-h-[14px]">
-            <Building2 className="h-3 w-3 text-emerald-600/80 dark:text-emerald-400/70 flex-shrink-0" />
-            <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300/90 truncate max-w-[70%]">
-              {(deal as any).account_name}
+            <Building2 className="h-3 w-3 text-[var(--vyz-text-muted)] flex-shrink-0" aria-hidden />
+            <span className="text-[11px] font-semibold text-[var(--vyz-text-strong)] truncate max-w-[70%]">
+              {deal.account_name}
             </span>
-            {Array.isArray((deal as any).additional_contacts) && (deal as any).additional_contacts.length > 0 && (
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0 rounded-md text-[9px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300/80 border border-emerald-500/20">
-                +{(deal as any).additional_contacts.length} stakeholder{(deal as any).additional_contacts.length > 1 ? "s" : ""}
+            {!!deal.additional_contacts?.length && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0 rounded-md text-[9px] font-semibold bg-[var(--vyz-surface-2)] text-[var(--vyz-text-muted)] border border-[var(--vyz-border-subtle)]">
+                +{deal.additional_contacts.length} contato{deal.additional_contacts.length > 1 ? "s" : ""}
               </span>
             )}
           </div>
@@ -758,73 +659,68 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
           // Melhor o card não ter a linha do que ter uma linha vazia de sentido.
           if (!hasConv) return null;
 
-          // Texto da leitura: stale > proxima_acao > derivado da temperatura.
+          // Texto da leitura: retomada do orçamento > stale > proxima_acao > temperatura.
           // Trunca elegante via line-clamp no JSX.
+          // O que a EVA já fez pelo orçamento vale mais que qualquer leitura.
           let readText: string;
-          if (context.isStale) {
-            readText = "EVA desatualizada";
-          } else if (context.proximaAcao) {
-            readText = context.proximaAcao;
+          const quoteEva = quote ? evaLine(quote) : null;
+          if (quoteEva) {
+            readText = quoteEva;
+          } else if (context.isStale) {
+            readText = "Conversa andou desde a última leitura";
+          } else if (context.proximaAcao && context.proximaAcao !== "criar_oportunidade") {
+            // "Criar oportunidade" não se aplica aqui: o card já é a oportunidade.
+            readText = proximaAcaoLabel(context.proximaAcao);
           } else {
             readText = EVA_DERIVED_READ[context.temperature] || EVA_DERIVED_READ.unknown;
           }
 
-          // Tom: âmbar quando stale, neutro discreto quando sem conversa,
-          // roxo da EVA no caso normal.
-          const tone = context.isStale
-            ? "amber"
-            : hasConv
-              ? "eva"
-              : "neutral";
+          const tone = context.isStale && !quoteEva ? "amber" : "eva";
 
           const since = context.lastMessageAt
-            ? formatDistanceToNow(new Date(context.lastMessageAt), { addSuffix: false, locale: ptBR })
+            ? formatDistanceToNowStrict(new Date(context.lastMessageAt), { addSuffix: true, locale: ptBR })
             : null;
 
           const toneClass =
             tone === "amber"
               ? "border-amber-400/40 bg-amber-500/[0.06] text-amber-700 dark:text-amber-300/90"
-              : tone === "eva"
-                ? "border-violet-500/25 bg-violet-500/[0.06] text-violet-700 dark:text-violet-300/90"
-                : "border-slate-200 bg-slate-50 text-slate-500 dark:border-border/50 dark:bg-card/40 dark:text-muted-foreground";
+              : "border-[var(--vyz-border-subtle)] bg-[var(--vyz-surface-2)] text-[var(--vyz-text-strong)]";
 
           return (
             <div className="mb-2.5 flex flex-col gap-1.5" onClick={e => e.stopPropagation()}>
-              {/* Etiqueta da leitura — accent roxo fino, prefixo "EVA" */}
+              {/* Leitura da EVA: superfície neutra, o roxo fica só no rótulo. */}
               <div className="flex items-center gap-1.5 min-w-0">
                 <span
-                  className={`inline-flex items-center gap-1.5 min-w-0 max-w-full px-2 py-1 rounded-md border text-[10.5px] leading-tight ${toneClass}`}
-                  title={hasConv ? readText : "Sem conversa vinculada"}
+                  className={`inline-flex items-baseline gap-1.5 min-w-0 max-w-full px-2 py-1 rounded-md border text-[10.5px] leading-snug ${toneClass}`}
+                  title={readText}
                 >
-                  <span className="font-semibold uppercase tracking-wide text-[9px] opacity-80 flex-shrink-0">
+                  <span className={`font-semibold uppercase tracking-wide text-[9px] flex-shrink-0 ${tone === "eva" ? "text-[var(--vyz-eva)]" : "opacity-80"}`}>
                     EVA
                   </span>
-                  <span className="truncate font-medium">
-                    {hasConv ? readText : "Sem conversa vinculada"}
-                  </span>
+                  <span className="line-clamp-2 font-medium">{readText}</span>
                 </span>
-                {hasConv && since && (
-                  <span className="text-[10px] text-slate-400 dark:text-muted-foreground/70 tabular-nums flex-shrink-0 whitespace-nowrap">
-                    há {since}
-                  </span>
-                )}
               </div>
 
               {/* F5P.4f — "Abrir conversa" mini-pill (preserva navegação /inbox) */}
-              {context.conversationId && (
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <button
                   type="button"
-                  className="group/openconv inline-flex items-center gap-1.5 self-start px-2 py-1 -ml-0.5 rounded-full text-[10.5px] font-medium text-sky-600 dark:text-sky-300 bg-sky-500/10 hover:bg-sky-500/15 ring-1 ring-sky-500/15 hover:ring-sky-500/25 transition-colors"
+                  className="group/openconv inline-flex items-center gap-1.5 self-start px-2 py-1 -ml-0.5 rounded-full text-[10.5px] font-medium text-[var(--vyz-accent)] bg-[var(--vyz-accent-soft-8)] hover:bg-[var(--vyz-accent-soft-12)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate(`/inbox?conversationId=${context.conversationId}`);
                   }}
                 >
-                  <MessageSquare className="h-2.5 w-2.5" />
+                  <MessageSquare className="h-2.5 w-2.5" aria-hidden />
                   Abrir conversa
-                  <ArrowRight className="h-2.5 w-2.5 -ml-0.5 translate-x-0 group-hover/openconv:translate-x-0.5 transition-transform" />
+                  <ArrowRight className="h-2.5 w-2.5 -ml-0.5 translate-x-0 group-hover/openconv:translate-x-0.5 transition-transform duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none" aria-hidden />
                 </button>
-              )}
+                {since && (
+                  <span className="text-[10px] text-[var(--vyz-text-soft)] tabular-nums">
+                    {since}
+                  </span>
+                )}
+              </div>
             </div>
           );
         })()}
@@ -861,10 +757,10 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
           </div>
         )}
 
-        {/* ── SLA badge (handoff ativo) ─────────────────────── */}
-        {(deal as any).sla_breach_at && (
+        {/* ── Prazo de resposta (handoff ativo, sla_breach_at) ── */}
+        {deal.sla_breach_at && (
           (() => {
-            const breach = new Date((deal as any).sla_breach_at).getTime();
+            const breach = new Date(deal.sla_breach_at as string).getTime();
             const now = Date.now();
             const hoursLeft = (breach - now) / 3600000;
             const expired = hoursLeft < 0;
@@ -873,8 +769,8 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               return (
                 <div className="flex items-center gap-1.5 mb-2 px-2 py-1 rounded-md bg-red-500/10 border border-red-500/30">
                   <AlertTriangle className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" />
-                  <span className="text-[10px] font-bold text-red-600 dark:text-red-300 uppercase tracking-wider">
-                    SLA vencido há {Math.abs(Math.round(hoursLeft))}h
+                  <span className="text-[10.5px] font-semibold text-red-700 dark:text-red-300">
+                    Resposta atrasada há {Math.abs(Math.round(hoursLeft))}h
                   </span>
                 </div>
               );
@@ -883,8 +779,8 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               return (
                 <div className="flex items-center gap-1.5 mb-2 px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/30">
                   <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-                  <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
-                    SLA em {Math.round(hoursLeft)}h
+                  <span className="text-[10.5px] font-semibold text-amber-700 dark:text-amber-300">
+                    Responder em até {Math.round(hoursLeft)}h
                   </span>
                 </div>
               );
@@ -902,10 +798,21 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             piso de 86px garante que ele desce de linha antes de ficar ilegível. */}
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10.5px] text-muted-foreground pt-1 mt-0.5 border-t border-slate-100 dark:border-border/30">
           {/* Aguardando (era "Parado há X dias") — só em deals abertos */}
-          {daysSince > 3 && deal.stage !== "closed_won" && deal.stage !== "closed_lost" && (
-            <span className="inline-flex items-center gap-1 tabular-nums whitespace-nowrap flex-shrink-0 text-amber-600 dark:text-amber-400/90">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              Aguardando {daysSince} {daysSince === 1 ? "dia" : "dias"}
+          {quote && quoteStatus(quote) ? (
+            <span
+              className={`inline-flex items-center gap-1 tabular-nums whitespace-nowrap flex-shrink-0 font-medium ${quoteStatus(quote)!.tone}`}
+              title={stateLine(quote)}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${quoteStatus(quote)!.dot}`} aria-hidden />
+              {quoteStatus(quote)!.text}
+            </span>
+          ) : showNoMovement && (
+            <span
+              className="inline-flex items-center gap-1 tabular-nums whitespace-nowrap flex-shrink-0 text-amber-600 dark:text-amber-400/90"
+              title="Dias desde a última alteração no card"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden />
+              Sem movimento há {daysSince} {daysSince === 1 ? "dia" : "dias"}
             </span>
           )}
 
@@ -929,11 +836,11 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                   {formatDistanceToNow(new Date(deal.lastActivity.date), { addSuffix: true, locale: ptBR })}
                 </span>
               </>
-            ) : deal.updated_at ? (
+            ) : deal.updated_at && !showNoMovement ? (
               <span className="truncate">
                 Atualizado {formatDistanceToNow(new Date(deal.updated_at), { addSuffix: true, locale: ptBR })}
               </span>
-            ) : (
+            ) : showNoMovement ? null : (
               <span className="truncate italic">Sem atividade</span>
             )}
           </span>

@@ -36,7 +36,6 @@ const EvaEntityTest = lazy(() => import("./pages/EvaEntityTest"));
 const EvaAssistPreview = lazy(() => import("./pages/EvaAssistPreview"));
 
 // Página temporária de validação da nova lista de conversas do Inbox (remover após integrar).
-const InboxListPreview = lazy(() => import("./pages/InboxListPreview"));
 
 // Página temporária de validação do novo EVA Studio, frente a frente (remover após integrar).
 const EvaStudioPreview = lazy(() => import("./pages/EvaStudioPreview"));
@@ -81,14 +80,6 @@ const App = () => (
           element={
             <Suspense fallback={<LazyFallback />}>
               <EvaAssistPreview />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/inbox-list-preview"
-          element={
-            <Suspense fallback={<LazyFallback />}>
-              <InboxListPreview />
             </Suspense>
           }
         />

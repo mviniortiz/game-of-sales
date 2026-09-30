@@ -10,11 +10,10 @@ import {
   Upload,
   ArrowUpRight,
   Link2,
-  FileText,
   Webhook,
   Tag,
+  MessageCircle,
 } from "lucide-react";
-import { EvaIcon } from "@/components/icons/EvaAvatar";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -44,7 +43,10 @@ const GROUPS: NavGroup[] = [
     label: "Empresa",
     items: [
       { id: "organizacao", label: "Organização", path: "/configuracoes/organizacao", icon: Building2, adminOnly: true },
-      { id: "time", label: "Acesso", path: "/configuracoes/time", icon: Users, adminOnly: true },
+      // O WhatsApp se conecta e reconecta no Inbox; o item leva direto para lá.
+      { id: "whatsapp", label: "WhatsApp", path: "/inbox?connect=1", icon: MessageCircle, adminOnly: true },
+      // A gestão de equipe vive em Gestão (/admin); sem página intermediária.
+      { id: "time", label: "Equipe", path: "/admin", icon: Users, adminOnly: true },
       { id: "faturamento", label: "Faturamento", path: "/configuracoes/faturamento", icon: CreditCard, adminOnly: true },
     ],
   },
@@ -52,6 +54,7 @@ const GROUPS: NavGroup[] = [
     label: "Dados",
     items: [
       { id: "integracoes", label: "Integrações", path: "/configuracoes/integracoes", icon: Plug, adminOnly: true },
+      { id: "webhooks-leads", label: "Receber leads", path: "/configuracoes/webhooks-leads", icon: Webhook, adminOnly: true },
       { id: "tags", label: "Tags", path: "/configuracoes/tags", icon: Tag, adminOnly: true },
       { id: "importar", label: "Importar", path: "/configuracoes/importar", icon: Upload, adminOnly: true },
     ],
@@ -68,31 +71,20 @@ const GROUPS: NavGroup[] = [
       },
     ],
   },
-  {
-    // F4E.2 2026-05-19: Memória Comercial da EVA. Membros leem, admin edita.
-    label: "EVA",
-    items: [
-      { id: "eva", label: "Contexto da EVA", path: "/configuracoes/eva", icon: EvaIcon },
-    ],
-  },
 ];
 
 const TITLES: Record<string, { title: string; subtitle: string }> = {
   perfil: { title: "Perfil", subtitle: "Sua identidade dentro do Vyzon" },
   seguranca: { title: "Segurança", subtitle: "Senha, sessões e acessos" },
   organizacao: { title: "Organização", subtitle: "Dados da empresa" },
-  time: { title: "Acesso", subtitle: "Gestão da equipe centralizada em Gestão → Equipe" },
   faturamento: { title: "Faturamento", subtitle: "Plano, uso e histórico" },
-  integracoes: { title: "Integrações", subtitle: "Checkouts, webhooks e automações" },
+  integracoes: { title: "Integrações", subtitle: "Conecte as ferramentas que você já usa" },
+  "webhooks-leads": { title: "Receber leads", subtitle: "Leads do seu site e dos anúncios entram direto no funil" },
   tags: { title: "Tags", subtitle: "Marcadores do time para deals, conversas e contatos" },
   importar: { title: "Importar", subtitle: "Traga deals e vendas de fora" },
   "relatorios-publicos": {
     title: "Relatórios públicos",
     subtitle: "Links white-label pro cliente acompanhar sem login",
-  },
-  eva: {
-    title: "Contexto da EVA",
-    subtitle: "Setup estratégico da IA comercial assistida",
   },
 };
 

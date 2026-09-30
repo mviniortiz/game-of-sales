@@ -33,14 +33,12 @@ const ConfiguracoesLayout = lazy(() => import("./components/configuracoes/Config
 const ConfPerfil = lazy(() => import("./pages/configuracoes/Perfil"));
 const ConfSeguranca = lazy(() => import("./pages/configuracoes/Seguranca"));
 const ConfOrganizacao = lazy(() => import("./pages/configuracoes/Organizacao"));
-const ConfTime = lazy(() => import("./pages/configuracoes/Time"));
 const ConfFaturamento = lazy(() => import("./pages/configuracoes/Faturamento"));
 const ConfIntegracoes = lazy(() => import("./pages/configuracoes/Integracoes"));
 const ConfTags = lazy(() => import("./pages/configuracoes/Tags"));
 const ConfImportar = lazy(() => import("./pages/configuracoes/Importar"));
 const ConfWebhooksLeads = lazy(() => import("./pages/configuracoes/WebhooksLeads"));
 const ConfRelatoriosPublicos = lazy(() => import("./pages/configuracoes/RelatoriosPublicos"));
-const ConfEvaContexto = lazy(() => import("./pages/configuracoes/EvaContexto"));
 const Calendario = lazy(() => import("./pages/Calendario"));
 const CRM = lazy(() => import("./pages/CRM"));
 const DealCommandCenter = lazy(() => import("./pages/DealCommandCenter"));
@@ -273,14 +271,8 @@ const AppShell = () => (
                     </AdminRoute>
                   }
                 />
-                <Route
-                  path="time"
-                  element={
-                    <AdminRoute>
-                      <ConfTime />
-                    </AdminRoute>
-                  }
-                />
+                {/* Equipe é gerida em Gestão; link antigo segue funcionando. */}
+                <Route path="time" element={<Navigate to="/admin" replace />} />
                 <Route
                   path="faturamento"
                   element={
@@ -335,7 +327,6 @@ const AppShell = () => (
                 />
                 {/* F4E.2 2026-05-19: Contexto da Agência (membros leem, admin edita).
                     UI não usa AdminRoute pra permitir leitura — RLS é a defesa real. */}
-                <Route path="eva" element={<ConfEvaContexto />} />
               </Route>
 
               {/* Legacy redirects */}

@@ -101,7 +101,7 @@ export default function Perfil() {
             </div>
           </div>
           <div className="flex justify-end">
-            <Button onClick={handleSave} disabled={loading} size="sm" className="rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white">
+            <Button onClick={handleSave} disabled={loading} size="sm" className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90">
               {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Salvar
             </Button>

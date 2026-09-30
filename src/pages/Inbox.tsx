@@ -6,11 +6,25 @@ import { ConnectionStatusCard } from "@/components/inbox/ConnectionStatusCard";
 import { InboxConversation } from "@/components/inbox/InboxConversation";
 import { EvaPanel } from "@/components/inbox/EvaPanel";
 import { WhatsAppConnectModal } from "@/components/inbox/WhatsAppConnectModal";
+import { KapsoConnectModal } from "@/components/inbox/KapsoConnectModal";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { useEvolutionSender } from "@/hooks/useEvolutionSender";
 import { useWhatsAppInboxDb } from "@/hooks/useWhatsAppInboxDb";
 import { useChannelInbox } from "@/hooks/useChannelInbox";
 import { useInboxConnectionStatus } from "@/hooks/useInboxConnectionStatus";
+import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
+import { useQuoteBoard, type QuoteItem } from "@/hooks/useQuoteBoard";
+import { OPEN_QUOTE_STATES } from "@/lib/quoteText";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useProspectingMode, PROSPECTING_OBJECTIVE } from "@/hooks/useProspectingMode";
 import { useConversationSummaries, normalizePhone, buildReason } from "@/hooks/useConversationSummaries";
 import { useEvaBlueprint } from "@/hooks/useEvaBlueprint";
@@ -47,18 +61,64 @@ function describeSendError(raw: string): string {
     if (m.includes("not configured") || m.includes("não configurad") || m.includes("evolution_api"))
         return "O WhatsApp não está configurado no servidor. Fale com o suporte.";
     if (m.includes("not found") || m.includes("does not exist") || m.includes("404") || m.includes("instance"))
-        return "A sessão do WhatsApp não foi encontrada. Reconecte o número em Configurações e tente de novo.";
+        return "A sessão do WhatsApp não foi encontrada. Use \"Reconectar\" no topo da lista de conversas e tente de novo.";
     if (m.includes("not connected") || m.includes("closed") || m.includes("connecting") || m.includes("disconnected") || m.includes("state"))
-        return "O WhatsApp não está conectado. Reconecte o número em Configurações e tente de novo.";
+        return "O WhatsApp não está conectado. Use \"Reconectar\" no topo da lista de conversas e tente de novo.";
     if (m.includes("no company"))
         return "Não consegui identificar a sua conta. Recarregue a página e tente de novo.";
     return raw ? `Não consegui enviar a mensagem: ${raw}` : "Não consegui enviar a mensagem. Verifique a conexão do WhatsApp.";
 }
 
+// Inbox sem conversa nenhuma: um recado só, pelo motivo, no lugar de três
+// painéis pedindo para selecionar algo que não existe.
+function InboxEmpty({
+    status,
+    canSync,
+    syncing,
+    onSync,
+    onConnect,
+}: {
+    status: string;
+    canSync: boolean;
+    syncing: boolean;
+    onSync: () => void;
+    onConnect: () => void;
+}) {
+    const checking = status === "checking";
+    const connected = status === "connected";
+    return (
+        <div className="flex flex-1 items-center justify-center px-6" style={{ background: "var(--ibx-paper)" }}>
+            <div className="max-w-sm text-center" role="status">
+                <h2 className="text-[15px] font-semibold text-[var(--vyz-text-primary)]" style={{ letterSpacing: "-0.015em" }}>
+                    {checking ? "Verificando o WhatsApp…" : connected ? "Nenhuma conversa por enquanto" : "Seu WhatsApp não está conectado"}
+                </h2>
+                <p className="mt-2 text-[12.5px] leading-relaxed text-[var(--vyz-text-muted)]">
+                    {checking
+                        ? "Um instante."
+                        : connected
+                        ? "Quando um cliente mandar mensagem para o número da empresa, a conversa aparece aqui."
+                        : "Conecte o número da empresa e as conversas do WhatsApp aparecem aqui."}
+                </p>
+                {!checking && (connected ? canSync : true) && (
+                    <button
+                        type="button"
+                        onClick={connected ? onSync : onConnect}
+                        disabled={syncing}
+                        className="mt-5 inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] px-4 text-[13px] font-semibold text-[var(--vyz-btn-on)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2"
+                    >
+                        {connected ? (syncing ? "Puxando conversas…" : "Puxar conversas recentes") : "Conectar WhatsApp"}
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+}
+
 const Inbox = () => {
     const { isAdmin, companyId } = useAuth();
-    const { activeCompanyId } = useTenant();
+    const { activeCompanyId, isSuperAdmin } = useTenant();
     const [connectModalOpen, setConnectModalOpen] = useState(false);
+    const [kapsoModalOpen, setKapsoModalOpen] = useState(false);
     const [evaMobileOpen, setEvaMobileOpen] = useState(false);
     // Texto que a EVA mandou pro composer ("Usar resposta"). InboxConversation
     // consome e zera. Permite o humano revisar antes de enviar (assistido).
@@ -94,6 +154,7 @@ const Inbox = () => {
     const {
         connected,
         lastStatusCheckedAt,
+        statusCheckFailed,
         sendMessage,
         sendAudioMessage,
         sendMediaMessage,
@@ -104,6 +165,19 @@ const Inbox = () => {
     } = useEvolutionSender();
     const [resyncing, setResyncing] = useState(false);
     const [disconnecting, setDisconnecting] = useState(false);
+    const [confirmDisconnect, setConfirmDisconnect] = useState(false);
+    const wa = useWhatsappConnection();
+    // Placar por conversa: o orçamento aberto mais recente de cada uma.
+    const { query: quoteQuery } = useQuoteBoard(30);
+    const quoteByChat = useMemo(() => {
+        const m = new Map<string, QuoteItem>();
+        for (const q of quoteQuery.data?.items ?? []) {
+            if (!q.conversation_id || !OPEN_QUOTE_STATES.includes(q.state)) continue;
+            const cur = m.get(q.conversation_id);
+            if (!cur || new Date(q.sent_at) > new Date(cur.sent_at)) m.set(q.conversation_id, q);
+        }
+        return m;
+    }, [quoteQuery.data]);
 
     // INBOX.STATUS — re-aplica o webhook (liga os checks de entrega/leitura sem reconectar).
     const handleResyncWebhook = async () => {
@@ -111,18 +185,18 @@ const Inbox = () => {
         setResyncing(true);
         try {
             await resyncWebhook();
-            toast.success("Webhook re-sincronizado. Os checks de entrega/leitura já valem nas próximas mensagens.");
+            toast.success("Confirmação de leitura religada. Vale a partir das próximas mensagens.");
         } catch {
-            toast.error("Não foi possível re-sincronizar o webhook agora.");
+            toast.error("Não deu para religar a confirmação de leitura agora. Tente de novo em instantes.");
         } finally {
             setResyncing(false);
         }
     };
 
-    // INBOX.STATUS — desconecta o número (logout). Pede confirmação.
+    // INBOX.STATUS — desconecta o número (logout). Confirmação no AlertDialog abaixo.
     const handleDisconnect = async () => {
         if (disconnecting) return;
-        if (!confirm("Desconectar o WhatsApp? Você precisará ler o QR Code de novo pra reconectar.")) return;
+        setConfirmDisconnect(false);
         setDisconnecting(true);
         try {
             await disconnect();
@@ -176,6 +250,8 @@ const Inbox = () => {
     ]);
 
     const activeInbox = useLegacy ? legacyInbox : channelInbox;
+    const chatsReady = channelInbox.chatsLoadedOnce || !!channelInbox.error;
+    const noChats = chatsReady && activeInbox.chats.length === 0;
     const activeSourceLabel = useLegacy ? "legacy-fallback" : "channel";
 
     useEffect(() => {
@@ -230,8 +306,9 @@ const Inbox = () => {
         connectionError: channelInbox.error,
         liveConnected: connected,
         lastStatusCheckedAt,
+        statusCheckFailed,
         hasMessages: chats.length > 0,
-        lastChatsLoadedAt: activeInbox.lastChatsLoadedAt,
+        lastInboundAt: wa.lastInboundAt,
     });
 
     // F5C.2 — Aplica deep link `?conversationId=` quando chats carregam
@@ -243,11 +320,15 @@ const Inbox = () => {
         const found = chats.find((c) => c.id === deepLinkConvId);
         if (found) {
             setSelectedChatId(found.id);
+            // Vindo do detalhe do card: a resposta da EVA chega no campo, e o humano revisa e envia.
+            const texto = searchParams.get("texto");
+            if (texto) setComposerInject(texto);
         }
         setAppliedDeepLinkFor(deepLinkConvId);
         // Limpa o param da URL — evita reaplicar se o user trocar de chat
         const sp = new URLSearchParams(searchParams);
         sp.delete("conversationId");
+        sp.delete("texto");
         setSearchParams(sp, { replace: true });
     }, [
         deepLinkConvId,
@@ -410,6 +491,7 @@ const Inbox = () => {
         const jid = target?.chatJid;
         if (!jid) {
             console.warn("[Inbox] handleSendAudio: missing chatJid for", chatIdFromCallback);
+            toast.error("Não consegui identificar o contato desta conversa. Atualize a página e tente de novo.");
             return;
         }
         await sendAudioMessage(jid, base64);
@@ -434,6 +516,7 @@ const Inbox = () => {
         const jid = target?.chatJid;
         if (!jid) {
             console.warn("[Inbox] handleSendMedia: missing chatJid for", chatIdFromCallback);
+            toast.error("Não consegui identificar o contato desta conversa. Atualize a página e tente de novo.");
             return;
         }
         await sendMediaMessage(jid, base64, mimetype, opts, progress);
@@ -492,17 +575,27 @@ const Inbox = () => {
                     selectedChatId={selectedChatId}
                     onSelect={setSelectedChatId}
                     onOpenStudio={() => navigate("/eva-studio")}
+                    loading={!chatsReady}
+                    quoteByChat={quoteByChat}
+                    emptyMessage={
+                        connectionStatus.status === "connected"
+                            ? "Nenhuma conversa ainda."
+                            : "Sem WhatsApp conectado, não há conversas para mostrar."
+                    }
                     headerSlot={
                         connectionStatus ? (
                             <ConnectionStatusCard
                                 status={connectionStatus}
-                                onConnectClick={() => setConnectModalOpen(true)}
+                                // Sem conversa no desktop, o botão grande do meio já chama para conectar.
+                                onConnectClick={noChats && !isMobile ? undefined : () => setConnectModalOpen(true)}
+                                onOfficialConnectClick={isSuperAdmin ? () => setKapsoModalOpen(true) : undefined}
+                                onRetryCheck={() => { void refreshStatus(); }}
                                 onSyncHistory={handleSyncHistory}
                                 historySyncing={historySyncing}
                                 adminScopeLabel={isAdmin ? "Minhas conversas" : undefined}
                                 onResyncWebhook={handleResyncWebhook}
                                 resyncing={resyncing}
-                                onDisconnect={handleDisconnect}
+                                onDisconnect={() => setConfirmDisconnect(true)}
                                 disconnecting={disconnecting}
                             />
                         ) : undefined
@@ -521,32 +614,43 @@ const Inbox = () => {
                         : "flex-1 min-w-0 flex flex-col bg-white"
                 }
             >
-                <InboxConversation
-                    chat={selectedChat || null}
-                    messages={selectedChatMessages}
-                    onSendText={handleSendText}
-                    onSendAudio={handleSendAudio}
-                    onSendMedia={handleSendMedia}
-                    getAudioMedia={getAudioMedia}
-                    isLoading={isLoadingMessages}
-                    onBack={isMobile ? () => setSelectedChatId(null) : undefined}
-                    onRefresh={handleRefresh}
-                    isRefreshing={isRefreshing}
-                    connected={connected}
-                    statusChecked={lastStatusCheckedAt != null}
-                    onReconnect={() => setConnectModalOpen(true)}
-                    onOpenEva={isMobile ? () => setEvaMobileOpen(true) : undefined}
-                    injectText={composerInject}
-                    onInjectConsumed={() => setComposerInject(null)}
-                    hasMoreMessages={!useLegacy ? channelInbox.messagesHasMore : false}
-                    loadingOlder={!useLegacy ? channelInbox.loadingOlder : false}
-                    onLoadOlder={!useLegacy ? channelInbox.loadOlderMessages : undefined}
-                    typing={!useLegacy && !!selectedChat?.chatJid && channelInbox.typingJid === selectedChat.chatJid}
-                />
+                {noChats ? (
+                    <InboxEmpty
+                        status={connectionStatus.status}
+                        canSync={connectionStatus.status === "connected" && connectionStatus.provider === "evolution"}
+                        syncing={historySyncing}
+                        onSync={handleSyncHistory}
+                        onConnect={() => setConnectModalOpen(true)}
+                    />
+                ) : (
+                    <InboxConversation
+                        chat={selectedChat || null}
+                        messages={selectedChatMessages}
+                        onSendText={handleSendText}
+                        onSendAudio={handleSendAudio}
+                        onSendMedia={handleSendMedia}
+                        getAudioMedia={getAudioMedia}
+                        isLoading={isLoadingMessages}
+                    messagesError={!useLegacy ? channelInbox.messagesError : null}
+                        onBack={isMobile ? () => setSelectedChatId(null) : undefined}
+                        onRefresh={handleRefresh}
+                        isRefreshing={isRefreshing}
+                        connected={connectionStatus.status === "connected"}
+                        statusChecked={connectionStatus.status !== "checking" && connectionStatus.status !== "unknown"}
+                        onReconnect={() => setConnectModalOpen(true)}
+                        onOpenEva={isMobile ? () => setEvaMobileOpen(true) : undefined}
+                        injectText={composerInject}
+                        onInjectConsumed={() => setComposerInject(null)}
+                        hasMoreMessages={!useLegacy ? channelInbox.messagesHasMore : false}
+                        loadingOlder={!useLegacy ? channelInbox.loadingOlder : false}
+                        onLoadOlder={!useLegacy ? channelInbox.loadOlderMessages : undefined}
+                        typing={!useLegacy && !!selectedChat?.chatJid && channelInbox.typingJid === selectedChat.chatJid}
+                    />
+                )}
             </main>
 
-            {/* Coluna direita — EvaPanel (desktop) */}
-            {!isMobile && (
+            {/* Coluna direita — EvaPanel (desktop). Sem conversa nenhuma, não há o que ler. */}
+            {!isMobile && !noChats && (
                 <aside
                     ref={evaRef}
                     className="w-[320px] 2xl:w-[380px] shrink-0 flex flex-col bg-[var(--ibx-card)]"
@@ -567,6 +671,7 @@ const Inbox = () => {
                             : undefined}
                         objective={prospectingMode ? PROSPECTING_OBJECTIVE : undefined}
                         onUseReply={(t) => setComposerInject(t)}
+                        quote={selectedChatId ? quoteByChat.get(selectedChatId) : null}
                     />
                 </aside>
             )}
@@ -594,6 +699,7 @@ const Inbox = () => {
                                 objective={prospectingMode ? PROSPECTING_OBJECTIVE : undefined}
                                 onUseReply={(t) => { setComposerInject(t); setEvaMobileOpen(false); }}
                                 onClose={() => setEvaMobileOpen(false)}
+                                quote={selectedChatId ? quoteByChat.get(selectedChatId) : null}
                             />
                         </div>
                     </DrawerContent>
@@ -606,6 +712,27 @@ const Inbox = () => {
                 onClose={() => setConnectModalOpen(false)}
                 onConnected={() => { void handleRefresh(); }}
             />
+            <KapsoConnectModal open={kapsoModalOpen} onClose={() => setKapsoModalOpen(false)} />
+
+            <AlertDialog open={confirmDisconnect} onOpenChange={setConfirmDisconnect}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Desconectar o WhatsApp?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            As conversas salvas continuam aqui, mas mensagens novas param de chegar. Para voltar, é preciso ler o QR Code de novo.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => { void handleDisconnect(); }}
+                            className="rounded-full bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600"
+                        >
+                            Desconectar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };

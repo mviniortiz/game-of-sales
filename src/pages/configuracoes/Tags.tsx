@@ -71,7 +71,7 @@ function usageLabel(t: TagWithUsage): string {
 }
 
 const primaryBtn =
-    "inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+    "inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-full text-sm font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed";
 const ghostBtn =
     "inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-colors hover:bg-[#F1F5F9]";
 
@@ -117,7 +117,7 @@ export default function Tags() {
             if (e?.code === "23505" || /duplicate|unique/i.test(msg)) {
                 toast.error("Já existe uma tag com esse nome");
             } else {
-                toast.error(`Erro ao salvar: ${msg}`);
+                toast.error("Não consegui salvar a tag. Tente de novo.", { description: `Detalhe técnico: ${msg}` });
             }
         } finally {
             setBusy(false);
@@ -132,7 +132,7 @@ export default function Tags() {
             toast.success("Tag excluída");
             setDeleting(null);
         } catch (e: any) {
-            toast.error(`Erro ao excluir: ${String(e?.message ?? e)}`);
+            toast.error("Não consegui excluir a tag. Tente de novo.", { description: `Detalhe técnico: ${String(e?.message ?? e)}` });
         } finally {
             setBusy(false);
         }
@@ -147,7 +147,7 @@ export default function Tags() {
             setMerging(null);
             setMergeTarget(null);
         } catch (e: any) {
-            toast.error(`Erro ao mesclar: ${String(e?.message ?? e)}`);
+            toast.error("Não consegui juntar as tags. Tente de novo.", { description: `Detalhe técnico: ${String(e?.message ?? e)}` });
         } finally {
             setBusy(false);
         }

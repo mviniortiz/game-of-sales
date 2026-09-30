@@ -16,7 +16,6 @@ Disallow: /redefinir-senha
 Disallow: /r/
 Disallow: /eva-entity-test
 Disallow: /eva-assist-preview
-Disallow: /inbox-list-preview
 Disallow: /eva-studio-preview
 
 User-agent: Bingbot
@@ -28,7 +27,6 @@ Disallow: /redefinir-senha
 Disallow: /r/
 Disallow: /eva-entity-test
 Disallow: /eva-assist-preview
-Disallow: /inbox-list-preview
 Disallow: /eva-studio-preview
 
 User-agent: Applebot
@@ -40,7 +38,6 @@ Disallow: /redefinir-senha
 Disallow: /r/
 Disallow: /eva-entity-test
 Disallow: /eva-assist-preview
-Disallow: /inbox-list-preview
 Disallow: /eva-studio-preview
 
 User-agent: Twitterbot
@@ -114,7 +111,6 @@ Disallow: /redefinir-senha
 Disallow: /r/
 Disallow: /eva-entity-test
 Disallow: /eva-assist-preview
-Disallow: /inbox-list-preview
 Disallow: /eva-studio-preview
 
 # Sitemap

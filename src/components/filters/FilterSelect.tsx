@@ -39,12 +39,12 @@ export const FilterSelect = ({
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger
         className={cn(
-          "h-9 w-auto gap-1.5 rounded-lg border bg-white px-3 text-[12.5px] font-medium transition-colors",
-          "border-[#E6EDF5] hover:border-[#D7DEE9] hover:bg-[#F8FAFC]",
-          "data-[state=open]:border-[#2563EB] data-[state=open]:ring-2 data-[state=open]:ring-[rgba(37,99,235,0.18)]",
+          "h-9 w-auto gap-1.5 rounded-full border bg-[var(--vyz-surface-1)] px-3 text-[12.5px] font-medium transition-[border-color,background-color,box-shadow] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]",
+          "border-[var(--vyz-border)] hover:border-[var(--vyz-border-strong)] hover:bg-[var(--vyz-surface-2)]",
+          "data-[state=open]:border-[var(--vyz-accent)] data-[state=open]:ring-2 data-[state=open]:ring-[var(--vyz-accent-soft-12)]",
           isActive
-            ? "text-[#0B1220] border-[#2563EB] ring-2 ring-[rgba(37,99,235,0.18)]"
-            : "text-[#64748B]",
+            ? "text-[var(--vyz-text-primary)] border-[var(--vyz-accent)] ring-2 ring-[var(--vyz-accent-soft-12)]"
+            : "text-[var(--vyz-text-muted)]",
           className,
         )}
         style={{ minWidth }}
@@ -52,7 +52,7 @@ export const FilterSelect = ({
         {Icon ? <Icon className="h-3.5 w-3.5 opacity-70 shrink-0" /> : null}
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent className="border border-[#E6EDF5] bg-white shadow-lg">
+      <SelectContent className="border border-[var(--vyz-border)] bg-popover shadow-lg">
         {options.map((opt) => (
           <SelectItem key={opt.value} value={opt.value}>
             {opt.label}

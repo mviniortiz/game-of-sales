@@ -156,7 +156,7 @@ export default function Faturamento() {
           <Button
             size="sm"
             onClick={() => navigate(`/upgrade?plan=${currentPlan}`)}
-            className="h-8 text-xs bg-[#2563EB] hover:bg-[#1D4ED8] text-white shrink-0"
+            className="h-8 text-xs rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 shrink-0"
           >
             Reativar
           </Button>
@@ -183,17 +183,18 @@ export default function Faturamento() {
                 <div className="flex items-center gap-2">
                   <p className="text-base font-bold text-foreground">Plano {planInfo.label}</p>
                   <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
-                    isCancelled ? "bg-[#FEF2F2] text-[#DC2626]" :
-                    status === "active" ? "bg-[#ECFDF3] text-[#16A34A]" :
-                    isTrialing ? "bg-[#FFFBEB] text-[#B45309]" :
-                    "bg-[#F1F5F9] text-[#64748B]"
+                    !subscription ? "bg-[var(--vyz-surface-2)] text-[var(--vyz-text-muted)]" :
+                    isCancelled ? "bg-[var(--vyz-danger-bg)] text-[var(--vyz-danger)]" :
+                    status === "expired" ? "bg-[var(--vyz-warning-bg)] text-[var(--vyz-warning)]" :
+                    isTrialing ? "bg-[var(--vyz-warning-bg)] text-[var(--vyz-warning)]" :
+                    "bg-[var(--vyz-success-bg)] text-[var(--vyz-success)]"
                   }`}>
-                    {isCancelled ? "Cancelado" : isTrialing ? "Trial" : "Ativo"}
+                    {!subscription ? "Sem dados" : isCancelled ? "Cancelado" : status === "expired" ? "Vencido" : isTrialing ? "Em teste" : "Ativo"}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {isTrialing
-                    ? "Trial do Pro"
+                    ? "Teste grátis do Pro"
                     : currentPlanData.monthlyPrice
                       ? `${formatPrice(currentPlanData.monthlyPrice)}/mês`
                       : formatPrice(currentPlanData.monthlyPrice)}

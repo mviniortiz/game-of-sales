@@ -6,11 +6,15 @@
 // resolvida e exposta por useChannelInbox) com o status AO VIVO da Evolution
 // (useEvolutionSender) + presença de histórico salvo.
 //
+// A linha do banco fica 'active' com a sessão da Evolution caída. Por isso, na
+// Evolution, só o check ao vivo diz "conectado"; sem resposta dele, a tela diz
+// "verificando", nunca "conectado". Kapso/Meta não tem esse check: vale o banco.
+//
 // Não chama edge function. Não faz query. Não toca em envio. Só deriva.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useMemo } from "react";
 
-export type ConnectionStatusValue = "connected" | "disconnected" | "pending" | "unknown";
+export type ConnectionStatusValue = "connected" | "disconnected" | "pending" | "checking" | "unknown";
 export type ConnectionProvider = "evolution" | "meta_cloud" | "unknown";
 
 /** Shape mínimo da channel_connections (compatível com useChannelInbox). */
@@ -28,7 +32,8 @@ export interface InboxConnectionStatus {
     status: ConnectionStatusValue;
     provider: ConnectionProvider;
     displayPhone: string | null;
-    lastUpdatedAt: Date | null;
+    /** Última mensagem que um cliente mandou, em qualquer conversa. */
+    lastInboundAt: Date | null;
     connectionLabel: string;
     isHistoryOnly: boolean;
     canConnect: boolean;
@@ -45,10 +50,12 @@ interface UseInboxConnectionStatusArgs {
     liveConnected: boolean;
     /** Quando o status ao vivo foi verificado (null = ainda incerto). */
     lastStatusCheckedAt: Date | null;
+    /** O check ao vivo deu erro: não dá para afirmar nada. */
+    statusCheckFailed: boolean;
     /** Há conversas salvas no banco? (histórico) */
     hasMessages: boolean;
-    /** Última carga de chats do banco (pra "atualizado há X"). */
-    lastChatsLoadedAt: Date | null;
+    /** Última mensagem recebida de cliente (useWhatsappConnection). */
+    lastInboundAt: string | null;
 }
 
 function normalizeProvider(p?: string | null): ConnectionProvider {
@@ -90,8 +97,9 @@ export function useInboxConnectionStatus(
         connectionError,
         liveConnected,
         lastStatusCheckedAt,
+        statusCheckFailed,
         hasMessages,
-        lastChatsLoadedAt,
+        lastInboundAt,
     } = args;
 
     return useMemo(() => {
@@ -108,14 +116,15 @@ export function useInboxConnectionStatus(
         } else if (!connection) {
             // Sem conexão resolvida. "multiple_…" é ambíguo → unknown; senão disconnected.
             status = connectionError === "multiple_connections_no_user_match" ? "unknown" : "disconnected";
+        } else if (provider !== "evolution") {
+            status = dbStatus;
         } else if (dbStatus === "pending") {
             status = "pending";
         } else if (lastStatusCheckedAt) {
             // Conexão existe no banco, mas o check ao vivo confirmou que NÃO está aberta.
             status = dbStatus === "unknown" ? "unknown" : "disconnected";
         } else {
-            // Sem check ao vivo conclusivo ainda: confia no que o banco diz.
-            status = dbStatus;
+            status = statusCheckFailed ? "unknown" : "checking";
         }
 
         const hasConnection = !!connection;
@@ -124,31 +133,28 @@ export function useInboxConnectionStatus(
         const canConnect = actionable && !hasConnection;
         const canReconnect = actionable && hasConnection;
 
-        const providerLabel = provider === "meta_cloud" ? "WhatsApp (Meta Cloud)" : "WhatsApp";
+        const providerLabel = provider === "meta_cloud" ? "WhatsApp oficial" : "WhatsApp";
         const connectionLabel =
             status === "connected"
                 ? `${providerLabel} conectado`
                 : status === "pending"
                 ? "Aguardando conexão"
+                : status === "checking"
+                ? "Verificando conexão…"
                 : status === "unknown"
-                ? "Status do WhatsApp indisponível"
+                ? "Não deu para confirmar o WhatsApp"
                 : "WhatsApp desconectado";
-
-        const lastUpdatedAt =
-            lastChatsLoadedAt ??
-            (connection?.last_seen_at ? new Date(connection.last_seen_at) : null) ??
-            lastStatusCheckedAt;
 
         return {
             status,
             provider,
             displayPhone: pickPhone(connection?.metadata),
-            lastUpdatedAt,
+            lastInboundAt: lastInboundAt ? new Date(lastInboundAt) : null,
             connectionLabel,
             isHistoryOnly,
             canConnect,
             canReconnect,
             connectionId,
         };
-    }, [connection, connectionError, liveConnected, lastStatusCheckedAt, hasMessages, lastChatsLoadedAt]);
+    }, [connection, connectionError, liveConnected, lastStatusCheckedAt, statusCheckFailed, hasMessages, lastInboundAt]);
 }

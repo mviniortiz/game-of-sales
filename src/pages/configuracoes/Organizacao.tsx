@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { Loader2, Building2, Upload, X } from "lucide-react";
 import { formatError } from "@/lib/utils";
+import { SOLAR_SEGMENT } from "@/lib/eva/blueprint";
 
 const TEAM_SIZES = [
   { value: "1", label: "Só eu" },
@@ -45,6 +46,17 @@ const maskPhone = (v: string) => {
     .replace(/^(\d{2})(\d)/, "($1) $2")
     .replace(/(\d{5})(\d)/, "$1-$2");
 };
+
+// A EVA liga o pacote solar pela chave exata (blueprint.ts). Os demais valores
+// são rótulos: continuam gravados como texto, como sempre foram.
+const SEGMENT_OPTIONS = [
+  { value: SOLAR_SEGMENT, label: "Energia solar" },
+  { value: "Agência de marketing", label: "Agência de marketing" },
+  { value: "Imobiliária / incorporadora", label: "Imobiliária / incorporadora" },
+  { value: "Tecnologia / SaaS", label: "Tecnologia / SaaS" },
+  { value: "Financeiro / Seguros", label: "Financeiro / Seguros" },
+  { value: "Outro", label: "Outro" },
+];
 
 export default function Organizacao() {
   const { isAdmin, companyId } = useAuth();
@@ -227,14 +239,15 @@ export default function Organizacao() {
             </div>
           </div>
 
-          <div className="h-px bg-[#E6EDF5]" />
+          <div className="h-px bg-[var(--vyz-border)]" />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-xs text-muted-foreground">
+              <Label htmlFor="org-name" className="text-xs text-muted-foreground">
                 Nome da empresa
               </Label>
               <Input
+                id="org-name"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 className="h-9 text-sm"
@@ -242,8 +255,9 @@ export default function Organizacao() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">CNPJ</Label>
+              <Label htmlFor="org-cnpj" className="text-xs text-muted-foreground">CNPJ</Label>
               <Input
+                id="org-cnpj"
                 value={cnpj}
                 onChange={(e) => setCnpj(maskCNPJ(e.target.value))}
                 placeholder="00.000.000/0000-00"
@@ -270,18 +284,32 @@ export default function Organizacao() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Segmento</Label>
-              <Input
-                value={companySegment}
-                onChange={(e) => setCompanySegment(e.target.value)}
-                placeholder="Ex: Infoprodutos, SaaS, Serviços"
-                className="h-9 text-sm"
-              />
+              <Label htmlFor="org-segment" className="text-xs text-muted-foreground">Segmento</Label>
+              <Select value={companySegment} onValueChange={setCompanySegment}>
+                <SelectTrigger id="org-segment" className="h-9 text-sm">
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SEGMENT_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                  {/* Valor antigo fora da lista continua selecionável, sem ser apagado ao salvar. */}
+                  {companySegment && !SEGMENT_OPTIONS.some((o) => o.value === companySegment) && (
+                    <SelectItem value={companySegment}>{companySegment}</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              {companySegment === SOLAR_SEGMENT && (
+                <p className="text-[11px] text-muted-foreground">A EVA usa o pacote de energia solar.</p>
+              )}
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Website</Label>
+              <Label htmlFor="org-website" className="text-xs text-muted-foreground">Website</Label>
               <Input
+                id="org-website"
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
                 placeholder="https://suaempresa.com.br"
@@ -290,10 +318,11 @@ export default function Organizacao() {
             </div>
 
             <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-xs text-muted-foreground">
+              <Label htmlFor="org-phone" className="text-xs text-muted-foreground">
                 Telefone comercial
               </Label>
               <Input
+                id="org-phone"
                 value={phone}
                 onChange={(e) => setPhone(maskPhone(e.target.value))}
                 placeholder="(11) 99999-9999"
@@ -303,7 +332,7 @@ export default function Organizacao() {
           </div>
 
           <div className="flex justify-end pt-1">
-            <Button onClick={handleSave} disabled={saving} size="sm" className="rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white">
+            <Button onClick={handleSave} disabled={saving} size="sm" className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90">
               {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Salvar alterações
             </Button>

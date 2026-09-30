@@ -37,6 +37,8 @@ export interface CrmDeal {
     title: string;
     value: number;
     stage: string;
+    /** Etapa do funil (pipeline_stages.id); `stage` é o valor legado. */
+    stage_id?: string | null;
     customer_name: string;
     customer_phone: string | null;
     customer_email: string | null;
