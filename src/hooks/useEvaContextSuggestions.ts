@@ -33,7 +33,7 @@ import type {
 
 // "O que muda ao confirmar" — causa e efeito por tipo (o DB não guarda isso).
 const EFFECT_BY_TYPE: Record<ContextSuggestionType, string> = {
-    agency: "A EVA passa a conhecer esse fato da sua agência.",
+    agency: "A EVA passa a conhecer esse fato da sua empresa.",
     service: "As respostas sobre esse serviço param de ser genéricas.",
     icp: "A lista do Inbox passa a separar fit bom de fit fraco.",
     playbook: "A EVA passa a seguir esse passo na hora de vender.",
@@ -45,7 +45,7 @@ const EFFECT_BY_TYPE: Record<ContextSuggestionType, string> = {
 
 // O que fica travado sem a lacuna, derivado do alvo do conserto.
 const GAP_BLOCKS_BY_TARGET: Record<string, string> = {
-    agency: "o que a EVA sabe da sua agência",
+    agency: "o que a EVA sabe da sua empresa",
     services: "respostas sobre serviço e preço",
     icp: "qualificação de fit",
     playbooks: "o passo a passo da venda",

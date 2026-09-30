@@ -23,7 +23,10 @@ export interface Blueprint {
     applied?: { tags_applied: number; gaps_applied: number; rules_applied: number } | null;
 }
 
-type SegmentKey = "real_estate" | "agency" | "generic";
+type SegmentKey = "solar" | "real_estate" | "agency" | "generic";
+
+/** Valor de companies.segment gravado pelo cadastro (/criar-conta?segmento=energia_solar). */
+export const SOLAR_SEGMENT = "energia_solar";
 
 interface Preset {
     agent: string;
@@ -36,6 +39,15 @@ interface Preset {
 }
 
 const PRESETS: Record<SegmentKey, Preset> = {
+    solar: {
+        agent: "Qualificador de energia solar",
+        label: "energia solar",
+        pipeline: [...SOLAR_PACK.pipeline],
+        fields: [...SOLAR_PACK.fields],
+        tags: [...SOLAR_PACK.tags],
+        rules: [...SOLAR_PACK.rules],
+        gaps: [...SOLAR_PACK.gaps],
+    },
     real_estate: {
         agent: "Qualificador imobiliário",
         label: "incorporadora",
@@ -92,6 +104,7 @@ export const DEMO_BLUEPRINT: Blueprint = {
 };
 
 import { AGENCY_PACK } from "@/lib/agents/qualifier/agencyPack";
+import { SOLAR_PACK } from "@/lib/agents/qualifier/solarPack";
 
 export interface EvaContextRow {
     agency?: Record<string, unknown> | null;
@@ -108,6 +121,7 @@ function detectSegment(ctx: EvaContextRow | null): SegmentKey {
     if (!ctx) return "generic";
     // JSON.stringify(array) nunca retorna undefined/null; o "?? ''" era inalcançável.
     const hay = JSON.stringify([ctx.agency, ctx.services, ctx.icp, ctx.playbooks]).toLowerCase();
+    if (/energia solar|fotovolt|placa solar|pain[eé]l solar|pain[eé]is solares|kwp|integradora? solar/.test(hay)) return "solar";
     if (/incorporadora|imobili|im[oó]vel|empreendimento|apartamento|construtora|loteamento|metro quadrado/.test(hay)) return "real_estate";
     if (/ag[eê]ncia|marketing|tr[aá]fego|social ?media|publicidade|criativos|an[uú]ncios|assessoria de marketing/.test(hay)) return "agency";
     return "generic";
@@ -140,18 +154,21 @@ export interface BuildInput {
     companyTags: string[];
     dealStages: string[]; // já em labels PT
     openGaps: string[];
+    /** companies.segment; quando é SOLAR_SEGMENT vence a detecção por texto. */
+    companySegment?: string | null;
 }
 
 export function buildSuggestion(input: BuildInput): { bp: Blueprint; origin: "context" | "demo" | "seeded" } {
     const { context, companyTags, dealStages, openGaps } = input;
+    const isSolar = input.companySegment === SOLAR_SEGMENT;
 
     const hasCtx = !!context && (nonEmptyObj(context.agency) || arr(context.services).length > 0 || nonEmptyObj(context.icp) || arr(context.playbooks).length > 0);
     const hasReal = hasCtx || companyTags.length > 0 || dealStages.length > 0 || openGaps.length > 0;
 
-    // Sem contexto real → nasce com o Padrão de Agência no estado seeded (já sugere).
-    if (!hasReal) return { bp: { ...AGENCY_PACK, scenarios: [] }, origin: "seeded" };
+    // Sem contexto real → nasce com o pacote do segmento no estado seeded (já sugere).
+    if (!hasReal) return { bp: { ...(isSolar ? SOLAR_PACK : AGENCY_PACK), scenarios: [] }, origin: "seeded" };
 
-    const seg = detectSegment(context);
+    const seg = isSolar ? "solar" : detectSegment(context);
     const preset = PRESETS[seg];
     const label = preset.label;
 

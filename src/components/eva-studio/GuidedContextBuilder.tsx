@@ -100,7 +100,7 @@ export interface GuidedContextBuilderProps {
 const HIGH_CONFIDENCE = 0.85;
 
 const TYPE_LABEL: Record<ContextSuggestionType, string> = {
-    agency: "Sobre a agência",
+    agency: "Sobre a empresa",
     service: "Serviço",
     icp: "Cliente ideal",
     playbook: "Jeito de vender",
@@ -434,7 +434,7 @@ function SuggestionCard({
 // ─── Lacunas acionáveis ─────────────────────────────────────────────────────
 
 const GAP_TARGET_LABEL: Record<string, string> = {
-    agency: "Agência",
+    agency: "Empresa",
     services: "Serviço / preço",
     icp: "ICP",
     playbooks: "Playbook",

@@ -62,7 +62,7 @@ export const PLANS: Record<PlanId, Plan> = {
     essential: {
         id: "essential",
         name: "Essential",
-        description: "Pra agência que quer parar de perder lead no WhatsApp",
+        description: "Pra quem quer parar de perder cliente no WhatsApp",
         monthlyPrice: 197,
         annualDiscount: 10,
         features: [
@@ -85,7 +85,7 @@ export const PLANS: Record<PlanId, Plan> = {
     pro: {
         id: "pro",
         name: "Pro",
-        description: "Pra agência que recebe leads todos os dias e quer o operacional resolvido",
+        description: "Pra quem recebe pedidos todos os dias e quer o operacional resolvido",
         monthlyPrice: 497,
         annualDiscount: 10,
         features: [

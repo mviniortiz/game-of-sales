@@ -1,6 +1,6 @@
 // deno test supabase/functions/_shared/quoteDetection.test.ts
 import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
-import { detectQuote, parseBRL } from "./quoteDetection.ts";
+import { detectQuote, parseBRL, pickProposalAmount } from "./quoteDetection.ts";
 
 const text = (body: string) => detectQuote({ type: "text", body });
 
@@ -76,4 +76,49 @@ Deno.test("imagem com legenda de orçamento conta como texto", () => {
         { isQuote: true, detectedBy: "text", amount: 2500 },
     );
     assertEquals(detectQuote({ type: "image", mimetype: "image/jpeg", caption: "foto do local" }).isQuote, false);
+});
+
+// Texto como sai do pdf.js: itens da página emendados por espaço.
+const PROPOSTA_SOLAR = `PROPOSTA COMERCIAL Nº 2291 Solar Rio Energia Cliente: Ana Paula Ribeiro
+Consumo médio mensal 650 kWh Valor médio da conta de luz R$ 780,00
+Potência do sistema 5,45 kWp Geração estimada 702 kWh/mês Tarifa R$ 0,98/kWh
+Economia mensal estimada R$ 690,00 Economia em 25 anos R$ 412.500,00
+Retorno do investimento 3,4 anos VPL R$ 151.300,00 TIR 31%
+INVESTIMENTO Valor total do sistema R$ 23.900,00 À vista no Pix R$ 22.705,00
+Financiamento em 60x de R$ 612,00 Entrada R$ 0,00 Preço por Wp R$ 4,38/Wp`;
+
+Deno.test("proposta solar: pega o investimento, não economia, conta, parcela ou VPL", () => {
+    assertEquals(pickProposalAmount(PROPOSTA_SOLAR), 23900);
+});
+
+Deno.test("rótulo em cima do valor, sem outro rótulo embaixo", () => {
+    assertEquals(pickProposalAmount("Investimento total\nR$ 31.450,00\nObrigado pela preferência"), 31450);
+});
+
+Deno.test("cartões empilhados: rótulo de cima e de baixo discordam, fica de fora", () => {
+    // Não dá para saber se 31.450 é o investimento (rótulo em cima) ou a economia (embaixo).
+    assertEquals(pickProposalAmount("Investimento total\nR$ 31.450,00\nEconomia anual\nR$ 9.600,00"), null);
+    // Legenda embaixo: 27.800 é investimento; 398.000 tem "investimento" em cima e "economia" embaixo.
+    assertEquals(
+        pickProposalAmount("Sua proposta\nR$ 27.800,00\ninvestimento no seu sistema\nR$ 398.000,00\neconomia em 25 anos"),
+        27800,
+    );
+});
+
+Deno.test("orçamento itemizado: fica o total, não o item", () => {
+    const t = "Orçamento 88 Painel 550W x 10 R$ 8.000,00 Inversor 5kW R$ 5.000,00 Instalação R$ 3.000,00 Total R$ 16.000,00";
+    assertEquals(pickProposalAmount(t), 16000);
+});
+
+Deno.test("total financiado não é o preço", () => {
+    assertEquals(pickProposalAmount("Valor à vista R$ 18.000,00 Total financiado R$ 27.400,00"), 18000);
+});
+
+Deno.test("proposta sem rótulo de preço devolve null em vez de chutar", () => {
+    assertEquals(pickProposalAmount("Economia mensal R$ 540,00 Conta atual R$ 610,00 Parcela R$ 499,00"), null);
+    assertEquals(pickProposalAmount("Relatório técnico do telhado, sem valores"), null);
+});
+
+Deno.test("valor com legenda embaixo, sem rótulo antes", () => {
+    assertEquals(pickProposalAmount("R$ 27.800,00\ninvestimento no seu sistema"), 27800);
 });

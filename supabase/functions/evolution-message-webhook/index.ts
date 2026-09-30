@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { handleOwnerCommand, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
-import { detectQuote } from "../_shared/quoteDetection.ts";
+import { trackOutboundQuote } from "../_shared/quoteTracking.ts";
 
 // Receiver do Evolution API (evento messages.upsert).
 //
@@ -254,132 +254,6 @@ async function autoQualifyNewLead(admin: any, n: NormalizedMessage): Promise<voi
   }
 }
 
-// QUOTE.1 — "orçamento que some". Mensagem outbound que é orçamento abre um
-// rastreio em quote_tracking; a eva-quote-followup volta nele depois de 2 dias
-// sem resposta. Se a conversa não tem card, cria um no estágio Proposta (o
-// trigger zzz_set_deal_default_pipeline resolve pipeline_id/stage_id) com o
-// dono da instância como user_id, que é quem recebe a aprovação no WhatsApp.
-// O rastreio é gravado ANTES do card: o unique de channel_message_id é a trava
-// que impede card duplicado em retry. Fire-and-forget, nunca derruba o webhook.
-async function trackOutboundQuote(admin: any, n: NormalizedMessage, r: DualWriteResult): Promise<void> {
-  try {
-    if (!n.companyId || !r.conversationId || !r.messageId || n.isGroup || n.isOwnerChat) return;
-
-    const realCaption = n.mediaCaption && n.mediaCaption !== n.mediaFileName ? n.mediaCaption : null;
-    const quote = detectQuote({
-      type: n.internalType,
-      body: n.body,
-      caption: realCaption,
-      fileName: n.mediaFileName,
-      mimetype: n.mediaMimetype,
-    });
-    if (!quote.isQuote || !quote.detectedBy) return;
-
-    const { data: tracked, error: trackErr } = await admin
-      .from("quote_tracking")
-      .upsert(
-        {
-          company_id: n.companyId,
-          conversation_id: r.conversationId,
-          contact_id: r.contactId || null,
-          channel_message_id: r.messageId,
-          amount: quote.amount,
-          detected_by: quote.detectedBy,
-          sent_at: n.messageTimestamp,
-        },
-        { onConflict: "channel_message_id", ignoreDuplicates: true },
-      )
-      .select("id");
-    if (trackErr) {
-      console.warn("[quote] rastreio falhou:", trackErr.message);
-      return;
-    }
-    const quoteId = (tracked as Array<{ id: string }> | null)?.[0]?.id;
-    if (!quoteId) return; // já rastreado
-
-    // Orçamento novo zera o relógio: o anterior ainda aberto na mesma conversa sai da fila.
-    await admin
-      .from("quote_tracking")
-      .update({ status: "closed" })
-      .eq("conversation_id", r.conversationId)
-      .eq("status", "open")
-      .neq("id", quoteId);
-
-    const { data: conv } = await admin
-      .from("channel_conversations")
-      .select("deal_id, contact_id")
-      .eq("id", r.conversationId)
-      .maybeSingle();
-
-    let dealId: string | null = conv?.deal_id || null;
-    if (dealId) {
-      if (quote.amount) {
-        await admin
-          .from("deals")
-          .update({ value: quote.amount })
-          .eq("id", dealId)
-          .or("value.is.null,value.eq.0");
-      }
-    } else {
-      const contactId = conv?.contact_id || r.contactId;
-      const { data: contact } = contactId
-        ? await admin.from("channel_contacts").select("name, phone_e164").eq("id", contactId).maybeSingle()
-        : { data: null };
-      const phone = (contact?.phone_e164 as string | null) || n.chatPhone || null;
-      const name = (contact?.name as string | null)?.trim() || (phone ? `+${phone}` : "Contato WhatsApp");
-
-      // Mesmo shape do useCreateOpportunityFromConversation, com stage 'proposal'.
-      const dealInsert: Record<string, unknown> = {
-        title: `${name} · orçamento`,
-        customer_name: name,
-        customer_phone: phone,
-        stage: "proposal",
-        user_id: n.userId,
-        company_id: n.companyId,
-        additional_contacts: phone ? [{ phone }] : [],
-        lead_source: "whatsapp",
-        source: "quote_tracking",
-      };
-      if (quote.amount) dealInsert.value = quote.amount;
-
-      const { data: deal, error: dealErr } = await admin
-        .from("deals")
-        .insert(dealInsert)
-        .select("id")
-        .single();
-      if (dealErr || !deal?.id) {
-        console.warn("[quote] criação do card falhou:", dealErr?.message);
-        return;
-      }
-      dealId = deal.id as string;
-
-      // Não sobrescreve vínculo feito em paralelo; se perder a corrida, usa o vencedor.
-      const { data: linked } = await admin
-        .from("channel_conversations")
-        .update({ deal_id: dealId })
-        .eq("id", r.conversationId)
-        .is("deal_id", null)
-        .select("id");
-      if (!linked?.length) {
-        const { data: again } = await admin
-          .from("channel_conversations")
-          .select("deal_id")
-          .eq("id", r.conversationId)
-          .maybeSingle();
-        if (again?.deal_id && again.deal_id !== dealId) {
-          await admin.from("deals").delete().eq("id", dealId);
-          dealId = again.deal_id as string;
-        }
-      }
-    }
-
-    await admin.from("quote_tracking").update({ deal_id: dealId }).eq("id", quoteId);
-    console.log(`[quote] rastreio ${quoteId} conversa=${r.conversationId} deal=${dealId} via=${quote.detectedBy} valor=${quote.amount ?? "-"}`);
-  } catch (e) {
-    console.warn("[quote] ignorado (erro):", (e as { message?: string })?.message || e);
-  }
-}
-
 // PERF (2026-07-01): caminho primário do dual-write. A RPC
 // ingest_channel_message() faz o upsert chain inteiro (connection → contact →
 // conversation → message + stats) num ÚNICO round-trip, idempotente por
@@ -484,8 +358,9 @@ async function dualWriteChannel(
 
   // BAIXA a mídia na entrada (não-bloqueante): captura os bytes enquanto a
   // sessão está viva e guarda no nosso Storage, pra nunca ficar "indisponível".
+  let mediaTask: Promise<void> | null = null;
   if (result.isNewMessage && result.messageId && n.companyId && MEDIA_TYPES.has(n.internalType) && n.mediaMimetype) {
-    const task = captureMediaToStorage(admin, {
+    const task = mediaTask = captureMediaToStorage(admin, {
       messageId: result.messageId,
       companyId: n.companyId,
       wamid: n.externalId,
@@ -499,8 +374,30 @@ async function dualWriteChannel(
   }
 
   // QUOTE.1 — orçamento enviado pela empresa: garante o card e abre o rastreio.
-  if (result.isNewMessage && n.direction === "outbound") {
-    try { (globalThis as any).EdgeRuntime?.waitUntil?.(trackOutboundQuote(admin, n, result)); } catch { /* noop */ }
+  if (
+    result.isNewMessage && n.direction === "outbound" && n.companyId &&
+    result.conversationId && result.messageId && !n.isGroup && !n.isOwnerChat
+  ) {
+    const companyId = n.companyId;
+    const conversationId = result.conversationId;
+    const messageId = result.messageId;
+    // Espera a mídia chegar no Storage: é de lá que o valor do PDF é lido.
+    const task = (mediaTask ?? Promise.resolve()).then(() => trackOutboundQuote(admin, {
+      companyId,
+      userId: n.userId,
+      conversationId,
+      contactId: result.contactId || null,
+      messageId,
+      type: n.internalType,
+      body: n.body,
+      // A Evolution repete o nome do arquivo na legenda quando não há legenda de verdade.
+      caption: n.mediaCaption && n.mediaCaption !== n.mediaFileName ? n.mediaCaption : null,
+      fileName: n.mediaFileName,
+      mimetype: n.mediaMimetype,
+      sentAt: n.messageTimestamp,
+      chatPhone: n.chatPhone || null,
+    }));
+    try { (globalThis as any).EdgeRuntime?.waitUntil?.(task); } catch { /* noop */ }
   }
 
   // EVA.AUTO.1 — lead novo entrou: dispara a auto-qualificação em background.

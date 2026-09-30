@@ -80,12 +80,13 @@ export function useEvaBlueprint() {
         enabled: !!companyId,
         staleTime: 30_000,
         queryFn: async (): Promise<Bundle> => {
-            const [savedRes, ctxRes, tagsRes, gapsRes, stagesRes] = await Promise.all([
+            const [savedRes, ctxRes, tagsRes, gapsRes, stagesRes, companyRes] = await Promise.all([
                 supabase.from("eva_blueprints" as any).select("*").eq("company_id", companyId).maybeSingle(),
                 supabase.from("eva_business_context" as any).select("agency, services, icp, playbooks").eq("company_id", companyId).maybeSingle(),
                 supabase.from("tags" as any).select("name").eq("company_id", companyId).limit(60),
                 supabase.from("eva_knowledge_gaps" as any).select("gap_description").eq("company_id", companyId).eq("status", "open").limit(20),
                 supabase.from("deals" as any).select("stage").eq("company_id", companyId).limit(300),
+                supabase.from("companies").select("segment").eq("id", companyId).maybeSingle(),
             ]);
 
             const saved = savedRes.data ? rowToBlueprint(savedRes.data) : null;
@@ -106,7 +107,8 @@ export function useEvaBlueprint() {
                 meta = { createdAt: r.created_at ?? null, updatedAt: r.updated_at ?? null, appliedAt: r.applied_at ?? null, appliedByName };
             }
 
-            const suggestion = buildSuggestion({ context, companyTags, dealStages, openGaps });
+            const companySegment = companyRes.data?.segment ?? null;
+            const suggestion = buildSuggestion({ context, companyTags, dealStages, openGaps, companySegment });
             return { saved, suggestion, existing: { tags: companyTags, gaps: openGaps, rules: existingRules }, meta };
         },
     });

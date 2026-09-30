@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { SOLAR_SEGMENT } from "@/lib/eva/blueprint";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getAttribution } from "@/lib/attribution";
@@ -23,6 +24,9 @@ const SignupV2 = () => {
     // Mantido só pra analytics/atribuição de origem: independente do card
     // clicado, TODO cadastro entra em trial do Pro (14d) e degrada pro Free.
     const plan = (params.get("plan") || "pro").toLowerCase();
+    // Link que o Markus manda ao integrador: /criar-conta?segmento=energia_solar.
+    // Vira companies.segment, que escolhe o pacote da EVA e os nomes do funil.
+    const segment = params.get("segmento") === SOLAR_SEGMENT ? SOLAR_SEGMENT : null;
     const { user, profile, companyId, isSuperAdmin, loading: authLoading, signUp, signIn, refreshProfile } = useAuth();
 
     const [nome, setNome] = useState("");
@@ -99,7 +103,7 @@ const SignupV2 = () => {
         const attribution = getAttribution() || {};
         // plan: 'pro' fixo — o trial é sempre do Pro; ao expirar, resolveEffectivePlan
         // degrada a conta pro Free (não existe mais bloqueio de trial expirado).
-        const base = { name: empresa.trim(), plan: "pro", subscription_status: "trialing", trial_ends_at: trialEnds, ...attribution };
+        const base = { name: empresa.trim(), plan: "pro", subscription_status: "trialing", trial_ends_at: trialEnds, segment, ...attribution };
         // id gerado no cliente nos DOIS caminhos: dispensa o .select() pós-insert,
         // que dependia de policy de SELECT que o usuário recém-criado não tem
         // (RLS de companies só permite ler a própria empresa DEPOIS do vínculo).
@@ -121,7 +125,10 @@ const SignupV2 = () => {
         try {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: "google",
-                options: { redirectTo: `${window.location.origin}/criar-conta?plan=${plan}`, queryParams: { access_type: "offline", prompt: "consent" } },
+                options: {
+                    redirectTo: `${window.location.origin}/criar-conta?plan=${plan}${segment ? `&segmento=${segment}` : ""}`,
+                    queryParams: { access_type: "offline", prompt: "consent" },
+                },
             });
             if (error) { toast.error("Não foi possível entrar com Google: " + error.message); setLoading(false); }
         } catch {
@@ -133,7 +140,7 @@ const SignupV2 = () => {
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
         const next: typeof erros = {};
-        if (!empresa.trim()) next.empresa = "Informe o nome da sua agência.";
+        if (!empresa.trim()) next.empresa = "Informe o nome da sua empresa.";
         if (!ssoMode) {
             if (!nome.trim()) next.nome = "Informe seu nome.";
             if (!email.trim()) next.email = "Informe seu email.";
@@ -266,7 +273,7 @@ const SignupV2 = () => {
                                 {ssoMode ? "Quase lá" : "Criar conta"}
                             </h1>
                             <p className="mt-2.5 landing-fade-in-up landing-delay-150" style={{ color: "rgba(255,255,255,0.55)", fontSize: "1rem" }}>
-                                {ssoMode ? "Só falta o nome da sua agência." : "14 dias de Pro grátis, sem cartão. Depois, escolha o plano da sua operação."}
+                                {ssoMode ? "Só falta o nome da sua empresa." : "14 dias de Pro grátis, sem cartão. Depois, escolha o plano da sua operação."}
                             </p>
 
                             {!ssoMode && (
@@ -306,8 +313,8 @@ const SignupV2 = () => {
                                     />
                                 )}
                                 <AuthField
-                                    label="Nome da agência"
-                                    placeholder="Sua agência"
+                                    label="Nome da empresa"
+                                    placeholder="Sua empresa"
                                     value={empresa}
                                     onChange={(v) => { setEmpresa(v); if (erros.empresa) setErros((p) => ({ ...p, empresa: undefined })); }}
                                     autoComplete="organization"
@@ -320,7 +327,7 @@ const SignupV2 = () => {
                                         <AuthField
                                             label="Email"
                                             type="email"
-                                            placeholder="voce@suaagencia.com"
+                                            placeholder="voce@suaempresa.com"
                                             value={email}
                                             onChange={(v) => { setEmail(v); if (erros.email || erros.form) setErros((p) => ({ ...p, email: undefined, form: undefined })); }}
                                             autoComplete="email"

@@ -112,14 +112,14 @@ export interface EvaStudioJourneyHandle {
 }
 
 const ASIDE_META: Record<AsideView, { title: string; sub: string }> = {
-    memoria: { title: "Memória da EVA", sub: "O que ela já sabe da sua agência." },
+    memoria: { title: "Memória da EVA", sub: "O que ela já sabe da sua empresa." },
     insights: { title: "Insights", sub: "O que ainda falta ensinar antes do Inbox." },
     analytics: { title: "Resultados", sub: "O que a EVA sugeriu e como o time usou." },
 };
 
 const STEPS = [
     { key: "criar" as StudioStepKey, label: "Escolher", sub: "Começar pelo Qualificador" },
-    { key: "ensinar" as StudioStepKey, label: "Ensinar", sub: "Contar como a agência vende" },
+    { key: "ensinar" as StudioStepKey, label: "Ensinar", sub: "Contar como a empresa vende" },
     { key: "provar" as StudioStepKey, label: "Provar", sub: "Ver se a sugestão faz sentido" },
     { key: "ativar" as StudioStepKey, label: "Ativar", sub: "Ligar no Inbox (você aprova)" },
 ];

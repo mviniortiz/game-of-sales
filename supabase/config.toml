@@ -42,6 +42,14 @@ verify_jwt = false
 [functions.evolution-message-webhook]
 verify_jwt = false
 
+# Kapso assina com HMAC (X-Webhook-Signature); não manda JWT do Supabase.
+[functions.kapso-webhook]
+verify_jwt = false
+
+# Só aceita Bearer igual à service_role, conferido dentro da função.
+[functions.quote-pdf-amount]
+verify_jwt = false
+
 [functions.evolution-backfill-webhooks]
 verify_jwt = false
 

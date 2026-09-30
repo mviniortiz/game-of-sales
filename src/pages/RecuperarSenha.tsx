@@ -92,7 +92,7 @@ const RecuperarSenha = () => {
                                 <AuthField
                                     label="Email"
                                     type="email"
-                                    placeholder="voce@suaagencia.com"
+                                    placeholder="voce@suaempresa.com"
                                     value={email}
                                     onChange={(v) => { setEmail(v); if (erro) setErro(null); }}
                                     autoComplete="email"
