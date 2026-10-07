@@ -161,8 +161,8 @@ const LandingV2 = () => {
             {/* véu de transição pro cadastro (cor do cadastro), some ao trocar de rota */}
             {toSignup && (
                 <div className="vz-signup-veil fixed inset-0 z-[200] flex flex-col items-center justify-center gap-5" style={{ background: "#07080A" }}>
-                    <div className="vz-veil-mark flex flex-col items-center gap-5" style={{ filter: "brightness(0) invert(1)" }}>
-                        <ThemeLogo className="h-7 w-auto" />
+                    <div className="vz-veil-mark flex flex-col items-center gap-5">
+                        <ThemeLogo variant="inverse" className="h-7 w-auto" />
                     </div>
                     <p className="vz-veil-mark lp-mono" style={{ color: "rgba(255,255,255,0.5)" }}>Preparando seu teste grátis…</p>
                 </div>

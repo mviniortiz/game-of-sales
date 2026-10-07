@@ -1,6 +1,7 @@
-import logoIcon from "@/assets/logo-icon.png";
+import { useId } from "react";
+import { MarkPieces, VyzonMark } from "@/components/brand/VyzonMark";
 
-export type ThemeLogoVariant = "default" | "iconOnly" | "negative" | "monochrome";
+export type ThemeLogoVariant = "default" | "inverse" | "iconOnly" | "negative" | "monochrome";
 
 interface ThemeLogoProps {
   className?: string;
@@ -8,89 +9,52 @@ interface ThemeLogoProps {
   /** Legacy shorthand — prefer `variant="iconOnly"`. */
   iconOnly?: boolean;
   /**
-   * `default` — símbolo 3D + wordmark Vyzon (padrão p/ fundos escuros)
-   * `iconOnly` — só o símbolo (sem wordmark)
-   * `negative` — wordmark branco (fundos brand/green sólidos)
-   * `monochrome` — wordmark com cor atual (herda `currentColor`)
+   * `default` — marca em duas cores + "vyzon" na cor do texto do tema
+   * `inverse` — duas cores sobre fundo escuro fixo (peça e nome brancos)
+   * `iconOnly` — só o ícone de app (com fundo)
+   * `negative` — tudo branco, para fundo escuro ou de cor
+   * `monochrome` — marca e nome em currentColor
    */
   variant?: ThemeLogoVariant;
-  /** Quando true, exibe a tagline "CRM DE VENDAS GAMIFICADO" abaixo do wordmark. */
-  withTagline?: boolean;
 }
 
-/**
- * Vyzon logo conforme brand guide (2026):
- * - Símbolo 3D: V emerald + centro blue (PNG transparente)
- * - Wordmark: Sora 700 (Bold), tracking -0.035em
- * - Palette: #00E37A (accent), #1556C0 (azul), com variantes negativa/monocromática
- */
-export const ThemeLogo = ({
-  className = "h-10 w-auto",
-  alt = "Vyzon",
-  iconOnly,
-  variant,
-  withTagline = false,
-}: ThemeLogoProps) => {
+// Assinatura num SVG só, para marca e nome escalarem juntos pela altura do
+// className (h-6, h-8...). Medidas em unidades do viewBox: a marca ocupa 68x69;
+// "vyzon" em Geist 600 corpo 64 mede 167 de largura (medido em 07/10/2026),
+// com a faixa da altura-x centrada na marca.
+const LOCKUP_VIEWBOX = "0 0 251 69";
+
+export const ThemeLogo = ({ className = "h-10 w-auto", alt = "Vyzon", iconOnly, variant }: ThemeLogoProps) => {
+  const uid = useId().replace(/:/g, "");
   const resolvedVariant: ThemeLogoVariant = iconOnly ? "iconOnly" : variant ?? "default";
 
   if (resolvedVariant === "iconOnly") {
-    return <img src={logoIcon} alt={alt} className={`${className} object-contain`} draggable={false} />;
+    return <VyzonMark variant="icon" size="100%" title={alt} className={`${className} aspect-square`} />;
   }
 
-  const wordmarkColor =
-    resolvedVariant === "negative"
+  const color =
+    resolvedVariant === "negative" || resolvedVariant === "inverse"
       ? "#FFFFFF"
       : resolvedVariant === "monochrome"
         ? "currentColor"
-        : undefined;
+        : "hsl(var(--foreground))";
 
-  // Fallback automático: shadcn `--foreground` inverte entre light/dark.
-  // Em light mode → slate quase preto (contrasta com bg branco).
-  // Em dark mode → branco (contrasta com bg escuro).
   return (
-    <span className={`inline-flex items-center gap-2 ${className}`} aria-label={alt}>
-      <img
-        src={logoIcon}
-        alt=""
-        aria-hidden
-        className="h-full w-auto object-contain"
-        draggable={false}
-        style={{ filter: "drop-shadow(0 0 12px rgba(0,227,122,0.28))" }}
-      />
-      <span className="flex flex-col leading-none">
-        <span
-          className="font-bold tracking-tight"
-          style={{
-            fontFamily: "Sora, Inter, system-ui, sans-serif",
-            fontWeight: 700,
-            fontSize: "0.95em",
-            letterSpacing: "-0.035em",
-            color: wordmarkColor ?? "hsl(var(--foreground))",
-          }}
-        >
-          Vyzon
-        </span>
-        {withTagline ? (
-          <span
-            className="mt-1"
-            style={{
-              fontFamily: "Sora, Inter, system-ui, sans-serif",
-              fontWeight: 500,
-              fontSize: "0.32em",
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              color:
-                resolvedVariant === "negative"
-                  ? "rgba(255,255,255,0.8)"
-                  : resolvedVariant === "monochrome"
-                    ? "currentColor"
-                    : "hsl(var(--muted-foreground))",
-            }}
-          >
-            CRM de Vendas Gamificado
-          </span>
-        ) : null}
-      </span>
-    </span>
+    <svg viewBox={LOCKUP_VIEWBOX} className={className} role="img" aria-label={alt} style={{ color, overflow: "visible" }}>
+      <g transform="translate(-16 -14.5)">
+        <MarkPieces uid={uid} duo={resolvedVariant === "default" || resolvedVariant === "inverse"} />
+      </g>
+      <text
+        x="82"
+        y="51.5"
+        fill="currentColor"
+        fontFamily="Geist, Inter, system-ui, sans-serif"
+        fontWeight={600}
+        fontSize={64}
+        letterSpacing={-3.2}
+      >
+        vyzon
+      </text>
+    </svg>
   );
 };

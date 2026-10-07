@@ -219,8 +219,8 @@ const SignupV2 = () => {
         return (
             <div className="lp-v2" style={{ minHeight: "100vh", backgroundColor: "#07080A", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
                 <div className="w-full max-w-[420px] text-center">
-                    <div style={{ filter: "brightness(0) invert(1)", display: "flex", justifyContent: "center" }}>
-                        <ThemeLogo className="h-6 w-auto" />
+                    <div style={{ display: "flex", justifyContent: "center" }}>
+                        <ThemeLogo variant="inverse" className="h-6 w-auto" />
                     </div>
                     <h1 className="lp-display mt-10" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.4rem)", lineHeight: 1.05, letterSpacing: "-0.03em", color: "#fff" }}>
                         Confirme seu email
@@ -263,8 +263,8 @@ const SignupV2 = () => {
         <div className="lp-v2" style={{ minHeight: "100vh", backgroundColor: "#07080A", color: "#fff" }}>
             <div className="grid min-h-screen lg:grid-cols-[0.88fr_1.12fr]">
                 <div className="relative flex flex-col px-6 py-8 sm:px-12 sm:py-10">
-                    <button onClick={() => navigate("/")} className="flex items-center self-start opacity-90 transition-opacity hover:opacity-100" aria-label="Vyzon" style={{ filter: "brightness(0) invert(1)" }}>
-                        <ThemeLogo className="h-6 w-auto" />
+                    <button onClick={() => navigate("/")} className="flex items-center self-start opacity-90 transition-opacity hover:opacity-100" aria-label="Vyzon">
+                        <ThemeLogo variant="inverse" className="h-6 w-auto" />
                     </button>
 
                     <div className="flex flex-1 items-center">

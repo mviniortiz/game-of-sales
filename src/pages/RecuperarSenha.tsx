@@ -78,8 +78,8 @@ const RecuperarSenha = () => {
                 <div className="flex flex-1 items-center">
                     {!enviado ? (
                         <div className="w-full py-12">
-                            <div style={{ filter: "brightness(0) invert(1)" }} className="landing-fade-in-up landing-delay-100">
-                                <ThemeLogo className="h-6 w-auto" />
+                            <div className="landing-fade-in-up landing-delay-100">
+                                <ThemeLogo variant="inverse" className="h-6 w-auto" />
                             </div>
                             <h1 className="lp-display mt-8 landing-fade-in-up landing-delay-150" style={{ fontSize: "clamp(2rem, 3.6vw, 2.6rem)", lineHeight: 1.05, letterSpacing: "-0.03em", color: "#fff" }}>
                                 Recuperar senha

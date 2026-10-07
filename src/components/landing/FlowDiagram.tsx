@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import logoIcon from "@/assets/logo-icon.png";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import hotmartLogo from "@/assets/integrations/hotmart-logo-png_seeklogo-485917.webp";
 import kiwifyLogo from "@/assets/integrations/kiwify-logo-png_seeklogo-537186.webp";
@@ -335,7 +334,7 @@ export const FlowDiagram = () => {
                             />
                             {/* Vyzon logo */}
                             <image
-                                href={logoIcon}
+                                href="/brand/vyzon-icon.svg"
                                 x={HUB_CENTER.x - 28}
                                 y={HUB_CENTER.y - 28}
                                 width="56"

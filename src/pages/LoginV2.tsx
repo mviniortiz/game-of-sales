@@ -106,9 +106,9 @@ const LoginV2 = () => {
                             onClick={() => navigate("/")}
                             className="flex items-center opacity-90 transition-opacity hover:opacity-100"
                             aria-label="Vyzon"
-                            style={{ filter: "brightness(0) invert(1)" }}
+                           
                         >
-                            <ThemeLogo className="h-6 w-auto" />
+                            <ThemeLogo variant="inverse" className="h-6 w-auto" />
                         </button>
                         <span className="h-4 w-px" style={{ background: "rgba(255,255,255,0.18)" }} aria-hidden />
                         <button

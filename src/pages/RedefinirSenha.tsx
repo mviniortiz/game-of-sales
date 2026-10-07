@@ -92,8 +92,8 @@ const RedefinirSenha = () => {
     return (
         <div className="lp-v2" style={{ minHeight: "100vh", backgroundColor: "#07080A", color: "#fff" }}>
             <div className="mx-auto flex min-h-screen w-full max-w-[440px] flex-col px-6 py-8 sm:px-8">
-                <div className="self-start landing-fade-in-up" style={{ filter: "brightness(0) invert(1)" }}>
-                    <ThemeLogo className="h-6 w-auto" />
+                <div className="self-start landing-fade-in-up">
+                    <ThemeLogo variant="inverse" className="h-6 w-auto" />
                 </div>
 
                 <div className="flex flex-1 items-center">

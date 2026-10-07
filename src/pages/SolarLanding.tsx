@@ -5,6 +5,7 @@ import { trackEvent, trackDemoConversion, FUNNEL_EVENTS } from "@/lib/analytics"
 import { getAttribution } from "@/lib/attribution";
 import { whatsappUrl } from "@/config/contact";
 import { ButtonV2 } from "@/components/landing-v2/ButtonV2";
+import { ThemeLogo } from "@/components/ui/ThemeLogo";
 
 // Home de produção desde 29/09/2026: integradores de energia solar, oferta de
 // entrada = Raio-X grátis das propostas paradas no WhatsApp. A landing de
@@ -93,8 +94,8 @@ const SolarLanding = () => {
 
 const Header = () => (
     <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between px-5 py-5 md:px-8">
-        <Link to="/" className="text-[15px] font-semibold tracking-tight" style={{ color: "var(--lp-ink)" }}>
-            Vyzon
+        <Link to="/" aria-label="Vyzon, início">
+            <ThemeLogo className="h-[22px] w-auto" />
         </Link>
         <div className="flex items-center gap-4">
             <Link to="/auth" className="text-sm" style={{ color: "var(--lp-ink-55)" }}>

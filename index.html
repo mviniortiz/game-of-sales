@@ -49,8 +49,9 @@
     })();
   </script>
 
-  <!-- Favicon & App Icons (PNG wins over SVG — o render 3D do V não dá pra
-       replicar vetorial sem perda, então priorizamos os PNGs otimizados) -->
+  <!-- Favicon & App Icons: SVG-mestre em public/brand/, PNGs gerados por
+       scripts/build-brand-assets.mjs para quem não lê SVG. -->
+  <link rel="icon" type="image/svg+xml" href="/brand/vyzon-icon.svg" />
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
@@ -77,7 +78,7 @@
   <meta property="og:title" content="Propostas de energia solar paradas no WhatsApp | Vyzon" />
   <meta property="og:description"
     content="Mandou a proposta e o cliente sumiu? O Vyzon mostra quais propostas de energia solar pararam no seu WhatsApp e entrega a retomada pronta. Raio-X grátis." />
-  <meta property="og:image" content="https://vyzon.com.br/og-image.jpg?v=6" />
+  <meta property="og:image" content="https://vyzon.com.br/og-image.jpg?v=7" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:locale" content="pt_BR" />
@@ -89,7 +90,7 @@
   <meta name="twitter:title" content="Propostas de energia solar paradas no WhatsApp | Vyzon" />
   <meta name="twitter:description"
     content="Mandou a proposta e o cliente sumiu? O Vyzon mostra quais propostas de energia solar pararam no seu WhatsApp e entrega a retomada pronta. Raio-X grátis." />
-  <meta name="twitter:image" content="https://vyzon.com.br/og-image.jpg?v=6" />
+  <meta name="twitter:image" content="https://vyzon.com.br/og-image.jpg?v=7" />
   <meta name="twitter:creator" content="@vyzonapp" />
 
   <!-- Sora (brand font — Vyzon wordmark) + Inter + Satoshi self-hosted em /public/fonts/.
@@ -222,7 +223,7 @@
       "Rascunho não aprovado expira em 48 horas",
       "Conexão do WhatsApp por QR code, sem trocar de número"
     ],
-    "screenshot": "https://vyzon.com.br/og-image.jpg?v=6"
+    "screenshot": "https://vyzon.com.br/og-image.jpg?v=7"
   }
   </script>
   <script type="application/ld+json">
