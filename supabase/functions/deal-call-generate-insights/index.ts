@@ -1,10 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -120,7 +120,7 @@ async function generateLLMInsights(
   transcript: string,
   dealContext: DealContext,
 ): Promise<LLMInsights | null> {
-  if (!OPENAI_API_KEY) return null;
+  if (!hasLlmKey()) return null;
 
   const systemPrompt = `Você é um assistente de vendas especializado em analisar transcrições de ligações comerciais em português brasileiro.
 Analise a transcrição e o contexto do deal fornecidos e retorne APENAS um JSON válido (sem markdown, sem code fences) com a seguinte estrutura:
@@ -151,22 +151,15 @@ Regras:
   const userMessage = `Contexto do deal:\n${dealInfo}\n\nTranscrição da ligação:\n${transcript}`;
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userMessage },
-        ],
-        temperature: 0.3,
-        max_tokens: 1500,
-      }),
-    });
+    const response = await llmChat({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
+      ],
+      temperature: 0.3,
+      max_tokens: 1500,
+    }, { label: "deal-call-generate-insights" });
 
     if (!response.ok) {
       const errBody = await response.text();
@@ -382,7 +375,7 @@ serve(async (req) => {
     let dealContext: DealContext = {};
 
     // Fetch deal context for LLM
-    if (OPENAI_API_KEY) {
+    if (hasLlmKey()) {
       try {
         const { data: deal } = await (adminSupabase as any)
           .from("deals")

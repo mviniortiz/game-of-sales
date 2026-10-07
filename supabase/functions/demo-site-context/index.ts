@@ -2,8 +2,8 @@
 // devolve um contexto COMPACTO pra EVA personalizar a narração do tour.
 // Best-effort com timeout curto: a demo nunca espera além do "preparando".
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -67,27 +67,23 @@ serve(async (req) => {
     } catch {
         return json(200, { context: null, reason: "fetch_failed" });
     }
-    if (text.length < 80 || !OPENAI_API_KEY) {
+    if (text.length < 80 || !hasLlmKey()) {
         return json(200, { context: null, reason: text.length < 80 ? "empty_site" : "no_key" });
     }
 
     try {
-        const res = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-                model: "gpt-5.4-nano",
-                messages: [
-                    {
-                        role: "system",
-                        content: "Você resume o site de uma empresa pra personalizar uma demo. Responda SÓ um JSON válido: {\"name\": \"nome da empresa\", \"segment\": \"segmento em 2-4 palavras (ex.: agência de tráfego pago)\", \"oneliner\": \"o que ela faz, em UMA frase curta\"}. Em português. Se o texto não permitir concluir, use null nos campos.",
-                    },
-                    { role: "user", content: text },
-                ],
-                max_completion_tokens: 150,
-                response_format: { type: "json_object" },
-            }),
-        });
+        const res = await llmChat({
+            model: "gpt-5.4-nano",
+            messages: [
+                {
+                    role: "system",
+                    content: "Você resume o site de uma empresa pra personalizar uma demo. Responda SÓ um JSON válido: {\"name\": \"nome da empresa\", \"segment\": \"segmento em 2-4 palavras (ex.: agência de tráfego pago)\", \"oneliner\": \"o que ela faz, em UMA frase curta\"}. Em português. Se o texto não permitir concluir, use null nos campos.",
+                },
+                { role: "user", content: text },
+            ],
+            max_completion_tokens: 150,
+            response_format: { type: "json_object" },
+        }, { label: "demo-site-context" });
         const data = await res.json();
         const parsed = JSON.parse(data.choices?.[0]?.message?.content || "{}");
         const clean = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null);

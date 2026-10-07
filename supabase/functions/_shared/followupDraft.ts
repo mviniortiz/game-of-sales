@@ -3,8 +3,7 @@
 // Só gera texto: quem chama grava em agent_suggestions e a saída segue pela
 // aprovação no WhatsApp do dono.
 
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+import { hasLlmKey, llmChat } from "./llm.ts";
 
 export type FollowupPrompt = { system: string; user: string };
 export type FollowupDraft = { suggestion_text: string; message_draft: string };
@@ -213,63 +212,27 @@ Retorne APENAS o JSON, nada fora dele.`;
     return { system, user };
 }
 
-// Provider dispatch: Claude Haiku se tiver ANTHROPIC_API_KEY, senão OpenAI gpt-4o-mini
 export async function callLLM(prompt: FollowupPrompt): Promise<FollowupDraft | null> {
-    if (ANTHROPIC_API_KEY) {
+    if (hasLlmKey()) {
         try {
-            const res = await fetch("https://api.anthropic.com/v1/messages", {
-                method: "POST",
-                headers: {
-                    "x-api-key": ANTHROPIC_API_KEY,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
-                body: JSON.stringify({
-                    model: "claude-haiku-4-5-20251001",
-                    max_tokens: 800,
-                    system: prompt.system,
-                    messages: [{ role: "user", content: prompt.user }],
-                }),
-            });
+            const res = await llmChat({
+                model: "gpt-4o-mini",
+                messages: [
+                    { role: "system", content: prompt.system },
+                    { role: "user", content: prompt.user },
+                ],
+                response_format: { type: "json_object" },
+                max_completion_tokens: 800,
+            }, { label: "followupDraft" });
             if (!res.ok) {
-                console.error("[followup-draft] anthropic error", res.status, await res.text());
-                return null;
-            }
-            const data = await res.json();
-            const text = data?.content?.[0]?.text ?? "";
-            return extractJson(text);
-        } catch (e) {
-            console.error("[followup-draft] anthropic threw", e);
-            return null;
-        }
-    }
-    if (OPENAI_API_KEY) {
-        try {
-            const res = await fetch("https://api.openai.com/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${OPENAI_API_KEY}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    model: "gpt-4o-mini",
-                    messages: [
-                        { role: "system", content: prompt.system },
-                        { role: "user", content: prompt.user },
-                    ],
-                    response_format: { type: "json_object" },
-                    max_completion_tokens: 800,
-                }),
-            });
-            if (!res.ok) {
-                console.error("[followup-draft] openai error", res.status, await res.text());
+                console.error("[followup-draft] ia error", res.status, await res.text());
                 return null;
             }
             const data = await res.json();
             const text = data?.choices?.[0]?.message?.content ?? "";
             return extractJson(text);
         } catch (e) {
-            console.error("[followup-draft] openai threw", e);
+            console.error("[followup-draft] ia threw", e);
             return null;
         }
     }

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
 // eva-studio-chat — a EVA CONVERSA com o gestor pra montar um agente especialista
 // (qualificação, follow-up, propostas ou reativação), sem formulário. A cada
@@ -11,7 +12,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -142,7 +142,7 @@ function forcedClosing(agent: AgentDef): string {
 }
 
 async function runChat(agent: AgentDef, messages: Turn[], fields: Fields, priorContext?: string): Promise<{ reply: string; fields: Fields; done: boolean } | null> {
-    if (!OPENAI_API_KEY) return null;
+    if (!hasLlmKey()) return null;
 
     const transcript = messages
         .map((m) => `${m.from === "eva" ? "EVA" : "Gestor"}: ${(m.text || "").trim()}`)
@@ -151,19 +151,15 @@ async function runChat(agent: AgentDef, messages: Turn[], fields: Fields, priorC
 
     const userContent = `Conversa até agora:\n${transcript || "(ainda sem conversa)"}\n\nCampos já capturados: ${JSON.stringify(fields)}\n\nGere o próximo passo (apenas o JSON).`;
 
-    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-            model: "gpt-5.4-nano",
-            messages: [
-                { role: "system", content: buildSystemPrompt(agent, priorContext) },
-                { role: "user", content: userContent },
-            ],
-            max_completion_tokens: 900,
-            response_format: { type: "json_object" },
-        }),
-    });
+    const resp = await llmChat({
+        model: "gpt-5.4-nano",
+        messages: [
+            { role: "system", content: buildSystemPrompt(agent, priorContext) },
+            { role: "user", content: userContent },
+        ],
+        max_completion_tokens: 900,
+        response_format: { type: "json_object" },
+    }, { label: "eva-studio-chat" });
     if (!resp.ok) return null;
     const completion = await resp.json();
     const content = completion?.choices?.[0]?.message?.content;

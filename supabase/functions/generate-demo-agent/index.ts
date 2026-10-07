@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
 // generate-demo-agent — recebe a URL do site do lead, faz scraping do PRÓPRIO
 // site dele (consentido; não é enriquecimento externo de terceiros) e gera um
@@ -11,7 +12,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -141,20 +141,16 @@ const SYSTEM_PROMPT = `Você analisa o site de uma agência/empresa que vende po
 Regras: use só o que dá pra inferir do conteúdo; não invente números, preços, prêmios nem clientes; português do Brasil; objetivo e comercial.`;
 
 async function generateBlueprint(siteText: string): Promise<Record<string, unknown> | null> {
-    if (!OPENAI_API_KEY) return null;
-    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-            model: "gpt-5.4-nano",
-            messages: [
-                { role: "system", content: SYSTEM_PROMPT },
-                { role: "user", content: `Conteúdo do site:\n\n${siteText}` },
-            ],
-            max_completion_tokens: 2000,
-            response_format: { type: "json_object" },
-        }),
-    });
+    if (!hasLlmKey()) return null;
+    const resp = await llmChat({
+        model: "gpt-5.4-nano",
+        messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: `Conteúdo do site:\n\n${siteText}` },
+        ],
+        max_completion_tokens: 2000,
+        response_format: { type: "json_object" },
+    }, { label: "generate-demo-agent" });
     if (!resp.ok) return null;
     const completion = await resp.json();
     const content = completion?.choices?.[0]?.message?.content;

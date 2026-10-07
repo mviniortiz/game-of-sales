@@ -11,8 +11,9 @@ const KAPSO_ORIGIN = "https://api.kapso.ai";
 export const KAPSO_WHATSAPP = "/meta/whatsapp/v24.0";
 export const KAPSO_PLATFORM = "/platform/v1";
 
-/** Janela de histórico que a Meta libera na coexistência. */
-export const HISTORY_DAYS = 180;
+/** A Meta libera 180 dias na coexistência; importamos só o que a retenção
+ *  (purge_old_whatsapp_messages) guarda. */
+export const HISTORY_DAYS = 90;
 
 // ── Tipos do payload (só o que o Vyzon lê) ─────────────────────────────────
 

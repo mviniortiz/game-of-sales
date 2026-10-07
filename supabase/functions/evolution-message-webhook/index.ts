@@ -4,6 +4,7 @@ import { handleOwnerCommand, resolveOwnerNumber } from "../_shared/whatsappAppro
 import { trackOutboundQuote } from "../_shared/quoteTracking.ts";
 import { ensureConnection, importHistoryMessages } from "../_shared/whatsappHistory.ts";
 import { fillContactNames, isPlaceholderName, knownLidMap, linkLidToPhone } from "../_shared/whatsappContacts.ts";
+import { READ_DELAY_MS, worthReading } from "../_shared/evaRead.ts";
 
 // Receiver do Evolution API (evento messages.upsert).
 //
@@ -199,52 +200,6 @@ interface DualWriteResult {
 
 /** Dual-write best-effort. Não joga; retorna `{ok:false, step, error}`.
  *  Cada etapa é isolada — falha em uma não interrompe o loop principal. */
-// EVA.AUTO.1 — auto-qualificação no 1º contato de número novo. Quando uma
-// conversa NOVA inbound nasce e a empresa tem o Qualificador ATIVADO
-// (eva_blueprints.status='approved_assisted'), dispara a whatsapp-copilot em
-// modo serviço pra deixar a leitura pronta no painel da EVA, esperando o OK do
-// humano. Fire-and-forget (waitUntil): NUNCA bloqueia nem quebra o recebimento.
-// Assistido: a EVA só LÊ e rascunha — não envia, não move pipeline.
-async function autoQualifyNewLead(admin: any, n: NormalizedMessage): Promise<void> {
-  try {
-    if (!n.companyId || !n.chatPhone || !n.body || !n.body.trim()) return;
-
-    // Gate: a empresa tem o Qualificador ativado? Pega o dono que ativou.
-    const { data: bp } = await admin
-      .from("eva_blueprints")
-      .select("approved_by, created_by")
-      .eq("company_id", n.companyId)
-      .eq("agent_key", "qualifier")
-      .eq("status", "approved_assisted")
-      .limit(1)
-      .maybeSingle();
-    if (!bp) return; // agente não ativado → não faz nada
-    const ownerUserId = bp.approved_by || bp.created_by;
-    if (!ownerUserId) return;
-
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/whatsapp-copilot`, {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        autoQualify: true,
-        company_id: n.companyId,
-        ownerUserId,
-        contactPhone: `+${n.chatPhone}`,
-        contactName: n.contactName || null,
-        messages: [{ text: n.body, sender: "them" }],
-      }),
-    });
-    if (!res.ok) console.warn("[auto-qualify] copilot status", res.status);
-    else console.log("[auto-qualify] pré-análise disparada", n.chatPhone);
-  } catch (e) {
-    console.warn("[auto-qualify] ignorado (erro):", (e as { message?: string })?.message || e);
-  }
-}
-
 // PERF (2026-07-01): caminho primário do dual-write. A RPC
 // ingest_channel_message() faz o upsert chain inteiro (connection → contact →
 // conversation → message + stats) num ÚNICO round-trip, idempotente por
@@ -388,9 +343,18 @@ async function dualWriteChannel(
     try { (globalThis as any).EdgeRuntime?.waitUntil?.(task); } catch { /* noop */ }
   }
 
-  // EVA.AUTO.1 — lead novo entrou: dispara a auto-qualificação em background.
-  if (result.isNewConversation && n.direction === "inbound" && n.body && n.body.trim()) {
-    try { (globalThis as any).EdgeRuntime?.waitUntil?.(autoQualifyNewLead(admin, n)); } catch { /* noop */ }
+  // EVA.READ.1 — mensagem com conteúdo marca a conversa para a EVA reler
+  // depois de 3 min de silêncio; mensagem seguinte empurra o prazo. Quem lê
+  // é a eva-conversation-read, pelo cron.
+  if (
+    result.isNewMessage && n.direction === "inbound" && result.conversationId &&
+    !n.isGroup && worthReading(n.body)
+  ) {
+    const { error: readErr } = await admin
+      .from("channel_conversations")
+      .update({ eva_read_due_at: new Date(Date.now() + READ_DELAY_MS).toISOString() })
+      .eq("id", result.conversationId);
+    if (readErr) console.warn("[eva-read] não marcou a conversa:", readErr.message);
   }
 
   return result;

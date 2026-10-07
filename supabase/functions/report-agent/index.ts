@@ -3,11 +3,11 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const PLAN_LIMITS: Record<string, number> = {
   pro: 999999, // ilimitado
@@ -374,8 +374,8 @@ serve(async (req) => {
   }
 
   try {
-    if (!OPENAI_API_KEY) {
-      return json(500, { error: "OPENAI_API_KEY não configurada", code: "OPENAI_NOT_CONFIGURED" });
+    if (!hasLlmKey()) {
+      return json(500, { error: "Nenhuma chave de IA configurada", code: "OPENAI_NOT_CONFIGURED" });
     }
 
     // Auth
@@ -459,22 +459,15 @@ serve(async (req) => {
     // Build prompt and call GPT
     const systemPrompt = buildSystemPrompt(companyData);
 
-    const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-5.4-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: question },
-        ],
-        max_completion_tokens: 1800,
-        response_format: { type: "json_object" },
-      }),
-    });
+    const openaiResponse = await llmChat({
+      model: "gpt-5.4-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: question },
+      ],
+      max_completion_tokens: 1800,
+      response_format: { type: "json_object" },
+    }, { label: "report-agent" });
 
     if (!openaiResponse.ok) {
       const errBody = await openaiResponse.text();

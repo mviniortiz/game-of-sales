@@ -21,11 +21,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const MODEL = "gpt-5.4-nano";
 const MAX_CONVERSATIONS = 8;   // teto de custo por run
@@ -163,7 +163,7 @@ serve(async (req) => {
   const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
-    if (!OPENAI_API_KEY) throw new Error("missing_openai_key");
+    if (!hasLlmKey()) throw new Error("missing_llm_key");
 
     // Contexto da agência (mesma fonte do copilot)
     const { data: ctxRow } = await adminClient
@@ -219,19 +219,15 @@ serve(async (req) => {
 
       const userPrompt = `CONTEXTO DA AGÊNCIA:\n${contextBlock}\n\nDESFECHO REAL desta conversa: ${outcomeWord}.${lossHint}\nLEAD: ${leadName}\n\nTRANSCRIPT:\n${lines.join("\n")}\n\nAche o momento-chave e devolva o JSON estrito.`;
 
-      const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: MODEL,
-          messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: userPrompt },
-          ],
-          max_completion_tokens: 900,
-          response_format: { type: "json_object" },
-        }),
-      });
+      const resp = await llmChat({
+        model: MODEL,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userPrompt },
+        ],
+        max_completion_tokens: 900,
+        response_format: { type: "json_object" },
+      }, { label: "generate-eva-replay-moments" });
       if (!resp.ok) {
         console.error(`[replay] OpenAI ${resp.status} conv=${row.id}:`, (await resp.text()).slice(0, 200));
         skipped.push(row.id);

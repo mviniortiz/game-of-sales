@@ -7,7 +7,9 @@
 
 import { isPlaceholderName, knownLidMap } from "./whatsappContacts.ts";
 
-export const HISTORY_MAX_AGE_DAYS = 180;
+// Igual à retenção (purge_old_whatsapp_messages): importar mais que isso só
+// gasta banco e rede com mensagem que a limpeza apaga em seguida.
+export const HISTORY_MAX_AGE_DAYS = 90;
 
 export function extractNumberFromJid(value?: string | null) {
   if (!value) return "";

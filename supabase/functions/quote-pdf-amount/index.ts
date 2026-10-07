@@ -15,17 +15,16 @@
 //
 // Invocação: POST { quote_id } com Bearer service_role. Quem chama é o
 // trackOutboundQuote, depois de criar o rastreio e o card.
-// Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY ou OPENAI_API_KEY.
+// Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, e a chave de algum provedor de IA (ver _shared/llm.ts).
 // ─────────────────────────────────────────────────────────────────────────────
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getDocumentProxy } from "npm:unpdf@1.8.1";
 import { extractAmounts, pickProposalAmount } from "../_shared/quoteDetection.ts";
+import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const MAX_BYTES = 15 * 1024 * 1024;
 const MAX_PAGES = 20;
@@ -72,33 +71,14 @@ async function askModel(text: string, candidates: number[]): Promise<number | nu
     const user = `Valores candidatos: ${JSON.stringify(candidates)}\n\nTexto do PDF:\n${text.slice(0, MAX_MODEL_CHARS)}`;
     let raw = "";
     try {
-        if (ANTHROPIC_API_KEY) {
-            const res = await fetch("https://api.anthropic.com/v1/messages", {
-                method: "POST",
-                headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-                body: JSON.stringify({
-                    model: "claude-haiku-4-5-20251001",
-                    max_tokens: 100,
-                    system: SYSTEM,
-                    messages: [{ role: "user", content: user }],
-                }),
-                signal: AbortSignal.timeout(25_000),
-            });
-            if (!res.ok) throw new Error(`anthropic ${res.status}`);
-            raw = (await res.json())?.content?.[0]?.text ?? "";
-        } else if (OPENAI_API_KEY) {
-            const res = await fetch("https://api.openai.com/v1/chat/completions", {
-                method: "POST",
-                headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    model: "gpt-4o-mini",
-                    messages: [{ role: "system", content: SYSTEM }, { role: "user", content: user }],
-                    response_format: { type: "json_object" },
-                    max_completion_tokens: 100,
-                }),
-                signal: AbortSignal.timeout(25_000),
-            });
-            if (!res.ok) throw new Error(`openai ${res.status}`);
+        if (hasLlmKey()) {
+            const res = await llmChat({
+                model: "gpt-4o-mini",
+                messages: [{ role: "system", content: SYSTEM }, { role: "user", content: user }],
+                response_format: { type: "json_object" },
+                max_completion_tokens: 100,
+            }, { label: "quote-pdf-amount", timeoutMs: 25_000 });
+            if (!res.ok) throw new Error(`ia ${res.status}`);
             raw = (await res.json())?.choices?.[0]?.message?.content ?? "";
         } else {
             return null;

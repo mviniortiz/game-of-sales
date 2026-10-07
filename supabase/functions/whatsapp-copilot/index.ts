@@ -24,11 +24,11 @@ import {
     type KnowledgeGap,
     type Qualification,
 } from "../_shared/evaQualification.ts";
+import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const DAILY_LIMIT_PER_USER = 50;        // plano Pro (e trial do Pro)
 const ESSENTIAL_DAILY_LIMIT_PER_USER = 25; // plano Essential
@@ -550,8 +550,8 @@ serve(async (req) => {
     }
 
     try {
-        if (!OPENAI_API_KEY) {
-            return json(500, { error: "OPENAI_API_KEY nao configurada", code: "OPENAI_NOT_CONFIGURED" });
+        if (!hasLlmKey()) {
+            return json(500, { error: "Nenhuma chave de IA configurada", code: "OPENAI_NOT_CONFIGURED" });
         }
 
         // ─── Auth ────────────────────────────────────────────────────────────
@@ -815,7 +815,7 @@ serve(async (req) => {
         const userPrompt = `Contato: ${contactName || "Desconhecido"}${contactPhone ? ` (${contactPhone})` : ""}
 
 Conversa recente:
-${conversationText}${memoryContext}${contextBlock}${objectiveBlock}
+${conversationText}${objectiveBlock}
 
 Analise a conversa e retorne o JSON estrito com sua análise e o objeto qualification.${
             contextEmpty
@@ -832,26 +832,21 @@ Analise a conversa e retorne o JSON estrito com sua análise e o objeto qualific
         // gpt-5.x consome reasoning tokens antes do conteúdo, então cap baixo
         // trunca o JSON e o parse falha com "Resposta invalida da IA".
         const modelUsed = "gpt-5.4-mini";
-        const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${OPENAI_API_KEY}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                model: modelUsed,
-                messages: [
-                    { role: "system", content: SYSTEM_PROMPT },
-                    { role: "user", content: userPrompt },
-                ],
-                max_completion_tokens: 2000,
-                response_format: { type: "json_object" },
-            }),
-        });
+        const openaiResponse = await llmChat({
+            model: modelUsed,
+            messages: [
+                // O que é fixo por empresa vem primeiro: o provedor cobra o começo
+                // repetido do pedido pelo preço de cache (DeepSeek: 50x menos).
+                { role: "system", content: `${SYSTEM_PROMPT}${contextBlock}${memoryContext}` },
+                { role: "user", content: userPrompt },
+            ],
+            max_completion_tokens: 2000,
+            response_format: { type: "json_object" },
+        }, { label: "whatsapp-copilot" });
 
         if (!openaiResponse.ok) {
             const errBody = await openaiResponse.text();
-            console.error(`[whatsapp-copilot] ${modelUsed} failed (${openaiResponse.status}):`, errBody);
+            console.error(`[whatsapp-copilot] IA falhou (${openaiResponse.status}): ${openaiResponse.attempts.join(" | ")}`, errBody);
             return json(502, {
                 error: "Erro ao consultar IA",
                 code: "OPENAI_ERROR",
@@ -1018,7 +1013,7 @@ Analise a conversa e retorne o JSON estrito com sua análise e o objeto qualific
         return json(200, {
             success: true,
             analysis,
-            model: modelUsed,
+            model: openaiResponse.provider ? `${openaiResponse.provider}/${openaiResponse.model}` : modelUsed,
             tokens: completion.usage?.total_tokens || null,
             remaining: consumed.remaining,
             dailyLimit: rlLimit,

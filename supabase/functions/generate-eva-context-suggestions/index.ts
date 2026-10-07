@@ -16,11 +16,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const MODEL = "gpt-5.4-nano";
 const MAX_DOC_CHARS = 30_000; // hard cap pra não estourar tokens
@@ -155,27 +155,20 @@ serve(async (req) => {
     .eq("id", documentId);
 
   try {
-    if (!OPENAI_API_KEY) throw new Error("missing_openai_key");
+    if (!hasLlmKey()) throw new Error("missing_llm_key");
 
     const text = (doc.raw_text as string).slice(0, MAX_DOC_CHARS);
     const userPrompt = `Texto enviado pela agência ("${doc.file_name}"):\n\n${text}\n\nGere as sugestões em JSON estrito conforme o schema.`;
 
-    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: userPrompt },
-        ],
-        max_completion_tokens: 2000,
-        response_format: { type: "json_object" },
-      }),
-    });
+    const resp = await llmChat({
+      model: MODEL,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userPrompt },
+      ],
+      max_completion_tokens: 2000,
+      response_format: { type: "json_object" },
+    }, { label: "generate-eva-context-suggestions" });
     if (!resp.ok) {
       const errBody = await resp.text();
       console.error(`[generate-eva-context-suggestions] OpenAI ${resp.status}:`, errBody.slice(0, 300));

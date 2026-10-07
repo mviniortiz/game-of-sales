@@ -17,11 +17,11 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { notifyPendingSuggestions } from "../_shared/whatsappApproval.ts";
+import { hasLlmKey, llmChat, type LlmProvider } from "../_shared/llm.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const EVA_CRON_SECRET = Deno.env.get("EVA_CRON_SECRET");
 
 const corsHeaders = {
@@ -510,7 +510,7 @@ serve(async (req) => {
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
 
     try {
-        if (!OPENAI_API_KEY) return json(500, { error: "OPENAI_API_KEY nao configurada" });
+        if (!hasLlmKey()) return json(500, { error: "Nenhuma chave de IA configurada" });
 
         const authHeader = req.headers.get("Authorization") ?? "";
         const cronSecret = req.headers.get("x-cron-secret");
@@ -620,27 +620,26 @@ serve(async (req) => {
         let iterations = 0;
         let finalText = "";
         let loopError: string | null = null;
+        // O loop fica no provedor que respondeu primeiro: trocar no meio mistura
+        // históricos de ferramenta de modelos diferentes.
+        let provider: LlmProvider | undefined;
+        let modelUsed: string | null = null;
 
         while (iterations < maxSteps) {
             iterations += 1;
             const llmStart = Date.now();
-            const res = await fetch("https://api.openai.com/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${OPENAI_API_KEY}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    model: MODEL,
-                    messages,
-                    tools: openaiTools,
-                    max_completion_tokens: MAX_COMPLETION_TOKENS,
-                }),
-            });
+            const res = await llmChat({
+                model: MODEL,
+                messages,
+                tools: openaiTools,
+                max_completion_tokens: MAX_COMPLETION_TOKENS,
+            }, { label: "eva-agent-loop", prefer: provider });
             if (!res.ok) {
-                loopError = `openai ${res.status}: ${(await res.text()).slice(0, 300)}`;
+                loopError = `ia ${res.status}: ${(await res.text()).slice(0, 300)}`;
                 break;
             }
+            provider = res.provider ?? undefined;
+            modelUsed = res.provider ? `${res.provider}/${res.model}` : modelUsed;
             const completion = await res.json();
             tokensPrompt += completion.usage?.prompt_tokens ?? 0;
             tokensCompletion += completion.usage?.completion_tokens ?? 0;
@@ -712,6 +711,7 @@ serve(async (req) => {
                 error: loopError,
                 tokens_prompt: tokensPrompt,
                 tokens_completion: tokensCompletion,
+                ...(modelUsed ? { model: modelUsed } : {}),
                 steps_used: iterations,
                 finished_at: new Date().toISOString(),
             })

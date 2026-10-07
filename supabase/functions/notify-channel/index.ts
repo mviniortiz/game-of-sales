@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,7 +9,6 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
@@ -76,7 +76,7 @@ async function evaWriteSaleMessage(ctx: {
     return base;
   };
 
-  if (!OPENAI_API_KEY) return fallback();
+  if (!hasLlmKey()) return fallback();
 
   try {
     const sys =
@@ -86,18 +86,14 @@ async function evaWriteSaleMessage(ctx: {
       "Pode citar ritmo (quantidade de vendas no mês) e progresso da meta se fizer sentido.";
     const userMsg = JSON.stringify(ctx);
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gpt-5.4-mini",
-        messages: [
-          { role: "system", content: sys },
-          { role: "user", content: `Dados da venda: ${userMsg}` },
-        ],
-        max_completion_tokens: 200,
-      }),
-    });
+    const response = await llmChat({
+      model: "gpt-5.4-mini",
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: `Dados da venda: ${userMsg}` },
+      ],
+      max_completion_tokens: 200,
+    }, { label: "notify-channel" });
 
     if (!response.ok) return fallback();
     const data = await response.json();

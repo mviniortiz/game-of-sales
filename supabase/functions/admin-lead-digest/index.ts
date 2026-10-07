@@ -9,6 +9,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -16,7 +17,6 @@ const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL");
 const EVOLUTION_API_KEY = Deno.env.get("EVOLUTION_API_KEY");
 const SDR_EVOLUTION_INSTANCE = Deno.env.get("SDR_EVOLUTION_INSTANCE");
 const ADMIN_WHATSAPP = Deno.env.get("ADMIN_WHATSAPP"); // formato: 5511999999999
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const TAVILY_API_KEY = Deno.env.get("TAVILY_API_KEY"); // opcional — sem ele, pula enrichment
 
 const corsHeaders = {
@@ -119,7 +119,7 @@ async function enrichCompany(company: string, email: string): Promise<Enrichment
 }
 
 async function summarizeWithAI(lead: LeadRecord, enrichment: Enrichment | null): Promise<string> {
-  if (!OPENAI_API_KEY) {
+  if (!hasLlmKey()) {
     return buildFallbackSummary(lead, enrichment);
   }
 
@@ -144,18 +144,11 @@ ${enrichment.linkedin ? `LinkedIn: ${enrichment.linkedin}` : ""}` : ""}
 Monte o resumo agora (entregue texto puro, sem preâmbulo):`;
 
   try {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-5.4-mini",
-        messages: [{ role: "user", content: prompt }],
-        max_completion_tokens: 400,
-      }),
-    });
+    const res = await llmChat({
+      model: "gpt-5.4-mini",
+      messages: [{ role: "user", content: prompt }],
+      max_completion_tokens: 400,
+    }, { label: "admin-lead-digest" });
     const data = await res.json();
     const text = data.choices?.[0]?.message?.content?.trim();
     if (text) return text;

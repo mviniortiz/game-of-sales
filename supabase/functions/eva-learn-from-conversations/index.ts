@@ -21,11 +21,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const EVA_CRON_SECRET = Deno.env.get("EVA_CRON_SECRET");
 
 const MODEL = "gpt-5.4-mini";
@@ -152,23 +152,16 @@ function pecasDaResposta(parsed: Record<string, any>): Peca[] {
 }
 
 async function chamarLLM(prompt: string): Promise<Record<string, any> | null> {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-            model: MODEL,
-            messages: [
-                { role: "system", content: SYSTEM_PROMPT },
-                { role: "user", content: prompt },
-            ],
-            // gpt-5.x usa max_completion_tokens, não max_tokens.
-            max_completion_tokens: MAX_COMPLETION_TOKENS,
-            response_format: { type: "json_object" },
-        }),
-    });
+    const res = await llmChat({
+        model: MODEL,
+        messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: prompt },
+        ],
+        // gpt-5.x usa max_completion_tokens, não max_tokens.
+        max_completion_tokens: MAX_COMPLETION_TOKENS,
+        response_format: { type: "json_object" },
+    }, { label: "eva-learn-from-conversations" });
 
     if (!res.ok) {
         const detalhe = await res.text();
@@ -189,7 +182,7 @@ serve(async (req) => {
     if (req.method !== "POST") return json(405, { error: "method not allowed" });
 
     try {
-        if (!OPENAI_API_KEY) return json(500, { error: "OPENAI_API_KEY nao configurada" });
+        if (!hasLlmKey()) return json(500, { error: "Nenhuma chave de IA configurada" });
 
         const body = await req.json().catch(() => ({} as Record<string, unknown>));
 

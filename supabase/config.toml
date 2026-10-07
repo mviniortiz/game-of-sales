@@ -64,3 +64,61 @@ verify_jwt = false
 
 [functions.lead-webhook]
 verify_jwt = false
+
+# Login exigido pelo gateway. Os agendamentos mandam a chave anon ou a de
+# serviço do cofre, as duas em formato JWT, então passam.
+[functions.admin-lead-digest]
+verify_jwt = true
+
+[functions.deal-call-generate-insights]
+verify_jwt = true
+
+[functions.eva-agent-loop]
+verify_jwt = true
+
+[functions.eva-help]
+verify_jwt = true
+
+[functions.eva-learn-from-conversations]
+verify_jwt = true
+
+[functions.eva-quote-followup]
+verify_jwt = true
+
+[functions.eva-stale-deal-followup]
+verify_jwt = true
+
+[functions.eva-studio-chat]
+verify_jwt = true
+
+[functions.generate-demo-agent]
+verify_jwt = true
+
+[functions.generate-eva-context-suggestions]
+verify_jwt = true
+
+[functions.generate-eva-replay-moments]
+verify_jwt = true
+
+[functions.notify-channel]
+verify_jwt = true
+
+[functions.report-agent]
+verify_jwt = true
+
+[functions.whatsapp-copilot]
+verify_jwt = true
+
+# Estado conferido no ar em 07/10/2026. evolution-whatsapp confere o usuário
+# por dentro (o keepwarm do cron chama com a anon key).
+[functions.evolution-whatsapp]
+verify_jwt = false
+
+[functions.kapso-whatsapp]
+verify_jwt = true
+
+[functions.eva-conversation-read]
+verify_jwt = true
+
+[functions.admin-delete-seller]
+verify_jwt = true

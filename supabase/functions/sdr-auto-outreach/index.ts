@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,7 +16,6 @@ const SDR_REPLY_TO = Deno.env.get("SDR_REPLY_TO") || "mviniciusortiz48@gmail.com
 const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL");
 const EVOLUTION_API_KEY = Deno.env.get("EVOLUTION_API_KEY");
 const SDR_EVOLUTION_INSTANCE = Deno.env.get("SDR_EVOLUTION_INSTANCE");
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const SDR_NAME = Deno.env.get("SDR_NAME") || "Markus";
 
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
@@ -76,7 +76,7 @@ async function generateGreeting(lead: Lead, channel: "whatsapp" | "email"): Prom
     : "";
 
   // Fallback sem OpenAI
-  if (!OPENAI_API_KEY) {
+  if (!hasLlmKey()) {
     if (channel === "whatsapp") {
       return {
         body: `${greeting}! Aqui é o ${SDR_NAME} do Vyzon.
@@ -144,22 +144,15 @@ O email deve:
 NÃO invente dados. NÃO inclua data/link no texto.`;
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-5.4-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        max_completion_tokens: 600,
-        response_format: { type: "json_object" },
-      }),
-    });
+    const response = await llmChat({
+      model: "gpt-5.4-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      max_completion_tokens: 600,
+      response_format: { type: "json_object" },
+    }, { label: "sdr-auto-outreach" });
     if (!response.ok) throw new Error(`OpenAI ${response.status}`);
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content?.trim() || "{}";

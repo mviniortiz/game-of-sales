@@ -45,7 +45,7 @@ mudança com valor vazio deixa o serviço sem imagem.
 - `evolution-message-webhook` recebe: `messages.upsert` (mensagem nova, com o
   arquivo de mídia dentro do evento, guardado no bucket `whatsapp-media`),
   `messages.update` (entregue/lido) e `messages.set` (histórico recente dos
-  últimos 180 dias, logo depois de conectar; não abre rastreio de orçamento).
+  últimos 90 dias, logo depois de conectar; não abre rastreio de orçamento).
 - "Puxar mensagens antigas" no Inbox chama `/chat/syncMessages`, que pede ao
   celular mensagens anteriores à mais antiga já gravada de cada conversa.
 

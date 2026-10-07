@@ -3,8 +3,8 @@
 // NÃO acessa dado de tenant nenhum. Rate-limit por IP (landing_chat_logs).
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SUPPORT_WHATSAPP = "5548991696887"; // espelha src/config/contact.ts
@@ -109,24 +109,17 @@ serve(async (req) => {
     let answer = fallback;
     let ok = false;
 
-    if (OPENAI_API_KEY) {
+    if (hasLlmKey()) {
         try {
-            const res = await fetch("https://api.openai.com/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${OPENAI_API_KEY}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    model: "gpt-5.4-mini",
-                    messages: [
-                        { role: "system", content: SYSTEM_PROMPT },
-                        ...cleanHistory,
-                        { role: "user", content: question },
-                    ],
-                    max_completion_tokens: 400,
-                }),
-            });
+            const res = await llmChat({
+                model: "gpt-5.4-mini",
+                messages: [
+                    { role: "system", content: SYSTEM_PROMPT },
+                    ...cleanHistory,
+                    { role: "user", content: question },
+                ],
+                max_completion_tokens: 400,
+            }, { label: "eva-landing-chat" });
             const data = await res.json();
             const text = data.choices?.[0]?.message?.content?.trim();
             if (text) { answer = text; ok = true; }
