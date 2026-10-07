@@ -122,3 +122,6 @@ verify_jwt = true
 
 [functions.admin-delete-seller]
 verify_jwt = true
+
+[functions.raio-x-build]
+verify_jwt = true

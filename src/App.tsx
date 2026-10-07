@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { BrandedLoader } from "@/components/ui/BrandedLoader";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { CanonicalManager } from "@/components/CanonicalManager";
 
@@ -23,6 +23,14 @@ const AppShell = lazy(() => import("./AppShell"));
 // O login v2 virou a página de /auth (dentro do AppShell, com AuthProvider).
 const SolarLanding = lazy(() => import("./pages/SolarLanding"));
 const LandingV2 = lazy(() => import("./pages/LandingV2"));
+const RaioXReport = lazy(() => import("./pages/RaioXReport"));
+
+// Página por ângulo de anúncio; ângulo desconhecido cai na home.
+const SolarAngleRoute = () => {
+  const { angulo } = useParams();
+  if (angulo !== "parado" && angulo !== "vou-pensar") return <Navigate to="/" replace />;
+  return <Suspense fallback={<LazyFallback />}><SolarLanding angle={angulo} /></Suspense>;
+};
 const BlogV2 = lazy(() => import("./pages/BlogV2"));
 const BlogPostV2 = lazy(() => import("./pages/BlogPostV2"));
 const Alternativas = lazy(() => import("./pages/Alternativas"));
@@ -50,6 +58,8 @@ const App = () => (
       <CanonicalManager />
       <Routes>
         <Route path="/" element={<Suspense fallback={<LazyFallback />}><SolarLanding /></Suspense>} />
+        <Route path="/raio-x/:angulo" element={<SolarAngleRoute />} />
+        <Route path="/relatorio/:token" element={<Suspense fallback={<LazyFallback />}><RaioXReport /></Suspense>} />
         <Route path="/agencias" element={<Suspense fallback={<LazyFallback />}><LandingV2 /></Suspense>} />
         <Route path="/blog" element={<Suspense fallback={<LazyFallback />}><BlogV2 /></Suspense>} />
         <Route path="/blog/:slug" element={<Suspense fallback={<LazyFallback />}><BlogPostV2 /></Suspense>} />

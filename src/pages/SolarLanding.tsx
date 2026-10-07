@@ -1,8 +1,9 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent, trackDemoConversion, FUNNEL_EVENTS } from "@/lib/analytics";
 import { getAttribution } from "@/lib/attribution";
+import { logLandingEvent } from "@/lib/landingFunnel";
 import { whatsappUrl } from "@/config/contact";
 import { ButtonV2 } from "@/components/landing-v2/ButtonV2";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
@@ -17,6 +18,34 @@ import { ThemeLogo } from "@/components/ui/ThemeLogo";
 // senão o dono do negócio receberia o pitch de agência. O contato é manual.
 
 const SOURCE = "orcamento_teste";
+const FUNNEL_PAGE = "solar";
+
+// Um ângulo por anúncio: a página repete a dor que a pessoa acabou de ver.
+// "sumiu" é a home; os outros vivem em /raio-x/:angulo (noindex).
+export type SolarAngle = "sumiu" | "parado" | "vou-pensar";
+
+type AngleCopy = { h1: string; h1Accent: string; sub: string; pain: string };
+
+const ANGLES: Record<SolarAngle, AngleCopy> = {
+    sumiu: {
+        h1: "Mandou a proposta de energia solar",
+        h1Accent: "e o cliente sumiu?",
+        sub: "O Vyzon lê as conversas de orçamento do seu WhatsApp e mostra quais propostas pararam, há quantos dias e quanto valem. Para cada uma, a mensagem de retomada já vem pronta.",
+        pain: "Você pega a conta de luz, dimensiona o sistema, faz a simulação e manda uma proposta caprichada. O cliente responde que vai conversar em casa. E some. Enquanto isso você está em cima de outro telhado, e a proposta de R$ 25 mil fica parada no meio de duzentas conversas.",
+    },
+    parado: {
+        h1: "Quanto dinheiro está parado",
+        h1Accent: "no seu WhatsApp agora?",
+        sub: "Doze propostas de R$ 25 mil sem resposta são R$ 300 mil esperando alguém chamar de volta. O Raio-X mostra o seu número de verdade, proposta por proposta.",
+        pain: "Ninguém soma as propostas que ficaram sem resposta. Cada uma parece pequena sozinha, perdida entre o grupo da obra, o fornecedor e o cliente novo. Somadas, quase sempre dão mais do que o faturamento do mês.",
+    },
+    "vou-pensar": {
+        h1: "“Vou pensar”",
+        h1Accent: "quase nunca é um não.",
+        sub: "É uma dúvida que o cliente não falou: a parcela, a garantia, alguém em casa. O Vyzon acha essas propostas no seu WhatsApp e escreve a retomada que pergunta no que ele ficou pensando.",
+        pain: "O cliente diz que vai pensar e você respeita o tempo dele. Passa um dia, três, uma semana. Ninguém pergunta o que ficou faltando, e a dúvida que dava pra resolver numa mensagem vira proposta perdida pro concorrente que ligou de volta.",
+    },
+};
 
 const TITLE = "Propostas de energia solar paradas no WhatsApp | Vyzon";
 const DESCRIPTION =
@@ -54,10 +83,17 @@ const normalizePhone = (raw: string) => {
     return digits.startsWith("55") && digits.length >= 12 ? `+${digits}` : `+55${digits}`;
 };
 
-const trackWhatsappClick = (placement: string) =>
-    trackEvent(FUNNEL_EVENTS.LANDING_CTA_CLICK, { page: "home_solar", cta: "whatsapp", placement });
+// Uma visita por ângulo e carregamento de página (o StrictMode do dev roda o efeito duas vezes).
+const viewedAngles = new Set<SolarAngle>();
 
-const SolarLanding = () => {
+const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
+    const copy = ANGLES[angle];
+    const trackWhatsappClick = (placement: string) => {
+        trackEvent(FUNNEL_EVENTS.LANDING_CTA_CLICK, { page: "home_solar", cta: "whatsapp", placement });
+        logLandingEvent(FUNNEL_PAGE, angle, "whatsapp_click", { placement });
+    };
+    const trackFormCta = (placement: string) => logLandingEvent(FUNNEL_PAGE, angle, "cta_click", { placement });
+
     useEffect(() => {
         document.title = TITLE;
         const meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
@@ -65,34 +101,56 @@ const SolarLanding = () => {
         const html = document.documentElement;
         const wasDark = html.classList.contains("dark");
         html.classList.remove("dark");
+        const robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+        const prevRobots = robots?.content;
+        if (robots && angle !== "sumiu") robots.content = "noindex, follow";
         return () => {
             if (wasDark) html.classList.add("dark");
+            if (robots && prevRobots !== undefined) robots.content = prevRobots;
         };
-    }, []);
+    }, [angle]);
 
     useEffect(() => {
-        trackEvent(FUNNEL_EVENTS.LANDING_VIEW, { page: "home_solar" });
-    }, []);
+        trackEvent(FUNNEL_EVENTS.LANDING_VIEW, { page: "home_solar", angle });
+        if (!viewedAngles.has(angle)) {
+            viewedAngles.add(angle);
+            logLandingEvent(FUNNEL_PAGE, angle, "view", { path: window.location.pathname });
+        }
+        const seen = new Set<string>();
+        const onScroll = () => {
+            const max = document.documentElement.scrollHeight - window.innerHeight;
+            if (max <= 0) return;
+            const ratio = window.scrollY / max;
+            for (const [mark, event] of [[0.5, "scroll_50"], [0.9, "scroll_90"]] as const) {
+                if (ratio >= mark && !seen.has(event)) {
+                    seen.add(event);
+                    logLandingEvent(FUNNEL_PAGE, angle, event);
+                }
+            }
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+    }, [angle]);
 
     return (
         <div className="lp-v2 min-h-screen" style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}>
-            <Header />
+            <Header onCta={() => trackFormCta("header")} />
             <main>
-                <Hero />
+                <Hero copy={copy} onCta={() => trackFormCta("hero")} onWhatsapp={() => trackWhatsappClick("hero")} />
                 <ProductMock />
-                <Pain />
+                <Pain text={copy.pain} />
                 <WhatYouGet />
                 <HowItWorks />
                 <NotABot />
                 <Faq />
-                <SignupForm />
+                <SignupForm angle={angle} onWhatsapp={() => trackWhatsappClick("form_error")} />
             </main>
             <Footer />
         </div>
     );
 };
 
-const Header = () => (
+const Header = ({ onCta }: { onCta: () => void }) => (
     <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between px-5 py-5 md:px-8">
         <Link to="/" aria-label="Vyzon, início">
             <ThemeLogo className="h-[22px] w-auto" />
@@ -101,34 +159,33 @@ const Header = () => (
             <Link to="/auth" className="text-sm" style={{ color: "var(--lp-ink-55)" }}>
                 Entrar
             </Link>
-            <a href="#raio-x" className="vz-btn vz-btn--primary vz-btn--sm">
+            <a href="#raio-x" className="vz-btn vz-btn--primary vz-btn--sm" onClick={onCta}>
                 <span>Pedir Raio-X</span>
             </a>
         </div>
     </header>
 );
 
-const Hero = () => (
+const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void; onWhatsapp: () => void }) => (
     <section className="mx-auto w-full max-w-[1120px] px-5 pb-10 pt-14 text-center md:px-8 md:pb-14 md:pt-24">
         <h1
             className="lp-display mx-auto max-w-4xl landing-fade-in-up-lg landing-delay-100"
             style={{ fontSize: "clamp(2rem, 5.2vw, 4rem)", lineHeight: 1.05, letterSpacing: "-0.04em", color: "#050505", textWrap: "balance" }}
         >
-            Mandou a proposta de energia solar{" "}
+            {copy.h1}{" "}
             <span className="lp-serif" style={{ color: "#050505" }}>
-                e o cliente sumiu?
+                {copy.h1Accent}
             </span>
         </h1>
         <p
             className="mx-auto mt-7 max-w-[580px] landing-fade-in-up-lg landing-delay-200"
             style={{ fontSize: "clamp(0.9375rem, 1.3vw, 1.0625rem)", lineHeight: 1.55, color: "rgba(5,5,5,0.68)" }}
         >
-            O Vyzon lê as conversas de orçamento do seu WhatsApp e mostra quais propostas pararam, há quantos dias e
-            quanto valem. Para cada uma, a mensagem de retomada já vem pronta.
+            {copy.sub}
         </p>
         <div className="mt-8 flex flex-col items-center gap-3 landing-fade-in-up-lg landing-delay-300">
             <div className="flex flex-wrap items-center justify-center gap-3">
-                <a href="#raio-x" className="vz-btn vz-btn--primary">
+                <a href="#raio-x" className="vz-btn vz-btn--primary" onClick={onCta}>
                     <span>Quero meu Raio-X grátis</span>
                     <span className="vz-btn__arrow" aria-hidden="true">
                         →
@@ -139,13 +196,13 @@ const Hero = () => (
                     target="_blank"
                     rel="noopener noreferrer"
                     className="vz-btn vz-btn--secondary"
-                    onClick={() => trackWhatsappClick("hero")}
+                    onClick={onWhatsapp}
                 >
                     <span>Falar no WhatsApp</span>
                 </a>
             </div>
             <span className="text-sm" style={{ color: "var(--lp-ink-55)" }}>
-                Grátis, sem cartão. Você recebe em até 24 horas.
+                Grátis, sem cartão. Uma conversa de 20 minutos e você vê o seu número.
             </span>
         </div>
     </section>
@@ -267,13 +324,11 @@ const SectionTitle = ({ children }: { children: ReactNode }) => (
     </h2>
 );
 
-const Pain = () => (
+const Pain = ({ text }: { text: string }) => (
     <section className="mx-auto w-full max-w-[720px] px-5 pb-16 md:px-8 md:pb-24">
         <SectionTitle>O filme de toda semana</SectionTitle>
         <p className="mt-5 text-[17px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
-            Você pega a conta de luz, dimensiona o sistema, faz a simulação e manda uma proposta caprichada. O cliente
-            responde que vai conversar em casa. E some. Enquanto isso você está em cima de outro telhado, e a proposta
-            de R$ 25 mil fica parada no meio de duzentas conversas.
+            {text}
         </p>
         <p className="mt-6 border-l-2 pl-4 text-[15px] leading-relaxed" style={{ borderColor: "var(--lp-line)", color: "var(--lp-ink-55)" }}>
             62% dos consumidores já desistiram de uma compra por demora na resposta. Opinion Box e Mobile Time, Panorama
@@ -311,12 +366,12 @@ const WhatYouGet = () => (
 
 const STEPS = [
     {
-        title: "Você manda as conversas",
-        body: "Exporta de 10 a 15 conversas de orçamento pelo próprio WhatsApp, ou conecta o número por QR code, sem trocar de número.",
+        title: "O Markus te chama no WhatsApp",
+        body: "Você pede o Raio-X aqui embaixo e combina um horário de 20 minutos, por vídeo ou ligação.",
     },
     {
-        title: "Em até 24 horas, o Raio-X",
-        body: "Você recebe quais propostas pararam, quanto valem e a retomada pronta de cada uma.",
+        title: "Na conversa, o seu número",
+        body: "Você conecta o WhatsApp da empresa por QR code, sem trocar de número, e vê na hora quais propostas pararam, há quantos dias e quanto somam.",
     },
     {
         title: "Se quiser, a EVA segue acompanhando",
@@ -363,7 +418,7 @@ const FAQ = [
     },
     {
         q: "O que vocês fazem com as minhas conversas?",
-        a: "Usamos só para montar o seu Raio-X. Depois da entrega, apagamos os arquivos que você mandou.",
+        a: "Elas ficam na sua conta do Vyzon e servem só pra montar o seu Raio-X. Você desconecta o número quando quiser.",
     },
     {
         q: "Preciso trocar de número ou de celular?",
@@ -399,11 +454,17 @@ const Faq = () => (
     </section>
 );
 
-const SignupForm = () => {
+const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () => void }) => {
     const [form, setForm] = useState<FormState>(EMPTY_FORM);
     const [submitting, setSubmitting] = useState(false);
     const [done, setDone] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const started = useRef(false);
+    const markStart = () => {
+        if (started.current) return;
+        started.current = true;
+        logLandingEvent(FUNNEL_PAGE, angle, "form_start");
+    };
 
     const phoneDigits = form.phone.replace(/\D/g, "");
     const valid =
@@ -435,10 +496,12 @@ const SignupForm = () => {
         if (rpcError) {
             setSubmitting(false);
             setError("Não deu certo. Tenta de novo ou me chama direto no WhatsApp.");
+            logLandingEvent(FUNNEL_PAGE, angle, "form_error", { code: rpcError.code ?? "rpc" });
             return;
         }
         const leadId = typeof data === "string" ? data : undefined;
-        trackEvent(FUNNEL_EVENTS.ORCAMENTO_LEAD, { segment: "energia_solar", monthly: form.monthly });
+        trackEvent(FUNNEL_EVENTS.ORCAMENTO_LEAD, { segment: "energia_solar", monthly: form.monthly, angle });
+        logLandingEvent(FUNNEL_PAGE, angle, "form_submit", { monthly: form.monthly });
         void trackDemoConversion({ email: payload.email, phone, leadId });
         try {
             (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq?.("track", "Lead", { content_name: "raio_x_solar" });
@@ -454,7 +517,7 @@ const SignupForm = () => {
             <div className="border-t pt-10" style={{ borderColor: "var(--lp-line)" }}>
                 <SectionTitle>Pedir meu Raio-X</SectionTitle>
                 <p className="mt-3 text-[15px]" style={{ color: "var(--lp-ink-55)" }}>
-                    Grátis. O Markus te chama no WhatsApp pra combinar o envio das conversas.
+                    Grátis. O Markus te chama no WhatsApp pra marcar 20 minutos e montar o Raio-X com você.
                 </p>
 
                 {done ? (
@@ -463,11 +526,11 @@ const SignupForm = () => {
                             Recebemos.
                         </p>
                         <p className="mt-1 text-[15px]" style={{ color: "var(--lp-ink-70)" }}>
-                            O Markus vai te chamar no WhatsApp pra combinar o Raio-X.
+                            O Markus te chama no WhatsApp pra marcar os 20 minutos.
                         </p>
                     </div>
                 ) : (
-                    <form onSubmit={onSubmit} className="mt-8 grid gap-4" noValidate>
+                    <form onSubmit={onSubmit} onFocus={markStart} className="mt-8 grid gap-4" noValidate>
                         <Field label="Seu nome">
                             <input className={inputCls} style={inputStyle} value={form.name} onChange={set("name")} autoComplete="name" />
                         </Field>
@@ -503,7 +566,7 @@ const SignupForm = () => {
                         {error && (
                             <p className="text-sm" role="alert" style={{ color: "#b42318" }}>
                                 {error}{" "}
-                                <a href={whatsappUrl(WHATSAPP_MESSAGE)} target="_blank" rel="noopener noreferrer" className="underline" onClick={() => trackWhatsappClick("form_error")}>
+                                <a href={whatsappUrl(WHATSAPP_MESSAGE)} target="_blank" rel="noopener noreferrer" className="underline" onClick={onWhatsapp}>
                                     Abrir WhatsApp
                                 </a>
                             </p>

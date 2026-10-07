@@ -182,6 +182,67 @@ function buildFallbackSummary(lead: LeadRecord, enrichment: Enrichment | null): 
   return parts.join("\n");
 }
 
+async function appendNotes(id: string, lines: string[]) {
+  const { data: current } = await supabaseAdmin
+    .from("demo_requests")
+    .select("notes")
+    .eq("id", id)
+    .maybeSingle();
+  const prev = (current?.notes as string) || "";
+  await supabaseAdmin
+    .from("demo_requests")
+    .update({ notes: prev ? `${prev}\n\n${lines.join(" | ")}` : lines.join(" | ") })
+    .eq("id", id);
+}
+
+// Pedido de Raio-X da home solar e das páginas por ângulo. Não cria conta
+// demo: o lead se cadastra na conversa de 20 minutos, e uma conta prévia com o
+// mesmo e-mail travaria esse cadastro. Mensagem fixa, sem IA: o que importa é
+// o Markus chamar rápido, com o ângulo e o anúncio de origem à vista.
+const RAIO_X_SOURCE = "orcamento_teste";
+const ANGLE_LABEL: Record<string, string> = {
+  "/": "home (proposta que sumiu)",
+  "/raio-x/parado": "dinheiro parado",
+  "/raio-x/vou-pensar": "vou pensar",
+};
+
+async function buildRaioXDigest(lead: LeadRecord): Promise<string> {
+  const { data: req } = await supabaseAdmin
+    .from("demo_requests")
+    .select("landing_page, utm_content, utm_campaign")
+    .eq("id", lead.id)
+    .maybeSingle();
+  let path = "";
+  try {
+    path = req?.landing_page ? new URL(req.landing_page, "https://vyzon.com.br").pathname : "";
+  } catch {
+    path = "";
+  }
+  const first = (lead.name || "").trim().split(/\s+/)[0] || "tudo bem";
+  const opening =
+    `Oi, ${first}, aqui é o Markus, do Vyzon. Vi que você pediu o Raio-X das suas propostas. ` +
+    `Consegue 20 minutos hoje ou amanhã pra gente olhar juntos? Você conecta o WhatsApp na hora e já vê quanto tem parado.`;
+  const digits = lead.phone ? normalizePhone(lead.phone) : "";
+  const monthly = (lead.biggest_pain || "").replace(/^Energia solar\.\s*/, "");
+  const origin = req?.utm_content
+    ? `Anúncio: ${req.utm_content}`
+    : req?.utm_campaign
+    ? `Campanha: ${req.utm_campaign}`
+    : "Origem: sem anúncio";
+  const lines = [
+    "Novo pedido de Raio-X",
+    "",
+    `${lead.name || "Lead"}${lead.company ? `, ${lead.company}` : ""}`,
+    digits ? `WhatsApp: +${digits}` : "",
+    `E-mail: ${lead.email}`,
+    monthly,
+    `Página: ${ANGLE_LABEL[path] || path || "desconhecida"}`,
+    origin,
+  ].filter(Boolean);
+  if (digits) lines.push("", "Chamar agora:", `https://wa.me/${digits}?text=${encodeURIComponent(opening)}`);
+  return lines.join("\n");
+}
+
 async function sendAdminWhatsApp(message: string): Promise<boolean> {
   if (!EVOLUTION_API_URL || !EVOLUTION_API_KEY || !SDR_EVOLUTION_INSTANCE || !ADMIN_WHATSAPP) {
     console.warn("[digest] WhatsApp env incompletas — pulando envio");
@@ -314,6 +375,17 @@ serve(async (req) => {
 
     console.log(`[digest] start lead=${record.id} email=${record.email}`);
 
+    if (record.source === RAIO_X_SOURCE) {
+      const whatsappOk = await sendAdminWhatsApp(await buildRaioXDigest(record));
+      await appendNotes(record.id, [
+        `[admin-digest] ${new Date().toISOString()}`,
+        `whatsapp: ${whatsappOk ? "ok" : "falhou"}`,
+      ]);
+      return new Response(JSON.stringify({ ok: true, whatsapp_sent: whatsappOk, raio_x: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // 1. Enrichment (opcional)
     const enrichment = record.company
       ? await enrichCompany(record.company, record.email)
@@ -337,20 +409,7 @@ serve(async (req) => {
     if (enrichment?.website) noteLines.push(`site: ${enrichment.website}`);
     if (enrichment?.linkedin) noteLines.push(`linkedin: ${enrichment.linkedin}`);
 
-    const { data: current } = await supabaseAdmin
-      .from("demo_requests")
-      .select("notes")
-      .eq("id", record.id)
-      .maybeSingle();
-    const prevNotes = (current?.notes as string) || "";
-    const nextNotes = prevNotes
-      ? `${prevNotes}\n\n${noteLines.join(" | ")}`
-      : noteLines.join(" | ");
-
-    await supabaseAdmin
-      .from("demo_requests")
-      .update({ notes: nextNotes })
-      .eq("id", record.id);
+    await appendNotes(record.id, noteLines);
 
     return new Response(
       JSON.stringify({

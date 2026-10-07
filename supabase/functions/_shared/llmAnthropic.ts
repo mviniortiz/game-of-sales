@@ -168,7 +168,14 @@ export async function anthropicChat(
     model: string,
     opts: { apiKey: string; timeoutMs: number; effort: string; wantsJson: boolean },
 ): Promise<{ status: number; text: string }> {
-    const client = new Anthropic({ apiKey: opts.apiKey, timeout: opts.timeoutMs, maxRetries: 0 });
+    // Chave criada fora de um workspace exige o id do workspace em cada chamada.
+    const workspace = Deno.env.get("ANTHROPIC_WORKSPACE_ID");
+    const client = new Anthropic({
+        apiKey: opts.apiKey,
+        timeout: opts.timeoutMs,
+        maxRetries: 0,
+        defaultHeaders: workspace ? { "anthropic-workspace-id": workspace } : undefined,
+    });
     try {
         const msg = await client.messages.create(toAnthropicBody(body, model, opts.effort) as never) as unknown as AnthropicMessage;
         if (msg.stop_reason === "refusal") {

@@ -49,6 +49,7 @@ import {
   XCircle,
   Search,
   Filter,
+  FileSearch,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -265,6 +266,23 @@ export function AdminCompanies() {
   };
 
   // Handle edit
+  // Raio-X da conversa de 20 minutos: lê o WhatsApp conectado da empresa e
+  // abre o relatório numa aba nova, pronto pra mostrar na tela.
+  const handleRaioX = async (company: CompanyWithCounts) => {
+    const tab = window.open("about:blank", "_blank");
+    const toastId = toast.loading(`Lendo as conversas de ${company.name}...`);
+    const { data, error } = await supabase.functions.invoke("raio-x-build", { body: { company_id: company.id } });
+    if (error || !data?.token) {
+      tab?.close();
+      toast.error("Não deu pra gerar o Raio-X", { id: toastId, description: data?.error ?? error?.message });
+      return;
+    }
+    toast.success("Raio-X pronto", { id: toastId });
+    const url = `/relatorio/${data.token}`;
+    if (tab) tab.location.href = url;
+    else window.location.href = url;
+  };
+
   const handleEdit = (company: CompanyWithCounts) => {
     setEditingCompany(company);
     setShowEditModal(true);
@@ -502,6 +520,10 @@ export function AdminCompanies() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-card border-border">
+                          <DropdownMenuItem onClick={() => void handleRaioX(company)} className="cursor-pointer">
+                            <FileSearch className="h-4 w-4 mr-2" />
+                            Gerar Raio-X
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleEdit(company)} className="cursor-pointer">
                             <Pencil className="h-4 w-4 mr-2" />
                             Editar
