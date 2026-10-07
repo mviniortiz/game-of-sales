@@ -20,6 +20,7 @@ import {
 import { quoteRpc, useQuoteBoard, type QuoteBoard, type QuoteItem, type QuoteOutcome, type QuoteState } from "@/hooks/useQuoteBoard";
 import { brl, evaLine, OPEN_QUOTE_STATES, plural, quoteName, stateLine } from "@/lib/quoteText";
 import { DayTicks } from "@/components/quotes/DayTicks";
+import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
 
 const PERIODS = [7, 30, 90] as const;
 type Period = (typeof PERIODS)[number];
@@ -122,6 +123,7 @@ export default function Orcamentos() {
     },
   });
 
+  const wa = useWhatsappConnection();
   const data = board.data;
   const isEmpty = !!data && data.items.length === 0 && data.totals.total_count === 0;
   // Sem parado mas com cliente esperando, abre direto no que pede ação.
@@ -143,7 +145,7 @@ export default function Orcamentos() {
           retrying={board.isFetching}
         />
       ) : isEmpty ? (
-        <EmptyState days={days} />
+        <EmptyState days={days} connected={wa.connected} checking={wa.loading} />
       ) : data ? (
         <>
           <Scoreboard totals={data.totals} onPick={setTab} />
@@ -544,7 +546,9 @@ const BTN_BASE = `inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-[
 const BTN_PRIMARY = `${BTN_BASE} bg-[#0B1220] text-white hover:bg-[#1F2A3B]`;
 const BTN_OUTLINE = `${BTN_BASE} border border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-1)] text-[var(--vyz-text-strong)] hover:bg-[var(--vyz-surface-2)]`;
 
-function EmptyState({ days }: { days: number }) {
+// O histórico importado na conexão não abre rastreio, então logo depois de
+// conectar o placar fica vazio até a primeira proposta nova sair.
+function EmptyState({ days, connected, checking }: { days: number; connected: boolean; checking: boolean }) {
   return (
     <section
       className="mt-6 rounded-[10px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-6 sm:p-8"
@@ -555,16 +559,25 @@ function EmptyState({ days }: { days: number }) {
         Nenhum orçamento nos últimos {days} dias
       </h2>
       <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-[var(--vyz-text)]">
-        Assim que você enviar um orçamento pelo WhatsApp, em PDF ou numa mensagem com valor, ele aparece aqui.
+        {connected
+          ? "Seu WhatsApp está conectado. Cada orçamento que você enviar a partir de agora, em PDF ou numa mensagem com valor, aparece aqui. As conversas antigas importadas na conexão não entram no placar."
+          : "Assim que você enviar um orçamento pelo WhatsApp, em PDF ou numa mensagem com valor, ele aparece aqui."}
       </p>
       <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-[var(--vyz-text)]">
         Se o cliente não responder em 2 dias, ou responder e sumir, a EVA prepara a retomada e manda pra você aprovar no
         seu WhatsApp. Nada sai sem o seu ok.
       </p>
-      <Link to="/inbox?connect=1" className={`${BTN_PRIMARY} ${FOCUS} mt-6`}>
-        <MessageCircle className="h-4 w-4" aria-hidden />
-        Conectar WhatsApp
-      </Link>
+      {checking ? null : connected ? (
+        <Link to="/inbox" className={`${BTN_OUTLINE} ${FOCUS} mt-6`}>
+          <MessageCircle className="h-4 w-4" aria-hidden />
+          Abrir conversas
+        </Link>
+      ) : (
+        <Link to="/inbox?connect=1" className={`${BTN_PRIMARY} ${FOCUS} mt-6`}>
+          <MessageCircle className="h-4 w-4" aria-hidden />
+          Conectar WhatsApp
+        </Link>
+      )}
     </section>
   );
 }
