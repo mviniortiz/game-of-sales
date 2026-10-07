@@ -111,9 +111,14 @@ está BLOQUEADO por billing; não criar workflows.
 - CTAs: demo → `EvaDemoModal` (agenda real via `calendar-slots` +
   `calendar-book`); trial → `/criar-conta?plan=X`. `DemoScheduleSection` e
   `NativeScheduler` estão órfãos, não usar como referência.
-- WhatsApp nativo: Evolution API (`evolution-whatsapp`,
-  `evolution-message-webhook`); prospecção supervisionada com allowlist
-  fail-closed (`validateChatOwnership`).
+- WhatsApp nativo (QR, não oficial): servidor Whatsmiau no Railway, que fala
+  as rotas da Evolution, por isso as edges seguem `evolution-whatsapp` e
+  `evolution-message-webhook` e os secrets `EVOLUTION_API_*` (desde
+  07/10/2026; guia em `infra/whatsmiau/README.md`). Mídia chega dentro do
+  webhook e histórico por `messages.set`; não existe `findChats`,
+  `findMessages` nem `getBase64FromMediaMessage`. API oficial: Kapso.
+  Prospecção supervisionada com allowlist fail-closed
+  (`validateChatOwnership`).
 
 ## UI: usar as skills, não improvisar
 

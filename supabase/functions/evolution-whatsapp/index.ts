@@ -1,5 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  ensureConnection,
+  extractNumberFromJid,
+  importHistoryMessages,
+} from "../_shared/whatsappHistory.ts";
+import { fillContactNames } from "../_shared/whatsappContacts.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -26,7 +32,7 @@ type CachedProfile = {
 const PROFILE_CACHE_TTL_MS = 30_000;
 const profileCache = new Map<string, CachedProfile>();
 const HOT_PATH_ACTIONS = new Set([
-  "send", "sendMedia", "sendAudio", "messages", "chats", "profilePic", "getMedia", "status",
+  "send", "sendMedia", "sendAudio", "profilePic", "getMedia", "status",
 ]);
 
 async function loadProfile(adminClient: any, userId: string): Promise<CachedProfile | null> {
@@ -61,23 +67,28 @@ async function getProfile(adminClient: any, userId: string, useCache: boolean): 
   return fresh;
 }
 
+// A Whatsmiau manda o arquivo de mídia dentro do próprio webhook (base64), o
+// histórico recente no evento messages.set, logo depois que o número conecta, e
+// nome/telefone dos contatos em contacts.upsert.
+const WEBHOOK_EVENTS = ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "MESSAGES_SET", "CONTACTS_UPSERT"];
+
+function webhookConfig() {
+  return {
+    enabled: true,
+    url: `${WEBHOOK_RECEIVER_URL}?secret=${EVOLUTION_WEBHOOK_SECRET}`,
+    base64: true,
+    events: WEBHOOK_EVENTS,
+  };
+}
+
 async function ensureWebhook(instanceName: string): Promise<{ ok: boolean; error?: string }> {
   if (!EVOLUTION_WEBHOOK_SECRET) {
     return { ok: false, error: "EVOLUTION_WEBHOOK_SECRET not set" };
   }
-  const url = `${WEBHOOK_RECEIVER_URL}?secret=${EVOLUTION_WEBHOOK_SECRET}`;
   try {
     await evolutionRequest(`/webhook/set/${instanceName}`, {
       method: "POST",
-      body: JSON.stringify({
-        webhook: {
-          enabled: true,
-          url,
-          byEvents: false,
-          base64: false,
-          events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "PRESENCE_UPDATE"],
-        },
-      }),
+      body: JSON.stringify({ webhook: webhookConfig() }),
     });
     return { ok: true };
   } catch (err: any) {
@@ -120,8 +131,6 @@ const corsHeaders = {
 type Action =
   | "status"
   | "connect"
-  | "chats"
-  | "messages"
   | "send"
   | "sendMedia"
   | "sendAudio"
@@ -140,7 +149,6 @@ type Body = {
   targetUserId?: string | null;
   chatId?: string;
   text?: string;
-  limit?: number;
   number?: string;
   messageId?: string;
   /** Base64-encoded media data (without data URI prefix) */
@@ -185,22 +193,11 @@ async function clearSendStuck(admin: any, instanceName: string) {
   } catch { /* noop */ }
 }
 
-function extractNumberFromJid(value?: string | null) {
-  if (!value) return "";
-  return String(value).split("@")[0].replace(/\D/g, "");
-}
-
 function getInstanceName(userId: string) {
   return `wa_${userId.replace(/-/g, "")}`;
 }
 
-// ── Helpers de mídia (cache no Storage privado whatsapp-media) ────────────────
-function bytesFromBase64(b64: string): Uint8Array {
-  const bin = atob(b64);
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
-}
+// Mídia guardada no Storage privado whatsapp-media volta ao front em base64.
 function base64FromBytes(bytes: Uint8Array): string {
   let bin = "";
   const chunk = 0x8000;
@@ -209,19 +206,6 @@ function base64FromBytes(bytes: Uint8Array): string {
   }
   return btoa(bin);
 }
-function mediaExt(mime: string): string {
-  const m = (mime || "").toLowerCase();
-  if (m.includes("jpeg") || m.includes("jpg")) return "jpg";
-  if (m.includes("png")) return "png";
-  if (m.includes("webp")) return "webp";
-  if (m.includes("gif")) return "gif";
-  if (m.includes("mp4")) return "mp4";
-  if (m.includes("ogg") || m.includes("opus")) return "ogg";
-  if (m.includes("mpeg") || m.includes("mp3")) return "mp3";
-  if (m.includes("pdf")) return "pdf";
-  return "bin";
-}
-
 function extractQrBase64(payload: any): string | null {
   return (
     payload?.qrcode?.base64 ||
@@ -241,10 +225,8 @@ async function evolutionRequest(
     throw new Error("Evolution API não configurada no servidor");
   }
 
-  // Timeout adaptativo: a VM grátis da Oracle é lenta em operações de leitura
-  // pesadas (listar todos os chats / mensagens de um número com histórico
-  // grande pode passar de 20s). Operações leves (status/send/logout) ficam
-  // curtas pra não pendurar a UI. Default conservador de 8s.
+  // Operações leves (status/send/logout) ficam curtas pra não pendurar a UI.
+  // Quem depende do celular responder (syncMessages) passa um prazo maior.
   const effectiveTimeout = timeoutMs ?? 8000;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), effectiveTimeout);
@@ -293,120 +275,6 @@ async function evolutionRequest(
   }
 
   return parsed;
-}
-
-// ─────────────────────────────────────────────────────────────
-// F4W.7.3 — Import de histórico: helpers de normalização.
-// Espelham evolution-message-webhook (mesmo schema em channel_*).
-// TODO(consolidação): extrair pra módulo _shared usado pelas 2 functions.
-// ─────────────────────────────────────────────────────────────
-function parseTextFromMsg(msg: any): string | null {
-  const m = msg?.message;
-  if (!m) return msg?.body || msg?.text || null;
-  if (m.conversation) return m.conversation;
-  if (m.extendedTextMessage?.text) return m.extendedTextMessage.text;
-  if (m.imageMessage?.caption) return m.imageMessage.caption;
-  if (m.videoMessage?.caption) return m.videoMessage.caption;
-  return null;
-}
-
-function detectMsgType(msg: any): { type: string; mimetype?: string; caption?: string; audioDuration?: number; mediaUrl?: string } {
-  const m = msg?.message;
-  if (!m) return { type: "text" };
-  if (m.conversation || m.extendedTextMessage?.text) return { type: "text" };
-  if (m.imageMessage) return { type: "image", mimetype: m.imageMessage.mimetype, caption: m.imageMessage.caption, mediaUrl: m.imageMessage.url };
-  if (m.videoMessage) return { type: "video", mimetype: m.videoMessage.mimetype, caption: m.videoMessage.caption, mediaUrl: m.videoMessage.url };
-  if (m.audioMessage) return { type: "audio", mimetype: m.audioMessage.mimetype, audioDuration: Number(m.audioMessage.seconds || 0) || undefined, mediaUrl: m.audioMessage.url };
-  if (m.stickerMessage) return { type: "sticker", mimetype: m.stickerMessage.mimetype, mediaUrl: m.stickerMessage.url };
-  if (m.documentMessage) return { type: "document", mimetype: m.documentMessage.mimetype, caption: m.documentMessage.fileName, mediaUrl: m.documentMessage.url };
-  if (m.locationMessage || m.liveLocationMessage) return { type: "location" };
-  if (m.contactMessage) return { type: "contact" };
-  if (m.reactionMessage) return { type: "reaction" };
-  if (m.protocolMessage || m.senderKeyDistributionMessage) return { type: "protocol" };
-  return { type: "other" };
-}
-
-function mapChannelType(internal: string): string {
-  switch (internal) {
-    case "text": case "image": case "audio": case "video": case "document": case "reaction": case "location": return internal;
-    case "sticker": return "image";
-    case "contact": return "contacts";
-    default: return "unknown";
-  }
-}
-
-async function importEnsureConnection(admin: any, instanceName: string, companyId: string, userId: string): Promise<string | null> {
-  const metaPatch: Record<string, unknown> = { source: "import_history", instance_name: instanceName, user_id: userId };
-  try {
-    const { data: existing } = await admin.from("channel_connections").select("id, metadata").eq("provider", "evolution").eq("external_id", instanceName).maybeSingle();
-    if (existing?.id) {
-      const merged = { ...((existing.metadata as Record<string, unknown>) || {}), ...metaPatch };
-      await admin.from("channel_connections").update({ status: "active", last_seen_at: new Date().toISOString(), metadata: merged }).eq("id", existing.id);
-      return existing.id;
-    }
-    const { data: created, error } = await admin.from("channel_connections").insert({ company_id: companyId, provider: "evolution", channel_type: "whatsapp", external_id: instanceName, display_name: instanceName, status: "active", last_seen_at: new Date().toISOString(), metadata: metaPatch }).select("id").single();
-    if (error) {
-      const { data: again } = await admin.from("channel_connections").select("id").eq("provider", "evolution").eq("external_id", instanceName).maybeSingle();
-      return again?.id || null;
-    }
-    return created.id;
-  } catch {
-    return null;
-  }
-}
-
-async function importEnsureContact(admin: any, connectionId: string, companyId: string, remoteJid: string, name: string | null, chatPhone: string, phoneTail: string): Promise<string | null> {
-  try {
-    const { data: existing } = await admin.from("channel_contacts").select("id, name").eq("connection_id", connectionId).eq("external_contact_id", remoteJid).maybeSingle();
-    if (existing?.id) {
-      if (name && name !== existing.name) {
-        await admin.from("channel_contacts").update({ name }).eq("id", existing.id);
-      }
-      return existing.id;
-    }
-    const { data: created, error } = await admin.from("channel_contacts").insert({ company_id: companyId, connection_id: connectionId, external_contact_id: remoteJid, phone_e164: chatPhone || null, phone_tail: phoneTail || null, name, is_group: false, metadata: { chat_jid: remoteJid } }).select("id").single();
-    if (error) {
-      const { data: again } = await admin.from("channel_contacts").select("id").eq("connection_id", connectionId).eq("external_contact_id", remoteJid).maybeSingle();
-      return again?.id || null;
-    }
-    return created.id;
-  } catch {
-    return null;
-  }
-}
-
-async function importEnsureConversation(
-  admin: any,
-  connectionId: string,
-  companyId: string,
-  contactId: string,
-  lastMessageAt: string,
-  lastInboundAt: string | null,
-  lastOutboundAt: string | null,
-): Promise<{ id: string | null; isNew: boolean }> {
-  try {
-    const { data: existing } = await admin.from("channel_conversations").select("id").eq("connection_id", connectionId).eq("contact_id", contactId).maybeSingle();
-    if (existing?.id) return { id: existing.id, isNew: false };
-    // Conversa nova: import NÃO infla unread (mensagens históricas já lidas).
-    const { data: created, error } = await admin.from("channel_conversations").insert({
-      company_id: companyId,
-      connection_id: connectionId,
-      contact_id: contactId,
-      status: "open",
-      last_message_at: lastMessageAt,
-      last_inbound_at: lastInboundAt,
-      last_outbound_at: lastOutboundAt,
-      unread_count: 0,
-      metadata: {},
-    }).select("id").single();
-    if (error) {
-      const { data: again } = await admin.from("channel_conversations").select("id").eq("connection_id", connectionId).eq("contact_id", contactId).maybeSingle();
-      return { id: again?.id || null, isNew: false };
-    }
-    return { id: created.id, isNew: true };
-  } catch {
-    return { id: null, isNew: false };
-  }
 }
 
 serve(async (req) => {
@@ -552,19 +420,8 @@ serve(async (req) => {
 
       // 2. Try to create instance
       try {
-        const createBody: any = {
-          instanceName,
-          integration: "WHATSAPP-BAILEYS",
-          qrcode: true,
-        };
-        if (EVOLUTION_WEBHOOK_SECRET) {
-          createBody.webhook = {
-            url: `${WEBHOOK_RECEIVER_URL}?secret=${EVOLUTION_WEBHOOK_SECRET}`,
-            byEvents: false,
-            base64: false,
-            events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "PRESENCE_UPDATE"],
-          };
-        }
+        const createBody: any = { instanceName, syncFullHistory: true };
+        if (EVOLUTION_WEBHOOK_SECRET) createBody.webhook = webhookConfig();
         const createRes = await evolutionRequest("/instance/create", {
           method: "POST",
           body: JSON.stringify(createBody),
@@ -601,251 +458,89 @@ serve(async (req) => {
       });
     }
 
-    if (action === "chats") {
-      const chats = await evolutionRequest(`/chat/findChats/${instanceName}`, {
-        method: "POST",
-        body: JSON.stringify({}),
-      }, 25000);
-      return json(200, { success: true, instanceName, chats });
-    }
-
-    // ── F4W.7.3 — IMPORT_HISTORY: Evolution é fonte do IMPORT; channel_* é a
-    // verdade. Importa conversas/mensagens recentes (sem grupos, com limites).
+    // IMPORT_HISTORY: o histórico recente chega sozinho por messages.set quando
+    // o número conecta. Aqui o celular manda mensagens mais antigas de cada
+    // conversa já conhecida, a partir da mais antiga gravada.
     if (action === "import_history") {
-      const MAX_CHATS_CAP = 30;
-      const MAX_MSGS_CAP = 100;
-      const TOTAL_CAP = 1000;
-      const maxChats = Math.max(1, Math.min(Number(body.maxChats || 20), MAX_CHATS_CAP));
-      const maxMsgs = Math.max(1, Math.min(Number(body.maxMessagesPerChat || 50), MAX_MSGS_CAP));
+      const maxChats = Math.max(1, Math.min(Number(body.maxChats || 10), 20));
+      const perChat = Math.max(1, Math.min(Number(body.maxMessagesPerChat || 50), 100));
+      const deadline = Date.now() + 100_000;
 
-      // 1. Garante a connection row (mesma resolução do webhook)
-      const connectionId = await importEnsureConnection(adminSupabase, instanceName, targetCompanyId, effectiveUserId);
+      const connectionId = await ensureConnection(adminSupabase, instanceName, targetCompanyId, effectiveUserId);
       if (!connectionId) {
         return json(500, { error: "Não consegui resolver a conexão para importar" });
       }
 
-      // 2. Busca chats recentes
-      let chatsRaw: any;
+      // Nome dos contatos que só aparecem como número, pela agenda do WhatsApp.
+      let contactsNamed = 0;
       try {
-        chatsRaw = await evolutionRequest(`/chat/findChats/${instanceName}`, {
-          method: "POST",
-          body: JSON.stringify({}),
-        }, 25000);
+        const list = await evolutionRequest(`/contact/fetchAll/${instanceName}`, { method: "GET" }, 20000);
+        if (Array.isArray(list)) {
+          contactsNamed = await fillContactNames(adminSupabase, connectionId, list.map((c: any) => ({
+            jid: String(c?.jid || ""),
+            name: c?.fullName || c?.firstName || c?.businessName || c?.pushName,
+          })));
+        }
       } catch (err: any) {
-        return json(502, { error: `Falha ao buscar conversas: ${err?.message || err}` });
+        console.warn(`[import_history] contact/fetchAll: ${String(err?.message || err).slice(0, 120)}`);
       }
-      const chatArr: any[] = Array.isArray(chatsRaw)
-        ? chatsRaw
-        : Array.isArray(chatsRaw?.chats)
-          ? chatsRaw.chats
-          : Array.isArray(chatsRaw?.chats?.records)
-            ? chatsRaw.chats.records
-            : Array.isArray(chatsRaw?.records)
-              ? chatsRaw.records
-              : [];
 
-      let skippedGroups = 0;
-      const candidatesChats = chatArr
-        .map((c: any) => ({
-          jid: String(c?.remoteJid || c?.id || ""),
-          name: (c?.pushName || c?.name || c?.contactName || c?.verifiedName || null) as string | null,
-          updatedAt: String(c?.updatedAt || c?.updated_at || ""),
-        }))
-        .filter((c) => {
-          if (!c.jid) return false;
-          if (c.jid.includes("@g.us")) { skippedGroups++; return false; }
-          if (c.jid.includes("@broadcast") || c.jid.includes("@newsletter")) return false;
-          // V1: só contatos individuais
-          return c.jid.endsWith("@s.whatsapp.net") || c.jid.endsWith("@lid");
-        });
-      // Mais recentes primeiro quando há updatedAt
-      candidatesChats.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-      const selectedChats = candidatesChats.slice(0, maxChats);
+      const { data: convs } = await adminSupabase
+        .from("channel_conversations")
+        .select("id, contact:channel_contacts(external_contact_id, is_group)")
+        .eq("connection_id", connectionId)
+        .order("last_message_at", { ascending: false })
+        .limit(maxChats);
 
-      let importedChats = 0;
-      let importedMessages = 0;
-      let skippedDuplicates = 0;
-      let errors = 0;
-
-      for (const chat of selectedChats) {
-        if (importedMessages >= TOTAL_CAP) break;
-        const remoteJid = chat.jid;
-        const chatPhone = extractNumberFromJid(remoteJid);
-        const phoneTail = chatPhone.slice(-10);
+      const fetched: any[] = [];
+      let chatsAsked = 0;
+      let phoneTimeouts = 0;
+      for (const conv of (convs || []) as any[]) {
+        if (Date.now() > deadline) break;
+        const jid = conv?.contact?.external_contact_id as string | undefined;
+        if (!jid || conv?.contact?.is_group) continue;
+        const { data: oldest } = await adminSupabase
+          .from("channel_messages")
+          .select("provider_message_id, direction")
+          .eq("conversation_id", conv.id)
+          .order("message_timestamp", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (!oldest?.provider_message_id) continue;
+        chatsAsked++;
         try {
-          // 3. Busca mensagens recentes do chat
-          const remaining = TOTAL_CAP - importedMessages;
-          const limit = Math.min(maxMsgs, remaining);
-          const msgsRaw = await evolutionRequest(`/chat/findMessages/${instanceName}`, {
+          const page = await evolutionRequest(`/chat/syncMessages/${instanceName}`, {
             method: "POST",
-            body: JSON.stringify({ where: { key: { remoteJid } }, limit }),
-          }, 25000);
-          const msgs: any[] = Array.isArray(msgsRaw)
-            ? msgsRaw
-            : Array.isArray(msgsRaw?.messages)
-              ? msgsRaw.messages
-              : Array.isArray(msgsRaw?.messages?.records)
-                ? msgsRaw.messages.records
-                : Array.isArray(msgsRaw?.records)
-                  ? msgsRaw.records
-                  : [];
-
-          // Normaliza candidatos (descarta sem id / reaction|protocol vazios)
-          const candidates = msgs
-            .map((msg: any) => {
-              const externalId = msg?.key?.id ? String(msg.key.id) : "";
-              if (!externalId) return null;
-              const t = detectMsgType(msg);
-              const text = parseTextFromMsg(msg);
-              if ((t.type === "reaction" || t.type === "protocol") && !text) return null;
-              const fromMe = msg?.key?.fromMe === true;
-              const tsSec = Number(msg?.messageTimestamp || msg?.timestamp || 0);
-              const ts = tsSec ? new Date(tsSec * 1000).toISOString() : new Date().toISOString();
-              return { raw: msg, externalId, direction: fromMe ? "outbound" : "inbound", ts, body: text, t };
-            })
-            .filter((x): x is NonNullable<typeof x> => x !== null);
-
-          if (candidates.length === 0) continue;
-
-          let maxTs = candidates[0].ts;
-          let lastIn: string | null = null;
-          let lastOut: string | null = null;
-          // F4W.7.4 — nome do contato só do pushName de mensagem INBOUND
-          // (outbound traz o nome do dono da conta). Fallback: nome do chat.
-          let inboundName: string | null = null;
-          let inboundNameTs = "";
-          for (const c of candidates) {
-            if (c.ts > maxTs) maxTs = c.ts;
-            if (c.direction === "inbound") {
-              if (!lastIn || c.ts > lastIn) lastIn = c.ts;
-              const pn = c.raw?.pushName ? String(c.raw.pushName).trim() : "";
-              if (pn && c.ts >= inboundNameTs) { inboundName = pn; inboundNameTs = c.ts; }
-            } else {
-              if (!lastOut || c.ts > lastOut) lastOut = c.ts;
-            }
-          }
-          const contactName = inboundName || chat.name;
-
-          // 4. Contato + conversa (idempotentes)
-          const contactId = await importEnsureContact(adminSupabase, connectionId, targetCompanyId, remoteJid, contactName, chatPhone, phoneTail);
-          if (!contactId) { errors++; continue; }
-          const conv = await importEnsureConversation(adminSupabase, connectionId, targetCompanyId, contactId, maxTs, lastIn, lastOut);
-          if (!conv.id) { errors++; continue; }
-          const conversationId = conv.id;
-
-          // 5. Mensagens (idempotente por connection_id + provider_message_id)
-          let chatImported = 0;
-          for (const c of candidates) {
-            if (importedMessages >= TOTAL_CAP) break;
-            try {
-              const { data: existsMsg } = await adminSupabase
-                .from("channel_messages")
-                .select("id")
-                .eq("connection_id", connectionId)
-                .eq("provider_message_id", c.externalId)
-                .maybeSingle();
-              if (existsMsg?.id) { skippedDuplicates++; continue; }
-
-              const mediaRef = (c.t.mediaUrl || c.t.mimetype || c.t.caption || c.t.audioDuration)
-                ? { url: c.t.mediaUrl || null, mimetype: c.t.mimetype || null, caption: c.t.caption || null, duration: c.t.audioDuration || null }
-                : {};
-              const { error: insErr } = await adminSupabase.from("channel_messages").insert({
-                company_id: targetCompanyId,
-                connection_id: connectionId,
-                conversation_id: conversationId,
-                contact_id: contactId,
-                provider_message_id: c.externalId,
-                direction: c.direction,
-                message_type: mapChannelType(c.t.type),
-                body: c.body,
-                media_ref: mediaRef,
-                status: c.direction === "inbound" ? "received" : "sent",
-                reply_to_message_id: null,
-                sent_by_user_id: c.direction === "outbound" ? effectiveUserId : null,
-                message_timestamp: c.ts,
-                raw_payload: c.raw,
-                raw_payload_redacted: false,
-                raw_payload_expires_at: null,
-                metadata: { chat_jid: remoteJid, instance_name: instanceName, original_type: c.t.type, imported: true },
-              });
-              if (insErr) {
-                if ((insErr as any).code === "23505") { skippedDuplicates++; }
-                else { errors++; }
-              } else {
-                importedMessages++;
-                chatImported++;
-              }
-            } catch {
-              errors++;
-            }
-          }
-
-          // 6. Conversa existente: avança cursores só pra frente (não mexe unread)
-          if (!conv.isNew) {
-            const { data: cur } = await adminSupabase
-              .from("channel_conversations")
-              .select("last_message_at, last_inbound_at, last_outbound_at")
-              .eq("id", conversationId)
-              .maybeSingle();
-            const patch: Record<string, unknown> = {};
-            if (!cur?.last_message_at || maxTs > cur.last_message_at) patch.last_message_at = maxTs;
-            if (lastIn && (!cur?.last_inbound_at || lastIn > cur.last_inbound_at)) patch.last_inbound_at = lastIn;
-            if (lastOut && (!cur?.last_outbound_at || lastOut > cur.last_outbound_at)) patch.last_outbound_at = lastOut;
-            if (Object.keys(patch).length > 0) {
-              await adminSupabase.from("channel_conversations").update(patch).eq("id", conversationId);
-            }
-          }
-
-          if (chatImported > 0) importedChats++;
+            body: JSON.stringify({
+              number: jid,
+              id: oldest.provider_message_id,
+              fromMe: oldest.direction === "outbound",
+              count: perChat,
+            }),
+          }, 35000);
+          if (Array.isArray(page)) fetched.push(...page);
         } catch (err: any) {
-          errors++;
-          console.error(`[import_history] chat error jid_tail=${remoteJid.slice(-6)}: ${String(err?.message || err).slice(0, 120)}`);
+          if (Number(err?.status) === 504) phoneTimeouts++;
+          console.warn(`[import_history] syncMessages jid_tail=${jid.slice(-6)}: ${String(err?.message || err).slice(0, 120)}`);
         }
       }
 
-      console.log(`[import_history] done instance=${instanceName} chats=${importedChats} msgs=${importedMessages} dup=${skippedDuplicates} groups=${skippedGroups} errors=${errors}`);
+      const result = await importHistoryMessages(adminSupabase, {
+        instanceName,
+        companyId: targetCompanyId,
+        userId: effectiveUserId,
+        connectionId,
+        messages: fetched,
+      });
+      console.log(`[import_history] instance=${instanceName} asked=${chatsAsked} fetched=${fetched.length} chats=${result.importedChats} msgs=${result.importedMessages} timeouts=${phoneTimeouts} errors=${result.errors}`);
 
       return json(200, {
         success: true,
-        importedChats,
-        importedMessages,
-        skippedGroups,
-        skippedDuplicates,
-        errors,
+        chatsAsked,
+        phoneTimeouts,
+        contactsNamed,
+        ...result,
       });
-    }
-
-    if (action === "messages") {
-      if (!body.chatId) return json(400, { error: "chatId is required" });
-      const limit = Math.max(1, Math.min(Number(body.limit || 50), 100));
-      const rawMessages = await evolutionRequest(`/chat/findMessages/${instanceName}`, {
-        method: "POST",
-        body: JSON.stringify({
-          where: { key: { remoteJid: body.chatId } },
-          limit,
-        }),
-      }, 25000);
-
-      // Normalize: Evolution API v2.3.7 may return messages in different formats
-      let messages: any[];
-      if (Array.isArray(rawMessages)) {
-        messages = rawMessages;
-      } else if (Array.isArray(rawMessages?.messages)) {
-        messages = rawMessages.messages;
-      } else if (Array.isArray(rawMessages?.messages?.records)) {
-        messages = rawMessages.messages.records;
-      } else if (Array.isArray(rawMessages?.records)) {
-        messages = rawMessages.records;
-      } else {
-        messages = [];
-      }
-
-      console.log(`[messages] chatId=${body.chatId} rawType=${typeof rawMessages} isArray=${Array.isArray(rawMessages)} count=${messages.length}`);
-      if (messages.length > 0) {
-        console.log("[messages] sample keys:", JSON.stringify(Object.keys(messages[0])));
-      }
-
-      return json(200, { success: true, instanceName, messages });
     }
 
     if (action === "send") {
@@ -855,7 +550,7 @@ serve(async (req) => {
       // For groups (@g.us), send using the full remoteJid.
       // For contacts (@s.whatsapp.net), extract the number.
       const isGroup = String(body.chatId).includes("@g.us");
-      const target = isGroup ? body.chatId : extractNumberFromJid(body.chatId);
+      const target = isGroup || String(body.chatId).endsWith("@lid") ? body.chatId : extractNumberFromJid(body.chatId);
       if (!target) return json(400, { error: "invalid chatId/number" });
 
       console.log(`[send] target=${target} isGroup=${isGroup} chatId=${body.chatId} instanceName=${instanceName}`);
@@ -907,7 +602,7 @@ serve(async (req) => {
       if (!body.mimetype) return json(400, { error: "mimetype is required" });
 
       const isGroup = String(body.chatId).includes("@g.us");
-      const target = isGroup ? body.chatId : extractNumberFromJid(body.chatId);
+      const target = isGroup || String(body.chatId).endsWith("@lid") ? body.chatId : extractNumberFromJid(body.chatId);
       if (!target) return json(400, { error: "invalid chatId/number" });
 
       const mime = String(body.mimetype).toLowerCase();
@@ -951,7 +646,7 @@ serve(async (req) => {
       if (!body.mediaBase64) return json(400, { error: "mediaBase64 is required" });
 
       const isGroup = String(body.chatId).includes("@g.us");
-      const target = isGroup ? body.chatId : extractNumberFromJid(body.chatId);
+      const target = isGroup || String(body.chatId).endsWith("@lid") ? body.chatId : extractNumberFromJid(body.chatId);
       if (!target) return json(400, { error: "invalid chatId/number" });
 
       // Accept mimetype from client, default to audio/mp4 (widely supported by WhatsApp)
@@ -984,79 +679,21 @@ serve(async (req) => {
     if (action === "getMedia") {
       if (!body.messageId) return json(400, { error: "messageId is required" });
 
-      // body.messageId pode ser (a) o UUID da linha channel_messages (Inbox novo)
-      // ou (b) o wamid direto (legado). Resolvemos pelo banco pra ter a CHAVE
-      // COMPLETA da Evolution (id+remoteJid+fromMe) — antes mandava só o UUID e a
-      // Evolution nunca achava ("Imagem indisponível").
-      let wamid = String(body.messageId);
-      let remoteJid: string | null = null;
-      let fromMe = false;
-      let rowId: string | null = null;
-      let companyId: string | null = null;
-      let mediaRef: Record<string, any> = {};
-      let storedPath: string | null = null;
-      let storedMime: string | null = null;
-
-      try {
-        const { data: row } = await adminSupabase
-          .from("channel_messages")
-          .select("id, company_id, provider_message_id, direction, media_ref, metadata")
-          .eq("id", body.messageId)
-          .maybeSingle();
-        if (row) {
-          rowId = row.id as string;
-          companyId = (row.company_id as string) || null;
-          wamid = (row.provider_message_id as string) || wamid;
-          remoteJid = ((row.metadata as any)?.chat_jid as string) || null;
-          fromMe = row.direction === "outbound";
-          mediaRef = ((row.media_ref as Record<string, any>) || {});
-          storedPath = (mediaRef.storage_path as string) || null;
-          storedMime = (mediaRef.mimetype as string) || null;
-        }
-      } catch { /* segue pro download on-demand */ }
-
-      // 1) Já está no nosso Storage? Serve de lá (robusto: independe da sessão viva).
-      if (storedPath) {
-        try {
-          const { data: file, error: dlErr } = await adminSupabase.storage.from("whatsapp-media").download(storedPath);
-          if (!dlErr && file) {
-            const buf = new Uint8Array(await file.arrayBuffer());
-            return json(200, { success: true, base64: base64FromBytes(buf), mimetype: storedMime || (file as any).type || "application/octet-stream" });
-          }
-        } catch { /* cai pro download da Evolution */ }
+      // A mídia é guardada no Storage quando a mensagem chega pelo webhook.
+      const { data: row } = await adminSupabase
+        .from("channel_messages")
+        .select("company_id, media_ref")
+        .eq("id", body.messageId)
+        .maybeSingle();
+      const mediaRef = (row?.media_ref as Record<string, any>) || {};
+      const storedPath = (mediaRef.storage_path as string) || null;
+      if (!row || row.company_id !== targetCompanyId || !storedPath) {
+        return json(404, { error: "Media not found or expired" });
       }
-
-      // 2) Baixa da Evolution com a chave completa.
-      try {
-        const key: any = { id: wamid };
-        if (remoteJid) key.remoteJid = remoteJid;
-        key.fromMe = fromMe;
-        const data = await evolutionRequest(`/chat/getBase64FromMediaMessage/${instanceName}`, {
-          method: "POST",
-          body: JSON.stringify({ message: { key }, convertToMp4: false }),
-        });
-        const base64 = data?.base64 || data?.mediaBase64 || data?.data || null;
-        const mimetype = data?.mimetype || data?.mediaType || storedMime || "application/octet-stream";
-        if (!base64) {
-          return json(404, { error: "Media not found or expired" });
-        }
-
-        // 3) Cacheia no Storage pra próxima vez (best-effort).
-        if (rowId && companyId) {
-          const path = `${companyId}/${rowId}.${mediaExt(mimetype)}`;
-          try {
-            const up = await adminSupabase.storage.from("whatsapp-media").upload(path, bytesFromBase64(base64), { contentType: mimetype, upsert: true });
-            if (!up.error) {
-              await adminSupabase.from("channel_messages").update({ media_ref: { ...mediaRef, storage_path: path, mimetype } }).eq("id", rowId);
-            }
-          } catch { /* cache é best-effort */ }
-        }
-
-        return json(200, { success: true, base64, mimetype });
-      } catch (err: any) {
-        console.error("[getMedia] error:", err?.message);
-        return json(500, { error: err?.message || "Failed to fetch media" });
-      }
+      const { data: file, error: dlErr } = await adminSupabase.storage.from("whatsapp-media").download(storedPath);
+      if (dlErr || !file) return json(404, { error: "Media not found or expired" });
+      const buf = new Uint8Array(await file.arrayBuffer());
+      return json(200, { success: true, base64: base64FromBytes(buf), mimetype: (mediaRef.mimetype as string) || (file as any).type || "application/octet-stream" });
     }
 
     if (action === "logout") {

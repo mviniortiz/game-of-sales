@@ -51,6 +51,9 @@ export function useWhatsappConnection(): WhatsappConnection {
         queryKey: ["whatsapp-connection", effectiveCompanyId],
         enabled: !!effectiveCompanyId,
         staleTime: 30_000,
+        // A última mensagem recebida muda o tempo todo; sem reler, o aviso de
+        // "nenhuma mensagem há X dias" ficava com a data de quando a tela abriu.
+        refetchInterval: 60_000,
         queryFn: () => fetchConnection(effectiveCompanyId!),
     });
 

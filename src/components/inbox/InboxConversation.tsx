@@ -753,7 +753,7 @@ function ConversationHeader({
     eva?: EvaHeaderState;
     typing?: boolean;
 }) {
-    const picUrl = useProfilePic(chat.phone, chat.profilePicUrl);
+    const picUrl = useProfilePic(chat.chatJid || chat.phone, chat.profilePicUrl);
     return (
         <div
             className="px-4 sm:px-5 py-3.5 flex items-center gap-3"

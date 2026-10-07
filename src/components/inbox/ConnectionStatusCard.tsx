@@ -132,7 +132,7 @@ export function ConnectionStatusCard({
                                 ) : (
                                     <RefreshCw className="h-3 w-3" aria-hidden />
                                 )}
-                                {historySyncing ? "Puxando conversas…" : "Puxar conversas recentes"}
+                                {historySyncing ? "Puxando mensagens…" : "Puxar mensagens antigas"}
                             </button>
                         )}
                         {onResyncWebhook && (

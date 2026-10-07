@@ -11,7 +11,7 @@
 // Resultado: avatares aparecem progressivamente, sem travar a UI nem o Evolution.
 import { supabase } from "@/integrations/supabase/client";
 
-const LS_KEY = "vyzon:wapp:ppic:v1";
+const LS_KEY = "vyzon:wapp:ppic:v2";
 const TTL_HIT_MS = 7 * 24 * 60 * 60 * 1000;   // foto encontrada: 7 dias
 const TTL_MISS_MS = 24 * 60 * 60 * 1000;       // sem foto: 1 dia
 const MAX_CONCURRENT = 4;
@@ -29,7 +29,9 @@ const queue: { key: string; companyId: string | null; resolve: Resolver }[] = []
 let active = 0;
 let hydrated = false;
 
-const digitsOf = (phone: string) => phone.replace(/\D/g, "");
+// Chave e número enviados ao servidor: o JID completo (5511…@s.whatsapp.net ou
+// …@lid). Os dígitos de um LID não são telefone, então não dá para reduzir a eles.
+const keyOf = (jid: string) => jid.trim();
 
 function hydrate() {
     if (hydrated) return;
@@ -100,7 +102,7 @@ function pump() {
  */
 export function getProfilePic(phone: string, companyId: string | null): Promise<string | null> {
     hydrate();
-    const key = digitsOf(phone);
+    const key = keyOf(phone);
     if (!key) return Promise.resolve(null);
 
     const cached = fresh(mem.get(key));
@@ -120,6 +122,6 @@ export function getProfilePic(phone: string, companyId: string | null): Promise<
 /** Pré-aquece sincronicamente a partir do cache (sem disparar fetch). */
 export function peekProfilePic(phone: string): string | null {
     hydrate();
-    const cached = fresh(mem.get(digitsOf(phone)));
+    const cached = fresh(mem.get(keyOf(phone)));
     return cached?.url ?? null;
 }

@@ -25,6 +25,9 @@ const CHATS_FETCH_LIMIT = 500;
 const MESSAGES_FETCH_LIMIT = 200;
 const REALTIME_DEBOUNCE_CHATS_MS = 500;
 const REALTIME_DEBOUNCE_MESSAGES_MS = 300;
+// Importação de histórico chega em rajadas de milhares de linhas: a lista
+// acompanha em passos, sem recarregar a cada mensagem antiga.
+const IMPORT_REFRESH_MS = 4_000;
 const PENDING_TTL_MS = 30_000;
 // Resync de fallback do Inbox: o Realtime cobre o caminho rápido; este intervalo
 // garante que a conversa aberta não congele se um evento se perder (igual ao Pulse).
@@ -142,10 +145,11 @@ function rowsToChat(conv: ConversationRow, lastMsg?: LastMessageRow): Chat {
     const ct = conv.channel_contacts;
     const externalContactId = ct?.external_contact_id || "";
     const phoneE164 = ct?.phone_e164 || null;
+    const isLid = externalContactId.endsWith("@lid");
     const name =
         (ct?.name && ct.name.trim()) ||
-        (phoneE164 ? `+${phoneE164}` : externalContactId) ||
-        "Contato";
+        (phoneE164 && !isLid ? `+${phoneE164}` : "") ||
+        "Contato do WhatsApp";
     const ts = lastMsg?.message_timestamp || conv.last_message_at || new Date().toISOString();
     return {
         id: conv.id, // conversation_id é o identificador da seleção
@@ -155,7 +159,7 @@ function rowsToChat(conv: ConversationRow, lastMsg?: LastMessageRow): Chat {
         name,
         unreadCount: conv.unread_count ?? 0,
         profilePicUrl: ct?.profile_pic_url || undefined,
-        phone: phoneE164 ? `+${phoneE164}` : undefined,
+        phone: phoneE164 && !isLid ? `+${phoneE164}` : undefined,
         isGroup: Boolean(ct?.is_group),
         lastMessage: lastMsg
             ? {
@@ -635,22 +639,24 @@ export function useChannelInbox(): UseChannelInbox {
     );
 
     // ── 4. Debounced wrappers (usados pelo Realtime) ──────────────────────
-    const scheduleRefetchChats = useCallback(() => {
-        if (chatsDebounceRef.current) clearTimeout(chatsDebounceRef.current);
+    // Agenda e não reagenda: a recarga sai no máximo `delay` depois do primeiro
+    // evento, mesmo com eventos chegando sem parar (importação de histórico).
+    const scheduleRefetchChats = useCallback((delay: number = REALTIME_DEBOUNCE_CHATS_MS) => {
+        if (chatsDebounceRef.current) return;
         chatsDebounceRef.current = setTimeout(() => {
             chatsDebounceRef.current = null;
             void refetchChats();
-        }, REALTIME_DEBOUNCE_CHATS_MS);
+        }, delay);
     }, [refetchChats]);
 
     const scheduleFetchMessages = useCallback(
-        (conversationId: string) => {
-            if (messagesDebounceRef.current) clearTimeout(messagesDebounceRef.current);
+        (conversationId: string, delay: number = REALTIME_DEBOUNCE_MESSAGES_MS) => {
+            if (messagesDebounceRef.current) return;
             messagesDebounceRef.current = setTimeout(() => {
                 messagesDebounceRef.current = null;
                 if (selectedConversationIdRef.current !== conversationId) return;
                 void fetchMessages(conversationId);
-            }, REALTIME_DEBOUNCE_MESSAGES_MS);
+            }, delay);
         },
         [fetchMessages],
     );
@@ -895,6 +901,15 @@ export function useChannelInbox(): UseChannelInbox {
                         return;
                     }
                     const isSelected = convId === selectedConversationIdRef.current;
+
+                    // Mensagem de histórico importado: é antiga, não muda preview
+                    // nem não lidas. Só recarrega em passos para a lista acompanhar.
+                    const meta = normalizeRow(row).metadata as Record<string, unknown> | null;
+                    if (meta?.["imported"] === true || meta?.["imported"] === "true") {
+                        if (isSelected) scheduleFetchMessages(convId, IMPORT_REFRESH_MS);
+                        scheduleRefetchChats(IMPORT_REFRESH_MS);
+                        return;
+                    }
 
                     // UPDATE = mudança de status (entregue/lido). Patch in-place na
                     // thread aberta; NÃO mexe na sidebar (status não reordena lista).

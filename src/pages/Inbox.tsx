@@ -71,19 +71,7 @@ function describeSendError(raw: string): string {
 
 // Inbox sem conversa nenhuma: um recado só, pelo motivo, no lugar de três
 // painéis pedindo para selecionar algo que não existe.
-function InboxEmpty({
-    status,
-    canSync,
-    syncing,
-    onSync,
-    onConnect,
-}: {
-    status: string;
-    canSync: boolean;
-    syncing: boolean;
-    onSync: () => void;
-    onConnect: () => void;
-}) {
+function InboxEmpty({ status, onConnect }: { status: string; onConnect: () => void }) {
     const checking = status === "checking";
     const connected = status === "connected";
     return (
@@ -96,17 +84,16 @@ function InboxEmpty({
                     {checking
                         ? "Um instante."
                         : connected
-                        ? "Quando um cliente mandar mensagem para o número da empresa, a conversa aparece aqui."
+                        ? "As conversas recentes chegam sozinhas alguns minutos depois de conectar. Depois disso, cada mensagem nova aparece aqui."
                         : "Conecte o número da empresa e as conversas do WhatsApp aparecem aqui."}
                 </p>
-                {!checking && (connected ? canSync : true) && (
+                {!checking && !connected && (
                     <button
                         type="button"
-                        onClick={connected ? onSync : onConnect}
-                        disabled={syncing}
-                        className="mt-5 inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] px-4 text-[13px] font-semibold text-[var(--vyz-btn-on)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2"
+                        onClick={onConnect}
+                        className="mt-5 inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] px-4 text-[13px] font-semibold text-[var(--vyz-btn-on)] transition-opacity duration-150 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2"
                     >
-                        {connected ? (syncing ? "Puxando conversas…" : "Puxar conversas recentes") : "Conectar WhatsApp"}
+                        Conectar WhatsApp
                     </button>
                 )}
             </div>
@@ -421,7 +408,8 @@ const Inbox = () => {
         }
     };
 
-    // F4W.7.3 — import sob demanda do histórico recente (Evolution → channel_*)
+    // O histórico recente chega sozinho quando o número conecta; aqui o celular
+    // manda mensagens mais antigas das conversas que já estão no Inbox.
     const handleSyncHistory = async () => {
         if (historySyncing) return;
         setHistorySyncing(true);
@@ -430,13 +418,19 @@ const Inbox = () => {
                 body: { action: "import_history", companyId: activeCompanyId || companyId },
             });
             if (error) throw error;
-            const r = data as { importedChats?: number; importedMessages?: number } | null;
+            const r = data as { importedChats?: number; importedMessages?: number; phoneTimeouts?: number } | null;
             const chatsN = r?.importedChats ?? 0;
             const msgsN = r?.importedMessages ?? 0;
-            toast.success(
-                `Histórico atualizado: ${chatsN} ${chatsN === 1 ? "conversa" : "conversas"}, ` +
-                `${msgsN} ${msgsN === 1 ? "mensagem" : "mensagens"}`,
-            );
+            if (msgsN > 0) {
+                toast.success(
+                    `${msgsN} ${msgsN === 1 ? "mensagem antiga" : "mensagens antigas"} em ` +
+                    `${chatsN} ${chatsN === 1 ? "conversa" : "conversas"}.`,
+                );
+            } else if ((r?.phoneTimeouts ?? 0) > 0) {
+                toast.error("O celular não respondeu. Deixe o WhatsApp aberto nele e tente de novo.");
+            } else {
+                toast.success("Nenhuma mensagem antiga nova.");
+            }
             await handleRefresh();
         } catch {
             toast.error("Não foi possível sincronizar agora. Tente de novo em instantes.");
@@ -615,13 +609,7 @@ const Inbox = () => {
                 }
             >
                 {noChats ? (
-                    <InboxEmpty
-                        status={connectionStatus.status}
-                        canSync={connectionStatus.status === "connected" && connectionStatus.provider === "evolution"}
-                        syncing={historySyncing}
-                        onSync={handleSyncHistory}
-                        onConnect={() => setConnectModalOpen(true)}
-                    />
+                    <InboxEmpty status={connectionStatus.status} onConnect={() => setConnectModalOpen(true)} />
                 ) : (
                     <InboxConversation
                         chat={selectedChat || null}

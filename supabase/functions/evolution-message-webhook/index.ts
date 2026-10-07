@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { handleOwnerCommand, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
 import { trackOutboundQuote } from "../_shared/quoteTracking.ts";
+import { ensureConnection, importHistoryMessages } from "../_shared/whatsappHistory.ts";
+import { fillContactNames, isPlaceholderName, knownLidMap, linkLidToPhone } from "../_shared/whatsappContacts.ts";
 
 // Receiver do Evolution API (evento messages.upsert).
 //
@@ -20,10 +22,6 @@ import { trackOutboundQuote } from "../_shared/quoteTracking.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const EVOLUTION_WEBHOOK_SECRET = Deno.env.get("EVOLUTION_WEBHOOK_SECRET") || "";
-// Secrets do projeto (compartilhados por todas as edges): o webhook usa pra
-// BAIXAR a mídia na entrada e guardar no nosso Storage (robusto vs URL .enc).
-const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL")?.replace(/\/+$/, "");
-const EVOLUTION_API_KEY = Deno.env.get("EVOLUTION_API_KEY");
 
 const MEDIA_TYPES = new Set(["image", "video", "sticker", "audio", "document"]);
 
@@ -46,25 +44,16 @@ function bytesFromBase64(b64: string): Uint8Array {
   return out;
 }
 
-// Baixa a mídia da Evolution (chave completa) e guarda no bucket privado
-// whatsapp-media, gravando o storage_path no media_ref. Best-effort: qualquer
-// falha é só logada (o on-demand do getMedia segue como fallback).
+// Guarda no bucket privado whatsapp-media o arquivo que a Whatsmiau manda
+// dentro do evento (webhook com base64), gravando o storage_path no media_ref.
+// É a única cópia: a URL do WhatsApp é criptografada e expira. Best-effort:
+// falha é só logada.
 async function captureMediaToStorage(
   admin: any,
-  p: { messageId: string; companyId: string; wamid: string; remoteJid: string; fromMe: boolean; instanceName: string; mimetype: string },
+  p: { messageId: string; companyId: string; base64: string; mimetype: string },
 ): Promise<void> {
-  if (!EVOLUTION_API_URL || !EVOLUTION_API_KEY) return;
   try {
-    const resp = await fetch(`${EVOLUTION_API_URL}/chat/getBase64FromMediaMessage/${p.instanceName}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", apikey: EVOLUTION_API_KEY },
-      body: JSON.stringify({ message: { key: { id: p.wamid, remoteJid: p.remoteJid, fromMe: p.fromMe } }, convertToMp4: false }),
-    });
-    if (!resp.ok) return;
-    const data = await resp.json().catch(() => null);
-    const base64 = data?.base64 || data?.mediaBase64 || data?.data || null;
-    const mimetype = data?.mimetype || data?.mediaType || p.mimetype || "application/octet-stream";
-    if (!base64) return;
+    const { base64, mimetype } = p;
     const path = `${p.companyId}/${p.messageId}.${mediaExt(mimetype)}`;
     const up = await admin.storage.from("whatsapp-media").upload(path, bytesFromBase64(base64), { contentType: mimetype, upsert: true });
     if (up.error) return;
@@ -191,6 +180,8 @@ interface NormalizedMessage {
   messageTimestamp: string;
   /** Conversa do dono com o próprio número (canal de aprovação da EVA). */
   isOwnerChat: boolean;
+  /** Arquivo da mídia (base64), tirado do payload para não ir ao banco. */
+  mediaBase64: string | null;
   rawMsg: any;
 }
 
@@ -359,14 +350,11 @@ async function dualWriteChannel(
   // BAIXA a mídia na entrada (não-bloqueante): captura os bytes enquanto a
   // sessão está viva e guarda no nosso Storage, pra nunca ficar "indisponível".
   let mediaTask: Promise<void> | null = null;
-  if (result.isNewMessage && result.messageId && n.companyId && MEDIA_TYPES.has(n.internalType) && n.mediaMimetype) {
+  if (result.isNewMessage && result.messageId && n.companyId && MEDIA_TYPES.has(n.internalType) && n.mediaMimetype && n.mediaBase64) {
     const task = mediaTask = captureMediaToStorage(admin, {
       messageId: result.messageId,
       companyId: n.companyId,
-      wamid: n.externalId,
-      remoteJid: n.remoteJid,
-      fromMe: n.direction === "outbound",
-      instanceName: n.instanceName,
+      base64: n.mediaBase64,
       mimetype: n.mediaMimetype,
     });
     // waitUntil mantém a função viva pra terminar o upload sem segurar o 200.
@@ -771,6 +759,12 @@ const WA_ACK_STATUS: Record<number, { status: string; rank: number }> = {
   4: { status: "read", rank: 3 },       // READ (✓✓ azul)
   5: { status: "read", rank: 3 },       // PLAYED (áudio ouvido) → tratado como lido
 };
+const WA_ACK_NAMED: Record<string, { status: string; rank: number }> = {
+  SERVER_ACK: WA_ACK_STATUS[2],
+  DELIVERY_ACK: WA_ACK_STATUS[3],
+  READ: WA_ACK_STATUS[4],
+  PLAYED: WA_ACK_STATUS[5],
+};
 const CH_STATUS_RANK: Record<string, number> = {
   queued: 0, failed: 0, received: 1, sent: 1, delivered: 2, read: 3,
 };
@@ -808,6 +802,70 @@ async function handlePresenceUpdate(payload: any): Promise<Response> {
   return json(200, { ok: true, typing, jid });
 }
 
+// HISTÓRICO — a Whatsmiau manda o histórico recente em lotes (messages.set)
+// logo depois que o número conecta. Grava em segundo plano para responder 200
+// na hora; o lote pode ter milhares de mensagens.
+async function handleMessagesSet(payload: any): Promise<Response> {
+  const instanceName: string | undefined = payload.instance || payload.data?.instance;
+  if (!instanceName) return json(200, { ok: true, ignored: "no_instance" });
+  const userId = instanceNameToUserId(instanceName);
+  if (!userId) return json(200, { ok: true, ignored: "instance_not_mapped" });
+  const messages: any[] = Array.isArray(payload.data) ? payload.data : [];
+  if (messages.length === 0) return json(200, { ok: true, imported: 0 });
+
+  const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const { data: profile } = await (admin as any)
+    .from("profiles").select("company_id").eq("id", userId).single();
+  const companyId: string | null = profile?.company_id || null;
+  if (!companyId) return json(200, { ok: true, ignored: "no_company" });
+
+  // Modo prospecção não recebe histórico: lá só entra número da allowlist.
+  const { data: pInst } = await (admin as any)
+    .from("prospecting_instances").select("user_id").eq("user_id", userId).eq("is_active", true).maybeSingle();
+  if (pInst) return json(200, { ok: true, ignored: "prospecting_active" });
+
+  const task = (async () => {
+    const connectionId = await ensureConnection(admin, instanceName, companyId, userId);
+    if (!connectionId) return;
+    const r = await importHistoryMessages(admin, { instanceName, companyId, userId, connectionId, messages });
+    console.log(`[history] instance=${instanceName} progress=${payload.progress ?? "-"} received=${messages.length} chats=${r.importedChats} msgs=${r.importedMessages} old=${r.skippedOld} groups=${r.skippedGroups} errors=${r.errors}`);
+  })().catch((err) => console.error("[history] import failed:", (err as any)?.message));
+  try { (globalThis as any).EdgeRuntime?.waitUntil?.(task); } catch { /* noop */ }
+  return json(200, { ok: true, received: messages.length });
+}
+
+// CONTATOS — contacts.upsert traz, para cada contato, o telefone (remoteJid),
+// o LID (remoteLid) e o nome que o WhatsApp conhece. Liga LID ao telefone e
+// preenche nome de quem só aparecia como número.
+async function handleContactsUpsert(payload: any): Promise<Response> {
+  const instanceName: string | undefined = payload.instance || payload.data?.instance;
+  if (!instanceName) return json(200, { ok: true, ignored: "no_instance" });
+  const userId = instanceNameToUserId(instanceName);
+  if (!userId) return json(200, { ok: true, ignored: "instance_not_mapped" });
+  const contacts: any[] = Array.isArray(payload.data) ? payload.data : [];
+  if (contacts.length === 0) return json(200, { ok: true, contacts: 0 });
+
+  const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const { data: conn } = await (admin as any)
+    .from("channel_connections").select("id").eq("provider", "evolution").eq("external_id", instanceName).maybeSingle();
+  if (!conn?.id) return json(200, { ok: true, ignored: "no_connection" });
+
+  const task = (async () => {
+    for (const c of contacts) {
+      const phoneJid = String(c?.remoteJid || "");
+      const lidJid = String(c?.remoteLid || "");
+      if (phoneJid && lidJid) await linkLidToPhone(admin, conn.id, phoneJid, lidJid, c?.pushName);
+    }
+    const named = await fillContactNames(admin, conn.id, contacts.flatMap((c: any) => [
+      { jid: String(c?.remoteJid || ""), name: c?.pushName },
+      { jid: String(c?.remoteLid || ""), name: c?.pushName },
+    ]));
+    console.log(`[contacts] instance=${instanceName} received=${contacts.length} named=${named}`);
+  })().catch((err) => console.error("[contacts] failed:", (err as any)?.message));
+  try { (globalThis as any).EdgeRuntime?.waitUntil?.(task); } catch { /* noop */ }
+  return json(200, { ok: true, received: contacts.length });
+}
+
 async function handleMessagesUpdate(payload: any): Promise<Response> {
   const instanceName: string | undefined = payload.instance || payload.data?.instance;
   if (!instanceName) return json(200, { ok: true, ignored: "no_instance" });
@@ -823,11 +881,10 @@ async function handleMessagesUpdate(payload: any): Promise<Response> {
   const updates: any[] = Array.isArray(payload.data) ? payload.data : [payload.data];
   let applied = 0;
   for (const u of updates) {
-    const id = u?.key?.id;
-    const waStatus = u?.update?.status;
-    if (!id || typeof waStatus !== "number") continue;
-    const mapped = WA_ACK_STATUS[waStatus];
-    if (!mapped) continue;
+    const id = u?.key?.id || u?.keyId || u?.messageId;
+    const rawStatus = u?.update?.status ?? u?.status;
+    const mapped = typeof rawStatus === "number" ? WA_ACK_STATUS[rawStatus] : WA_ACK_NAMED[String(rawStatus || "")];
+    if (!id || !mapped) continue;
     // só-sobe: atualiza apenas mensagens cujo status atual tem rank MENOR que o novo.
     const allowedFrom = Object.entries(CH_STATUS_RANK)
       .filter(([, r]) => r < mapped.rank).map(([s]) => s);
@@ -879,6 +936,14 @@ serve(async (req) => {
   // INBOX.STATUS — atualiza os checks (entregue/lido) das mensagens enviadas.
   if (event === "messages.update") {
     return await handleMessagesUpdate(payload);
+  }
+
+  if (event === "messages.set") {
+    return await handleMessagesSet(payload);
+  }
+
+  if (event === "contacts.upsert") {
+    return await handleContactsUpsert(payload);
   }
 
   // TYPING — "digitando…": presença do contato. Efêmero, via Realtime broadcast
@@ -964,13 +1029,46 @@ serve(async (req) => {
   let dualSkipped = 0;
   let dualErr = 0;
 
+  // Conexão desta instância: só para ligar LID ao telefone antes de gravar.
+  let connectionIdCache: string | null | undefined;
+  async function connectionIdOnce(): Promise<string | null> {
+    if (connectionIdCache === undefined) {
+      const { data: conn } = await (admin as any)
+        .from("channel_connections").select("id").eq("provider", "evolution").eq("external_id", instanceName).maybeSingle();
+      connectionIdCache = conn?.id || null;
+    }
+    return connectionIdCache ?? null;
+  }
+  const linkedLids = new Set<string>();
+
   for (const msg of messages) {
     if (!msg || !msg.key) {
       skipped.push("no_key");
       continue;
     }
 
-    const remoteJid: string = msg.key.remoteJid || "";
+    let remoteJid: string = msg.key.remoteJid || "";
+    // A mesma pessoa chega pelo telefone (com o LID ao lado em remoteLid) ou só
+    // pelo LID. O contato fica sempre no telefone quando ele é conhecido.
+    const remoteLid: string = msg.key.remoteLid || "";
+    if (remoteJid.endsWith("@s.whatsapp.net") && remoteLid.endsWith("@lid") && !linkedLids.has(remoteLid)) {
+      linkedLids.add(remoteLid);
+      const connId = await connectionIdOnce();
+      if (connId) {
+        try {
+          await linkLidToPhone(admin, connId, remoteJid, remoteLid, msg.key.fromMe ? null : msg.pushName);
+        } catch (err: any) {
+          console.warn("[webhook] linkLidToPhone:", err?.message);
+        }
+      }
+    } else if (remoteJid.endsWith("@lid")) {
+      const connId = await connectionIdOnce();
+      const phoneJid = connId ? (await knownLidMap(admin, connId, [remoteJid])).get(remoteJid) : undefined;
+      if (phoneJid) {
+        remoteJid = phoneJid;
+        msg.key.remoteJid = phoneJid;
+      }
+    }
     if (!remoteJid) {
       skipped.push("no_jid");
       continue;
@@ -987,9 +1085,16 @@ serve(async (req) => {
       continue;
     }
 
+    let mediaBase64: string | null = null;
+    if (typeof msg.message?.base64 === "string" && msg.message.base64) {
+      mediaBase64 = msg.message.base64;
+      delete msg.message.base64;
+    }
+
     const fromMe: boolean = msg.key.fromMe === true;
     const isGroup = remoteJid.includes("@g.us");
-    const chatPhone = extractDigits(remoteJid);
+    // LID não é telefone: os dígitos dele não servem para ligar nem para cruzar.
+    const chatPhone = remoteJid.endsWith("@lid") ? "" : extractDigits(remoteJid);
     const phoneTail = chatPhone.slice(-10);
 
     // APPROVAL.1 — o dono respondendo no próprio chat resolve o rascunho da
@@ -1061,7 +1166,7 @@ serve(async (req) => {
       // F4W.7.4: pushName é o nome de QUEM ENVIOU. Em outbound (fromMe) isso é
       // o DONO da conta — usar aqui renomeava o contato pro nome do vendedor
       // (ex.: "Amor" virava "Markus"). Só nomeia o contato a partir de inbound.
-      contactName: direction === "inbound" ? (msg.pushName || null) : null,
+      contactName: direction === "inbound" && !isPlaceholderName(msg.pushName) ? msg.pushName : null,
       isGroup,
       direction,
       internalType: meta.type,
@@ -1074,6 +1179,7 @@ serve(async (req) => {
       audioDuration: meta.audioDuration || null,
       messageTimestamp,
       isOwnerChat: fromMe && !isGroup && ownerNumberCache != null && ownerNumberCache === chatPhone,
+      mediaBase64,
       rawMsg: msg,
     };
 

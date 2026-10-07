@@ -65,12 +65,13 @@ serve(async (req) => {
       await evolutionRequest(`/webhook/set/${name}`, {
         method: "POST",
         body: JSON.stringify({
+          // Mesma configuração do evolution-whatsapp: mídia dentro do evento,
+          // histórico por messages.set e contatos por contacts.upsert.
           webhook: {
             enabled: true,
             url: receiverUrl,
-            byEvents: false,
-            base64: false,
-            events: ["MESSAGES_UPSERT"],
+            base64: true,
+            events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "MESSAGES_SET", "CONTACTS_UPSERT"],
           },
         }),
       });
