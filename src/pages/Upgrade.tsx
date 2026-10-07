@@ -4,7 +4,7 @@
 // bloqueio de "selecione um plano superior".
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@phosphor-icons/react";
 import { usePlan } from "@/hooks/usePlan";
 import { PlanPicker } from "@/components/billing/PlanPicker";
 
@@ -21,19 +21,16 @@ export default function Upgrade() {
         <div className="px-4 sm:px-6 py-8 sm:py-10 max-w-5xl mx-auto">
             <button
                 onClick={() => navigate("/configuracoes/faturamento")}
-                className="inline-flex items-center gap-1.5 text-[13px] font-medium mb-6 transition-colors hover:opacity-80"
-                style={{ color: "#64748B" }}
+                className="mb-6 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--vyz-text-muted)] transition-colors hover:text-[var(--vyz-text-primary)]"
             >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Voltar para faturamento
+                <ArrowLeft size={14} aria-hidden />
+                Voltar para o plano
             </button>
 
             <div className="text-center mb-9 max-w-lg mx-auto">
-                <h1 className="text-2xl font-bold tracking-tight mb-2" style={{ color: "#0B1220" }}>
-                    Escolha seu plano
-                </h1>
-                <p className="text-[15px]" style={{ color: "#64748B" }}>
-                    Assine ou troque de plano quando quiser. Cobrança mensal, cancele a qualquer momento.
+                <h1 className="mb-2 text-[28px] font-semibold tracking-[-0.03em] text-[var(--vyz-text-primary)]">Escolha seu plano</h1>
+                <p className="text-[15px] text-[var(--vyz-text-muted)]">
+                    Os dois têm a EVA completa. A diferença é o tamanho da equipe e quanto ela trabalha por dia.
                 </p>
             </div>
 

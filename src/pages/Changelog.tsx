@@ -10,9 +10,9 @@ const TAG_STYLE: Record<
 > = {
   shipped: {
     label: "Shipped",
-    bg: "rgba(0,227,122,0.08)",
+    bg: "rgba(37, 99, 235,0.08)",
     text: "#34e398",
-    border: "rgba(0,227,122,0.25)",
+    border: "rgba(37, 99, 235,0.25)",
     icon: CheckCircle2,
   },
   feature: {
@@ -128,7 +128,7 @@ export default function Changelog() {
           className="vyz-animate-shimmer absolute inset-0"
           style={{
             background:
-              "linear-gradient(90deg, transparent 0%, rgba(0,227,122,0.15) 20%, rgba(0,227,122,0.9) 50%, rgba(0,227,122,0.15) 80%, transparent 100%)",
+              "linear-gradient(90deg, transparent 0%, rgba(37, 99, 235,0.15) 20%, rgba(37, 99, 235,0.9) 50%, rgba(37, 99, 235,0.15) 80%, transparent 100%)",
             backgroundSize: "200% 100%",
             animation: "vyz-shimmer 6s linear infinite",
           }}
@@ -141,7 +141,7 @@ export default function Changelog() {
         className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-0 w-[1100px] h-[600px]"
         style={{
           background:
-            "radial-gradient(ellipse at 50% 0%, rgba(0,227,122,0.14) 0%, rgba(0,227,122,0.06) 30%, rgba(0,227,122,0) 65%)",
+            "radial-gradient(ellipse at 50% 0%, rgba(37, 99, 235,0.14) 0%, rgba(37, 99, 235,0.06) 30%, rgba(37, 99, 235,0) 65%)",
         }}
       />
 
@@ -161,7 +161,7 @@ export default function Changelog() {
         className="pointer-events-none absolute -right-40 top-[1400px] w-[600px] h-[600px]"
         style={{
           background:
-            "radial-gradient(circle at 70% 50%, rgba(0,227,122,0.08) 0%, rgba(0,227,122,0.03) 40%, transparent 70%)",
+            "radial-gradient(circle at 70% 50%, rgba(37, 99, 235,0.08) 0%, rgba(37, 99, 235,0.03) 40%, transparent 70%)",
         }}
       />
 
@@ -186,12 +186,12 @@ export default function Changelog() {
       {/* Floating pulse dots scattered */}
       <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
         {[
-          { top: 180, left: "14%", delay: "0s", color: "rgba(0,227,122,0.9)" },
-          { top: 420, left: "86%", delay: "1.2s", color: "rgba(0,227,122,0.8)" },
+          { top: 180, left: "14%", delay: "0s", color: "rgba(37, 99, 235,0.9)" },
+          { top: 420, left: "86%", delay: "1.2s", color: "rgba(37, 99, 235,0.8)" },
           { top: 780, left: "10%", delay: "0.4s", color: "rgba(110,166,255,0.9)" },
-          { top: 1120, left: "88%", delay: "2.0s", color: "rgba(0,227,122,0.8)" },
+          { top: 1120, left: "88%", delay: "2.0s", color: "rgba(37, 99, 235,0.8)" },
           { top: 1520, left: "12%", delay: "0.9s", color: "rgba(110,166,255,0.7)" },
-          { top: 1880, left: "84%", delay: "1.6s", color: "rgba(0,227,122,0.9)" },
+          { top: 1880, left: "84%", delay: "1.6s", color: "rgba(37, 99, 235,0.9)" },
         ].map((d, i) => (
           <span
             key={i}
@@ -230,7 +230,7 @@ export default function Changelog() {
         className="pointer-events-none absolute right-6 top-32 text-[10px] tracking-[0.35em] uppercase hidden xl:flex flex-col gap-12"
         style={{ color: "rgba(255,255,255,0.22)", fontWeight: 700, writingMode: "vertical-rl" }}
       >
-        <span style={{ color: "rgba(0,227,122,0.45)" }}>v.2026.04</span>
+        <span style={{ color: "rgba(37, 99, 235,0.45)" }}>v.2026.04</span>
         <span>v.2026.03</span>
         <span style={{ color: "rgba(255,255,255,0.12)" }}>v.2026.02</span>
       </div>
@@ -242,8 +242,8 @@ export default function Changelog() {
         style={{
           width: 40,
           height: 40,
-          borderTop: "1px solid rgba(0,227,122,0.35)",
-          borderLeft: "1px solid rgba(0,227,122,0.35)",
+          borderTop: "1px solid rgba(37, 99, 235,0.35)",
+          borderLeft: "1px solid rgba(37, 99, 235,0.35)",
         }}
       />
       <div
@@ -252,8 +252,8 @@ export default function Changelog() {
         style={{
           width: 40,
           height: 40,
-          borderTop: "1px solid rgba(0,227,122,0.35)",
-          borderRight: "1px solid rgba(0,227,122,0.35)",
+          borderTop: "1px solid rgba(37, 99, 235,0.35)",
+          borderRight: "1px solid rgba(37, 99, 235,0.35)",
         }}
       />
 
@@ -289,9 +289,9 @@ export default function Changelog() {
         <div
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs uppercase tracking-wider mb-6"
           style={{
-            background: "rgba(0,227,122,0.08)",
+            background: "rgba(37, 99, 235,0.08)",
             color: "#34e398",
-            border: "1px solid rgba(0,227,122,0.20)",
+            border: "1px solid rgba(37, 99, 235,0.20)",
             fontWeight: 600,
             letterSpacing: "0.08em",
           }}
@@ -328,8 +328,8 @@ export default function Changelog() {
                   className="hidden sm:block absolute left-0 top-2 w-[15px] h-[15px] rounded-full"
                   style={{
                     background: "var(--vyz-bg, #06080a)",
-                    border: "2px solid rgba(0,227,122,0.55)",
-                    boxShadow: "0 0 0 4px rgba(0,227,122,0.08)",
+                    border: "2px solid rgba(37, 99, 235,0.55)",
+                    boxShadow: "0 0 0 4px rgba(37, 99, 235,0.08)",
                   }}
                 />
 
@@ -414,7 +414,7 @@ export default function Changelog() {
             to="/"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm transition-all"
             style={{
-              background: "var(--vyz-accent, #00e37a)",
+              background: "var(--vyz-accent, #2563EB)",
               color: "#06080a",
               fontWeight: 600,
             }}

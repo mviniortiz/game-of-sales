@@ -19,6 +19,7 @@ import {
   Kanban as KanbanIcon,
   GearSix,
   ShieldCheck,
+  ChartLineUp,
   Lifebuoy as LifeBuoyIcon,
   Plus,
   CaretUpDown,
@@ -46,7 +47,6 @@ import { usePlan } from "@/hooks/usePlan";
 import { CONTACT, whatsappUrl } from "@/config/contact";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
-import logoIcon from "@/assets/logo-icon.png";
 const NovaVendaModal = lazy(() => import("@/components/vendas/NovaVendaModal").then((m) => ({ default: m.NovaVendaModal })));
 // F4G 2026-05-19: modal "Criar oportunidade" separado, grava em deals
 const NovaOportunidadeModal = lazy(() => import("@/components/deals/NovaOportunidadeModal").then((m) => ({ default: m.NovaOportunidadeModal })));
@@ -73,53 +73,56 @@ import { motion, useReducedMotion } from "framer-motion";
 // Phosphor icon component type
 type PhosphorIcon = ComponentType<IconProps>;
 
-// ─── Nav principal (F3 + F2.6) ──────────────────────────────────────────────
-// EVA usa Sparkle (consistente com EvaPhotoAvatar selo Preview). Cor controlada
-// pelo render — não força roxo na sidebar pra não criar marca paralela.
+// ─── Menu ────────────────────────────────────────────────────────────────────
+// Operação em cima (Orçamentos, Início, Inbox, Pipeline); empresa e conta num
+// grupo próprio no rodapé. Agenda, EVA Studio e Performance seguem na busca
+// (Ctrl+K) e nos links contextuais, fora do menu.
 type NavItem = {
   title: string;
   url: string;
   icon: PhosphorIcon;
-  adminOnly?: boolean;
-  feature?: "eva";
   badge?: "rotting";
+  requires?: "admin" | "super_admin";
 };
 
-// Erasure 2026-07-17: menu enxuto no caminho da promessa (WhatsApp → EVA →
-// aprovar → pipeline). Metas e Ranking saíram do 1º nível (uso externo zero,
-// herança do "CRM gamificado"); seguem acessíveis via Performance e busca.
-//
-// Erasure 2026-08-24: Agenda, EVA Studio e Performance saíram do 1º nível. São
-// telas de consulta, não de operação: a operação inteira mora em Início, Inbox
-// e Pipeline. As três continuam na busca (Ctrl+K) e nos links contextuais do
-// deal e do Inbox.
-//
-// 2026-09-16: Orçamentos (placar de dinheiro parado) vira a tela principal e o
-// primeiro item; o resto desce sem sair do menu.
 const mainNavItems: NavItem[] = [
   { title: "Orçamentos", url: "/orcamentos", icon: Receipt },
   { title: "Início", url: "/inicio", icon: House },
   { title: "Inbox", url: "/inbox", icon: ChatCircleText },
   { title: "Pipeline", url: "/pipeline", icon: KanbanIcon, badge: "rotting" },
-  { title: "Configurações", url: "/configuracoes", icon: GearSix },
 ];
 
-type FooterItem = {
-  title: string;
-  url: string;
-  icon: PhosphorIcon;
-  requires: "admin" | "super_admin";
-};
-
-const adminFooterItems: FooterItem[] = [
-  { title: "Gestão", url: "/admin", icon: ShieldCheck, requires: "admin" },
+const accountNavItems: NavItem[] = [
+  { title: "Gestão", url: "/admin", icon: ChartLineUp, requires: "admin" },
+  { title: "Configurações", url: "/configuracoes", icon: GearSix },
   { title: "Suporte", url: "/admin/suporte", icon: LifeBuoyIcon, requires: "super_admin" },
 ];
 
+function SidebarCta({ collapsed, onClick }: { collapsed: boolean; onClick: () => void }) {
+  const button = (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Novo lead"
+      className={`relative w-full flex items-center justify-center gap-1.5 h-9 rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] text-[13px] font-semibold tracking-[-0.01em] transition-[transform,box-shadow,opacity] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:opacity-90 active:scale-[0.97] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.3)] shadow-[0_1px_2px_rgba(8,8,8,0.16),0_6px_16px_-8px_rgba(8,8,8,0.4)]`}
+    >
+      <Plus size={15} weight="bold" aria-hidden />
+      {!collapsed && <span>Novo lead</span>}
+    </button>
+  );
+  if (!collapsed) return button;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipContent side="right" className="text-[11px]">Novo lead</TooltipContent>
+    </Tooltip>
+  );
+}
+
 interface UserMenuProps {
   collapsed: boolean;
-  profile: any;
-  user: any;
+  profile: { nome?: string | null; avatar_url?: string | null } | null;
+  user: { email?: string | null } | null;
   isAdmin: boolean;
   isProfileActive: boolean;
   navigate: (path: string) => void;
@@ -136,12 +139,12 @@ function UserMenu({
     <button
       aria-label="Abrir menu da conta"
       className={`p-1 rounded-md transition-colors ${
-        isProfileActive ? "bg-[#F1F5F9]" : "hover:bg-[#F1F5F9]/70"
+        isProfileActive ? "bg-[var(--vyz-surface-2)]" : "hover:bg-[var(--vyz-surface-2)]"
       }`}
     >
       <Avatar className="h-7 w-7 rounded-md">
         {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" className="rounded-md" />}
-        <AvatarFallback className="bg-[#F1F5F9] text-[#64748B] text-[10px] font-semibold rounded-md">
+        <AvatarFallback className="bg-[var(--vyz-surface-2)] text-[var(--vyz-text-muted)] text-[10px] font-semibold rounded-md">
           {profile?.nome ? getInitials(profile.nome) : "U"}
         </AvatarFallback>
       </Avatar>
@@ -150,24 +153,24 @@ function UserMenu({
     <button
       aria-label="Abrir menu da conta"
       className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg transition-colors ${
-        isProfileActive ? "bg-[#F1F5F9]" : "hover:bg-[#F1F5F9]/70"
+        isProfileActive ? "bg-[var(--vyz-surface-2)]" : "hover:bg-[var(--vyz-surface-2)]"
       }`}
     >
       <Avatar className="h-7 w-7 shrink-0 rounded-md">
         {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" className="rounded-md" />}
-        <AvatarFallback className="bg-[#F1F5F9] text-[#64748B] text-[10.5px] font-semibold rounded-md">
+        <AvatarFallback className="bg-[var(--vyz-surface-2)] text-[var(--vyz-text-muted)] text-[10.5px] font-semibold rounded-md">
           {profile?.nome ? getInitials(profile.nome) : "U"}
         </AvatarFallback>
       </Avatar>
       <div className="flex flex-col items-start text-left flex-1 min-w-0 leading-tight">
-        <span className="text-[12.5px] font-semibold text-[#0B1220] truncate w-full tracking-tight">
+        <span className="text-[12.5px] font-semibold text-[var(--vyz-text-primary)] truncate w-full tracking-tight">
           {profile?.nome || "Usuário"}
         </span>
-        <span className="text-[10.5px] text-[#94A3B8] truncate w-full mt-0.5">
+        <span className="text-[10.5px] text-[var(--vyz-text-muted)] truncate w-full mt-0.5">
           {user?.email || ""}
         </span>
       </div>
-      <CaretUpDown size={14} weight="bold" className="text-[#CBD5E1] shrink-0" />
+      <CaretUpDown size={14} weight="bold" className="text-[var(--vyz-text-soft)] shrink-0" />
     </button>
   );
 
@@ -213,7 +216,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const { user, isAdmin, isSuperAdmin, signOut, profile, companyId } = useAuth();
   const { activeCompanyId } = useTenant();
-  const { hasFeature, currentPlan, planInfo } = usePlan();
+  const { currentPlan, planInfo } = usePlan();
   const location = useLocation();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
@@ -267,16 +270,10 @@ export function AppSidebar() {
     };
   }, []);
 
-  const filteredMainItems = mainNavItems.filter((item) => {
-    if (item.adminOnly && !isAdmin) return false;
-    if (item.url === "/performance" && !hasFeature("gamification") && !hasFeature("metas")) return false;
-    return true;
-  });
-
-  const filteredAdminItems = adminFooterItems.filter((item) => {
+  const filteredAccountItems = accountNavItems.filter((item) => {
     if (item.requires === "admin") return isAdmin;
     if (item.requires === "super_admin") return isSuperAdmin;
-    return false;
+    return true;
   });
 
   const getInitials = (nome: string) => {
@@ -288,18 +285,14 @@ export function AppSidebar() {
       .toUpperCase();
   };
 
-  // ─── F2.6 item style ─────────────────────────────────────────────────
-  // Altura 40px, radius 12px, gap-2.5. Ativo: bg azul muito suave +
-  // border azul + ícone azul. Hover: bg #F6F4EF. Sem AnimatedIcon — render
-  // direto controlando cor via className do ícone.
-  const baseItem =
-    "group relative flex items-center gap-2.5 h-10 px-3 rounded-xl text-[14px] font-medium transition-all duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] outline-none";
-  const inactiveClass = `${baseItem} text-[#64748B] hover:text-[#0B1220] hover:bg-[#F6F4EF]`;
-  const activeClass = `${baseItem} text-[#0B1220]`;
+  // Item no padrão de sidebar da Apple: ícone em contorno parado, preenchido
+  // e azul quando ativo; o realce ativo desliza entre itens (layoutId).
+  const itemClass =
+    "group relative flex items-center gap-3 h-9 px-2.5 rounded-[10px] text-[13.5px] font-medium tracking-[-0.01em] outline-none transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.28)]";
 
   // Analytics: clique manual em aba. Na demo a EVA navega por postMessage, então
   // qualquer clique na sidebar = a pessoa saindo do roteiro guiado (nav_off_flow).
-  const handleNavClick = (item: NavItem | FooterItem) => {
+  const handleNavClick = (item: NavItem) => {
     trackBehavior(DEMO_EVENTS.NAV_TAB_CLICK, { tab: item.url, title: item.title, from: location.pathname });
     claritySet("last_tab", item.title);
     if (isDemoSession()) {
@@ -309,96 +302,50 @@ export function AppSidebar() {
     }
   };
 
-  const renderNavItem = (item: NavItem | FooterItem, opts?: { footer?: boolean }) => {
-    const isFooter = opts?.footer === true;
+  const renderNavItem = (item: NavItem) => {
     const isActive =
       location.pathname === item.url ||
-      (item.url !== "/inicio" && location.pathname.startsWith(item.url));
-    const showBadge = "badge" in item && item.badge === "rotting";
+      (item.url !== "/inicio" && location.pathname.startsWith(item.url + "/")) ||
+      (item.url === "/admin" && location.pathname === "/admin");
+    const showBadge = item.badge === "rotting" && rottingDealsCount > 0;
     const Icon = item.icon;
-
-    // Footer = mais discreto: text menor e cor mais muted, sem ativo cheio
-    const itemBase = isFooter
-      ? "relative flex items-center gap-2.5 h-9 px-3 rounded-lg text-[12.5px] font-medium text-[#94A3B8] hover:text-[#0B1220] hover:bg-[#F6F4EF] transition-colors outline-none"
-      : isActive
-      ? activeClass
-      : inactiveClass;
 
     const linkContent = (
       <NavLink
         to={item.url}
-        end={item.url === "/inicio"}
-        className={itemBase}
+        end={item.url === "/inicio" || item.url === "/admin"}
+        className={`${itemClass} ${
+          isActive
+            ? "text-[var(--vyz-text-primary)]"
+            : "text-[var(--vyz-text-muted)] hover:text-[var(--vyz-text-primary)] hover:bg-[var(--vyz-surface-2)]"
+        } ${collapsed ? "justify-center px-0" : ""}`}
         activeClassName=""
         aria-label={item.title}
+        aria-current={isActive ? "page" : undefined}
         data-demo-nav={item.url}
         onClick={() => handleNavClick(item)}
       >
-        {/* Pill ativo — só nav principal. Desliza entre itens (layoutId). */}
-        {!isFooter && isActive && (
-          <>
-            {reduceMotion ? (
-              <span
-                className="absolute inset-0 rounded-xl pointer-events-none"
-                style={{
-                  background: "rgba(37,99,235,0.08)",
-                  border: "1px solid rgba(37,99,235,0.18)",
-                }}
-                aria-hidden
-              />
-            ) : (
-              <motion.span
-                layoutId="sidebar-active-pill"
-                transition={{ type: "spring", stiffness: 420, damping: 36 }}
-                className="absolute inset-0 rounded-xl pointer-events-none"
-                style={{
-                  background: "rgba(37,99,235,0.08)",
-                  border: "1px solid rgba(37,99,235,0.18)",
-                }}
-                aria-hidden
-              />
-            )}
-            <span
-              className="absolute -left-[7px] top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full pointer-events-none"
-              style={{ background: "#2563EB", boxShadow: "0 0 6px rgba(37,99,235,0.45)" }}
+        {isActive &&
+          (reduceMotion ? (
+            <span className="absolute inset-0 rounded-[10px] pointer-events-none bg-[var(--vyz-accent-soft-10)]" aria-hidden />
+          ) : (
+            <motion.span
+              layoutId="sidebar-active-pill"
+              transition={{ type: "spring", stiffness: 460, damping: 38 }}
+              className="absolute inset-0 rounded-[10px] pointer-events-none bg-[var(--vyz-accent-soft-10)]"
               aria-hidden
             />
-          </>
-        )}
+          ))}
 
-        <span className="relative shrink-0 inline-flex transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110 motion-reduce:group-hover:scale-100">
+        <span className="relative shrink-0 inline-flex">
           <Icon
-            size={18}
-            weight={isActive && !isFooter ? "fill" : "duotone"}
-            className={
-              isFooter
-                ? "text-[#94A3B8] group-hover:text-[#0B1220]"
-                : isActive
-                ? "text-[#2563EB]"
-                : "text-[#94A3B8]"
-            }
+            size={19}
+            weight={isActive ? "fill" : "regular"}
+            className={isActive ? "text-[var(--vyz-accent)]" : "text-[var(--vyz-text-muted)] group-hover:text-[var(--vyz-text-primary)]"}
             aria-hidden
           />
-          {/* F2.7: micro dot roxo no item EVA (IA accent sutil), sem dominar */}
-          {!isFooter && "feature" in item && item.feature === "eva" && !isActive && (
-            <span
-              className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full pointer-events-none"
-              style={{
-                background: "#7C3AED",
-                boxShadow: "0 0 4px rgba(124,58,237,0.5)",
-              }}
-              aria-hidden
-            />
-          )}
-          {/* F2.7: badge rotting em amber (atenção), não rose (emergência) */}
-          {showBadge && rottingDealsCount > 0 && collapsed && (
-            <span
-              className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full text-white text-[9px] font-semibold leading-none"
-              style={{
-                background: "#F59E0B",
-                boxShadow: "0 0 6px rgba(245,158,11,0.40)",
-              }}
-            >
+          {showBadge && collapsed && (
+            <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[15px] h-[15px] px-1 rounded-full bg-[#D97706] text-white text-[9px] font-semibold leading-none ring-2 ring-[var(--vyz-surface-1)]">
               {rottingDealsCount > 99 ? "99+" : rottingDealsCount}
             </span>
           )}
@@ -406,15 +353,11 @@ export function AppSidebar() {
 
         {!collapsed && (
           <>
-            <span className="relative flex-1 truncate tracking-tight">{item.title}</span>
-            {showBadge && rottingDealsCount > 0 && (
+            <span className="relative flex-1 truncate">{item.title}</span>
+            {showBadge && (
               <span
-                className="relative inline-flex items-center justify-center min-w-[22px] h-[20px] px-2 rounded-md text-[10.5px] font-semibold"
-                style={{
-                  background: "rgba(245,158,11,0.12)",
-                  color: "#B45309",
-                  border: "1px solid rgba(245,158,11,0.25)",
-                }}
+                className="relative inline-flex items-center justify-center min-w-[22px] h-[19px] px-1.5 rounded-full text-[11px] font-semibold tabular-nums bg-[rgba(217,119,6,0.12)] text-[#B45309]"
+                title={`${rottingDealsCount} oportunidades paradas`}
               >
                 {rottingDealsCount}
               </span>
@@ -432,7 +375,7 @@ export function AppSidebar() {
           </TooltipTrigger>
           <TooltipContent side="right" className="font-medium">
             {item.title}
-            {showBadge && rottingDealsCount > 0 && ` (${rottingDealsCount} parados)`}
+            {showBadge && ` (${rottingDealsCount} parados)`}
           </TooltipContent>
         </Tooltip>
       );
@@ -447,116 +390,44 @@ export function AppSidebar() {
     <TooltipProvider delayDuration={300}>
       <Sidebar
         collapsible="icon"
-        className="text-[#0B1220]"
-        style={{
-          background: "#FFFFFF",
-          borderRight: "1px solid #E6EDF5",
-        }}
+        className="text-[var(--vyz-text-primary)]"
+        style={{ background: "var(--vyz-surface-1)", borderRight: "1px solid var(--vyz-border)" }}
       >
         <SidebarContent className="gap-0">
-          {/* Topo: logo + sino alinhados (F2.7: mais respiro superior) */}
-          <div
-            className={`pt-5 pb-4 ${collapsed ? "px-2" : "px-4"} flex items-center ${
-              collapsed ? "justify-center" : "justify-between"
-            } gap-2`}
-          >
-            {collapsed ? (
-              <img src={logoIcon} alt="Vyzon" className="h-7 w-7 object-contain" />
-            ) : (
-              <ThemeLogo className="h-8 w-auto" />
-            )}
+          <div className={`pt-5 pb-4 ${collapsed ? "px-2 justify-center" : "pl-4 pr-3 justify-between"} flex items-center gap-2`}>
+            {collapsed ? <ThemeLogo iconOnly className="h-7 w-7" /> : <ThemeLogo className="h-[22px] w-auto" />}
             {!collapsed && <ReminderBell />}
           </div>
 
-          {/* CTA Novo lead — premium gradient 40px */}
           <div className="px-3 pb-3" data-tour="register-sale-btn">
-            {collapsed ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setIsNovaOportunidadeOpen(true)}
-                    aria-label="Novo lead"
-                    className="relative w-full flex items-center justify-center h-10 rounded-full bg-[#080808] text-white transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.97] hover:bg-[#1a1a1a] hover:-translate-y-px motion-reduce:hover:translate-y-0 shadow-[0_1px_2px_rgba(8,8,8,0.18),0_6px_16px_-8px_rgba(8,8,8,0.45)] hover:shadow-[0_3px_8px_rgba(8,8,8,0.20),0_14px_30px_-10px_rgba(8,8,8,0.50)]"
-                  >
-                    <Plus size={16} weight="bold" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="text-[11px]">
-                  Novo lead
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              <button
-                onClick={() => setIsNovaOportunidadeOpen(true)}
-                aria-label="Novo lead"
-                className="relative w-full flex items-center justify-center gap-1.5 h-10 rounded-full bg-[#080808] text-white text-[13px] font-semibold tracking-tight transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] hover:bg-[#1a1a1a] hover:-translate-y-px motion-reduce:hover:translate-y-0 shadow-[0_1px_2px_rgba(8,8,8,0.18),0_6px_16px_-8px_rgba(8,8,8,0.45)] hover:shadow-[0_3px_8px_rgba(8,8,8,0.20),0_14px_30px_-10px_rgba(8,8,8,0.50)]"
-              >
-                <Plus size={15} weight="bold" />
-                <span>Novo lead</span>
-              </button>
-            )}
+            <SidebarCta collapsed={collapsed} onClick={() => setIsNovaOportunidadeOpen(true)} />
           </div>
 
-          {/* Sino standalone (collapsed) */}
           {collapsed && (
             <div className="px-3 pb-2 flex items-center justify-center">
               <ReminderBell />
             </div>
           )}
 
-          {/* Separator leve */}
-          <div
-            className="mx-3 h-px mb-2"
-            style={{
-              background:
-                "linear-gradient(90deg, transparent 0%, #E6EDF5 50%, transparent 100%)",
-            }}
-            aria-hidden
-          />
-
-          {/* Nav principal */}
           <SidebarGroup className="py-1 px-2">
             <SidebarGroupContent>
-              <SidebarMenu className="gap-0.5">
-                {filteredMainItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    {renderNavItem(item)}
-                  </SidebarMenuItem>
+              <SidebarMenu className="gap-px">
+                {mainNavItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>{renderNavItem(item)}</SidebarMenuItem>
                 ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
 
-        {/* Footer */}
-        <SidebarFooter
-          className="mt-auto p-0"
-          style={{
-            borderTop: "1px solid #E6EDF5",
-            background: "#FAFBFC",
-          }}
-        >
-          {/* Gestão/Suporte — discreto, antes do user */}
-          {filteredAdminItems.length > 0 && (
-            <div className={collapsed ? "p-2" : "px-2.5 pt-2.5 pb-1.5"}>
-              {!collapsed && (
-                <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-[#CBD5E1]">
-                  Admin
-                </p>
-              )}
-              <SidebarMenu className="gap-0.5">
-                {filteredAdminItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    {renderNavItem(item, { footer: true })}
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </div>
-          )}
-
-          {!collapsed && filteredAdminItems.length > 0 && (
-            <div className="mx-3 h-px" style={{ background: "#EAF0F6" }} aria-hidden />
-          )}
+        <SidebarFooter className="mt-auto p-0" style={{ borderTop: "1px solid var(--vyz-border)" }}>
+          <div className={collapsed ? "p-2" : "px-2 pt-2"}>
+            <SidebarMenu className="gap-px">
+              {filteredAccountItems.map((item) => (
+                <SidebarMenuItem key={item.title}>{renderNavItem(item)}</SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </div>
 
           {/* User menu + plan badges */}
           <div className={collapsed ? "p-2 flex justify-center" : "p-2.5 space-y-1.5"}>
@@ -576,7 +447,7 @@ export function AppSidebar() {
               <div className="flex items-center gap-3 px-2 pt-0.5">
                 {isAdmin && (
                   <span
-                    className="inline-flex items-center gap-1 text-[10.5px] font-medium text-[#94A3B8]"
+                    className="inline-flex items-center gap-1 text-[10.5px] font-medium text-[var(--vyz-text-muted)]"
                     aria-label="Você é admin"
                   >
                     <ShieldCheck size={11} weight="duotone" className="text-[#B45309]/80" />
@@ -587,7 +458,7 @@ export function AppSidebar() {
                   <button
                     onClick={() => navigate("/configuracoes/faturamento")}
                     aria-label={`Plano ${planInfo.label} — abrir faturamento`}
-                    className="inline-flex items-center gap-1 text-[10.5px] font-medium text-[#94A3B8] hover:text-[#0B1220] transition-colors"
+                    className="inline-flex items-center gap-1 text-[10.5px] font-medium text-[var(--vyz-text-muted)] hover:text-[var(--vyz-text-primary)] transition-colors"
                     title="Ver faturamento"
                   >
                     <Star
@@ -595,8 +466,8 @@ export function AppSidebar() {
                       weight="fill"
                       className={
                         currentPlan !== "free"
-                          ? "text-[#2563EB]"
-                          : "text-[#94A3B8]"
+                          ? "text-[var(--vyz-accent)]"
+                          : "text-[var(--vyz-text-soft)]"
                       }
                     />
                     {planInfo.label}

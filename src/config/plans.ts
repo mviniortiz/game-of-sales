@@ -62,17 +62,20 @@ export const PLANS: Record<PlanId, Plan> = {
     essential: {
         id: "essential",
         name: "Essential",
-        description: "Pra quem quer parar de perder cliente no WhatsApp",
+        description: "Pra quem quer parar de perder proposta no WhatsApp",
         monthlyPrice: 197,
         annualDiscount: 10,
+        // Só o que existe no produto e o que muda entre os planos de verdade:
+        // usuários, análises da EVA (whatsapp-copilot) e execuções do agente
+        // por dia (eva-agent-loop PLAN_RUN_LIMIT). O resto é igual nos dois.
         features: [
             "Até 3 usuários",
-            "WhatsApp conectado",
-            "Inbox Comercial completo",
-            "Pipeline com agendamentos",
-            "EVA lê as conversas e sugere respostas (25 análises/dia por usuário)",
-            "Qualificação automática dos leads",
-            "Relatórios essenciais",
+            "1 WhatsApp da empresa conectado",
+            "Placar de propostas: quanto está parado e há quantos dias",
+            "Valor da proposta lido direto do PDF",
+            "EVA escreve a retomada e você aprova pelo WhatsApp",
+            "25 leituras da EVA por pessoa por dia",
+            "20 tarefas do agente da EVA por dia",
         ],
         limits: {
             users: 3,
@@ -85,18 +88,14 @@ export const PLANS: Record<PlanId, Plan> = {
     pro: {
         id: "pro",
         name: "Pro",
-        description: "Pra quem recebe pedidos todos os dias e quer o operacional resolvido",
+        description: "Pra equipes com mais gente e mais conversa por dia",
         monthlyPrice: 497,
         annualDiscount: 10,
         features: [
             "Até 10 usuários",
             "Tudo do Essential",
-            "EVA completa: intenção, fit, urgência e objeções (50/dia por usuário)",
-            "Follow-up supervisionado com rascunho pronto na hora certa",
-            "Pipeline que se atualiza sozinho conforme a conversa anda",
-            "Ranking e metas do time",
-            "Relatórios completos",
-            "Integrações Hotmart, Kiwify e Mercado Pago",
+            "50 leituras da EVA por pessoa por dia",
+            "60 tarefas do agente da EVA por dia",
         ],
         limits: {
             users: 10,

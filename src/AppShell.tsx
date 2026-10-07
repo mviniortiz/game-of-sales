@@ -38,7 +38,7 @@ const ConfIntegracoes = lazy(() => import("./pages/configuracoes/Integracoes"));
 const ConfTags = lazy(() => import("./pages/configuracoes/Tags"));
 const ConfImportar = lazy(() => import("./pages/configuracoes/Importar"));
 const ConfWebhooksLeads = lazy(() => import("./pages/configuracoes/WebhooksLeads"));
-const ConfRelatoriosPublicos = lazy(() => import("./pages/configuracoes/RelatoriosPublicos"));
+const ConfAprovacao = lazy(() => import("./pages/configuracoes/Aprovacao"));
 const Calendario = lazy(() => import("./pages/Calendario"));
 const CRM = lazy(() => import("./pages/CRM"));
 const DealCommandCenter = lazy(() => import("./pages/DealCommandCenter"));
@@ -306,14 +306,13 @@ const AppShell = () => (
                   }
                 />
                 <Route
-                  path="relatorios-publicos"
+                  path="aprovacao"
                   element={
                     <AdminRoute>
-                      <ConfRelatoriosPublicos />
+                      <ConfAprovacao />
                     </AdminRoute>
                   }
                 />
-                {/* Contratos virou seção da Gestão. */}
                 {/* Webhooks de leads (Google Sheets / Meta Lead Ads / etc.): setup via
                     Apps Script + lead-webhook. Alcançado pelo botão "Conectar" do Sheets
                     em Integrações (navigate com ?create=). Estava órfão (redirect). */}

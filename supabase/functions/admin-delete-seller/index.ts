@@ -122,6 +122,46 @@ serve(async (req) => {
       });
     }
 
+    // deals.user_id é NOT NULL e apaga em cascata com o usuário: sem repassar,
+    // remover alguém da equipe apagaria todas as oportunidades dela.
+    let heirId: string | null = requesterProfile.company_id === sellerProfile.company_id ? user.id : null;
+    if (!heirId) {
+      const { data: adminRows } = await (supabaseAdmin as any)
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin")
+        .neq("user_id", sellerId);
+      const adminIds = (adminRows ?? []).map((r: { user_id: string }) => r.user_id);
+      if (adminIds.length) {
+        const { data: heir } = await (supabaseAdmin as any)
+          .from("profiles")
+          .select("id")
+          .eq("company_id", sellerProfile.company_id)
+          .in("id", adminIds)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        heirId = heir?.id ?? null;
+      }
+    }
+    if (!heirId) {
+      return new Response(JSON.stringify({ error: "A empresa não tem outro admin para receber as oportunidades desta pessoa" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { error: moveError } = await (supabaseAdmin as any)
+      .from("deals")
+      .update({ user_id: heirId })
+      .eq("user_id", sellerId);
+    if (moveError) {
+      console.error("[admin-delete-seller] repasse de deals falhou:", moveError);
+      return new Response(JSON.stringify({ error: "Não deu para repassar as oportunidades; nada foi removido" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Delete from auth.users (cascades to profiles via FK or trigger)
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(sellerId);
 
@@ -137,7 +177,7 @@ serve(async (req) => {
     await (supabaseAdmin as any).from("user_roles").delete().eq("user_id", sellerId);
     await (supabaseAdmin as any).from("profiles").delete().eq("id", sellerId);
 
-    console.log(`[admin-delete-seller] User ${sellerId} (${sellerProfile.nome}) deleted by ${user.id}`);
+    console.log(`[admin-delete-seller] User ${sellerId} (${sellerProfile.nome}) deleted by ${user.id}; deals -> ${heirId}`);
 
     return new Response(JSON.stringify({ success: true, deletedName: sellerProfile.nome }), {
       status: 200,

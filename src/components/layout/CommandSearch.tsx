@@ -362,7 +362,7 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
                                                     onClick={r.onSelect}
                                                     className="relative w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors"
                                                     style={{
-                                                        background: active ? "rgba(0,227,122,0.08)" : "transparent",
+                                                        background: active ? "rgba(37, 99, 235,0.08)" : "transparent",
                                                     }}
                                                 >
                                                     {active && (
@@ -376,14 +376,14 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
                                                         className="flex items-center justify-center h-7 w-7 rounded-md shrink-0"
                                                         style={{
                                                             background: active
-                                                                ? "rgba(0,227,122,0.12)"
+                                                                ? "rgba(37, 99, 235,0.12)"
                                                                 : "rgba(255,255,255,0.03)",
                                                             border: "1px solid rgba(255,255,255,0.05)",
                                                         }}
                                                     >
                                                         <Icon
                                                             className="h-3.5 w-3.5"
-                                                            {...(active ? { style: { color: "#33FF9E" } } : { style: { color: "rgba(255,255,255,0.55)" } })}
+                                                            {...(active ? { style: { color: "#60A5FA" } } : { style: { color: "rgba(255,255,255,0.55)" } })}
                                                         />
                                                     </div>
                                                     <div className="flex-1 min-w-0">

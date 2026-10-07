@@ -225,7 +225,7 @@ export function EmbedController() {
                     style={{ position: "fixed", top: 14, left: "50%", zIndex: 2147483600, pointerEvents: "none", display: "flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 999, background: "rgba(11,18,32,0.92)", color: "#fff", fontSize: 12.5, fontWeight: 600, boxShadow: "0 10px 28px -10px rgba(13,20,33,0.55)", backdropFilter: "blur(4px)", animation: "vzFlash 1.9s ease both" }}
                     aria-hidden="true"
                 >
-                    <span style={{ width: 7, height: 7, borderRadius: 999, background: "#00E37A" }} />
+                    <span style={{ width: 7, height: 7, borderRadius: 999, background: "#2563EB" }} />
                     EVA · {flash.label}
                 </div>
             )}

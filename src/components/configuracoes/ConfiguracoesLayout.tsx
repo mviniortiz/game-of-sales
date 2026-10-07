@@ -1,186 +1,134 @@
 import { useMemo } from "react";
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
-  User,
-  ShieldCheck,
-  Building2,
-  Users,
+  Buildings,
+  ChatCircleText,
+  CheckCircle,
   CreditCard,
-  Plug,
-  Upload,
-  ArrowUpRight,
-  Link2,
-  Webhook,
+  DownloadSimple,
+  ShieldCheck,
   Tag,
-  MessageCircle,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+  UserCircle,
+  UsersThree,
+  WebhooksLogo,
+  type Icon,
+} from "@phosphor-icons/react";
 import { useAuth } from "@/contexts/AuthContext";
 
 type NavItem = {
   id: string;
   label: string;
   path: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: Icon;
   adminOnly?: boolean;
-  pending?: boolean;
 };
 
-type NavGroup = {
-  label: string;
-  items: NavItem[];
-};
+type NavGroup = { label: string; items: NavItem[] };
 
+// Menu do produto de hoje (out/2026): WhatsApp, aprovação da EVA e leads.
+// Integrações de infoproduto (Hotmart, Kiwify) e Relatórios públicos saíram do
+// menu por falta de uso; Equipe mora na Gestão.
 const GROUPS: NavGroup[] = [
   {
     label: "Conta",
     items: [
-      { id: "perfil", label: "Perfil", path: "/configuracoes/perfil", icon: User },
+      { id: "perfil", label: "Perfil", path: "/configuracoes/perfil", icon: UserCircle },
       { id: "seguranca", label: "Segurança", path: "/configuracoes/seguranca", icon: ShieldCheck },
     ],
   },
   {
     label: "Empresa",
     items: [
-      { id: "organizacao", label: "Organização", path: "/configuracoes/organizacao", icon: Building2, adminOnly: true },
+      { id: "organizacao", label: "Organização", path: "/configuracoes/organizacao", icon: Buildings, adminOnly: true },
       // O WhatsApp se conecta e reconecta no Inbox; o item leva direto para lá.
-      { id: "whatsapp", label: "WhatsApp", path: "/inbox?connect=1", icon: MessageCircle, adminOnly: true },
-      // A gestão de equipe vive em Gestão (/admin); sem página intermediária.
-      { id: "time", label: "Equipe", path: "/admin", icon: Users, adminOnly: true },
-      { id: "faturamento", label: "Faturamento", path: "/configuracoes/faturamento", icon: CreditCard, adminOnly: true },
+      { id: "whatsapp", label: "WhatsApp", path: "/inbox?connect=1", icon: ChatCircleText, adminOnly: true },
+      { id: "time", label: "Equipe", path: "/admin?aba=equipe", icon: UsersThree, adminOnly: true },
+      { id: "faturamento", label: "Plano e faturamento", path: "/configuracoes/faturamento", icon: CreditCard, adminOnly: true },
     ],
   },
   {
-    label: "Dados",
+    label: "EVA",
+    items: [{ id: "aprovacao", label: "Aprovação no WhatsApp", path: "/configuracoes/aprovacao", icon: CheckCircle, adminOnly: true }],
+  },
+  {
+    label: "Leads",
     items: [
-      { id: "integracoes", label: "Integrações", path: "/configuracoes/integracoes", icon: Plug, adminOnly: true },
-      { id: "webhooks-leads", label: "Receber leads", path: "/configuracoes/webhooks-leads", icon: Webhook, adminOnly: true },
+      { id: "webhooks-leads", label: "Receber leads", path: "/configuracoes/webhooks-leads", icon: WebhooksLogo, adminOnly: true },
+      { id: "importar", label: "Importar", path: "/configuracoes/importar", icon: DownloadSimple, adminOnly: true },
       { id: "tags", label: "Tags", path: "/configuracoes/tags", icon: Tag, adminOnly: true },
-      { id: "importar", label: "Importar", path: "/configuracoes/importar", icon: Upload, adminOnly: true },
-    ],
-  },
-  {
-    label: "Compartilhamento",
-    items: [
-      {
-        id: "relatorios-publicos",
-        label: "Relatórios públicos",
-        path: "/configuracoes/relatorios-publicos",
-        icon: Link2,
-        adminOnly: true,
-      },
     ],
   },
 ];
 
 const TITLES: Record<string, { title: string; subtitle: string }> = {
-  perfil: { title: "Perfil", subtitle: "Sua identidade dentro do Vyzon" },
-  seguranca: { title: "Segurança", subtitle: "Senha, sessões e acessos" },
-  organizacao: { title: "Organização", subtitle: "Dados da empresa" },
-  faturamento: { title: "Faturamento", subtitle: "Plano, uso e histórico" },
+  perfil: { title: "Perfil", subtitle: "Seu nome e sua foto no Vyzon" },
+  seguranca: { title: "Segurança", subtitle: "Senha e acesso à conta" },
+  organizacao: { title: "Organização", subtitle: "Dados da empresa e o segmento que a EVA usa" },
+  faturamento: { title: "Plano e faturamento", subtitle: "Seu plano, o uso e as cobranças" },
+  aprovacao: { title: "Aprovação no WhatsApp", subtitle: "Como os rascunhos da EVA chegam até você" },
   integracoes: { title: "Integrações", subtitle: "Conecte as ferramentas que você já usa" },
   "webhooks-leads": { title: "Receber leads", subtitle: "Leads do seu site e dos anúncios entram direto no funil" },
-  tags: { title: "Tags", subtitle: "Marcadores do time para deals, conversas e contatos" },
-  importar: { title: "Importar", subtitle: "Traga deals e vendas de fora" },
-  "relatorios-publicos": {
-    title: "Relatórios públicos",
-    subtitle: "Links white-label pro cliente acompanhar sem login",
-  },
+  tags: { title: "Tags", subtitle: "Marcadores para oportunidades, conversas e contatos" },
+  importar: { title: "Importar", subtitle: "Traga contatos e oportunidades de uma planilha" },
 };
 
 export default function ConfiguracoesLayout() {
   const location = useLocation();
-  const navigate = useNavigate();
   const { isAdmin } = useAuth();
-
-  const currentSection = useMemo(() => {
-    const seg = location.pathname.split("/")[2] || "perfil";
-    return seg;
-  }, [location.pathname]);
-
+  const currentSection = location.pathname.split("/")[2] || "perfil";
   const header = TITLES[currentSection] || TITLES.perfil;
 
   const visibleGroups = useMemo(
     () =>
-      GROUPS.map((g) => ({
-        ...g,
-        items: g.items.filter((it) => !it.adminOnly || isAdmin),
-      })).filter((g) => g.items.length > 0),
+      GROUPS.map((g) => ({ ...g, items: g.items.filter((it) => !it.adminOnly || isAdmin) })).filter((g) => g.items.length > 0),
     [isAdmin],
   );
 
-  return (
-    <div className="space-y-4 sm:space-y-6 p-1">
-      {/* Header — mesmo padrão do Dashboard */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
-          {header.title}
-        </h1>
-        <p className="text-sm text-muted-foreground font-medium mt-1">{header.subtitle}</p>
-      </div>
+  const itemClass = (active: boolean) =>
+    `group flex items-center gap-2.5 rounded-[10px] px-2.5 text-[13.5px] font-medium outline-none transition-colors duration-150 focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.28)] ${
+      active
+        ? "bg-[var(--vyz-accent-soft-10)] text-[var(--vyz-text-primary)]"
+        : "text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-2)] hover:text-[var(--vyz-text-primary)]"
+    }`;
 
-      {/* Body: sidebar + outlet */}
-      <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 lg:gap-8">
-        {/* Sidebar nav */}
+  return (
+    <div className="mx-auto w-full max-w-[1120px] space-y-6">
+      <header>
+        <h1 className="text-[26px] font-semibold tracking-[-0.03em] text-[var(--vyz-text-primary)]">{header.title}</h1>
+        <p className="mt-1 text-[14px] text-[var(--vyz-text-muted)]">{header.subtitle}</p>
+      </header>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr] lg:gap-8">
         <aside className="lg:sticky lg:top-4 lg:self-start">
-          {/* Mobile: horizontal scroll pill nav */}
-          <nav className="lg:hidden flex gap-1.5 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
+          <nav aria-label="Configurações" className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-2 no-scrollbar lg:hidden">
             {visibleGroups.flatMap((g) => g.items).map((item) => {
               const active = currentSection === item.id;
-              const Icon = item.icon;
               return (
-                <NavLink
-                  key={item.id}
-                  to={item.path}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs whitespace-nowrap transition-colors font-medium",
-                    active
-                      ? "bg-[rgba(37,99,235,0.10)] text-[#2563EB] ring-1 ring-[rgba(37,99,235,0.20)]"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
-                  )}
-                >
-                  <Icon className="h-3.5 w-3.5" />
+                <NavLink key={item.id} to={item.path} aria-current={active ? "page" : undefined} className={`${itemClass(active)} h-8 whitespace-nowrap`}>
+                  <item.icon size={16} weight={active ? "fill" : "regular"} className={active ? "text-[var(--vyz-accent)]" : ""} aria-hidden />
                   {item.label}
-                  {item.pending && (
-                    <span className="w-1 h-1 rounded-full bg-amber-400 animate-pulse" />
-                  )}
                 </NavLink>
               );
             })}
           </nav>
 
-          {/* Desktop: grouped vertical nav */}
-          <div className="hidden lg:block space-y-5">
+          <nav aria-label="Configurações" className="hidden space-y-5 lg:block">
             {visibleGroups.map((group) => (
               <div key={group.label}>
-                <p className="text-xs font-semibold text-muted-foreground mb-2 px-2.5">
-                  {group.label}
-                </p>
-                <ul className="space-y-0.5">
+                <p className="mb-1.5 px-2.5 text-[12px] font-medium text-[var(--vyz-text-soft)]">{group.label}</p>
+                <ul className="space-y-px">
                   {group.items.map((item) => {
                     const active = currentSection === item.id;
-                    const Icon = item.icon;
                     return (
                       <li key={item.id}>
-                        <NavLink
-                          to={item.path}
-                          className={cn(
-                            "group flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-all font-medium",
-                            active
-                              ? "text-[#2563EB] bg-[rgba(37,99,235,0.10)] ring-1 ring-[rgba(37,99,235,0.20)]"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
-                          )}
-                        >
-                          <Icon
-                            className={cn(
-                              "h-4 w-4 transition-colors",
-                              active ? "text-[#2563EB]" : "text-muted-foreground/70 group-hover:text-foreground",
-                            )}
+                        <NavLink to={item.path} aria-current={active ? "page" : undefined} className={`${itemClass(active)} h-9`}>
+                          <item.icon
+                            size={18}
+                            weight={active ? "fill" : "regular"}
+                            className={active ? "text-[var(--vyz-accent)]" : "group-hover:text-[var(--vyz-text-primary)]"}
+                            aria-hidden
                           />
                           <span className="flex-1">{item.label}</span>
-                          {item.pending && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                          )}
                         </NavLink>
                       </li>
                     );
@@ -188,21 +136,9 @@ export default function ConfiguracoesLayout() {
                 </ul>
               </div>
             ))}
-            {isAdmin && (
-              <div className="pt-4 border-t border-border">
-                <button
-                  onClick={() => navigate("/admin")}
-                  className="group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
-                >
-                  <span className="flex-1 text-left">Ir para Gestão</span>
-                  <ArrowUpRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </button>
-              </div>
-            )}
-          </div>
+          </nav>
         </aside>
 
-        {/* Content */}
         <main className="min-w-0">
           <Outlet />
         </main>

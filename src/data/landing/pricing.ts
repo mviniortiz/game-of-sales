@@ -3,7 +3,9 @@
 // O piso free existe só internamente; nunca aparece aqui.
 // Ligações e e-mail são ADICIONAIS: entram na lista abaixo, sem preço
 // inventado (Claims Policy: preço de adicional é decisão do Markus).
-// Cada feature listada aqui é verificada no código; nada de promessa vazia.
+// As listas de recursos vêm direto de plans.ts, para não divergirem.
+import { PLANS as PLAN_CONFIG } from "@/config/plans";
+
 export type Plan = {
     name: string;
     /** null = sem preço público. */
@@ -22,15 +24,7 @@ export const PLANS: readonly Plan[] = [
         price: "197",
         priceNumber: 197,
         tagline: "Pra agência que quer parar de perder lead no WhatsApp.",
-        features: [
-            "Até 3 usuários",
-            "WhatsApp conectado",
-            "Inbox Comercial completo",
-            "Pipeline com agendamentos",
-            "EVA lê as conversas e sugere respostas (25 análises/dia por usuário)",
-            "Qualificação automática dos leads",
-            "Relatórios essenciais",
-        ],
+        features: PLAN_CONFIG.essential.features,
         popular: false,
         extraInfo: null,
         ctaLabel: "Começar no Essential",
@@ -39,17 +33,8 @@ export const PLANS: readonly Plan[] = [
         name: "Pro",
         price: "497",
         priceNumber: 497,
-        tagline: "Pra agência que recebe leads todos os dias e quer o operacional resolvido.",
-        features: [
-            "Até 10 usuários",
-            "Tudo do Essential",
-            "EVA completa: intenção, fit, urgência e objeções (50/dia por usuário)",
-            "Follow-up supervisionado com rascunho pronto na hora certa",
-            "Pipeline que se atualiza sozinho conforme a conversa anda",
-            "Ranking e metas do time",
-            "Relatórios completos",
-            "Integrações Hotmart, Kiwify e Mercado Pago",
-        ],
+        tagline: "Pra agência com mais gente e mais conversa por dia.",
+        features: PLAN_CONFIG.pro.features,
         popular: true,
         extraInfo: "14 dias grátis pra testar, sem cartão",
         ctaLabel: "Testar o Pro grátis",

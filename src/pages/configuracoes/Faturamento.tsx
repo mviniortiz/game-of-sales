@@ -5,7 +5,7 @@ import { usePlan } from "@/hooks/usePlan";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
-  Star, Crown, Rocket, Check, ArrowRight, Users, Package, CreditCard,
+  Star, Crown, Rocket, Check, ArrowRight, Users, CreditCard,
   Loader2, AlertTriangle, Calendar, HeartCrack, Layers,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -31,12 +31,6 @@ interface Subscription {
   mp_subscription_id: string | null;
 }
 
-interface UsageStats {
-  teamCount: number;
-  productsCount: number;
-  salesThisMonth: number;
-  revenueThisMonth: number;
-}
 
 export default function Faturamento() {
   const { isAdmin, companyId } = useAuth();
@@ -48,32 +42,20 @@ export default function Faturamento() {
 
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [stats, setStats] = useState<UsageStats>({
-    teamCount: 0,
-    productsCount: 0,
-    salesThisMonth: 0,
-    revenueThisMonth: 0,
-  });
+  const [teamCount, setTeamCount] = useState(0);
   const [cancelOpen, setCancelOpen] = useState(false);
 
   const load = async () => {
     if (!effectiveCompanyId) return;
     setLoading(true);
 
-    const [companyRes, teamRes, productsRes, salesRes] = await Promise.all([
+    const [companyRes, teamRes] = await Promise.all([
       supabase
         .from("companies")
         .select("subscription_status, trial_ends_at, subscription_cancelled_at, subscription_ends_at, mp_subscription_id")
         .eq("id", effectiveCompanyId)
         .maybeSingle(),
       supabase.from("profiles").select("id", { count: "exact", head: true }).eq("company_id", effectiveCompanyId),
-      supabase.from("produtos").select("id", { count: "exact", head: true }).eq("company_id", effectiveCompanyId),
-      supabase
-        .from("vendas")
-        .select("valor")
-        .eq("company_id", effectiveCompanyId)
-        .eq("status", "Aprovado")
-        .gte("data_venda", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
     ]);
 
     if (companyRes.data) {
@@ -86,13 +68,7 @@ export default function Faturamento() {
       });
     }
 
-    const revenue = (salesRes.data || []).reduce((s: number, v: any) => s + (Number(v.valor) || 0), 0);
-    setStats({
-      teamCount: teamRes.count || 0,
-      productsCount: productsRes.count || 0,
-      salesThisMonth: salesRes.data?.length || 0,
-      revenueThisMonth: revenue,
-    });
+    setTeamCount(teamRes.count || 0);
     setLoading(false);
   };
 
@@ -133,8 +109,6 @@ export default function Faturamento() {
     ? new Date(subscription.ends_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })
     : null;
 
-  const formatCurrency = (value: number) =>
-    value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   return (
     <div className="space-y-5">
@@ -218,35 +192,13 @@ export default function Faturamento() {
             <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Uso atual</p>
             <div className="space-y-2.5">
               <UsageRow
-                used={stats.teamCount}
+                used={teamCount}
                 limit={PLAN_FEATURES[currentPlan].maxUsers}
-                label="Vendedores"
+                label="Pessoas na equipe"
                 icon={Users}
-              />
-              <UsageRow
-                used={stats.productsCount}
-                limit={PLAN_FEATURES[currentPlan].maxProducts}
-                label="Produtos"
-                icon={Package}
               />
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Monthly summary */}
-      <div className="grid sm:grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-[#E6EDF5] bg-white p-4">
-          <p className="text-[11px] text-muted-foreground mb-1">Faturamento no mês</p>
-          <p className="text-xl font-bold text-foreground tabular-nums">
-            {formatCurrency(stats.revenueThisMonth)}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-[#E6EDF5] bg-white p-4">
-          <p className="text-[11px] text-muted-foreground mb-1">Vendas no mês</p>
-          <p className="text-xl font-bold text-foreground tabular-nums">
-            {stats.salesThisMonth}
-          </p>
         </div>
       </div>
 

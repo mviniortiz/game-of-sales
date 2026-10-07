@@ -85,7 +85,7 @@ const Suporte = () => {
         <hr style="border:none;border-top:1px solid #e5e5e5;margin:24px 0;">
         <div style="color:#666;font-size:13px;">
           <strong>Vyzon Suporte</strong><br>
-          <a href="https://vyzon.com.br" style="color:#00E37A;text-decoration:none;">vyzon.com.br</a>
+          <a href="https://vyzon.com.br" style="color:#2563EB;text-decoration:none;">vyzon.com.br</a>
         </div>
       </div>`;
 
@@ -217,14 +217,14 @@ const Suporte = () => {
                         isSelected ? "bg-emerald-500/10" : "hover:bg-muted/60"
                       }`}
                       style={{
-                        borderLeft: isSelected ? "2px solid #00E37A" : "2px solid transparent",
+                        borderLeft: isSelected ? "2px solid #2563EB" : "2px solid transparent",
                       }}
                     >
                       <div className="flex items-start gap-3">
                         <div
                           className="h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
                           style={{
-                            background: "linear-gradient(135deg, rgba(0,227,122,0.2), rgba(6,182,212,0.15))",
+                            background: "linear-gradient(135deg, rgba(37, 99, 235,0.2), rgba(6,182,212,0.15))",
                           }}
                         >
                           {getInitials(email.from)}
@@ -289,7 +289,7 @@ const Suporte = () => {
                     <div
                       className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-semibold text-emerald-700 dark:text-emerald-300"
                       style={{
-                        background: "linear-gradient(135deg, rgba(0,227,122,0.2), rgba(6,182,212,0.15))",
+                        background: "linear-gradient(135deg, rgba(37, 99, 235,0.2), rgba(6,182,212,0.15))",
                       }}
                     >
                       {getInitials(emailDetail.from)}

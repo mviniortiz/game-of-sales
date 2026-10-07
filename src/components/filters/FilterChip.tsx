@@ -9,7 +9,7 @@ interface FilterChipProps {
 }
 
 /**
- * Chip de filtro ativo. Usa accent emerald do brand guide (rgba 0,227,122).
+ * Chip de filtro ativo. Usa accent emerald do brand guide (rgba 37, 99, 235).
  */
 export const FilterChip = ({ label, value, onRemove, className }: FilterChipProps) => {
   return (

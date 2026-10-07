@@ -55,7 +55,7 @@ export function MonthCard({ numbers, loading }: { numbers: MonthNumbers | null; 
                 ) : (
                     <p className="text-[12.5px] text-[var(--vyz-text-muted)]">
                         {plural(wonCount, "negócio", "negócios")} no mês. Sem meta cadastrada.{" "}
-                        <Link to="/metas" className="font-medium text-[var(--vyz-text-primary)] underline underline-offset-2 hover:text-[var(--vyz-accent)]">Definir meta</Link>
+                        <Link to="/admin?aba=meta" className="font-medium text-[var(--vyz-text-primary)] underline underline-offset-2 hover:text-[var(--vyz-accent)]">Definir meta</Link>
                     </p>
                 )}
             </div>

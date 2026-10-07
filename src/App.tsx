@@ -8,7 +8,6 @@ const AppShell = lazy(() => import("./AppShell"));
 // Personas /para-* DESPUBLICADAS: /para-infoprodutores + /para-saas-b2b removidas
 // (2026-06-16, foco único na home/agências); /para-agencias já estava off.
 // Todas 301 → home no vercel.json.
-const PublicReport = lazy(() => import("./pages/PublicReport"));
 
 // SEO landings /crm-* DESPUBLICADAS (2026-06-10): posicionamento antigo
 // ("CRM gamificado/ranking"), conflita com o foco atual em agências/conversa.
@@ -58,14 +57,6 @@ const App = () => (
         <Route path="/eva-voz" element={<Suspense fallback={<LazyFallback />}><EvaVoz /></Suspense>} />
         {/* Personas /para-* despublicadas 2026-06-16 — 301 → home no vercel.json. */}
         {/* /alternativa-* individuais → /alternativas (hub republicado 2026-07-22). */}
-        <Route
-          path="/r/:token"
-          element={
-            <Suspense fallback={<LazyFallback />}>
-              <PublicReport />
-            </Suspense>
-          }
-        />
         {/* Rotas /crm-* despublicadas 2026-06-10 — 301 → home no vercel.json. */}
         <Route
           path="/eva-entity-test"

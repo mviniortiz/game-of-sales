@@ -28,7 +28,7 @@ describe("MonthCard", () => {
     it("sem meta, diz isso e leva pra cadastrar", () => {
         render(<MemoryRouter><MonthCard numbers={{ ...MES, goal: null }} loading={false} /></MemoryRouter>);
         expect(screen.getByText(/2 negócios no mês. Sem meta cadastrada./)).toBeTruthy();
-        expect(screen.getByRole("link", { name: "Definir meta" }).getAttribute("href")).toBe("/metas");
+        expect(screen.getByRole("link", { name: "Definir meta" }).getAttribute("href")).toBe("/admin?aba=meta");
     });
 });
 
