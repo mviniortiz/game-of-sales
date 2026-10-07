@@ -1,18 +1,21 @@
 // Chamada de chat com troca automática de provedor.
 //
 // Todas as funções da EVA falam o formato "chat completions" da OpenAI.
-// DeepSeek, Gemini e OpenAI aceitam esse formato, então este módulo recebe o
-// corpo de sempre e tenta os provedores em ordem. Erro de cota (429), saldo
+// DeepSeek, Gemini e OpenAI aceitam esse formato; a Anthropic passa pelo
+// tradutor em llmAnthropic.ts. Este módulo recebe o corpo de sempre e tenta
+// os provedores em ordem. Erro de cota (429), saldo
 // (402), chave (401/403), fora do ar (5xx), tempo esgotado ou JSON inválido
 // quando o pedido exigia JSON: passa para o próximo.
 //
 // A resposta imita a do fetch (ok, status, json(), text()), para cada função
 // só trocar a linha da chamada.
 //
-// Ordem: LLM_PROVIDERS (ex.: "deepseek,gemini,openai"). Provedor sem chave é
+// Ordem: LLM_PROVIDERS (ex.: "anthropic,deepseek,gemini,openai"). Provedor sem chave é
 // pulado. Troca de modelo sem deploy: LLM_<PROVEDOR>_MODEL.
 
-export type LlmProvider = "deepseek" | "gemini" | "openai";
+import { anthropicChat } from "./llmAnthropic.ts";
+
+export type LlmProvider = "anthropic" | "deepseek" | "gemini" | "openai";
 
 type Body = Record<string, unknown> & { model?: string; messages: unknown[] };
 
@@ -45,10 +48,18 @@ interface ProviderSpec {
 }
 
 // Modelos conferidos nas páginas oficiais em 07/10/2026 (US$ por 1M tokens):
+// claude-haiku-5-5 0,10 / 0,50 em pedidos de até 100 mil tokens, leitura de
+// cache 0,01;
 // deepseek-flash (V4.1) 0,15 entrada / 0,60 saída fora do pico, o dobro no pico;
 // gemini-2.5-flash 0,30 / 2,50; gemini-2.5-flash-lite 0,10 / 0,40;
 // gpt-5.4-mini 0,75 / 4,50.
 const PROVIDERS: Record<LlmProvider, ProviderSpec> = {
+    anthropic: {
+        url: "https://api.anthropic.com/v1/messages",
+        keyEnv: "ANTHROPIC_API_KEY",
+        models: ["claude-haiku-5-5"],
+        maxTokensField: "max_tokens",
+    },
     deepseek: {
         url: "https://api.deepseek.com/chat/completions",
         keyEnv: "DEEPSEEK_API_KEY",
@@ -76,7 +87,11 @@ const PROVIDERS: Record<LlmProvider, ProviderSpec> = {
     },
 };
 
-const DEFAULT_ORDER: LlmProvider[] = ["deepseek", "gemini", "openai"];
+const DEFAULT_ORDER: LlmProvider[] = ["anthropic", "deepseek", "gemini", "openai"];
+
+// O Haiku 5.5 pensa por padrão (esforço "medium"). As tarefas da EVA são
+// leitura e extração curtas, então "low" corta tempo e saída.
+const ANTHROPIC_EFFORT_DEFAULT = "low";
 
 // Modelo que falhou por cota/saldo fica de fora por um tempo, no mesmo
 // isolate, para não pagar a latência do erro em toda chamada.
@@ -108,6 +123,13 @@ export function modelsFor(provider: LlmProvider, originalModel?: string): string
 export function bodyFor(provider: LlmProvider, body: Body, model = modelsFor(provider, body.model)[0]): Record<string, unknown> {
     const spec = PROVIDERS[provider];
     const out: Record<string, unknown> = { ...body, model };
+    // provider_content é o conteúdo original da Anthropic, para o replay no
+    // loop do agente; os outros provedores rejeitam campo desconhecido.
+    out.messages = (body.messages as Record<string, unknown>[]).map((m) => {
+        if (!m || typeof m !== "object" || !("provider_content" in m)) return m;
+        const { provider_content: _drop, ...rest } = m;
+        return rest;
+    });
     const limit = body.max_completion_tokens ?? body.max_tokens;
     delete out.max_completion_tokens;
     delete out.max_tokens;
@@ -134,7 +156,7 @@ export function contentIsJson(content: unknown): boolean {
 }
 
 function isCooldownStatus(status: number) {
-    return status === 401 || status === 402 || status === 403 || status === 429;
+    return status === 401 || status === 402 || status === 403 || status === 429 || status === 529;
 }
 
 function makeResponse(
@@ -176,18 +198,24 @@ export async function llmChat(body: Body, opts: LlmOptions = {}): Promise<LlmRes
 
     for (const { provider, model } of queue) {
         const spec = PROVIDERS[provider];
-        const payload = bodyFor(provider, body, model);
         const started = Date.now();
         try {
-            const res = await fetch(spec.url, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${env(spec.keyEnv)}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-                signal: AbortSignal.timeout(timeoutMs),
-            });
+            const res = provider === "anthropic"
+                ? await anthropicChat(body, model, {
+                    apiKey: env(spec.keyEnv),
+                    timeoutMs,
+                    effort: env("LLM_ANTHROPIC_EFFORT") || ANTHROPIC_EFFORT_DEFAULT,
+                    wantsJson: wantsJson(body),
+                }).then(({ status, text }) => ({ ok: status >= 200 && status < 300, status, text: async () => text }))
+                : await fetch(spec.url, {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${env(spec.keyEnv)}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(bodyFor(provider, body, model)),
+                    signal: AbortSignal.timeout(timeoutMs),
+                });
             const text = await res.text();
             const ms = Date.now() - started;
             if (!res.ok) {

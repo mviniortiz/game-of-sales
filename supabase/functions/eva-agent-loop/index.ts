@@ -665,10 +665,13 @@ serve(async (req) => {
                 break;
             }
 
+            // provider_content leva o raciocínio do Claude, que precisa voltar
+            // intacto junto com o resultado das ferramentas.
             messages.push({
                 role: "assistant",
                 content: msg.content ?? null,
                 tool_calls: toolCalls,
+                ...(msg.provider_content ? { provider_content: msg.provider_content } : {}),
             });
 
             for (const call of toolCalls) {
