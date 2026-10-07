@@ -58,7 +58,10 @@ export function isIndividualJid(jid: string): boolean {
 export async function ensureConnection(admin: any, instanceName: string, companyId: string, userId: string): Promise<string | null> {
   const metaPatch: Record<string, unknown> = { instance_name: instanceName, user_id: userId };
   try {
-    const { data: existing } = await admin.from("channel_connections").select("id, metadata").eq("provider", "evolution").eq("external_id", instanceName).maybeSingle();
+    const { data: existing } = await admin.from("channel_connections").select("id, company_id, metadata").eq("provider", "evolution").eq("external_id", instanceName).maybeSingle();
+    // O número pertence a uma empresa só: super admin operando outra empresa
+    // não grava histórico dele com o company_id errado.
+    if (existing?.id && existing.company_id !== companyId) return null;
     if (existing?.id) {
       const merged = { ...((existing.metadata as Record<string, unknown>) || {}), ...metaPatch };
       await admin.from("channel_connections").update({ status: "active", last_seen_at: new Date().toISOString(), metadata: merged }).eq("id", existing.id);
