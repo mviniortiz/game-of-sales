@@ -496,6 +496,7 @@ async function persistKnowledgeGaps(
 async function validateChatOwnership(
     adminClient: any,
     userId: string,
+    companyId: string | null,
     chatPhone: string,
 ): Promise<boolean> {
     // Normalização: frontend/conversation_summaries usam "+5511...", mas
@@ -510,7 +511,26 @@ async function validateChatOwnership(
             .eq("user_id", userId)
             .in("chat_phone", [chatPhone, withoutPlus, withPlus])
             .limit(1);
-        return (count ?? 0) > 0;
+        if ((count ?? 0) > 0) return true;
+        // Histórico importado e contatos só com LID vivem só em channel_*: a
+        // posse vem da empresa da conversa (o front manda o id da conversa
+        // quando o contato não tem telefone) ou do contato.
+        if (!companyId) return false;
+        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(chatPhone)) {
+            const { count: convCount } = await adminClient
+                .from("channel_conversations")
+                .select("id", { count: "exact", head: true })
+                .eq("id", chatPhone)
+                .eq("company_id", companyId);
+            return (convCount ?? 0) > 0;
+        }
+        const { count: contactCount } = await adminClient
+            .from("channel_contacts")
+            .select("id", { count: "exact", head: true })
+            .eq("company_id", companyId)
+            .eq("phone_e164", withoutPlus)
+            .limit(1);
+        return (contactCount ?? 0) > 0;
     } catch (e) {
         console.error("[whatsapp-copilot] validateChatOwnership exception (fail-closed):", e);
         // SEGURANÇA: fail-CLOSED. Em erro de DB NÃO presumimos posse — bloqueia a
@@ -639,7 +659,7 @@ serve(async (req) => {
         // (Pulado no modo serviço: a chamada é interna e confiável, e o lead novo
         //  ainda não tem mensagens sob o user_id do dono.)
         if (!serviceMode && contactPhone) {
-            const owns = await validateChatOwnership(adminSupabase, user.id, contactPhone);
+            const owns = await validateChatOwnership(adminSupabase, user.id, companyId, contactPhone);
             if (!owns) {
                 console.warn(
                     "[whatsapp-copilot] tenant guard rejected — user",

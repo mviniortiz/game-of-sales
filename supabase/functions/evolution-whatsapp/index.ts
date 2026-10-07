@@ -81,6 +81,33 @@ function webhookConfig() {
   };
 }
 
+// A Whatsmiau não devolve pelo webhook o que foi enviado pela própria API
+// (a Evolution devolvia). Sem isto a mensagem sai no WhatsApp e não aparece no
+// Inbox nem abre rastreio de orçamento. Grava pelo mesmo caminho do webhook;
+// se o evento vier depois, o índice único evita duplicar.
+async function recordOutbound(instanceName: string, sendRes: any, message: Record<string, unknown>): Promise<void> {
+  const id = sendRes?.key?.id;
+  const remoteJid = sendRes?.key?.remoteJid;
+  if (!id || !remoteJid || !EVOLUTION_WEBHOOK_SECRET) return;
+  try {
+    await fetch(`${WEBHOOK_RECEIVER_URL}?secret=${EVOLUTION_WEBHOOK_SECRET}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event: "messages.upsert",
+        instance: instanceName,
+        data: {
+          key: { remoteJid, fromMe: true, id },
+          message,
+          messageTimestamp: Number(sendRes?.messageTimestamp) || Math.floor(Date.now() / 1000),
+        },
+      }),
+    });
+  } catch (err: any) {
+    console.warn("[recordOutbound]", err?.message);
+  }
+}
+
 async function ensureWebhook(instanceName: string): Promise<{ ok: boolean; error?: string }> {
   if (!EVOLUTION_WEBHOOK_SECRET) {
     return { ok: false, error: "EVOLUTION_WEBHOOK_SECRET not set" };
@@ -573,6 +600,7 @@ serve(async (req) => {
         }, typingMs + 8000);
         // Envio OK → socket vivo: limpa qualquer sinal de "preso".
         await clearSendStuck(adminSupabase, instanceName);
+        await recordOutbound(instanceName, sendRes, { conversation: String(body.text).trim() });
         return json(200, { success: true, instanceName, result: sendRes });
       } catch (sendErr: any) {
         console.error("[send] error:", sendErr?.message, "status:", sendErr?.status, "payload:", JSON.stringify(sendErr?.payload));
@@ -634,6 +662,11 @@ serve(async (req) => {
           body: JSON.stringify(payload),
         }, 12000);
         console.log("[sendMedia] success:", JSON.stringify(sendRes));
+        const mediaKey = isImage ? "imageMessage" : isVideo ? "videoMessage" : "documentMessage";
+        await recordOutbound(instanceName, sendRes, {
+          [mediaKey]: { mimetype: body.mimetype, caption: body.caption || undefined, fileName: body.fileName || undefined },
+          base64: body.mediaBase64,
+        });
         return json(200, { success: true, instanceName, result: sendRes });
       } catch (sendErr: any) {
         console.error("[sendMedia] error:", sendErr?.message, "status:", sendErr?.status, "payload:", JSON.stringify(sendErr?.payload));
@@ -669,6 +702,7 @@ serve(async (req) => {
           }),
         }, 12000);
         console.log("[sendAudio] success:", JSON.stringify(sendRes));
+        await recordOutbound(instanceName, sendRes, { audioMessage: { mimetype: audioMime }, base64: body.mediaBase64 });
         return json(200, { success: true, instanceName, result: sendRes });
       } catch (sendErr: any) {
         console.error("[sendAudio] error:", sendErr?.message, "status:", sendErr?.status, "payload:", JSON.stringify(sendErr?.payload));
