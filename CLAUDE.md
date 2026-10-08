@@ -108,9 +108,13 @@ está BLOQUEADO por billing; não criar workflows.
 - Rotas públicas/SEO em `App.tsx`; `/auth`, `/criar-conta` e o app
   autenticado (catch-all) em `AppShell.tsx`. `/onboarding` e `/register` são
   redirects de compatibilidade.
-- Cadastro: trial Pro 14 dias SEM cartão; expirou → degrada pra Free em
-  runtime (`resolveEffectivePlan`). Cartão só em `/upgrade` / Faturamento
-  (`PlanCheckoutForm`, checkout transparente MP).
+- Plano único "Vyzon" R$ 497 (id `pro`). Cadastro: teste de 14 dias SEM
+  cartão; expirou → degrada pra Free em runtime (`resolveEffectivePlan`).
+  Cobrança MANUAL desde 08/10/2026: /upgrade abre o WhatsApp do Markus, ele
+  manda link do Mercado Pago e marca "Pago" em AdminCompanyDetail. Plano e
+  assinatura só mudam por service_role ou super admin (trigger
+  `guard_company_billing`). Edges mercadopago-* estão dormentes e o webhook
+  não valida assinatura; não religar sem consertar.
 - CTAs: home solar → formulário do Raio-X (`demo_requests`
   source='orcamento_teste') ou WhatsApp do Markus; trial → `/criar-conta?plan=X`. `DemoScheduleSection` e
   `NativeScheduler` estão órfãos, não usar como referência.
