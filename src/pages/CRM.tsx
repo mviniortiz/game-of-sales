@@ -57,7 +57,7 @@ import { differenceInDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { syncWonDealToSale, unsyncDealSale } from "@/utils/salesSync";
 import { KanbanColumn } from "@/components/crm/KanbanColumn";
-import { DealCard } from "@/components/crm/DealCard";
+import { DealCard, quoteStatus } from "@/components/crm/DealCard";
 import { NewDealModal } from "@/components/crm/NewDealModal";
 import { KanbanSkeleton } from "@/components/crm/KanbanSkeleton";
 import { PipelineConfigModal } from "@/components/crm/PipelineConfigModal";
@@ -490,6 +490,9 @@ export default function CRM() {
     }
     return m;
   }, [quoteQuery.data]);
+
+  const parkedCount = quoteQuery.data?.totals.parked_count ?? 0;
+  const parkedAmount = quoteQuery.data?.totals.parked_amount ?? 0;
 
   // Pipeline único de filtragem (vendedor multi + busca + avançados + status + ativo).
   // Usado por dealsByStage, stageTotals, filteredDeals e allVisibleDealIds.
@@ -1249,7 +1252,7 @@ export default function CRM() {
                   Pipeline
                 </h1>
                 {/* KPI inline: o que está na tela (respeita filtros e busca), valor e parados */}
-                <span className="flex items-center gap-1.5 text-[12px] sm:text-[12.5px] text-muted-foreground/90 font-medium sm:pl-2 sm:ml-0.5 sm:border-l border-border/60" aria-live="polite">
+                <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] sm:text-[12.5px] text-muted-foreground/90 font-medium sm:pl-2 sm:ml-0.5 sm:border-l border-border/60" aria-live="polite">
                   {isLoading ? (
                     <span>Carregando...</span>
                   ) : (
@@ -1259,7 +1262,30 @@ export default function CRM() {
                       <span>{(isFiltering ? deals.length : filteredDeals.length) === 1 ? "oportunidade" : "oportunidades"}</span>
                       <span className="hidden sm:inline text-muted-foreground/40">·</span>
                       <span className="hidden sm:inline text-foreground tabular-nums font-semibold">{formatCurrency(pipelineTotal)}</span>
-                      {rottingDealsCount > 0 && (
+                      {/* Integrador pensa em orçamento parado, não em card parado: com o
+                          placar ativo, o dinheiro parado substitui o "N paradas" genérico. */}
+                      {parkedCount > 0 && (
+                        <>
+                          <span className="text-muted-foreground/40">·</span>
+                          <button
+                            type="button"
+                            aria-pressed={filterQuoteParked}
+                            onClick={() => setFilterQuoteParked((prev) => !prev)}
+                            title={filterQuoteParked ? "Mostrar todas" : "Ver só os orçamentos sem resposta"}
+                            className={`inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-full px-2 -mx-0.5 font-semibold tabular-nums transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
+                              filterQuoteParked
+                                ? "bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200"
+                                : "text-amber-700 hover:bg-amber-50 dark:text-amber-300/90 dark:hover:bg-amber-500/10"
+                            }`}
+                          >
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden />
+                            {parkedAmount > 0
+                              ? `${formatCurrency(parkedAmount)} parados`
+                              : `${parkedCount} ${parkedCount === 1 ? "orçamento parado" : "orçamentos parados"}`}
+                          </button>
+                        </>
+                      )}
+                      {rottingDealsCount > 0 && parkedCount === 0 && (
                         <>
                           <span className="text-muted-foreground/40">·</span>
                           <button
@@ -1869,6 +1895,14 @@ export default function CRM() {
                     const ownerName = owner?.nome || (deal.assignee_outside_company ? "Outro time" : "Sem responsável");
                     const initials = (owner?.nome || "?").trim().split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
                     const isSel = selectionMode && selectedDeals.has(deal.id);
+                    const quote = quoteByDeal.get(deal.id);
+                    const st = quote ? quoteStatus(quote) : null;
+                    const quoteLine = st ? (
+                      <span className={`mt-0.5 flex min-w-0 items-center gap-1.5 text-[11.5px] font-medium ${st.tone}`}>
+                        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${st.dot}`} aria-hidden />
+                        <span className="truncate">{st.text}</span>
+                      </span>
+                    ) : null;
                     return (
                       <div
                         key={deal.id}
@@ -1897,14 +1931,18 @@ export default function CRM() {
                           </span>
                         </div>
 
-                        {/* Cliente */}
-                        <span className={`${LIST_CELL_SUB} text-[12.5px] text-muted-foreground truncate`}>
-                          {deal.customer_name || "—"}
+                        {/* Cliente e, embaixo, em que pé está o orçamento: no celular a lista
+                            é a visão padrão e sem isso o integrador não via quem sumiu. Lá a
+                            situação ganha linha própria, senão a etiqueta da etapa a corta. */}
+                        <span className={`${LIST_CELL_SUB} min-w-0 text-[12.5px] text-muted-foreground`}>
+                          <span className="block truncate">{deal.customer_name || "—"}</span>
+                          {quoteLine && <span className="hidden sm:flex">{quoteLine}</span>}
                         </span>
+                        {quoteLine && <span className="col-span-2 col-start-1 row-start-3 sm:hidden">{quoteLine}</span>}
 
                         {/* Valor */}
                         <span className={`${LIST_CELL_RIGHT_TOP} text-[13.5px] font-bold tabular-nums text-foreground text-right`}>
-                          {formatCurrency(value)}
+                          {value ? formatCurrency(value) : <span className="text-[12px] font-medium text-muted-foreground/70">Sem valor</span>}
                         </span>
 
                         {/* Etapa */}

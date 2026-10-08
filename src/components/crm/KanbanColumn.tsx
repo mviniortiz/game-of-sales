@@ -88,7 +88,8 @@ export const KanbanColumn = memo(({
   const dealIds = useMemo(() => deals.map(d => d.id), [deals]);
 
   const conversionRate = useMemo(() => {
-    if (!showConversionRate || !previousStageCount || previousStageCount === 0) return null;
+    // Com menos de 5 na etapa anterior a razão é ruído: 1 de 1 virava "100%".
+    if (!showConversionRate || !previousStageCount || previousStageCount < 5) return null;
     const rate = Math.round((total.count / previousStageCount) * 100);
     // F5P.4c — pipelines com poucos deals geram ratios >100% que não fazem
     // sentido como "conversão". Esconde quando estágio atual >= anterior.

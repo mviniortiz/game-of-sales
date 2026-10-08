@@ -19,7 +19,6 @@ import { useNavigate } from "react-router-dom";
 import type { Deal } from "@/pages/CRM";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useSwipeToMove } from "@/hooks/useSwipeToMove";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -27,8 +26,6 @@ import { toast } from "sonner";
 import { proximaAcaoLabel } from "@/lib/eva/qualificationSchema";
 import type { QuoteItem } from "@/hooks/useQuoteBoard";
 import { ago, evaLine, stateLine } from "@/lib/quoteText";
-import { useTagsForDeal } from "@/hooks/useDealTags";
-import { DealTagBadge } from "./DealTagBadge";
 import type { PipelineDealContext } from "@/hooks/usePipelineContextData";
 // F6T.2 — tags transversais (sistema F6T.1) substituem visualmente o deal_tags legado
 import type { Tag } from "@/types/tags";
@@ -72,7 +69,7 @@ const EVA_DERIVED_READ: Record<string, string> = {
 };
 
 // Estado do orçamento em linguagem de dono. Âmbar = parado; azul = a vez é sua.
-function quoteStatus(q: QuoteItem): { text: string; tone: string; dot: string } | null {
+export function quoteStatus(q: QuoteItem): { text: string; tone: string; dot: string } | null {
   switch (q.state) {
     case "no_reply":
       return { text: `Sem resposta ao orçamento · ${ago(q.days)}`, tone: "text-amber-700 dark:text-amber-300", dot: "bg-amber-500" };
@@ -85,6 +82,21 @@ function quoteStatus(q: QuoteItem): { text: string; tone: string; dot: string } 
     default:
       return null;
   }
+}
+
+// O Pipeline troca kanban por lista e liga o swipe abaixo de 640px (breakpoint
+// sm do CRM.tsx); o cartão precisa usar o mesmo corte, senão entre 640 e 767px
+// o arraste fica desligado num board que é de computador.
+const BELOW_SM = "(max-width: 639px)";
+function useBelowSm() {
+  const [below, setBelow] = useState(() => typeof window !== "undefined" && window.matchMedia(BELOW_SM).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(BELOW_SM);
+    const onChange = () => setBelow(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return below;
 }
 
 // Format BRL as user types (same as NewDealModal)
@@ -102,10 +114,9 @@ type EditableField = "title" | "customer_name" | "value";
 
 export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDelete, onMarkWon, quote = null, selectionMode = false, isSelected = false, onToggleSelect, stageNeighbors, onSwipeMove, context, tags = [] }: DealCardProps) => {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
+  const isMobile = useBelowSm();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { data: dealTags = [] } = useTagsForDeal(deal.id);
   const pressStart = useRef<{ x: number; y: number } | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const swipeRef = useRef<HTMLDivElement | null>(null);
@@ -520,12 +531,12 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 onMouseDown={e => e.stopPropagation()}
                 onPointerDown={e => e.stopPropagation()}
               >
-                {formatCurrency(deal.value)}
+                {deal.value ? formatCurrency(deal.value) : <span className="text-[12px] font-medium text-[var(--vyz-text-soft)]">Sem valor</span>}
                 <Pencil className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0" />
               </button>
             ) : (
               <span className="text-[14px] font-bold text-slate-900 dark:text-foreground tabular-nums tracking-tight leading-snug">
-                {formatCurrency(deal.value)}
+                {deal.value ? formatCurrency(deal.value) : <span className="text-[12px] font-medium text-[var(--vyz-text-soft)]">Sem valor</span>}
               </span>
             )}
           </div>
@@ -642,9 +653,6 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             </Avatar>
           </div>
 
-          {/* F6T.2 — dealTags legado (sistema deal_tags) escondido do card pra
-              evitar mistura visual com tags F6T.1. Dados continuam vivos no DB;
-              renderização principal agora usa props.tags (vide bloco abaixo). */}
         </div>
 
         {/* ── LP-PIPE.2 "Fio da Conversa": a leitura da EVA ──────
