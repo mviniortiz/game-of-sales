@@ -110,6 +110,12 @@ const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
     }, [angle]);
 
     useEffect(() => {
+        if (window.location.hash !== "#raio-x") return;
+        const id = requestAnimationFrame(() => document.getElementById("raio-x")?.scrollIntoView({ block: "start" }));
+        return () => cancelAnimationFrame(id);
+    }, []);
+
+    useEffect(() => {
         trackEvent(FUNNEL_EVENTS.LANDING_VIEW, { page: "home_solar", angle });
         if (!viewedAngles.has(angle)) {
             viewedAngles.add(angle);

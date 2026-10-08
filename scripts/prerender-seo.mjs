@@ -485,7 +485,7 @@ async function buildBlogIndex(posts) {
         slug: "blog",
         seo: {
             title: "Blog · Vyzon",
-            description: "Ideias sobre vender por conversa, qualificar leads no WhatsApp e usar IA sem perder o controle do seu time.",
+            description: "Para quem vende energia solar pelo WhatsApp: como acompanhar cada proposta, retomar o cliente que parou de responder e não deixar orçamento esfriar.",
         },
     };
     let html = rewriteHead(template, config);
@@ -497,7 +497,7 @@ async function buildBlogIndex(posts) {
   <noscript>
     <div style="max-width:760px;margin:0 auto;padding:32px 20px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.6;color:#111;">
       <h1 style="font-size:34px;line-height:1.15;margin:0 0 8px;">Blog da Vyzon</h1>
-      <p style="font-size:17px;color:#333;margin:0 0 24px;">Ideias sobre vender por conversa, qualificar leads no WhatsApp e usar IA sem perder o controle do seu time.</p>
+      <p style="font-size:17px;color:#333;margin:0 0 24px;">Para quem vende energia solar pelo WhatsApp: como acompanhar cada proposta, retomar o cliente que parou de responder e não deixar orçamento esfriar.</p>
       <ul style="padding-left:20px;">
           ${list}
       </ul>

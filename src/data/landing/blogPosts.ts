@@ -1,6 +1,7 @@
-// Conteúdo do blog da landing (v2). Posts voltados pro ICP da Vyzon: agências
-// que vendem por conversa. Capas geradas em CSS (sem assets). Copy orientada a
-// dor/conversa, IA enquadrada como assistida; sem métricas inventadas.
+// Conteúdo do blog da landing (v2). Posts para o ICP da Vyzon: integrador de
+// energia solar que vende pelo WhatsApp. Capas em public/blog-covers (geradas por
+// scripts/gen-blog-covers.mjs). Copy orientada a dor, IA enquadrada como
+// assistida; sem métricas inventadas (números só em exemplo marcado como tal).
 //
 // FONTE ÚNICA: os posts vivem em blogPosts.content.json — assim o React (aqui) e
 // o prerender SEO (scripts/prerender-seo.mjs, Node) leem exatamente os mesmos
@@ -31,7 +32,7 @@ export interface BlogPost {
     faq?: { q: string; a: string }[]; // perguntas frequentes (GEO: FAQPage + trecho extraível por IA)
 }
 
-export const BLOG_CATEGORIES = ["Crescimento", "Comercial", "Produto"] as const;
+export const BLOG_CATEGORIES = ["Comercial", "Crescimento"] as const;
 
 const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 

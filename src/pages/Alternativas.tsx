@@ -92,7 +92,7 @@ const Alternativas = () => {
   const goHome = (anchor?: string) => navigate(anchor ? `/?go=${anchor}` : "/");
   const openDemo = () => {
     trackBehavior("alternativas_cta", { target: "demo" });
-    navigate("/?demo=1");
+    navigate("/#raio-x");
   };
   const goTrial = () => {
     trackBehavior("alternativas_cta", { target: "trial" });
@@ -145,7 +145,6 @@ const Alternativas = () => {
       <NavV2
         onCTAClick={openDemo}
         onLoginClick={() => navigate("/auth")}
-        onNavClick={(a) => goHome(a)}
         onBlogClick={() => navigate("/blog")}
       />
 
@@ -523,7 +522,6 @@ const Alternativas = () => {
       <FinalCtaV2 onScheduleDemoClick={openDemo} onSecondaryClick={() => goHome("how-it-works")} />
 
       <FooterV2
-        onNavClick={(a) => goHome(a)}
         onLoginClick={() => navigate("/auth")}
         onBlogClick={() => navigate("/blog")}
       />

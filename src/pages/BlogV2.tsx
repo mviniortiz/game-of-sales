@@ -22,7 +22,6 @@ const BlogV2 = () => {
         return () => { if (wasDark) html.classList.add("dark"); };
     }, []);
 
-    const goHome = (anchor?: string) => navigate(anchor ? `/?go=${anchor}` : "/");
     const openPost = (p: BlogPost) => navigate(`/blog/${p.slug}`);
 
     const filtered = cat === "Todos" ? BLOG_POSTS : BLOG_POSTS.filter((p) => p.category === cat);
@@ -32,9 +31,8 @@ const BlogV2 = () => {
     return (
         <div className="lp-v2 min-h-screen w-full" style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}>
             <NavV2
-                onCTAClick={() => goHome()}
+                onCTAClick={() => navigate("/#raio-x")}
                 onLoginClick={() => navigate("/auth")}
-                onNavClick={(a) => goHome(a)}
                 onBlogClick={() => navigate("/blog")}
             />
 
@@ -44,7 +42,7 @@ const BlogV2 = () => {
                         Conteúdo
                     </h1>
                     <p className="mt-4 max-w-xl text-[15px]" style={{ color: "rgba(5,5,5,0.6)", lineHeight: 1.55 }}>
-                        Ideias sobre vender por conversa, qualificar leads e usar IA sem perder o controle do seu time.
+                        Para quem vende energia solar pelo WhatsApp: como acompanhar cada proposta, retomar o cliente que parou de responder e não deixar orçamento esfriar.
                     </p>
                 </Rise>
 
@@ -128,7 +126,7 @@ const BlogV2 = () => {
                 </div>
             </main>
 
-            <FooterV2 onNavClick={(a) => goHome(a)} onLoginClick={() => navigate("/auth")} onBlogClick={() => navigate("/blog")} />
+            <FooterV2 onLoginClick={() => navigate("/auth")} onBlogClick={() => navigate("/blog")} />
         </div>
     );
 };

@@ -119,6 +119,31 @@
             "statusCode": 301
         },
         {
+            "source": "/blog/pare-de-perder-leads-no-whatsapp",
+            "destination": "/blog/follow-up-proposta-energia-solar",
+            "statusCode": 301
+        },
+        {
+            "source": "/blog/seu-lead-ja-decidiu",
+            "destination": "/blog/cliente-sumiu-depois-do-orcamento-energia-solar",
+            "statusCode": 301
+        },
+        {
+            "source": "/blog/sdr-humano-vs-eva",
+            "destination": "/blog",
+            "statusCode": 301
+        },
+        {
+            "source": "/blog/central-comercial-para-agencias",
+            "destination": "/blog",
+            "statusCode": 301
+        },
+        {
+            "source": "/blog/ia-agentica-vendas-agencias",
+            "destination": "/blog",
+            "statusCode": 301
+        },
+        {
             "source": "/agencias",
             "destination": "/",
             "statusCode": 301

@@ -131,15 +131,13 @@ const BlogPostV2 = () => {
     }, [slug, post, navigate]);
 
     if (!post) return null;
-    const goHome = (anchor?: string) => navigate(anchor ? `/?go=${anchor}` : "/");
 
     return (
         <div className="lp-v2 min-h-screen w-full" style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}>
             <ReadingProgress accent={post.accent} />
             <NavV2
-                onCTAClick={() => navigate("/?demo=1")}
+                onCTAClick={() => navigate("/#raio-x")}
                 onLoginClick={() => navigate("/auth")}
-                onNavClick={(a) => goHome(a)}
                 onBlogClick={() => navigate("/blog")}
             />
 
@@ -204,25 +202,25 @@ const BlogPostV2 = () => {
                     </Rise>
                 )}
 
-                {/* CTA pra demo */}
+                {/* convite para o Raio-X */}
                 <Rise>
                     <div className="mt-14 vz-post-cta rounded-2xl px-7 py-9 text-center" style={{ background: "#fff", border: "1px solid var(--lp-line)" }}>
                         <h2 className="lp-display" style={{ fontSize: "clamp(1.4rem, 2.6vw, 1.9rem)", letterSpacing: "-0.025em", color: "var(--lp-ink)" }}>
-                            Veja a EVA trabalhando em uma conversa
+                            Quantas propostas estão paradas no seu WhatsApp?
                         </h2>
                         <p className="mx-auto mt-2.5 max-w-md text-[14.5px]" style={{ color: "rgba(5,5,5,0.6)", lineHeight: 1.55 }}>
-                            Em poucos minutos, entenda como ela lê o atendimento e sugere o próximo passo.
+                            No Raio-X grátis, a gente olha com você as propostas do último mês e mostra quais pararam e quanto elas somam. Leva 20 minutos.
                         </p>
                         <div className="mt-6 flex justify-center">
-                            <ButtonV2 variant="primary" showArrow onClick={() => navigate("/?demo=1")}>
-                                Ver a EVA em ação
+                            <ButtonV2 variant="primary" showArrow onClick={() => navigate("/#raio-x")}>
+                                Fazer meu Raio-X grátis
                             </ButtonV2>
                         </div>
                     </div>
                 </Rise>
             </article>
 
-            <FooterV2 onNavClick={(a) => goHome(a)} onLoginClick={() => navigate("/auth")} onBlogClick={() => navigate("/blog")} />
+            <FooterV2 onLoginClick={() => navigate("/auth")} onBlogClick={() => navigate("/blog")} />
         </div>
     );
 };

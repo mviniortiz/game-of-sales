@@ -23,26 +23,26 @@
   </url>
   <!-- Posts do blog (prerenderizados em dist/blog/<slug>/ por scripts/prerender-seo.mjs) -->
   <url>
-    <loc>https://vyzon.com.br/blog/pare-de-perder-leads-no-whatsapp</loc>
-    <lastmod>2026-06-11</lastmod>
+    <loc>https://vyzon.com.br/blog/cliente-sumiu-depois-do-orcamento-energia-solar</loc>
+    <lastmod>2026-10-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://vyzon.com.br/blog/sdr-humano-vs-eva</loc>
-    <lastmod>2026-06-04</lastmod>
+    <loc>https://vyzon.com.br/blog/follow-up-proposta-energia-solar</loc>
+    <lastmod>2026-10-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://vyzon.com.br/blog/seu-lead-ja-decidiu</loc>
-    <lastmod>2026-05-21</lastmod>
+    <loc>https://vyzon.com.br/blog/quanto-dinheiro-esta-parado-nas-suas-propostas</loc>
+    <lastmod>2026-10-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://vyzon.com.br/blog/central-comercial-para-agencias</loc>
-    <lastmod>2026-05-07</lastmod>
+    <loc>https://vyzon.com.br/blog/mensagens-para-retomar-cliente-energia-solar</loc>
+    <lastmod>2026-10-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
