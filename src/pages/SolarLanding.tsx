@@ -713,19 +713,28 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
     };
 
     const phoneDigits = form.phone.replace(/\D/g, "");
-    const valid =
-        form.name.trim().length >= 2 &&
-        (phoneDigits.length === 10 || phoneDigits.length === 11) &&
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) &&
-        form.company.trim().length >= 2 &&
-        form.monthly !== "";
+    // O botão fica sempre clicável: se faltar algo, o envio diz o quê (botão
+    // cinza sem explicação parecia site quebrado).
+    const faltando = [
+        form.name.trim().length < 2 && "seu nome",
+        !(phoneDigits.length === 10 || phoneDigits.length === 11) && "WhatsApp com DDD",
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) && "e-mail",
+        form.company.trim().length < 2 && "nome da empresa",
+        form.monthly === "" && "propostas por mês",
+    ].filter(Boolean) as string[];
+    const valid = faltando.length === 0;
+    const [tentou, setTentou] = useState(false);
 
     const set = (key: keyof FormState) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
         setForm((f) => ({ ...f, [key]: e.target.value }));
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        if (!valid || submitting) return;
+        if (submitting) return;
+        if (!valid) {
+            setTentou(true);
+            return;
+        }
         setSubmitting(true);
         setError(null);
         const phone = normalizePhone(form.phone);
@@ -825,6 +834,11 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                                 </select>
                             </Field>
                         </div>
+                        {tentou && !valid && (
+                            <p className="text-sm" role="alert" style={{ color: "#b42318" }}>
+                                Falta preencher: {faltando.join(", ")}.
+                            </p>
+                        )}
                         {error && (
                             <p className="text-sm" role="alert" style={{ color: "#b42318" }}>
                                 {error}{" "}
@@ -834,7 +848,7 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                             </p>
                         )}
                         <div className="mt-2">
-                            <ButtonV2 type="submit" disabled={!valid || submitting} showArrow>
+                            <ButtonV2 type="submit" disabled={submitting} showArrow>
                                 {submitting ? "Enviando" : "Pedir meu Raio-X"}
                             </ButtonV2>
                         </div>
