@@ -14,9 +14,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import type { ReactNode } from "react";
 import { Check } from "lucide-react";
-import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
-import type { EvaOrbState } from "@/components/landing-v2/EvaOrb";
-import { mapEvaOrbUiState } from "@/hooks/useEvaOrbCycle";
+import { EvaBot, type EvaBotState } from "@/components/eva/EvaBot";
 
 export type StudioStepKey = "criar" | "ensinar" | "provar" | "ativar";
 
@@ -43,7 +41,7 @@ export interface EvaStudioShellProps {
     hideStepLabel?: boolean;
     /** Estado do orb do cabeçalho — reage ao passo atual (idle no Criar,
      *  analyzing/thinking ao Ensinar/Provar, speaking ao Ativar). */
-    orbState?: EvaOrbState;
+    evaState?: EvaBotState;
     children: ReactNode;
 }
 
@@ -61,7 +59,7 @@ export function EvaStudioShell({
     readiness,
     secondary,
     hideStepLabel,
-    orbState = "idle",
+    evaState = "idle",
     children,
 }: EvaStudioShellProps) {
     const currentStep = steps.find((s) => s.key === current);
@@ -73,14 +71,7 @@ export function EvaStudioShell({
         <div className="vz-studioshell">
             {/* ── Cabeçalho ÚNICO ── */}
             <div className="vz-studioshell-head">
-                <EvaThinkingOrb
-                    state={mapEvaOrbUiState(orbState)}
-                    size={64}
-                    displaySize={38}
-                    theme="light"
-                    agentKey="qualificacao"
-                    aria-label="EVA Studio"
-                />
+                <EvaBot state={evaState} size={38} label="EVA Studio" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <h1 className="vz-studioshell-title">EVA Studio</h1>
                     <p className="vz-studioshell-subtitle">

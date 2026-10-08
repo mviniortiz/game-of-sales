@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp } from "lucide-react";
-import { EvaOrb } from "@/components/landing-v2/EvaOrb";
 import { useEvaVoice } from "@/lib/eva-voz/useEvaVoice";
+import { EvaBot, evaBotFrom } from "@/components/eva/EvaBot";
 
 // EVA VOZ (rota /eva-voz) — conversa por voz BIDIRECIONAL com a EVA, isolada da
 // demo. Half-duplex por turno: a EVA fala, depois é a sua vez. Fallback por texto.
@@ -63,7 +63,7 @@ const EvaVoz = () => {
         <div className="lp-v2 flex min-h-screen w-full flex-col items-center justify-center px-5 py-12" style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}>
             <div className="flex w-full max-w-lg flex-col items-center text-center">
                 <div className={live.orb === "speaking" && connected ? "vz-orb-speaking" : "vz-orb-calm"}>
-                    <EvaOrb state={orbState as "idle" | "thinking" | "speaking" | "listening"} size={200} showVoice={connected} />
+                    <EvaBot state={evaBotFrom(orbState)} size={200} />
                 </div>
 
                 <h1 className="lp-display mt-9" style={{ fontSize: "clamp(1.8rem,4vw,2.6rem)", letterSpacing: "-0.03em", color: "var(--lp-ink)" }}>

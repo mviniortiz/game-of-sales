@@ -14,8 +14,8 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { DynamicIsland } from "@/components/vendor/dynamic-island";
 import { TextShimmer } from "@/components/vendor/text-shimmer";
-import { EvaNode } from "@/components/landing/EvaNode";
 import { useEvaDiary } from "@/hooks/useEvaDiary";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 export function EvaLiveIsland() {
     const diary = useEvaDiary();
@@ -64,7 +64,7 @@ export function EvaLiveIsland() {
                     className="!bg-[var(--vyz-surface-2)] !text-[var(--vyz-text-primary)] !shadow-none ring-1 ring-[var(--vyz-border-subtle)]"
                     compact={
                         <span className="inline-flex items-center gap-2">
-                            <EvaNode size={11} color="var(--vyz-eva)" />
+                            <EvaBot size={16} still />
                             {esperando > 0 ? (
                                 // Esperando aprovação é o único estado que pede o
                                 // olho: o shimmer marca isso sem virar alarme.
@@ -98,7 +98,7 @@ export function EvaLiveIsland() {
                         className="absolute right-0 top-[calc(100%+8px)] z-50 w-[252px] rounded-[var(--vyz-radius)] p-3.5 text-left"
                     >
                         <span className="flex items-center gap-2 mb-2">
-                            <EvaNode size={11} color="var(--vyz-eva)" />
+                            <EvaBot size={16} still />
                             <span className="text-[12px] font-semibold" style={{ color: "var(--vyz-text-strong)" }}>
                                 O dia da EVA
                             </span>

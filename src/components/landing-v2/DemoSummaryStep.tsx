@@ -1,5 +1,5 @@
 import { ButtonV2 } from "./ButtonV2";
-import { EvaOrb } from "./EvaOrb";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // Fim do tour: a decisão. Trial é o caminho primário (sem cartão, 2 minutos);
 // a conversa com o Markus fica como alternativa pra quem quer gente antes.
@@ -11,7 +11,7 @@ interface DemoSummaryStepProps {
 
 export const DemoSummaryStep = ({ onTrial, onSchedule, onRestart }: DemoSummaryStepProps) => (
     <div className="vz-modal-step flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
-        <EvaOrb state="idle" size={120} />
+        <EvaBot state="idle" size={120} />
         <div>
             <h2 className="lp-display" style={{ fontSize: "clamp(1.8rem,3.4vw,2.4rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "var(--lp-ink)" }}>
                 Agora com os seus leads.

@@ -2,7 +2,7 @@
 // F2.10.2 (2026-05-20) — EvaAISection v3 (camada operacional, não BI)
 // LP.4 (2026-06-09) — v4 "O Fio da Conversa": reskin editorial-técnico.
 //   - Sem framer-motion (CSS-only landing-fade, seção é lazy)
-//   - Sem EvaPhotoAvatar (imagem) — glifo EvaNode no lugar
+//   - EvaBot pequeno como marca da EVA
 //   - Conector do fluxo vira o fio pontilhado da página
 //   - Copy LP.3 intocada; frase canônica = 2ª e última ocorrência
 // ─────────────────────────────────────────────────────────────────────────────
@@ -16,7 +16,7 @@ import {
   AlertCircle,
   BookOpen,
 } from "lucide-react";
-import { EvaNode } from "./EvaNode";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
   return (
@@ -73,7 +73,7 @@ export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
             className="lp-serif mt-5 inline-flex items-center gap-2"
             style={{ fontSize: "1.0625rem", color: "var(--lp-ink-70)" }}
           >
-            <EvaNode size={13} color="var(--lp-eva)" />
+            <EvaBot size={18} still />
             A EVA sugere. Seu time aprova.
           </p>
         </div>
@@ -87,7 +87,7 @@ export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
                 className="h-11 w-11 rounded-[10px] flex items-center justify-center shrink-0"
                 style={{ border: "1px solid var(--lp-line)", background: "var(--lp-paper)" }}
               >
-                <EvaNode size={20} color="var(--lp-eva)" />
+                <EvaBot size={28} />
               </span>
               <div>
                 <p className="lp-mono mb-0.5" style={{ color: "var(--lp-eva)" }}>

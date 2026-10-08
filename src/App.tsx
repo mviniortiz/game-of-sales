@@ -36,9 +36,6 @@ const BlogPostV2 = lazy(() => import("./pages/BlogPostV2"));
 const Alternativas = lazy(() => import("./pages/Alternativas"));
 const EvaVoz = lazy(() => import("./pages/EvaVoz"));
 
-// Página temporária de calibração da EvaEntity (remover depois de plugar à lógica).
-const EvaEntityTest = lazy(() => import("./pages/EvaEntityTest"));
-
 // Página temporária de validação da nova lateral da EVA na Inbox (remover após integrar).
 const EvaAssistPreview = lazy(() => import("./pages/EvaAssistPreview"));
 
@@ -68,14 +65,6 @@ const App = () => (
         {/* Personas /para-* despublicadas 2026-06-16 — 301 → home no vercel.json. */}
         {/* /alternativa-* individuais → /alternativas (hub republicado 2026-07-22). */}
         {/* Rotas /crm-* despublicadas 2026-06-10 — 301 → home no vercel.json. */}
-        <Route
-          path="/eva-entity-test"
-          element={
-            <Suspense fallback={<LazyFallback />}>
-              <EvaEntityTest />
-            </Suspense>
-          }
-        />
         <Route
           path="/eva-assist-preview"
           element={

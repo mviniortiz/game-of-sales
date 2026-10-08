@@ -28,11 +28,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useRef, useState } from "react";
 import { ArrowDown, ArrowRight, Check, PencilLine } from "lucide-react";
-import { EvaEntity } from "@/components/eva/EvaEntity";
 import {
     buildSuggestionOutcome,
     type SuggestionOutcome,
 } from "@/lib/eva/suggestionFeedback";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -183,7 +183,7 @@ export function GuidedContextBuilder({
             {!hideHeader && (
             <>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <EvaEntity size={44} state="idle" />
+                <EvaBot state="idle" size={44} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <p className="vz-agentcreate-label">Construção guiada</p>
                     <h1 className="vz-agentcreate-title" style={{ marginTop: 2, fontSize: 22 }}>
@@ -289,7 +289,7 @@ export function GuidedContextBuilder({
 
             {/* Rodapé fixo — causa e efeito */}
             <div className="vz-ctxbuild-footer">
-                <EvaEntity size={22} state="idle" />
+                <EvaBot state="idle" size={22} />
                 <p className="vz-ctxbuild-footer-text">
                     Cada item que você confirma deixa a EVA mais certeira na ordem da
                     lista do Inbox e nas respostas sugeridas.
@@ -607,7 +607,7 @@ function PasteFirstState({
             {!hideHeader && (
             <>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <EvaEntity size={44} state="listening" />
+                <EvaBot state="idle" size={44} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <p className="vz-agentcreate-label">Construção guiada</p>
                     <h1 className="vz-agentcreate-title" style={{ marginTop: 2, fontSize: 22 }}>

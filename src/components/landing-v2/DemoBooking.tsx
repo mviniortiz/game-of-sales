@@ -6,7 +6,7 @@ import { whatsappUrl } from "@/config/contact";
 import { WhatsappGlyph } from "@/components/icons/WhatsappGlyph";
 import { getAttribution } from "@/lib/attribution";
 import { trackBehavior, DEMO_EVENTS } from "@/lib/analytics";
-import { EvaOrb } from "./EvaOrb";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // LP.9 (v2) — booking PÓS-tour. Quando a demo guiada termina, a pessoa marca a
 // SUA demo personalizada: 2 perguntas de 1 toque (sem digitar) + horário
@@ -319,7 +319,7 @@ export const DemoBooking = ({ email, site, intakeId, onDone }: DemoBookingProps)
             {/* topo */}
             <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: "1px solid var(--lp-line)" }}>
                 <div className="flex items-center gap-2.5">
-                    <EvaOrb state="speaking" size={30} />
+                    <EvaBot state="talking" size={30} />
                     <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>EVA · agendar sua demo</span>
                 </div>
                 {(view === "q_pain" || view === "schedule") && (

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useReducedMotion } from "framer-motion";
-import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import { ActionSwapBlurText } from "@/components/vendor/action-swap-blur";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // Momento "EVA lendo a conversa" no Inbox. Em vez de um spinner, a EVA mostra
 // que está LENDO: uma linha de varredura passa sobre uma miniatura da conversa
@@ -35,15 +35,7 @@ export function EvaAnalyzingState() {
 
     return (
         <div className="flex-1 flex flex-col items-center justify-center px-5 py-6 text-center">
-            <EvaThinkingOrb
-                state="searching"
-                size={64}
-                displaySize={56}
-                theme="light"
-                agentKey="qualificacao"
-                className="mb-3.5"
-                aria-hidden
-            />
+            <EvaBot state="thinking" size={56} className="mb-3.5" />
             <p className="text-[13px] font-semibold mb-4" style={{ color: "#0B1220" }}>
                 EVA lendo a conversa<span className="vz-eva-dots" aria-hidden="true" />
             </p>

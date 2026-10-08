@@ -14,7 +14,6 @@ Disallow: /checkout
 Disallow: /recuperar-senha
 Disallow: /redefinir-senha
 Disallow: /r/
-Disallow: /eva-entity-test
 Disallow: /eva-assist-preview
 Disallow: /eva-studio-preview
 
@@ -25,7 +24,6 @@ Disallow: /checkout
 Disallow: /recuperar-senha
 Disallow: /redefinir-senha
 Disallow: /r/
-Disallow: /eva-entity-test
 Disallow: /eva-assist-preview
 Disallow: /eva-studio-preview
 
@@ -36,7 +34,6 @@ Disallow: /checkout
 Disallow: /recuperar-senha
 Disallow: /redefinir-senha
 Disallow: /r/
-Disallow: /eva-entity-test
 Disallow: /eva-assist-preview
 Disallow: /eva-studio-preview
 
@@ -109,7 +106,6 @@ Disallow: /checkout
 Disallow: /recuperar-senha
 Disallow: /redefinir-senha
 Disallow: /r/
-Disallow: /eva-entity-test
 Disallow: /eva-assist-preview
 Disallow: /eva-studio-preview
 

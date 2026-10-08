@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowUp, Volume2, VolumeX, MessageSquare, PhoneOff } from "lucide-react";
-import { EvaOrb } from "./EvaOrb";
 import { useTourNarration } from "./useTourNarration";
 import { supabase } from "@/integrations/supabase/client";
 import { whatsappUrl } from "@/config/contact";
 import { WhatsappGlyph } from "@/components/icons/WhatsappGlyph";
 import { trackBehavior, claritySet, DEMO_EVENTS } from "@/lib/analytics";
+import { EvaBot, evaBotFrom } from "@/components/eva/EvaBot";
 
 // DEMO.C — contexto do site do visitante (edge demo-site-context), usado pra
 // personalizar a saudação da EVA. Tudo opcional: sem contexto, demo genérica.
@@ -464,7 +464,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
                 {!appReady && (
                     <div className="absolute inset-0 flex items-center justify-center" style={{ background: "var(--lp-paper)" }}>
                         <div className="flex flex-col items-center gap-4">
-                            <EvaOrb state="thinking" size={120} />
+                            <EvaBot state="thinking" size={120} />
                             <p className="text-[14px]" style={{ color: "rgba(5,5,5,0.6)" }}>Abrindo a Vyzon ao vivo…</p>
                         </div>
                     </div>
@@ -475,7 +475,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
                 {appReady && greeting && (
                     <div className={`${greetExit ? "vz-greet-out" : "vz-greet-in"} absolute inset-0 z-30 flex flex-col items-center justify-center gap-7 px-6 text-center`} style={{ background: "var(--lp-paper)" }}>
                         <div className={speaking ? "vz-orb-speaking" : "vz-orb-calm"}>
-                            <EvaOrb state={speaking ? "speaking" : "thinking"} size={210} />
+                            <EvaBot state={speaking ? "talking" : "thinking"} size={210} />
                         </div>
                         <div className="max-w-xl">
                             <p className="lp-display" style={{ fontSize: "clamp(1.8rem,3.4vw,2.4rem)", color: "var(--lp-ink)", letterSpacing: "-0.03em", lineHeight: 1.1 }}>EVA</p>
@@ -507,7 +507,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col items-center gap-2.5 px-4 pb-5 pt-20"
                         style={{ background: "linear-gradient(to top, rgba(8,9,12,0.62), rgba(8,9,12,0.18) 55%, transparent)" }}>
                         <div className={(narr.active || speaking) ? "vz-orb-speaking" : "vz-orb-calm"}>
-                            <EvaOrb theme="dark" state={(narr.active || speaking) ? "speaking" : "idle"} size={58} />
+                            <EvaBot state={(narr.active || speaking) ? "talking" : "idle"} size={58} />
                         </div>
                         <div className="flex items-center gap-1.5">
                             <span className="lp-mono inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-white"
@@ -549,7 +549,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
                         {/* Palco: orb grande de frente + nome + resposta */}
                         <div className="flex flex-1 flex-col items-center justify-center gap-7 px-6 text-center">
                             <div className={speaking ? "vz-orb-speaking" : "vz-orb-calm"}>
-                                <EvaOrb state={orbState} size={232} />
+                                <EvaBot state={evaBotFrom(orbState)} size={232} />
                             </div>
                             <div className="max-w-xl">
                                 <p className="lp-display" style={{ fontSize: "clamp(1.5rem,3vw,2.1rem)", color: "var(--lp-ink)", letterSpacing: "-0.025em", lineHeight: 1.1 }}>EVA</p>
@@ -587,7 +587,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
                     <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-3 px-4 pb-6 pt-24"
                         style={{ background: "linear-gradient(to top, rgba(8,9,12,0.78), rgba(8,9,12,0.30) 60%, transparent)" }}>
                         <div className={speaking ? "vz-orb-speaking" : "vz-orb-calm"}>
-                            <EvaOrb theme="dark" state={speaking ? "speaking" : "idle"} size={58} />
+                            <EvaBot state={speaking ? "talking" : "idle"} size={58} />
                         </div>
                         <p className="text-center text-[15px] font-medium text-white" style={{ textShadow: "0 1px 8px rgba(0,0,0,0.45)" }} aria-live="polite">
                             O que você quer ver de perto agora?
@@ -699,7 +699,7 @@ export const DemoLiveStage = ({ onDone, site, siteCtx, onTourEnd }: DemoLiveStag
 
                     <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-7 px-6 text-center">
                         <div className={speaking ? "vz-orb-speaking" : "vz-orb-calm"}>
-                            <EvaOrb state={orbState} size={232} />
+                            <EvaBot state={evaBotFrom(orbState)} size={232} />
                         </div>
                         <div className="relative w-full text-center" style={{ minHeight: 56, maxWidth: 560 }} aria-live="polite">
                             <p className="line-clamp-4 font-medium leading-snug" style={{ color: "var(--lp-ink-90)", fontSize: "clamp(1rem,2.4vw,1.15rem)" }}>

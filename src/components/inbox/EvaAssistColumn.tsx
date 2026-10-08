@@ -4,7 +4,7 @@
 // SUGERIDA é o herói, contexto e próxima ação são insumo.
 //
 // Hierarquia (de cima pra baixo):
-//   1. Header: <EvaEntity> + nome + 1 linha de estado do lead
+//   1. Header: <EvaBot> + nome + 1 linha de estado do lead
 //   2. ZONA DE RESPOSTA (herói) — dois estados:
 //        CONFIA   → resposta pronta em card roxo, Enviar + Editar
 //        SE CALA  → estado honesto + "descubra isto primeiro" (1-2 perguntas)
@@ -26,11 +26,11 @@
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { CornerDownRight, MessageCircleQuestion, PencilLine, SendHorizonal } from "lucide-react";
-import { EvaEntity } from "@/components/eva/EvaEntity";
 import {
     buildSuggestionOutcome,
     type SuggestionOutcome,
 } from "@/lib/eva/suggestionFeedback";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -87,7 +87,7 @@ export function EvaAssistColumn({ data, onSend, hideHeader }: EvaAssistColumnPro
                 tem sugestão, slate apagado quando está só escutando */}
             {!hideHeader && (
                 <div className="vz-evassist-header">
-                    <EvaEntity size={28} state={data.mode === "suggest" ? "idle" : "listening"} />
+                    <EvaBot state={data.mode === "suggest" ? "talking" : "idle"} size={28} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <p className="vz-evassist-header-name">{data.leadName}</p>
                         <p className="vz-evassist-header-state">{data.stateLine}</p>

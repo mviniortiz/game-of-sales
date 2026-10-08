@@ -4,8 +4,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { ArrowRight, Check } from "lucide-react";
-import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import { SPECIALISTS, SPECIALIST_ORDER, type SpecialistKey } from "@/lib/eva/evaSpecialists";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 export type AgentPurpose = "vender" | "suporte" | "pos_venda";
 
@@ -68,14 +68,7 @@ export function AgentPurposeCreate({ sources, onCreate, onProceed, onPickSpecial
 
             {!hideHeader && (
                 <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 8 }}>
-                    <EvaThinkingOrb
-                        state={chosen ? "working" : "listening"}
-                        size={64}
-                        displaySize={44}
-                        theme="light"
-                        agentKey={chosenSpec?.key ?? "qualificacao"}
-                        aria-hidden
-                    />
+                    <EvaBot state={chosen ? "thinking" : "idle"} size={44} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <p className="vz-agentcreate-label">EVA Studio</p>
                         <h1
@@ -108,14 +101,7 @@ export function AgentPurposeCreate({ sources, onCreate, onProceed, onPickSpecial
                         className="vz-agentcreate-card vz-agentcreate-card--hero"
                     >
                         <div className="vz-agentcreate-hero-top">
-                            <EvaThinkingOrb
-                                state="listening"
-                                size={64}
-                                displaySize={48}
-                                theme="light"
-                                agentKey="qualificacao"
-                                aria-hidden
-                            />
+                            <EvaBot state="idle" size={48} />
                             <span className="vz-agentcreate-live-badge">Disponível agora</span>
                         </div>
                         <span className="vz-agentcreate-card-title" style={{ display: "block", fontSize: 18 }}>
@@ -143,14 +129,7 @@ export function AgentPurposeCreate({ sources, onCreate, onProceed, onPickSpecial
                                 >
                                     <span className="vz-agentcreate-soon-badge">Em breve</span>
                                     <span style={{ display: "block", marginBottom: 10 }}>
-                                        <EvaThinkingOrb
-                                            state="listening"
-                                            size={20}
-                                            displaySize={28}
-                                            theme="light"
-                                            agentKey={s.key}
-                                            aria-hidden
-                                        />
+                                        <EvaBot state="idle" size={28} />
                                     </span>
                                     <span className="vz-agentcreate-card-title" style={{ display: "block" }}>
                                         {s.label}

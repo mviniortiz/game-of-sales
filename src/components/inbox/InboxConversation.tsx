@@ -16,16 +16,15 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { isDemoSession } from "@/lib/analytics";
 import { TemplatePicker } from "@/components/whatsapp/TemplatePicker";
-import { EvaNode } from "@/components/landing/EvaNode";
 import { useEvaInsight } from "@/hooks/useEvaInsight";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AudioMessagePlayer } from "@/components/whatsapp/AudioMessagePlayer";
 import { MediaMessageBubble } from "@/components/whatsapp/MediaMessageBubble";
 import { AudioRecorder } from "@/components/whatsapp/AudioRecorder";
-import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import type { Chat, MessageLine } from "@/hooks/useEvolutionAPI";
 import { useProfilePic } from "@/hooks/useProfilePic";
 import { cn } from "@/lib/utils";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // InboxConversation (F4C.2, 2026-05-19)
@@ -158,15 +157,7 @@ function EmptyConversation() {
     return (
         <div className="flex-1 flex items-center justify-center px-6" style={{ background: "var(--ibx-paper)" }}>
             <div className="text-center max-w-sm">
-                <EvaThinkingOrb
-                    state="listening"
-                    size={64}
-                    displaySize={56}
-                    theme="light"
-                    agentKey="qualificacao"
-                    className="mx-auto mb-4"
-                    aria-hidden
-                />
+                <EvaBot state="idle" size={56} className="mx-auto mb-4" />
                 <h3
                     className="text-[15px] font-semibold mb-2"
                     style={{ color: "#0B1220", letterSpacing: "-0.015em" }}
@@ -667,7 +658,7 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                 {analyzing ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: "#6D28D9" }} />
                 ) : (
-                    <EvaNode size={14} color="#6D28D9" />
+                    <EvaBot size={20} />
                 )}
                 {/* Ponto de temperatura: prova visual de que a EVA leu (e o quê). */}
                 {!analyzing && temp && (
@@ -703,7 +694,7 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                         style={{ background: "#FFFFFF", borderLeft: "1px solid rgba(109,40,217,0.20)", borderTop: "1px solid rgba(109,40,217,0.20)" }}
                     />
                     <div className="flex items-start gap-2">
-                        <EvaNode size={14} color="#6D28D9" className="mt-0.5 shrink-0" />
+                        <EvaBot size={20} className="mt-0.5 shrink-0" />
                         <div className="flex-1 min-w-0">
                             <p className="text-[12px] font-semibold mb-0.5" style={{ color: "#0B1220" }}>
                                 A análise da EVA fica aqui
@@ -1155,7 +1146,7 @@ function EvaInlineSuggestion({ text, onUse, onDismiss }: { text: string; onUse: 
                     }}
                 >
                     <div className="flex items-center gap-1.5 px-3.5 pt-2.5">
-                        <EvaNode size={12} color="var(--vyz-eva)" />
+                        <EvaBot size={17} still />
                         <span className="text-[10px] uppercase font-bold text-[var(--vyz-text-muted)]" style={{ letterSpacing: "0.08em" }}>
                             Sugestão da EVA
                         </span>

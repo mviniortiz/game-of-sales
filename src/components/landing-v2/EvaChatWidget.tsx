@@ -1,15 +1,15 @@
 // LP.11 (v2) — widget de chat da EVA acoplado à landing inteira: pill fixo
 // CENTRALIZADO embaixo; clicou, abre o painel com a EVA já saudando. Chat REAL
-// (edge eva-landing-chat). Ícone: EvaThinkingOrb (ThinkingOrb + halo).
+// (edge eva-landing-chat). Ícone: EvaBot.
 // O pill some quando o footer entra na tela. Marca: enviar = seta-pra-cima.
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUp, CircleNotch, X } from "@phosphor-icons/react";
-import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import { useEvaOrbCycle } from "@/hooks/useEvaOrbCycle";
 import { supabase } from "@/integrations/supabase/client";
 import { useTypewriter } from "@/hooks/useTypewriter";
 import { trackBehavior } from "@/lib/analytics";
+import { EvaBot, evaBotFrom } from "@/components/eva/EvaBot";
 
 interface Msg {
     role: "user" | "assistant";
@@ -147,14 +147,7 @@ export const EvaChatWidget = () => {
                             }}
                         >
                             <div className="flex items-center gap-2.5 px-4 py-3 border-b" style={{ borderColor: "var(--lp-line-soft)", background: "#FFFFFF" }}>
-                                <EvaThinkingOrb
-                                    state={orb.state}
-                                    size={64}
-                                    displaySize={28}
-                                    theme="light"
-                                    paused={!!reduce}
-                                    aria-label="EVA"
-                                />
+                                <EvaBot state={evaBotFrom(orb.state)} size={28} label="EVA" />
                                 <div className="min-w-0 flex-1">
                                     <p className="text-[13.5px] font-bold leading-tight" style={{ color: "var(--lp-ink)" }}>EVA</p>
                                     <p className="text-[11px] leading-tight" style={{ color: "rgba(5,5,5,0.5)" }}>a inteligência do Vyzon, ao vivo</p>
@@ -172,7 +165,7 @@ export const EvaChatWidget = () => {
 
                             <div ref={threadRef} className="flex-1 overflow-y-auto px-4 py-3.5 flex flex-col gap-3">
                                 <div className="flex items-end gap-2.5">
-                                    <EvaThinkingOrb state="listening" size={20} theme="light" paused={!!reduce} className="mb-1" aria-hidden />
+                                    <EvaBot state="idle" size={20} className="mb-1" />
                                     <div
                                         className="max-w-[88%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed"
                                         style={{ background: "#FFFFFF", color: "var(--lp-ink)", border: "1px solid var(--lp-line)", borderBottomLeftRadius: 6 }}
@@ -198,7 +191,7 @@ export const EvaChatWidget = () => {
                                             </div>
                                         ) : (
                                             <div className="flex items-end gap-2.5">
-                                                <EvaThinkingOrb state="listening" size={20} theme="light" paused={!!reduce} className="mb-1" aria-hidden />
+                                                <EvaBot state="idle" size={20} className="mb-1" />
                                                 <EvaBubble content={m.content} animate={i === animateIdx} onTick={scrollToEnd} />
                                             </div>
                                         )}
@@ -206,7 +199,7 @@ export const EvaChatWidget = () => {
                                 ))}
                                 {loading && (
                                     <div className="flex items-center gap-2.5 text-[12.5px]" style={{ color: "rgba(5,5,5,0.5)" }}>
-                                        <EvaThinkingOrb state="working" size={20} theme="light" paused={!!reduce} aria-hidden />
+                                        <EvaBot state="thinking" size={20} />
                                         EVA está lendo sua pergunta
                                     </div>
                                 )}
@@ -271,14 +264,7 @@ export const EvaChatWidget = () => {
                         }}
                         aria-label="Perguntar à EVA"
                     >
-                        <EvaThinkingOrb
-                            state={orb.state}
-                            size={64}
-                            displaySize={36}
-                            theme="light"
-                            paused={!!reduce}
-                            aria-hidden
-                        />
+                        <EvaBot state={evaBotFrom(orb.state)} size={36} />
                         <span className="text-[14px] font-semibold" style={{ color: "var(--lp-ink)" }}>Perguntar à EVA</span>
                     </motion.button>
                 )}

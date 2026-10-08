@@ -32,11 +32,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { ArrowRight, Check, ChevronDown, Loader2, PencilLine, RefreshCw, ShieldAlert } from "lucide-react";
-import { EvaEntity } from "@/components/eva/EvaEntity";
 import {
     buildSuggestionOutcome,
     type SuggestionOutcome,
 } from "@/lib/eva/suggestionFeedback";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -174,7 +174,7 @@ export function GuidedSimulationReplay({
             {!hideHeader && (
             <>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <EvaEntity size={44} state="idle" />
+                <EvaBot state="idle" size={44} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <p className="vz-agentcreate-label">Prova de confiança</p>
                     <h1 className="vz-agentcreate-title" style={{ marginTop: 2, fontSize: 22 }}>
@@ -470,7 +470,7 @@ function ConfidencePanel({
             style={{ marginTop: 28 }}
         >
             <div className="vz-simreplay-panel-top">
-                <EvaEntity size={30} state={readiness === "ready" ? "done" : readiness === "blocked" ? "alert" : "idle"} />
+                <EvaBot state={readiness === "ready" ? "happy" : readiness === "blocked" ? "alert" : "idle"} size={30} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <p className="vz-simreplay-panel-headline">{headline}</p>
                     <p className="vz-simreplay-panel-reason">{reason}</p>
@@ -535,7 +535,7 @@ function EmptyReplayState({
             {!hideHeader && (
             <>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <EvaEntity size={44} state="listening" />
+                <EvaBot state="idle" size={44} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <p className="vz-agentcreate-label">Prova de confiança</p>
                     <h1 className="vz-agentcreate-title" style={{ marginTop: 2, fontSize: 22 }}>

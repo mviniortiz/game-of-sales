@@ -1,8 +1,8 @@
 import { ReportAgent } from "@/components/admin/ReportAgent";
 import { usePlan } from "@/hooks/usePlan";
-import { EvaPhotoAvatar } from "@/components/eva/EvaPhotoAvatar";
 import { Lock, Sparkles, ArrowRight, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tela /eva — EVA Comercial (F4D.2, 2026-05-19)
@@ -68,7 +68,7 @@ const EvaPaywall = () => {
             }}
           >
             <div className="flex justify-center mb-5">
-              <EvaPhotoAvatar size="lg" ring="glow" />
+              <EvaBot state="idle" size={80} />
             </div>
 
             <div className="space-y-2 mb-5">
@@ -142,8 +142,8 @@ function EvaPageHeader() {
       />
 
       <div className="flex items-center gap-5 sm:gap-6">
-        <EvaPhotoAvatar size="xl" ring="glow" className="hidden sm:block" />
-        <EvaPhotoAvatar size="lg" ring="glow" className="sm:hidden" />
+        <EvaBot state="idle" size={160} className="hidden sm:block" />
+        <EvaBot state="idle" size={80} className="sm:hidden" />
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">

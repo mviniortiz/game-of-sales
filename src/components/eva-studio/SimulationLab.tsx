@@ -25,11 +25,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState, useEffect, useRef } from "react";
 import { ArrowRight, Check, ShieldAlert, UserRound, PencilLine } from "lucide-react";
-import { EvaEntity } from "@/components/eva/EvaEntity";
 import {
     buildSuggestionOutcome,
     type SuggestionOutcome,
 } from "@/lib/eva/suggestionFeedback";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 interface SimRead {
     intent: string;
@@ -246,7 +246,7 @@ export function SimulationLab({ hideHeader, onJudge, onComplete }: SimulationLab
             `}</style>
             {!hideHeader && (
                 <div className="vz-simlab-head">
-                    <EvaEntity size={34} state="idle" />
+                    <EvaBot state="idle" size={34} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <h1 className="vz-simlab-title">Campo de provas da EVA</h1>
                         <p className="vz-simlab-sub">Veja como ela se comporta, do lead mais tranquilo ao mais difícil.</p>

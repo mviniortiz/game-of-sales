@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { EvaNode } from "@/components/landing/EvaNode";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // LP.9 (v2) — previews detalhados dos tiles. Cada benefício clicável tem o seu
 // preview (mini-UI real, sem badges/chips coloridos — só texto refinado, mono e
@@ -41,7 +41,7 @@ function Mono({ children }: { children: ReactNode }) {
 function EvaTag({ children }: { children: ReactNode }) {
     return (
         <div className="flex items-center gap-1.5">
-            <EvaNode size={13} color="var(--lp-blue)" className="vz-eva-live" />
+            <EvaBot size={18} still className="vz-eva-live" />
             <span className="lp-mono" style={{ color: "var(--lp-ink-55)" }}>{children}</span>
         </div>
     );

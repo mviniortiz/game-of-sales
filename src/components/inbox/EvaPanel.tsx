@@ -47,9 +47,7 @@ import {
     X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { EvaNode } from "@/components/landing/EvaNode";
 import { toast } from "sonner";
-import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import { EvaAnalyzingState } from "@/components/inbox/EvaAnalyzingState";
 import { NovaOportunidadeModal } from "@/components/deals/NovaOportunidadeModal";
 import { EvaCreateDealNudge } from "@/components/inbox/EvaCreateDealNudge";
@@ -73,6 +71,7 @@ import type {
     Urgencia,
 } from "@/lib/eva/qualificationSchema";
 import { proximaAcaoLabel } from "@/lib/eva/qualificationSchema";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // ─── Movimento (disciplinado, com fallback de reduced-motion) ───────────────
 // LP-INBOX.2 2026-06-21: as seções entram com fade+rise em stagger curto, o
@@ -275,15 +274,7 @@ function EmptyPanel({ reason, onClose }: { reason: "no-chat" | "no-messages"; on
     return (
         <div className="relative flex-1 flex flex-col items-center justify-center px-5 text-center">
             {onClose && <SheetCloseButton onClose={onClose} absolute />}
-            <EvaThinkingOrb
-                state="listening"
-                size={64}
-                displaySize={56}
-                theme="light"
-                agentKey="qualificacao"
-                className="mb-4"
-                aria-hidden
-            />
+            <EvaBot state="idle" size={56} className="mb-4" />
             <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
                 Aguardando contexto
             </p>
@@ -300,15 +291,7 @@ function EmptyPanel({ reason, onClose }: { reason: "no-chat" | "no-messages"; on
 function LoadingState({ message }: { message?: string }) {
     return (
         <div className="flex-1 flex flex-col items-center justify-center px-5 text-center">
-            <EvaThinkingOrb
-                state="working"
-                size={64}
-                displaySize={56}
-                theme="light"
-                agentKey="qualificacao"
-                className="mb-4"
-                aria-hidden
-            />
+            <EvaBot state="thinking" size={56} className="mb-4" />
             <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
                 {message || "EVA analisando conversa…"}
             </p>
@@ -735,15 +718,7 @@ function PanelContent({
             >
                 {/* Linha 1 — identidade + ações */}
                 <div className="flex items-center gap-3">
-                    <EvaThinkingOrb
-                        state={insight.analyzing ? "working" : "listening"}
-                        size={64}
-                        displaySize={36}
-                        theme="light"
-                        agentKey="qualificacao"
-                        className="shrink-0"
-                        aria-label="EVA Comercial"
-                    />
+                    <EvaBot state={insight.analyzing ? "thinking" : "idle"} size={36} className="shrink-0" label="EVA Comercial" />
                     <p className="flex-1 min-w-0 truncate text-[14px] font-semibold leading-tight text-[var(--vyz-text-primary)]">
                         EVA
                     </p>
@@ -763,7 +738,7 @@ function PanelContent({
                         className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-0.5 rounded-full shrink-0 bg-[var(--vyz-surface-2)] text-[var(--vyz-text-strong)]"
                         title="A EVA sugere. Nada sai para o cliente sem o seu ok."
                     >
-                        <EvaNode size={9} color="var(--vyz-eva)" />
+                        <EvaBot size={16} still />
                         Você aprova
                     </span>
                     {/* Mobile: fecha a bottom sheet (no desktop a coluna é fixa). */}
@@ -1084,15 +1059,7 @@ function formatResetAt(iso: string | null): string | null {
 function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
     return (
         <div className="flex flex-col items-center justify-center text-center py-8 px-2">
-            <EvaThinkingOrb
-                state="listening"
-                size={64}
-                displaySize={56}
-                theme="light"
-                agentKey="qualificacao"
-                className="mb-4"
-                aria-hidden
-            />
+            <EvaBot state="idle" size={56} className="mb-4" />
             <p className="text-[13.5px] font-semibold mb-2" style={{ color: "#0B1220" }}>
                 A EVA ainda não analisou esta conversa.
             </p>
@@ -1107,7 +1074,7 @@ function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
                 onClick={onAnalyze}
                 className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-full whitespace-nowrap text-[13px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 active:scale-[0.98] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2"
             >
-                <EvaNode size={13} color="currentColor" />
+                <EvaBot size={18} still />
                 Analisar conversa
             </button>
             <p className="text-[10.5px] mt-3" style={{ color: "#94A3B8", lineHeight: 1.5, maxWidth: "260px" }}>
@@ -1241,7 +1208,7 @@ function RealContent({
                     className="flex items-center gap-2 px-3 py-2 rounded-lg"
                     style={{ background: "rgba(109,40,217,0.06)", border: "1px solid rgba(109,40,217,0.16)" }}
                 >
-                    <EvaNode size={11} color="#6D28D9" />
+                    <EvaBot size={16} still />
                     <p className="text-[11.5px] font-medium" style={{ color: "#6D28D9", lineHeight: 1.4 }}>
                         A EVA leu esta conversa sozinha quando o lead chegou.
                     </p>
@@ -1281,7 +1248,7 @@ function RealContent({
                         // Fio roxo de 2px no topo: no meio de um painel todo
                         // branco, é o que diz "a decisão é aqui" antes de a
                         // pessoa ler qualquer palavra. Roxo só como acento,
-                        // igual ao EvaNode logo abaixo.
+                        // igual à EVA logo abaixo.
                         borderTop: "2px solid #6D28D9",
                         boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 14px 36px -18px rgba(109,40,217,0.28)",
                     }}
@@ -1291,7 +1258,7 @@ function RealContent({
                             className="text-[10.5px] uppercase inline-flex items-center gap-1.5"
                             style={{ color: "#6D28D9", fontWeight: 700, letterSpacing: "0.08em" }}
                         >
-                            <EvaNode size={10} color="#6D28D9" />
+                            <EvaBot size={16} still />
                             O que fazer agora
                         </p>
                     </div>

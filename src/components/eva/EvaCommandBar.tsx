@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowRight, Loader2, Sparkles, Users, Clock, TrendingDown, Calendar } from "lucide-react";
-import { EvaPhotoAvatar } from "./EvaPhotoAvatar";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // EvaCommandBar (F4D.2.1, 2026-05-19)
@@ -88,7 +88,7 @@ export function EvaCommandBar() {
             <div className="px-6 sm:px-8 pt-6 sm:pt-7 pb-5 sm:pb-7">
                 {/* Header com avatar + título + selo (F4A.4: avatar lg) */}
                 <div className="flex items-start gap-5 mb-5">
-                    <EvaPhotoAvatar size="lg" ring="subtle" thinking={state === "thinking"} />
+                    <EvaBot state={state === "thinking" ? "thinking" : "idle"} size={80} />
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
                             <h3
@@ -238,7 +238,7 @@ export function EvaCommandBar() {
                             border: "1px solid #E2E8F0",
                         }}
                     >
-                        <EvaPhotoAvatar size="xs" ring="subtle" />
+                        <EvaBot state="idle" size={24} />
                         <div className="flex-1 min-w-0">
                             <p
                                 className="text-[11px] uppercase mb-1"

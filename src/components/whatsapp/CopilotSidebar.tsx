@@ -20,7 +20,6 @@ import { RegisterSaleForm } from "./RegisterSaleForm";
 import { CreateProposalForm } from "./CreateProposalForm";
 import { useCrmLookup, updateDealStage, addNoteToDeal } from "./useCrmLookup";
 import { PIPELINE_STAGES, getStageInfo, tempColor } from "./helpers";
-import { EvaEntity } from "@/components/eva/EvaEntity";
 import {
     EvaAssistColumn,
     type EvaAssistData,
@@ -30,6 +29,7 @@ import {
     recordSuggestionFeedback,
     type SuggestionOutcome,
 } from "@/lib/eva/suggestionFeedback";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 const TempIcon = ({ temp }: { temp: string }) => {
     if (temp === "quente") return <Flame className="w-3 h-3" />;
@@ -273,7 +273,7 @@ export const CopilotSidebar = ({
             <div className={`${containerClassName || 'hidden md:flex'} w-[320px] shrink-0 flex-col border-l border-border bg-background`}>
                 <div className="flex items-center justify-between px-4 h-14 border-b border-border shrink-0">
                     <div className="flex items-center gap-2">
-                        <EvaEntity size={24} state="listening" />
+                        <EvaBot state="idle" size={24} />
                         <div className="flex flex-col leading-none">
                             <span className="text-[12px] font-semibold text-foreground tracking-tight">EVA</span>
                             <span className="text-[10px] text-muted-foreground/50 mt-0.5">copiloto</span>
@@ -300,7 +300,7 @@ export const CopilotSidebar = ({
             {/* ── Header: EVA brand ── */}
             <div className="flex items-center justify-between px-4 h-14 border-b border-border shrink-0">
                 <div className="flex items-center gap-2">
-                    <EvaEntity size={24} state={aiThinking ? "thinking" : aiSuggestion ? "idle" : "listening"} />
+                    <EvaBot state={aiThinking ? "thinking" : aiSuggestion ? "talking" : "idle"} size={24} />
                     <div className="flex flex-col leading-none">
                         <span className="text-[12px] font-semibold text-foreground tracking-tight">EVA</span>
                         <span className="text-[10px] text-muted-foreground/50 mt-0.5">
@@ -368,14 +368,14 @@ export const CopilotSidebar = ({
                     <div className="px-3 py-3 border-b border-border">
                         {aiThinking ? (
                             <div className="flex items-center gap-2.5 px-1 py-1">
-                                <EvaEntity size={24} state="thinking" />
+                                <EvaBot state="thinking" size={24} />
                                 <span className="text-[11.5px] text-violet-700/70 italic">Deixa eu ler essa conversa…</span>
                             </div>
                         ) : assistData ? (
                             <>
                                 {evaSpeech && (
                                     <div className="flex items-start gap-2 px-1 pb-2.5">
-                                        <EvaEntity size={22} state="idle" />
+                                        <EvaBot state="idle" size={22} />
                                         <p className="flex-1 text-[12px] text-foreground/85 leading-[1.5]">
                                             {evaSpeech}
                                         </p>
@@ -394,7 +394,7 @@ export const CopilotSidebar = ({
                         ) : (
                             <div className="px-1 py-1">
                                 <div className="flex items-start gap-2.5 mb-3">
-                                    <EvaEntity size={24} state="listening" />
+                                    <EvaBot state="idle" size={24} />
                                     <p className="flex-1 text-[12px] text-foreground/75 leading-[1.5] pt-0.5">
                                         Quer que eu leia essa conversa e já te deixe a resposta pronta?
                                     </p>

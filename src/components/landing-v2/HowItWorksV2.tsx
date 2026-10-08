@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 import { ButtonV2 } from "./ButtonV2";
 import { AnimatedMeshTile } from "./AnimatedMeshTile";
 import { Reveal } from "./Reveal";
-import { EvaNode } from "@/components/landing/EvaNode";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // LP.6 (v2) — "Comece em minutos", no espírito do "Get started in minutes" da
 // handhold: passos numerados à esquerda + mock de painel à direita. Fluxo real
@@ -39,7 +39,7 @@ function PanelMock() {
                 {/* sidebar */}
                 <div className="hidden w-[120px] shrink-0 flex-col gap-1 p-3 sm:flex" style={{ background: "var(--lp-ink)" }}>
                     <div className="mb-2 flex items-center gap-1.5 px-1.5">
-                        <EvaNode size={13} color="#fff" />
+                        <EvaBot size={18} still />
                         <span className="text-[12px] text-white" style={{ fontWeight: 700 }}>
                             Vyzon
                         </span>

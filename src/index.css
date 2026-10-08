@@ -895,111 +895,6 @@ All colors MUST be HSL.
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   EvaEntity — malha de nós abstrata da EVA. A forma é simples; o movimento é
-   a personalidade. Cor por estado via CSS vars (muda mesmo em reduced-motion);
-   movimento por estado (desligado em reduced-motion).
-   ───────────────────────────────────────────────────────────────────────── */
-.vz-eva {
-  display: block;
-  /* paleta padrão (idle/thinking) = azul da EVA — um pouco mais forte/saturada
-     que a base, pras claras (nós externos + linhas) não lavarem. */
-  --eva-core: #1E40AF;
-  --eva-c1: #2563EB;
-  --eva-c2: #4f8df0;
-  --eva-c3: #8FB6F4;
-  --eva-line: #ABC6F5;
-  --eva-bg: #EAF1FE;
-}
-/* a cor acompanha a troca de estado (cor ≠ movimento, ok em reduced-motion) */
-.vz-eva-bg,
-.vz-eva-core-hi { transition: fill 0.4s ease; }
-.vz-eva-line {
-  stroke: var(--eva-line);
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  transition: stroke 0.4s ease;
-}
-/* variante pequena (<40px): stroke proporcionalmente mais grosso, senão some */
-.vz-eva--sm .vz-eva-line { stroke-width: 2.7; }
-/* escala em torno do próprio centro de cada peça. O easing de transform "segura"
-   a desaceleração quando a animação é trocada/removida (ex: alert tenso → idle
-   calmo): em vez de snap do scale, ela ASSENTA. Dormente enquanto a animação
-   roda (a animação vence); só atua no instante do switch de estado. */
-.vz-eva-mesh,
-.vz-eva-node,
-.vz-eva-core {
-  transform-box: fill-box;
-  transform-origin: center;
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.vz-eva-node,
-.vz-eva-core { transition: fill 0.4s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
-
-/* alert: malha coral, tensa */
-.vz-eva--alert {
-  --eva-core: #9A3412;
-  --eva-c1: #D85A30;
-  --eva-c2: #EA7B52;
-  --eva-c3: #F3A982;
-  --eva-line: #F6C9B3;
-  --eva-bg: #FCEEE7;
-}
-/* done: malha verde, "tudo resolvido" */
-.vz-eva--done {
-  --eva-core: #2C5210;
-  --eva-c1: #3B6D11;
-  --eva-c2: #5C9A2E;
-  --eva-c3: #9BC36E;
-  --eva-line: #CFE3B8;
-  --eva-bg: #EDF5E3;
-}
-/* listening: malha apagada (slate), "em escuta, sem contexto pra sugerir".
-   A EVA sinaliza o modo pela cor antes de qualquer texto ser lido. */
-.vz-eva--listening {
-  --eva-core: #475569;
-  --eva-c1: #64748B;
-  --eva-c2: #94A3B8;
-  --eva-c3: #C3CDD9;
-  --eva-line: #DDE4EC;
-  --eva-bg: #F1F5F9;
-}
-
-@keyframes vz-eva-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-@keyframes vz-eva-breathe-deep { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
-/* thinking: pulso DE LEVE (1.13) — o sinal nas linhas é a estrela; pulso forte
-   que repete a cada refetch vira tique nervoso na periferia da visão. */
-@keyframes vz-eva-node-pulse { 0%, 100% { transform: scale(1); opacity: 0.82; } 50% { transform: scale(1.13); opacity: 1; } }
-@keyframes vz-eva-node-tense { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.16); opacity: 1; } }
-@keyframes vz-eva-core-tense { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-@keyframes vz-eva-flow { from { stroke-dashoffset: 10; } to { stroke-dashoffset: 0; } }
-
-/* idle: respiro lento, quase imperceptível (padrão) */
-.vz-eva--idle .vz-eva-mesh { animation: vz-eva-breathe 4s ease-in-out infinite; }
-
-/* thinking: nós pulsam ~1s (defasados) + sinal percorrendo as linhas */
-.vz-eva--thinking .vz-eva-node { animation: vz-eva-node-pulse 1s ease-in-out infinite; }
-.vz-eva--thinking .vz-eva-line { stroke-dasharray: 3 7; animation: vz-eva-flow 1.1s linear infinite; }
-
-/* alert: pulso mais tenso e curto. 1.2s lê tenso; se ficar ansioso demais ao
-   lado da tela parada, subir pra 1.5s (ainda tenso, menos frenético). */
-.vz-eva--alert .vz-eva-node { animation: vz-eva-node-tense 1.2s ease-in-out infinite; }
-.vz-eva--alert .vz-eva-core { animation: vz-eva-core-tense 1.2s ease-in-out infinite; }
-
-/* done: respiro profundo e lento */
-.vz-eva--done .vz-eva-mesh { animation: vz-eva-breathe-deep 5s ease-in-out infinite; }
-
-/* listening: respiro AINDA mais lento que idle — presença mínima, só escuta */
-.vz-eva--listening .vz-eva-mesh { animation: vz-eva-breathe 6.5s ease-in-out infinite; }
-
-@media (prefers-reduced-motion: reduce) {
-  .vz-eva-mesh,
-  .vz-eva-node,
-  .vz-eva-core,
-  .vz-eva-line { animation: none !important; }
-  .vz-eva--thinking .vz-eva-line { stroke-dasharray: none; }
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
    EvaAssistColumn — lateral da EVA na Inbox como MÁQUINA DE RESPOSTA.
    O olho lê camadas por função, não uma lista plana:
      branco  = ação (zona de resposta, o herói)
@@ -1024,7 +919,7 @@ All colors MUST be HSL.
   color: var(--evassist-ink);
 }
 
-/* 1. Header — EvaEntity + nome + 1 linha de estado do lead */
+/* 1. Header — EvaBot + nome + 1 linha de estado do lead */
 .vz-evassist-header {
   display: flex;
   align-items: center;

@@ -10,7 +10,7 @@ export type EvaOrbCycleState =
   | "shaping";
 
 /**
- * Ciclo de estados do ThinkingOrb pra chat da EVA:
+ * Ciclo de estados da EVA no chat (traduzido para o EvaBot por evaBotFrom):
  * open → shaping → listening;
  * ask → searching → working;
  * resposta → composing → listening.
@@ -89,20 +89,3 @@ export function useEvaOrbCycle(opts?: {
   return { state, setState, onAskStart, onAnswerStart, onIdle, clearTimers };
 }
 
-/** Mapeia estados legados do EvaOrb → ThinkingOrb. */
-export function mapEvaOrbUiState(
-  ui?: "idle" | "thinking" | "speaking" | "listening" | "analyzing" | null,
-): EvaOrbCycleState {
-  switch (ui) {
-    case "analyzing":
-    case "thinking":
-      return "working";
-    case "speaking":
-      return "composing";
-    case "listening":
-      return "listening";
-    case "idle":
-    default:
-      return "listening";
-  }
-}

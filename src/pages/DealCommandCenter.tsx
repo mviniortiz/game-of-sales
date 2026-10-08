@@ -75,7 +75,6 @@ import { proximaAcaoLabel } from "@/lib/eva/qualificationSchema";
 import { syncWonDealToSale, unsyncDealSale } from "@/utils/salesSync";
 import { usePipelineStages, DEFAULT_STAGE_CONFIGS } from "@/hooks/usePipelines";
 import { deriveLegacyStage, type StageConfig } from "@/lib/pipelineStyles";
-import { EvaNode } from "@/components/landing/EvaNode";
 import { useQuoteBoard } from "@/hooks/useQuoteBoard";
 import { OPEN_QUOTE_STATES } from "@/lib/quoteText";
 
@@ -104,6 +103,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // â"€â"€â"€ Constants â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
@@ -341,7 +341,7 @@ const FocusCard = ({ action, onComplete, onExecute }: {
             <div className="flex items-center gap-3 px-4 py-3.5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 bg-[var(--vyz-surface-2)]">
                     {isEva
-                        ? <EvaNode size={18} color="var(--vyz-eva)" />
+                        ? <EvaBot size={25} />
                         : <Calendar className="h-5 w-5 text-[var(--vyz-text-muted)]" aria-hidden />}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -2123,7 +2123,7 @@ function DealConversationContextBlock({
             <div className="bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <EvaNode size={14} color="var(--vyz-eva)" />
+                        <EvaBot size={20} />
                         <p className="text-[13px] font-semibold text-[#0B1220]">Leitura da EVA</p>
                     </div>
                     {hasAnalysis && (

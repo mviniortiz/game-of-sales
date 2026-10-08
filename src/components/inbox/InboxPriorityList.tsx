@@ -21,8 +21,8 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { ArrowRight, ChevronDown, ChevronRight, Clock3, ListOrdered, Search, X } from "lucide-react";
 import type { QuoteItem } from "@/hooks/useQuoteBoard";
-import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import type { Chat } from "@/hooks/useEvolutionAPI";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // ─── Tipos do sinal de prioridade (placeholder do cálculo real) ─────────────
 
@@ -225,14 +225,7 @@ export function InboxPriorityList({
             {/* Header — a entidade sinaliza o modo: roxo priorizando, slate sem base */}
             <div className="vz-evlist-header">
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <EvaThinkingOrb
-                        state={studioConfigured ? "listening" : "shaping"}
-                        size={20}
-                        displaySize={26}
-                        theme="light"
-                        agentKey="qualificacao"
-                        aria-hidden
-                    />
+                    <EvaBot state={studioConfigured ? "idle" : "thinking"} size={26} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <p className="vz-evlist-title">Conversas</p>
                         <p className="vz-evlist-subtitle">

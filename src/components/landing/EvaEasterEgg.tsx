@@ -10,9 +10,9 @@
 // aparece inteiro, sem datilografia.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X, ArrowRight } from "lucide-react";
-import { EvaNode } from "./EvaNode";
 import { trackEvent } from "@/lib/analytics";
 import { smoothScrollToId } from "@/hooks/useLandingAnchor";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 const EGG_MESSAGE =
     "Você digitou meu nome — eu estava lendo esta página com você. " +
@@ -161,7 +161,7 @@ export function EvaEasterEgg() {
                         style={{ borderColor: "var(--lp-line-soft)" }}
                     >
                         <span className="lp-egg-node shrink-0 inline-flex" aria-hidden="true">
-                            <EvaNode size={15} color="var(--lp-eva)" />
+                            <EvaBot size={21} />
                         </span>
                         <span className="lp-mono" style={{ color: "var(--lp-eva)" }}>
                             EVA · presença detectada

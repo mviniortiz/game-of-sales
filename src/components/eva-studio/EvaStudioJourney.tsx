@@ -33,8 +33,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
-import type { EvaOrbState } from "@/components/landing-v2/EvaOrb";
+import type { EvaBotState } from "@/components/eva/EvaBot";
 import {
     AgentPurposeCreate,
     type AgentPurpose,
@@ -56,6 +55,7 @@ import { ConversationalStudio } from "./ConversationalStudio";
 import { SimulationLab, type LabJudgment, type LabScenario } from "./SimulationLab";
 import { EvaStudioShell, type StudioStepKey } from "./EvaStudioShell";
 import { getSpecialist, type SpecialistKey } from "@/lib/eva/evaSpecialists";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -126,13 +126,12 @@ const STEPS = [
 
 const ORDER: StudioStepKey[] = ["criar", "ensinar", "provar", "ativar"];
 
-// O orb do cabeçalho reage ao passo (EvaOrb não tem 'configuring'/'ready' →
-// mapeia pro vocabulário disponível: idle → thinking → analyzing → speaking).
-const STEP_ORB: Record<StudioStepKey, EvaOrbState> = {
+// A EVA do cabeçalho reage ao passo: esperando, lendo, escrevendo, pronta.
+const STEP_EVA: Record<StudioStepKey, EvaBotState> = {
     criar: "idle",
     ensinar: "thinking",
-    provar: "analyzing",
-    ativar: "speaking",
+    provar: "talking",
+    ativar: "happy",
 };
 
 // ─── Componente ─────────────────────────────────────────────────────────────
@@ -272,7 +271,7 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
             onSelect={selectStep}
             readiness={{ label: "Pronta pro Inbox", pct: readinessPct }}
             hideStepLabel={aside !== null}
-            orbState={aside ? "analyzing" : STEP_ORB[step]}
+            evaState={aside ? "thinking" : STEP_EVA[step]}
             secondary={(["memoria", "insights", "analytics"] as AsideView[])
                 .filter((v) => (v === "memoria" ? memoryContent : v === "insights" ? insightsContent : analyticsContent))
                 .map((v) => ({
@@ -471,14 +470,7 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
                     <div className={`vz-simreplay-panel vz-simreplay-panel--ready vz-journey-activate ${activated ? "vz-journey-activate--on" : ""}`}>
                         <div className="vz-simreplay-panel-top">
                             <span className={`vz-journey-activate-orb ${activated ? "vz-journey-activate-orb--on" : ""}`}>
-                                <EvaThinkingOrb
-                                    state={activated ? "composing" : "working"}
-                                    size={64}
-                                    displaySize={52}
-                                    theme="light"
-                                    agentKey="qualificacao"
-                                    aria-hidden
-                                />
+                                <EvaBot state={activated ? "talking" : "thinking"} size={52} />
                             </span>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <p className="vz-simreplay-panel-headline">

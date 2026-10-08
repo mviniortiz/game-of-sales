@@ -1,5 +1,5 @@
 import { MessageCircle, Workflow, Check, ArrowRight, Search } from "lucide-react";
-import { EvaNode } from "./EvaNode";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // LP.2.2 2026-05-25: prova visual de produto em mock CSS de alta fidelidade
 // (sem screenshot real). Mostra o fluxo WhatsApp → EVA → Pipeline:
@@ -243,7 +243,7 @@ export const ProductShowcase = () => {
                                     className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0"
                                     style={{ background: "linear-gradient(135deg, #7C3AED, #A78BFA)" }}
                                 >
-                                    <EvaNode size={15} color="#FFFFFF" />
+                                    <EvaBot size={21} />
                                 </div>
                                 <span className="text-[13.5px]" style={{ color: "#0B1220", fontWeight: 600 }}>
                                     EVA Comercial
@@ -289,7 +289,7 @@ export const ProductShowcase = () => {
                                         className="text-[10.5px] uppercase mb-2 inline-flex items-center gap-1.5"
                                         style={{ letterSpacing: "0.1em", color: "#6D28D9", fontWeight: 700 }}
                                     >
-                                        <EvaNode size={11} color="#6D28D9" />
+                                        <EvaBot size={16} still />
                                         Sugestão da EVA
                                     </p>
                                     <p className="text-[13px] mb-3.5" style={{ color: "rgba(10,10,10,0.78)", lineHeight: 1.5 }}>
@@ -361,7 +361,7 @@ export const ProductShowcase = () => {
                     className="mt-8 text-center inline-flex items-center gap-2 mx-auto w-full justify-center landing-fade-in landing-delay-300 lp-serif"
                     style={{ fontSize: "1.0625rem", color: "var(--lp-ink-70)" }}
                 >
-                    <EvaNode size={13} color="var(--lp-eva)" />
+                    <EvaBot size={18} still />
                     A EVA sugere. Seu time aprova.
                 </p>
             </div>

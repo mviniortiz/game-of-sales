@@ -8,7 +8,7 @@
 //
 // Presentacional puro: toda a lógica de criação vive no EvaPanel.
 import { Check, ArrowRight, Loader2, Pencil } from "lucide-react";
-import { EvaNode } from "@/components/landing/EvaNode";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 const ORCAMENTO_LABEL: Record<string, string> = {
     informado: "Orçamento informado",
@@ -65,7 +65,7 @@ export function EvaCreateDealNudge({
                         className="text-[10px] uppercase inline-flex items-center gap-1.5"
                         style={{ color: "#6D28D9", fontWeight: 700, letterSpacing: "0.08em" }}
                     >
-                        <EvaNode size={10} color="#6D28D9" />
+                        <EvaBot size={16} still />
                         Novo lead pronto pro pipeline
                     </p>
                     <span

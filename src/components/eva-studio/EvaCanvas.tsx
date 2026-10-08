@@ -35,7 +35,6 @@ import {
     X,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
 import { getSpecialist } from "@/lib/eva/evaSpecialists";
 import type { ApprovalResult } from "@/lib/eva/approval";
 import type { EvaMemory } from "@/hooks/useEvaMemory";
@@ -57,6 +56,7 @@ import type { AgentSourceInfo } from "./AgentPurposeCreate";
 import { EvaAnalyticsPanel } from "./EvaAnalyticsPanel";
 import { EvaMemoryView } from "./EvaMemoryTab";
 import { EvaInsightsTab } from "./EvaInsightsTab";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 type BlockKey = "escuta" | "sabe" | "regras" | "entrega";
 type ModalKey = BlockKey | "memoria" | "insights" | "julgar";
@@ -234,14 +234,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                 <aside className="w-full flex-shrink-0 lg:w-[320px] 2xl:w-[360px]">
                     <div className="rounded-2xl p-5" style={cardSoft}>
                         <div className="flex items-center gap-3">
-                            <EvaThinkingOrb
-                                state={running ? "working" : "listening"}
-                                size={64}
-                                displaySize={44}
-                                theme="light"
-                                agentKey={spec.key}
-                                aria-label={spec.role}
-                            />
+                            <EvaBot state={running ? "thinking" : "idle"} size={44} label={spec.role} />
                             <div style={{ minWidth: 0 }}>
                                 <h1 style={{ fontSize: 16.5, fontWeight: 700, letterSpacing: "-0.01em" }}>Qualificador</h1>
                                 <p style={{ marginTop: 2, fontSize: 12, color: SUB, lineHeight: 1.4 }}>
@@ -429,14 +422,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                         </div>
                     ) : groups.length === 0 ? (
                         <div className="rounded-2xl px-6 py-14 text-center" style={cardSoft}>
-                            <EvaThinkingOrb
-                                state="listening"
-                                size={64}
-                                displaySize={52}
-                                theme="light"
-                                agentKey={spec.key}
-                                aria-hidden
-                            />
+                            <EvaBot state="idle" size={52} />
                             <p className="mt-4" style={{ fontSize: 15, fontWeight: 700 }}>Ainda sem sugestões neste período.</p>
                             <p className="mx-auto mt-2 max-w-md" style={{ fontSize: 13, color: SUB, lineHeight: 1.55 }}>
                                 Quando houver leads no Inbox, cada leitura e sugestão aparece aqui.
