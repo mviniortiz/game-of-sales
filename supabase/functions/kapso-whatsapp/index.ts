@@ -13,6 +13,11 @@
 //                   lê o histórico é o Raio-X. Roda com teto de tempo e, se
 //                   sobrar página, chama a si mesma com o cursor.
 //                   Estado em channel_connections.metadata.history_import.
+//   setup_eva       (super_admin ou service_role) Prepara o número oficial da
+//                   EVA (EVA_WHATSAPP_PHONE_NUMBER_ID): registra este webhook
+//                   no número, cria o template do aviso de rascunho e devolve o
+//                   número exibido, para gravar em EVA_WHATSAPP_NUMBER.
+//                   Pode rodar de novo: só cria o que falta.
 //
 // Env: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, KAPSO_API_KEY.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -27,6 +32,7 @@ import {
     normalizeKapsoMessage,
     type KapsoMessage,
 } from "../_shared/kapso.ts";
+import { EVA_TEMPLATE, EVA_TEMPLATE_DEFINITION, evaPhoneNumberId } from "../_shared/whatsappApproval.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -49,7 +55,7 @@ const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
 type Body = { action?: string; companyId?: string; connectionId?: string; cursor?: string | null };
 
-type Caller = { internal: true } | { internal: false; userId: string; companyId: string };
+type Caller = { internal: true } | { internal: false; userId: string; companyId: string; isSuperAdmin: boolean };
 
 /** service_role (chamada interna) ou usuário logado na própria empresa; super_admin opera qualquer uma. */
 async function resolveCaller(req: Request, body: Body): Promise<Caller | Response> {
@@ -74,7 +80,61 @@ async function resolveCaller(req: Request, body: Body): Promise<Caller | Respons
     }
     const companyId = isSuperAdmin ? body.companyId || profile.company_id : profile.company_id;
     if (!companyId) return json(400, { error: "companyId is required" });
-    return { internal: false, userId: user.id, companyId };
+    return { internal: false, userId: user.id, companyId, isSuperAdmin };
+}
+
+async function setupEva(): Promise<Response> {
+    const phoneId = evaPhoneNumberId();
+    if (!phoneId) return json(400, { error: "Grave o secret EVA_WHATSAPP_PHONE_NUMBER_ID com o id do número da EVA na Kapso" });
+
+    const info = await kapsoFetch(`${KAPSO_PLATFORM}/whatsapp/phone_numbers/${phoneId}`);
+    const numero = info?.data || {};
+    const wabaId = numero.business_account_id;
+    if (!wabaId) return json(502, { error: "A Kapso não devolveu a conta (business_account_id) do número", numero });
+
+    const webhookSecret = Deno.env.get("KAPSO_WEBHOOK_SECRET") || "";
+    const url = `${SUPABASE_URL}/functions/v1/kapso-webhook`;
+    const passos: Record<string, unknown> = {};
+
+    const hooks = await kapsoFetch(`${KAPSO_PLATFORM}/whatsapp/phone_numbers/${phoneId}/webhooks`).catch(() => null);
+    const jaTem = (hooks?.data || []).some((h: { url?: string }) => h.url === url);
+    if (jaTem) {
+        passos.webhook = "já registrado";
+    } else {
+        await kapsoFetch(`${KAPSO_PLATFORM}/whatsapp/phone_numbers/${phoneId}/webhooks`, {
+            method: "POST",
+            body: JSON.stringify({
+                whatsapp_webhook: {
+                    kind: "kapso",
+                    url,
+                    events: ["whatsapp.message.received", "whatsapp.message.failed"],
+                    secret_key: webhookSecret,
+                },
+            }),
+        });
+        passos.webhook = "registrado";
+    }
+
+    const lista = await kapsoFetch(`${KAPSO_WHATSAPP}/${wabaId}/message_templates?name=${EVA_TEMPLATE}`).catch(() => null);
+    const existente = (lista?.data || []).find((t: { name?: string }) => t.name === EVA_TEMPLATE);
+    if (existente) {
+        passos.template = `já existe, status ${existente.status}`;
+    } else {
+        const criado = await kapsoFetch(`${KAPSO_WHATSAPP}/${wabaId}/message_templates`, {
+            method: "POST",
+            body: JSON.stringify(EVA_TEMPLATE_DEFINITION),
+        });
+        passos.template = `criado, status ${criado?.status || "enviado para análise"}`;
+    }
+
+    return json(200, {
+        ok: true,
+        numero_exibido: numero.display_phone_number || null,
+        nome: numero.verified_name || numero.name || null,
+        waba_id: wabaId,
+        ...passos,
+        proximo_passo: "Grave EVA_WHATSAPP_NUMBER com o número exibido (só dígitos, com 55) e espere o template ficar APPROVED.",
+    });
 }
 
 async function connect(companyId: string, userId: string): Promise<Response> {
@@ -232,6 +292,11 @@ serve(async (req) => {
             }
             if (!connectionId) return json(404, { error: "Empresa sem WhatsApp oficial conectado" });
             return await importHistory(connectionId, caller.internal ? body.cursor || null : null);
+        }
+
+        if (body.action === "setup_eva") {
+            if (!caller.internal && !caller.isSuperAdmin) return json(403, { error: "só super_admin" });
+            return await setupEva();
         }
 
         return json(400, { error: "action inválida" });

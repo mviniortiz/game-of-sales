@@ -9,8 +9,20 @@
 // A regra de produto continua: NENHUMA mensagem sai sem decisão humana. Só muda
 // a superfície onde a decisão acontece.
 //
-// Usado por: edge eva-approval (notificação) e edge evolution-message-webhook
-// (leitura da resposta do dono no próprio chat).
+// Usado por: edge eva-approval (notificação), edge evolution-message-webhook
+// (resposta do dono no próprio chat) e edge kapso-webhook (resposta do dono no
+// número oficial da EVA).
+//
+// Dois canais entre a EVA e o dono:
+//   - Número oficial da EVA (API oficial do WhatsApp, via Kapso), quando
+//     EVA_WHATSAPP_PHONE_NUMBER_ID está configurado. O aviso chega como
+//     mensagem de outro contato, com notificação, e tem botões Enviar e
+//     Descartar.
+//   - Sem ele, o próprio número do dono manda o aviso para ele mesmo.
+// Nos dois casos a retomada para o lead sai do número do integrador. O número
+// da EVA só conversa com o dono.
+
+import { KAPSO_WHATSAPP, kapsoFetch } from "./kapso.ts";
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Lidas dentro da função, não no topo: assim o parser de comandos deste mesmo
@@ -109,6 +121,117 @@ async function sendText(instanceName: string, number: string, text: string): Pro
         method: "POST",
         body: JSON.stringify({ number, text, delay: 900, presence: "composing" }),
     }, 20000);
+}
+
+// ── Número oficial da EVA ───────────────────────────────────────────────────
+
+function envGet(key: string): string | undefined {
+    return (globalThis as { Deno?: { env: { get(k: string): string | undefined } } }).Deno?.env?.get(key);
+}
+
+export function evaPhoneNumberId(): string | null {
+    return envGet("EVA_WHATSAPP_PHONE_NUMBER_ID")?.trim() || null;
+}
+
+/** Celular BR com e sem o nono dígito. O WhatsApp identifica números antigos
+ *  sem o 9, e o telefone do perfil costuma vir com ele. */
+export function brNumberVariants(raw: string): string[] {
+    const n = normalizeNumber(raw);
+    if (!n) return [];
+    const out = new Set([n]);
+    if (n.startsWith("55") && n.length === 13 && n[4] === "9") out.add(n.slice(0, 4) + n.slice(5));
+    if (n.startsWith("55") && n.length === 12 && /[6-9]/.test(n[4])) out.add(`${n.slice(0, 4)}9${n.slice(4)}`);
+    return [...out];
+}
+
+export function sameNumber(a: string, b: string): boolean {
+    const other = new Set(brNumberVariants(b));
+    return brNumberVariants(a).some((v) => other.has(v));
+}
+
+/** Conversa com o número oficial da EVA não é lead: não entra na Inbox do
+ *  cliente nem abre rastreio de orçamento. */
+export function isEvaOfficialNumber(raw: string): boolean {
+    const eva = envGet("EVA_WHATSAPP_NUMBER");
+    return Boolean(eva && raw && sameNumber(raw, eva));
+}
+
+/** Parâmetro de template: a Meta recusa quebra de linha, tab e mais de quatro
+ *  espaços seguidos. O corpo inteiro tem teto de 1024 caracteres. */
+export function templateParam(value: string, max: number): string {
+    const flat = String(value || "").replace(/\s+/g, " ").trim();
+    return flat.length > max ? `${flat.slice(0, max - 1).trimEnd()}…` : flat;
+}
+
+export const EVA_TEMPLATE = "eva_rascunho_pronto";
+
+/** Template de utilidade (aviso sobre a conta do próprio dono). Criado pela
+ *  action setup_eva da edge kapso-whatsapp e aprovado pela Meta. Mudou o texto,
+ *  muda o nome: template aprovado não aceita edição livre. */
+export const EVA_TEMPLATE_DEFINITION = {
+    name: EVA_TEMPLATE,
+    language: "pt_BR",
+    category: "UTILITY",
+    parameter_format: "NAMED",
+    components: [
+        {
+            type: "BODY",
+            text: "Rascunho {{codigo}} pronto para {{lead}}.\n\nPor que agora: {{motivo}}\n\nMensagem sugerida:\n{{mensagem}}\n\nToque em Enviar, em Descartar, ou responda esta mensagem com o texto corrigido.",
+            example: {
+                body_text_named_params: [
+                    { param_name: "codigo", example: "A2" },
+                    { param_name: "lead", example: "Carlos Menezes" },
+                    { param_name: "motivo", example: "2 dias sem resposta depois da proposta" },
+                    { param_name: "mensagem", example: "Oi Carlos, tudo bem? Conseguiu olhar a proposta do sistema? Se ajudar, te mando a simulação com financiamento." },
+                ],
+            },
+        },
+        { type: "FOOTER", text: "Nada é enviado sem a sua aprovação." },
+        { type: "BUTTONS", buttons: [{ type: "QUICK_REPLY", text: "Enviar" }, { type: "QUICK_REPLY", text: "Descartar" }] },
+    ],
+};
+
+/** Aviso fora da janela de 24h: só sai como template. Os botões levam o código
+ *  no payload, então o dono aprova sem digitar nada. Devolve o id da mensagem. */
+async function sendDraftViaEva(
+    phoneId: string,
+    to: string,
+    p: { code: string; contactName: string | null; why: string | null; text: string },
+): Promise<string | null> {
+    const res = await kapsoFetch(`${KAPSO_WHATSAPP}/${phoneId}/messages`, {
+        method: "POST",
+        body: JSON.stringify({
+            messaging_product: "whatsapp",
+            to,
+            type: "template",
+            template: {
+                name: EVA_TEMPLATE,
+                language: { code: "pt_BR" },
+                components: [
+                    {
+                        type: "body",
+                        parameters: [
+                            { type: "text", parameter_name: "codigo", text: p.code },
+                            { type: "text", parameter_name: "lead", text: templateParam(p.contactName || "seu cliente", 60) },
+                            { type: "text", parameter_name: "motivo", text: templateParam(p.why || "proposta sem resposta", 160) },
+                            { type: "text", parameter_name: "mensagem", text: templateParam(p.text, 600) },
+                        ],
+                    },
+                    { type: "button", sub_type: "quick_reply", index: "0", parameters: [{ type: "payload", payload: `${p.code} 1` }] },
+                    { type: "button", sub_type: "quick_reply", index: "1", parameters: [{ type: "payload", payload: `${p.code} 2` }] },
+                ],
+            },
+        }),
+    });
+    return res?.messages?.[0]?.id || null;
+}
+
+/** Texto livre: só vale dentro da janela de 24h, que a resposta do dono abre. */
+async function sendTextViaEva(phoneId: string, to: string, text: string): Promise<void> {
+    await kapsoFetch(`${KAPSO_WHATSAPP}/${phoneId}/messages`, {
+        method: "POST",
+        body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: text } }),
+    });
 }
 
 // ── Número do dono da instância ─────────────────────────────────────────────
@@ -264,6 +387,7 @@ export async function notifyPendingSuggestions(
     // Sessão caída derruba o lote inteiro daquele número. Sem isto, uma
     // instância morta consome uma chamada à Evolution por rascunho da fila.
     const instanciasMortas = new Set<string>();
+    const evaPhone = evaPhoneNumberId();
 
     // Cota diária por empresa, consultada uma vez e mantida em memória durante
     // a rodada.
@@ -338,20 +462,22 @@ export async function notifyPendingSuggestions(
 
         try {
             const code = await nextApprovalCode(admin, s.company_id);
-            const text = buildDraftMessage({
-                code,
-                contactName: s.suggestion?.contact_name || deal.customer_name || deal.account_name || null,
-                stage: deal.stage || null,
-                why: s.suggestion?.suggestion_text || null,
-                text: draftText,
-            });
-            await sendText(instanceName, ownerNumber, text);
+            const contactName = s.suggestion?.contact_name || deal.customer_name || deal.account_name || null;
+            const why = s.suggestion?.suggestion_text || null;
+            let messageId: string | null = null;
+            if (evaPhone) {
+                messageId = await sendDraftViaEva(evaPhone, ownerNumber, { code, contactName, why, text: draftText });
+            } else {
+                const text = buildDraftMessage({ code, contactName, stage: deal.stage || null, why, text: draftText });
+                await sendText(instanceName, ownerNumber, text);
+            }
             await admin
                 .from("agent_suggestions")
                 .update({
                     approval_code: code,
                     notified_at: new Date().toISOString(),
                     notify_channel: "whatsapp",
+                    notify_message_id: messageId,
                     notify_error: null,
                 })
                 .eq("id", s.id);
@@ -362,7 +488,7 @@ export async function notifyPendingSuggestions(
             const tentativas = (s.notify_attempts ?? 0) + 1;
             // "Connection Closed" e afins: o socket do número caiu, e nenhum
             // outro rascunho deste dono vai passar nesta rodada.
-            if (/connection closed|socket|not connected|closed/i.test(msg)) {
+            if (!evaPhone && /connection closed|socket|not connected|closed/i.test(msg)) {
                 instanciasMortas.add(instanceName);
             }
             await admin
@@ -438,10 +564,20 @@ export function parseOwnerCommand(rawText: string): ParsedCommand {
  *  pessoal dele continua intacta. */
 export async function handleOwnerCommand(
     admin: any,
-    params: { instanceName: string; companyId: string | null; ownerNumber: string; text: string },
+    params: {
+        instanceName: string;
+        companyId: string | null;
+        ownerNumber: string;
+        text: string;
+        /** Por onde a EVA responde ao dono. Padrão: o chat dele com ele mesmo. */
+        replyVia?: (text: string) => Promise<void>;
+        /** Rascunho já identificado (resposta citando o aviso). */
+        targetSuggestionId?: string | null;
+    },
 ): Promise<ApprovalOutcome> {
     const { instanceName, companyId, ownerNumber } = params;
     if (!companyId) return { handled: false };
+    const reply = params.replyVia ?? ((t: string) => replyOwner(instanceName, ownerNumber, t));
 
     const parsed = parseOwnerCommand(params.text);
     if (parsed.intent === "none" && !parsed.code) return { handled: false };
@@ -450,7 +586,20 @@ export async function handleOwnerCommand(
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     let target: any = null;
 
-    if (parsed.code) {
+    if (params.targetSuggestionId && !parsed.code) {
+        const { data } = await admin
+            .from("agent_suggestions")
+            .select("id, company_id, deal_id, suggestion, approval_code")
+            .eq("id", params.targetSuggestionId)
+            .eq("company_id", companyId)
+            .eq("status", "pending")
+            .maybeSingle();
+        if (!data) {
+            await reply("Esse rascunho já foi resolvido ou expirou. Não enviei nada.");
+            return { handled: true, action: "help" };
+        }
+        target = data;
+    } else if (parsed.code) {
         const { data } = await admin
             .from("agent_suggestions")
             .select("id, company_id, deal_id, suggestion, approval_code")
@@ -459,7 +608,7 @@ export async function handleOwnerCommand(
             .eq("approval_code", parsed.code)
             .maybeSingle();
         if (!data) {
-            await replyOwner(instanceName, ownerNumber, `Não achei o rascunho ${parsed.code}. Ele já foi resolvido ou expirou.`);
+            await reply(`Não achei o rascunho ${parsed.code}. Ele já foi resolvido ou expirou.`);
             return { handled: true, action: "help" };
         }
         target = data;
@@ -476,10 +625,7 @@ export async function handleOwnerCommand(
         const rows = (data || []) as any[];
         if (rows.length === 0) return { handled: false };
         if (rows.length > 1) {
-            await replyOwner(
-                instanceName,
-                ownerNumber,
-                "Tem mais de um rascunho aberto. Responda com o código na frente, por exemplo: A2 1",
+            await reply("Tem mais de um rascunho aberto. Responda com o código na frente, por exemplo: A2 1",
             );
             return { handled: true, action: "help" };
         }
@@ -487,10 +633,7 @@ export async function handleOwnerCommand(
     }
 
     if (parsed.intent === "none") {
-        await replyOwner(
-            instanceName,
-            ownerNumber,
-            `Rascunho ${target.approval_code}: responda 1 para enviar, 2 para descartar, ou escreva o texto corrigido.`,
+        await reply(`Rascunho ${target.approval_code}: responda 1 para enviar, 2 para descartar, ou escreva o texto corrigido.`,
         );
         return { handled: true, action: "help", suggestionId: target.id };
     }
@@ -505,7 +648,7 @@ export async function handleOwnerCommand(
                 approval_code: null,
             })
             .eq("id", target.id);
-        await replyOwner(instanceName, ownerNumber, "Descartado. Não enviei nada.");
+        await reply("Descartado. Não enviei nada.");
         return { handled: true, action: "rejected", suggestionId: target.id };
     }
 
@@ -514,7 +657,7 @@ export async function handleOwnerCommand(
         ? String(parsed.replacement || "").trim()
         : String(target.suggestion?.message_text || "").trim();
     if (!finalText) {
-        await replyOwner(instanceName, ownerNumber, "O rascunho está vazio. Não enviei nada.");
+        await reply("O rascunho está vazio. Não enviei nada.");
         return { handled: true, action: "help", suggestionId: target.id };
     }
 
@@ -527,7 +670,7 @@ export async function handleOwnerCommand(
     const leadRaw = target.suggestion?.contact_phone || deal?.customer_phone || "";
     const leadNumber = normalizeNumber(String(leadRaw));
     if (!leadNumber) {
-        await replyOwner(instanceName, ownerNumber, "Esse lead está sem telefone. Não consegui enviar.");
+        await reply("Esse lead está sem telefone. Não consegui enviar.");
         return { handled: true, action: "help", suggestionId: target.id, error: "lead sem telefone" };
     }
 
@@ -537,7 +680,7 @@ export async function handleOwnerCommand(
         admin.rpc("consume_rate_limit", { p_bucket: `wa-out:${instanceName}:${leadNumber}`, p_limit: 12, p_window_seconds: 60 }),
     ]);
     if (instanceOk?.data === false || targetOk?.data === false) {
-        await replyOwner(instanceName, ownerNumber, "Muitas mensagens em sequência agora. Espere um minuto e responda de novo.");
+        await reply("Muitas mensagens em sequência agora. Espere um minuto e responda de novo.");
         return { handled: true, action: "help", suggestionId: target.id, error: "rate_limited" };
     }
 
@@ -545,7 +688,7 @@ export async function handleOwnerCommand(
         await sendText(instanceName, leadNumber, finalText);
     } catch (err) {
         const msg = (err as Error)?.message || "falha no envio";
-        await replyOwner(instanceName, ownerNumber, `Não consegui enviar: ${msg}`);
+        await reply(`Não consegui enviar: ${msg}`);
         return { handled: true, action: "help", suggestionId: target.id, error: msg };
     }
 
@@ -563,12 +706,87 @@ export async function handleOwnerCommand(
         .eq("id", target.id);
 
     const quem = deal?.customer_name || deal?.account_name || "o lead";
-    await replyOwner(instanceName, ownerNumber, `Enviado para ${quem}.`);
+    await reply(`Enviado para ${quem}.`);
     return {
         handled: true,
         action: parsed.intent === "replace" ? "adjusted" : "sent",
         suggestionId: target.id,
     };
+}
+
+// ── Resposta do dono no número oficial da EVA ───────────────────────────────
+
+const EVA_OI = "Oi! Aqui é a EVA, do Vyzon. Quando uma proposta ficar sem resposta, eu te mando aqui a retomada pronta para você aprovar.";
+
+/** O número da EVA é público: qualquer pessoa pode escrever "A2 1" nele. Só
+ *  vira comando o que vem do número dono de uma conexão do Vyzon, e só sobre
+ *  rascunho da empresa dessa conexão. */
+export async function handleEvaInbound(
+    admin: any,
+    params: { from: string; text: string; contextMessageId?: string | null },
+): Promise<ApprovalOutcome> {
+    const phoneId = evaPhoneNumberId();
+    const from = normalizeNumber(params.from);
+    if (!phoneId || !from) return { handled: false };
+    const reply = async (t: string) => {
+        try {
+            await sendTextViaEva(phoneId, from, t);
+        } catch (err) {
+            console.warn("[eva] resposta ao dono falhou:", (err as Error)?.message);
+        }
+    };
+
+    // owner_jid fica em cache desde o primeiro aviso (resolveOwnerNumber).
+    const { data: conns } = await admin
+        .from("channel_connections")
+        .select("external_id, company_id, metadata")
+        .eq("provider", "evolution")
+        .not("metadata->>owner_jid", "is", null);
+    const minhas = ((conns || []) as any[]).filter((c) => sameNumber(String(c.metadata?.owner_jid || ""), from));
+    if (minhas.length === 0) {
+        await reply("Oi! Aqui é a EVA, do Vyzon. Não encontrei uma conta ligada a este número.");
+        return { handled: true, action: "help" };
+    }
+
+    let alvo = minhas[0];
+    let targetSuggestionId: string | null = null;
+    if (params.contextMessageId) {
+        // Citou o aviso: o rascunho vem pelo id da mensagem, sem precisar de código.
+        const { data: s } = await admin
+            .from("agent_suggestions")
+            .select("id, company_id")
+            .eq("notify_message_id", params.contextMessageId)
+            .maybeSingle();
+        const dona = s && minhas.find((c) => c.company_id === s.company_id);
+        if (dona) {
+            alvo = dona;
+            targetSuggestionId = s.id;
+        }
+    } else if (minhas.length > 1) {
+        // Dono de mais de uma empresa: vale a do aviso mais recente.
+        const { data: ultimo } = await admin
+            .from("agent_suggestions")
+            .select("company_id")
+            .in("company_id", minhas.map((c) => c.company_id))
+            .eq("status", "pending")
+            .not("notified_at", "is", null)
+            .order("notified_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        alvo = minhas.find((c) => c.company_id === ultimo?.company_id) || alvo;
+    }
+
+    const outcome = await handleOwnerCommand(admin, {
+        instanceName: alvo.external_id,
+        companyId: alvo.company_id,
+        ownerNumber: from,
+        text: params.text,
+        replyVia: reply,
+        targetSuggestionId,
+    });
+    if (outcome.handled) return outcome;
+    await reply(EVA_OI);
+    return { handled: true, action: "help" };
 }
 
 async function replyOwner(instanceName: string, ownerNumber: string, text: string): Promise<void> {

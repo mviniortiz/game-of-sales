@@ -8,6 +8,9 @@ import {
     normalizeNumber,
     instanceNameFor,
     userIdFromInstance,
+    brNumberVariants,
+    sameNumber,
+    templateParam,
 } from "../../supabase/functions/_shared/whatsappApproval";
 
 describe("parseOwnerCommand", () => {
@@ -82,5 +85,30 @@ describe("nome da instância", () => {
 
     it("devolve null para instância fora do padrão", () => {
         expect(userIdFromInstance("wa_demo_incorp_d1e0000000004000")).toBeNull();
+    });
+});
+
+describe("número oficial da EVA", () => {
+    it("acha o mesmo celular com e sem o nono dígito", () => {
+        expect(brNumberVariants("11 99876-5432")).toEqual(["5511998765432", "551198765432"]);
+        expect(sameNumber("551198765432", "(11) 99876-5432")).toBe(true);
+        expect(sameNumber("5511998765432", "5511998765433")).toBe(false);
+    });
+
+    it("não inventa nono dígito em telefone fixo", () => {
+        expect(brNumberVariants("1133334444")).toEqual(["551133334444"]);
+    });
+
+    it("achata o parâmetro do template e respeita o teto", () => {
+        expect(templateParam("Oi Carlos,\n\ntudo bem?\t  ", 100)).toBe("Oi Carlos, tudo bem?");
+        const longo = templateParam("a".repeat(700), 600);
+        expect(longo.length).toBe(600);
+        expect(longo.endsWith("…")).toBe(true);
+    });
+
+    it("entende os botões do aviso", () => {
+        expect(parseOwnerCommand("A2 1")).toEqual({ code: "A2", intent: "send" });
+        expect(parseOwnerCommand("Enviar")).toEqual({ code: null, intent: "send" });
+        expect(parseOwnerCommand("Descartar")).toEqual({ code: null, intent: "reject" });
     });
 });

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { handleOwnerCommand, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
+import { handleOwnerCommand, isEvaOfficialNumber, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
 import { trackOutboundQuote } from "../_shared/quoteTracking.ts";
 import { ensureConnection, importHistoryMessages } from "../_shared/whatsappHistory.ts";
 import { fillContactNames, isPlaceholderName, knownLidMap, linkLidToPhone } from "../_shared/whatsappContacts.ts";
@@ -1060,6 +1060,13 @@ serve(async (req) => {
     // LID não é telefone: os dígitos dele não servem para ligar nem para cruzar.
     const chatPhone = remoteJid.endsWith("@lid") ? "" : extractDigits(remoteJid);
     const phoneTail = chatPhone.slice(-10);
+
+    // O aviso do número oficial da EVA chega no WhatsApp da empresa. Não é
+    // lead: fora da Inbox, do rastreio de orçamento e da contagem do Raio-X.
+    if (chatPhone && isEvaOfficialNumber(chatPhone)) {
+      skipped.push("eva_oficial");
+      continue;
+    }
 
     // APPROVAL.1 — o dono respondendo no próprio chat resolve o rascunho da
     // EVA: 1 envia, 2 descarta, texto corrige e envia. Precisa vir ANTES da

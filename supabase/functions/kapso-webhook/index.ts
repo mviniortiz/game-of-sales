@@ -31,6 +31,7 @@ import {
     type KapsoMessageEvent,
 } from "../_shared/kapso.ts";
 import { trackOutboundQuote } from "../_shared/quoteTracking.ts";
+import { evaPhoneNumberId, handleEvaInbound } from "../_shared/whatsappApproval.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -147,9 +148,31 @@ async function handleConnected(body: { phone_number_id?: string; customer?: { id
     return `conectado ${phoneNumberId} → empresa ${customer.company_id}`;
 }
 
+/** Número oficial da EVA: só o dono escreve nele, para aprovar rascunho. Não
+ *  tem conexão de cliente e nada dele vai para a Inbox. Áudio e mídia ficam de
+ *  fora de propósito: transcrição errada não pode virar mensagem para o lead. */
+async function handleEvaMessage(ev: KapsoMessageEvent): Promise<void> {
+    const m = ev.message;
+    if (!m || m.kapso?.direction !== "inbound") return;
+    const texto = m.button?.payload || m.button?.text || m.interactive?.button_reply?.id || m.text?.body || "";
+    const from = m.from || ev.conversation?.phone_number || "";
+    const r = await handleEvaInbound(admin, { from, text: texto, contextMessageId: m.context?.id || null });
+    console.log("[eva] resposta do dono:", r.action || "ignorada");
+}
+
+/** Aviso da EVA que a Meta não entregou (template pausado, número inválido...). */
+async function handleEvaStatus(event: string, ev: KapsoMessageEvent): Promise<void> {
+    if (event !== "whatsapp.message.failed" || !ev.message?.id) return;
+    await admin
+        .from("agent_suggestions")
+        .update({ notify_error: `entrega falhou no número da EVA (${ev.message.kapso?.status || "failed"})` })
+        .eq("notify_message_id", ev.message.id);
+}
+
 async function handleMessage(ev: KapsoMessageEvent, cache: Map<string, Connection | null>): Promise<void> {
     const phoneNumberId = ev.phone_number_id || ev.conversation?.phone_number_id;
     if (!phoneNumberId) return;
+    if (phoneNumberId === evaPhoneNumberId()) return handleEvaMessage(ev);
     if (!cache.has(phoneNumberId)) cache.set(phoneNumberId, await findConnection(phoneNumberId));
     const conn = cache.get(phoneNumberId);
     if (!conn) {
@@ -195,6 +218,7 @@ async function handleStatus(event: string, ev: KapsoMessageEvent, cache: Map<str
     const messageId = ev.message?.id;
     const status = event.split(".").pop() as string;
     if (!phoneNumberId || !messageId) return;
+    if (phoneNumberId === evaPhoneNumberId()) return handleEvaStatus(event, ev);
     if (!cache.has(phoneNumberId)) cache.set(phoneNumberId, await findConnection(phoneNumberId));
     const conn = cache.get(phoneNumberId);
     if (!conn) return;

@@ -27,6 +27,11 @@ export type KapsoMessage = {
     to?: string;
     from_user_id?: string;
     text?: { body?: string };
+    /** Toque em botão de resposta rápida de template. */
+    button?: { payload?: string; text?: string };
+    interactive?: { button_reply?: { id?: string; title?: string } };
+    /** Mensagem citada (resposta a uma mensagem específica). */
+    context?: { id?: string };
     image?: MediaPart;
     video?: MediaPart;
     audio?: MediaPart;
