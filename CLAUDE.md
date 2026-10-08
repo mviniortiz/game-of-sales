@@ -23,8 +23,11 @@
   `evolution-message-webhook` resolve. Motivo: 162 de 175 sugestões estavam
   paradas em 'pending' porque aprovar exigia abrir o app. Rascunho com mais de
   48h expira sozinho e nunca é enviado.
-- **Nunca:** scraping/enriquecimento externo, promessa de resultado,
-  substituir o vendedor. Slogan segue válido pra saída:
+- **Nunca:** buscar dado de lead fora do WhatsApp (scraping/enriquecimento
+  de contato), promessa de resultado, substituir o vendedor. Exceção única
+  (08/10/2026): o site da PRÓPRIA empresa do usuário pode ser lido quando ele
+  digita o endereço na configuração da EVA (`eva-site-context`), e nada é
+  gravado sem ele confirmar o resumo. Slogan segue válido pra saída:
   **"A EVA sugere, seu time aprova."**
 
 ## Comandos
@@ -91,9 +94,11 @@ está BLOQUEADO por billing; não criar workflows.
 - Contexto do negócio: a EVA deduz sozinha das conversas
   (`eva-learn-from-conversations`, cron `eva-learn-context` toda segunda 10h
   BRT) e propõe em `eva_context_suggestions` com `source='conversations'` e
-  `evidence` obrigatória. Quem aprova é o humano, no EVA Studio. A tela de
-  contexto em Configurações saiu em 30/09/2026: o dono não configura contexto,
-  a EVA parte do pacote do segmento (`src/lib/eva/blueprint.ts`). O
+  `evidence` obrigatória. Quem aprova é o humano, no EVA Studio. Conta nova
+  sem contexto cai em `/configurar-eva` (desde 08/10/2026): a EVA lê o site,
+  pergunta só o que faltou e grava `eva_business_context` depois do "É isso"
+  (`src/lib/eva/setupContext.ts`). Sem isso, parte do pacote do segmento
+  (`src/lib/eva/blueprint.ts`). O
   `eva-agent-loop` lê `eva_business_context` no system prompt: sem isso o
   rascunho saía sem a voz da empresa.
 - Fila ÚNICA de sugestão: `agent_suggestions`. Escrevem nela o

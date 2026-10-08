@@ -22,6 +22,7 @@ const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
 const RedefinirSenha = lazy(() => import("./pages/RedefinirSenha"));
 const Inicio = lazy(() => import("./pages/Inicio"));
 const Orcamentos = lazy(() => import("./pages/Orcamentos"));
+const ConfigurarEva = lazy(() => import("./pages/ConfigurarEva"));
 const Ranking = lazy(() => import("./pages/Ranking"));
 const NovaVenda = lazy(() => import("./pages/NovaVenda"));
 const Calls = lazy(() => import("./pages/Calls"));
@@ -130,6 +131,7 @@ const AppShell = () => (
 
               {/* 2026-09-16: Orçamentos é a tela principal (APP_HOME). */}
               <Route path="/orcamentos" element={<OrcamentosRoute />} />
+              <Route path="/configurar-eva" element={<ProtectedRoute><ConfigurarEva /></ProtectedRoute>} />
               {/* F4A 2026-05-19: /inicio renderiza Inicio (Central da Operação).
                   /dashboard antigo continua acessível como fallback (não removido em F4A,
                   só não está no menu). F3 fez redirect /dashboard → /inicio que segue válido. */}

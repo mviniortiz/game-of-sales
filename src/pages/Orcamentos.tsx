@@ -2,8 +2,8 @@
 // Lê o placar pelo useQuoteBoard e marca desfecho via set_quote_outcome. O
 // estado de cada orçamento (nunca respondeu, respondeu e sumiu, esperando
 // você...) é calculado no banco (view quote_tracking_live); a tela só agrupa e mostra.
-import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowUpDown, ArrowUpRight, Check, FileText, MessageCircle, MoreHorizontal, RotateCcw, Search, X } from "lucide-react";
@@ -21,6 +21,9 @@ import { quoteRpc, useQuoteBoard, type QuoteBoard, type QuoteItem, type QuoteOut
 import { brl, evaLine, OPEN_QUOTE_STATES, plural, quoteName, stateLine } from "@/lib/quoteText";
 import { DayTicks } from "@/components/quotes/DayTicks";
 import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
+import { useAuth } from "@/contexts/AuthContext";
+import { EVA_SETUP_PATH, setupDismissKey, useEvaSetup } from "@/hooks/useEvaSetup";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 const PERIODS = [7, 30, 90] as const;
 type Period = (typeof PERIODS)[number];
@@ -124,6 +127,17 @@ export default function Orcamentos() {
   });
 
   const wa = useWhatsappConnection();
+  const setup = useEvaSetup();
+  const { isAdmin, isSuperAdmin } = useAuth();
+  const navigate = useNavigate();
+  const adiou = (() => {
+    try { return !!setup.companyId && localStorage.getItem(setupDismissKey(setup.companyId)) === "1"; } catch { return true; }
+  })();
+  // Conta nova cai na conversa de configuração uma vez; quem adiou vê o aviso.
+  // Super admin operando outra empresa nunca é levado.
+  useEffect(() => {
+    if (!preview && setup.configured === false && isAdmin && !isSuperAdmin && !adiou) navigate(EVA_SETUP_PATH, { replace: true });
+  }, [preview, setup.configured, isAdmin, isSuperAdmin, adiou, navigate]);
   const data = board.data;
   const isEmpty = !!data && data.items.length === 0 && data.totals.total_count === 0;
   // Sem parado mas com cliente esperando, abre direto no que pede ação.
@@ -135,6 +149,8 @@ export default function Orcamentos() {
         <h1 className="text-[15px] font-semibold text-[var(--vyz-text-primary)]">Orçamentos</h1>
         <PeriodFilter value={days} onChange={setDays} />
       </header>
+
+      {!preview && setup.configured === false && isAdmin && <SetupBanner />}
 
       {board.isLoading || (!data && !board.isError) ? (
         <BoardSkeleton />
@@ -169,6 +185,22 @@ export default function Orcamentos() {
 }
 
 // ─── Blocos ────────────────────────────────────────────────────────────────
+function SetupBanner() {
+  return (
+    <Link
+      to={EVA_SETUP_PATH}
+      className={`mt-4 flex items-center gap-3 rounded-2xl border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors duration-150 ${EASE} hover:bg-[var(--vyz-surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]`}
+    >
+      <EvaBot size={32} state="alert" />
+      <span className="min-w-0 flex-1">
+        <span className="block text-[14px] font-semibold text-[var(--vyz-text-strong)]">A EVA ainda não conhece sua empresa</span>
+        <span className="block text-[13px] text-[var(--vyz-text-muted)]">Uma conversa de 3 minutos e ela escreve as retomadas do seu jeito.</span>
+      </span>
+      <ArrowUpRight className="h-4 w-4 shrink-0 text-[var(--vyz-text-muted)]" aria-hidden />
+    </Link>
+  );
+}
+
 function PeriodFilter({ value, onChange }: { value: Period; onChange: (p: Period) => void }) {
   return (
     <div role="radiogroup" aria-label="Período" className="inline-flex rounded-full border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-0.5">
