@@ -75,6 +75,17 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
     const [qrAt, setQrAt] = useState(0);
     const [agora, setAgora] = useState(() => Date.now());
 
+    // O WhatsApp informado no cadastro já entra no campo do código.
+    useEffect(() => {
+        if (!open || !effectiveCompanyId) return;
+        let vivo = true;
+        supabase.from("companies").select("phone").eq("id", effectiveCompanyId).maybeSingle().then(({ data }) => {
+            const phone = (data as { phone?: string | null } | null)?.phone;
+            if (vivo && phone) setNumero((n) => n || phone.replace(/^55/, ""));
+        });
+        return () => { vivo = false; };
+    }, [open, effectiveCompanyId]);
+
     const pollRef = useRef<number | null>(null);
     const qrRefreshRef = useRef<number | null>(null);
     const onConnectedRef = useRef(onConnected);

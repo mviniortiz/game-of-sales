@@ -293,21 +293,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       password,
       options: {
         emailRedirectTo: redirectUrl,
-        data: {
-          nome,
-          company_id: companyId || '00000000-0000-0000-0000-000000000001'
-        }
+        data: { nome, company_id: companyId ?? null }
       }
     });
 
-    // Com confirmação de email ativa, signUp NÃO devolve sessão: navegar pro
-    // app aqui derrubaria a pessoa na tela de login sem explicação. Quem chama
-    // decide o que mostrar (tela de "confirme seu email").
+    // Sem sessão = confirmação de email ativa. Quem chama decide o que
+    // mostrar e para onde ir (o cadastro ainda cria a empresa depois daqui).
     const needsConfirmation = !error && !data?.session;
-    if (!error && data?.session) {
-      navigate(APP_HOME);
-    }
-
     return { error, needsConfirmation };
   };
 

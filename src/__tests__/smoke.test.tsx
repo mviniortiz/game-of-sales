@@ -159,7 +159,8 @@ describe('Smoke Tests - Public Pages', () => {
             </MemoryRouter>
         );
         expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/proposta de energia solar/i);
-        expect(screen.getByRole('button', { name: /pedir meu raio-x/i })).toBeDisabled();
+        // o botão fica sempre clicável: com campo faltando, o clique diz o que falta
+        expect(screen.getByRole('button', { name: /pedir meu raio-x/i })).toBeEnabled();
     });
 });
 

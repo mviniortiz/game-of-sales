@@ -13,10 +13,19 @@ import { AuthField } from "@/components/auth/AuthField";
 import { scorePassword, STRENGTH_META } from "@/components/auth/password";
 import { APP_HOME } from "@/config/routes";
 
-// Cadastro SIMPLES: 1 tela → conta criada sem plano (sem teste grátis desde
-// 08/10/2026) → Raio-X automático no app. Trata 2 modos: (a) novo
-// usuário (nome+empresa+email+senha ou Google); (b) usuário que entrou via Google
-// e ainda não tem empresa (pede só o nome da empresa). Rota /criar-conta.
+// Cadastro SIMPLES: 1 tela → conta criada sem plano (sem teste grátis) →
+// Raio-X automático no app. Trata 2 modos: (a) novo usuário
+// (nome+empresa+WhatsApp+email+senha ou Google); (b) usuário logado ainda sem
+// empresa (Google, ou quem confirmou o email depois): pede empresa+WhatsApp.
+// A conta nasce ANTES da empresa: se a conta falha, não sobra empresa órfã
+// (companies não tem policy de DELETE). Rota /criar-conta.
+// Aceita com ou sem 55 e com máscara; grava sempre 55 + DDD + número.
+function whatsDigitos(v: string): string {
+    const d = v.replace(/\D/g, "");
+    return d.length === 10 || d.length === 11 ? "55" + d : d;
+}
+const whatsValido = (v: string) => /^55\d{10,11}$/.test(whatsDigitos(v));
+
 const SignupV2 = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -32,13 +41,14 @@ const SignupV2 = () => {
 
     const [nome, setNome] = useState("");
     const [empresa, setEmpresa] = useState("");
+    const [whats, setWhats] = useState("");
     const [email, setEmail] = useState(
         // veio do login com o email preenchido (amarração do fluxo)
         (((location.state as { email?: string } | null)?.email) ?? "").toLowerCase(),
     );
     const [senha, setSenha] = useState("");
     const [loading, setLoading] = useState(false);
-    const [erros, setErros] = useState<{ nome?: string; empresa?: string; email?: string; senha?: string; form?: string; formAction?: "login" }>({});
+    const [erros, setErros] = useState<{ nome?: string; empresa?: string; whats?: string; email?: string; senha?: string; form?: string; formAction?: "login" }>({});
     const [erroKey, setErroKey] = useState(0);
     const [showSenha, setShowSenha] = useState(false);
     // email pra onde foi o link de confirmação; quando setado, troca o form
@@ -47,8 +57,11 @@ const SignupV2 = () => {
     const [reenviando, setReenviando] = useState(false);
     const [reenvioCooldown, setReenvioCooldown] = useState(0);
 
-    // veio do Google (logado) mas ainda sem empresa → só completar o nome da empresa
-    const ssoMode = !authLoading && !!user && !companyId && !isSuperAdmin;
+    // true entre o signUp e a empresa vinculada: nesse intervalo o usuário já
+    // existe sem empresa, e o form não pode virar o modo "Quase lá".
+    const [criandoConta, setCriandoConta] = useState(false);
+    // logado mas ainda sem empresa → só completar empresa e WhatsApp
+    const ssoMode = !authLoading && !!user && !companyId && !isSuperAdmin && !criandoConta;
 
     // Analytics: início do registro (chegou no cadastro), com o plano escolhido.
     useEffect(() => {
@@ -109,24 +122,21 @@ const SignupV2 = () => {
         trackBehavior(FUNNEL_EVENTS.REGISTER_COMPLETE, { plan });
     };
 
-    // cria a company sem plano; devolve o id
-    const createCompany = async (): Promise<string> => {
+    // Cria a empresa sem plano e vincula o usuário logado como admin. O
+    // WhatsApp fica em companies.phone: é por ele que o Markus chama quem
+    // travou no meio e ele já vem preenchido no código de conexão.
+    const createCompany = async () => {
         const attribution = getAttribution() || {};
-        const base = { name: empresa.trim(), plan: "free", subscription_status: "inactive", segment, ...attribution };
-        // id gerado no cliente nos DOIS caminhos: dispensa o .select() pós-insert,
-        // que dependia de policy de SELECT que o usuário recém-criado não tem
-        // (RLS de companies só permite ler a própria empresa DEPOIS do vínculo).
+        const base = { name: empresa.trim(), phone: whatsDigitos(whats), plan: "free", subscription_status: "inactive", segment, ...attribution };
+        // id gerado no cliente: dispensa o .select() pós-insert, que dependia de
+        // policy de SELECT que o usuário ainda sem vínculo não tem.
         const id = globalThis.crypto.randomUUID();
         const { error } = await supabase.from("companies").insert({ id, ...base } as never);
         if (error) throw new Error(error.message);
-        if (ssoMode) {
-            // associa o usuário (Google) à company — RPC SECURITY DEFINER (bypass RLS)
-            // Vínculo só via RPC SECURITY DEFINER (trava 1o-vínculo/company-vazia).
-            // Sem fallback de UPDATE direto: profiles agora bloqueia auto-set de role/company_id.
-            const { error: rpcErr } = await supabase.rpc("onboarding_assign_company", { target_company_id: id });
-            if (rpcErr) throw new Error(rpcErr.message);
-        }
-        return id;
+        // Vínculo só via RPC SECURITY DEFINER (trava 1o-vínculo/company-vazia).
+        const { error: rpcErr } = await supabase.rpc("onboarding_assign_company", { target_company_id: id });
+        if (rpcErr) throw new Error(rpcErr.message);
+        try { await refreshProfile(); } catch { /* noop */ }
     };
 
     const handleGoogle = async () => {
@@ -150,6 +160,7 @@ const SignupV2 = () => {
         e.preventDefault();
         const next: typeof erros = {};
         if (!empresa.trim()) next.empresa = "Informe o nome da sua empresa.";
+        if (!whatsValido(whats)) next.whats = "Informe o WhatsApp com DDD.";
         if (!ssoMode) {
             if (!nome.trim()) next.nome = "Informe seu nome.";
             if (!email.trim()) next.email = "Informe seu email.";
@@ -165,25 +176,25 @@ const SignupV2 = () => {
         try {
             if (ssoMode) {
                 await createCompany();
-                try { await refreshProfile(); } catch { /* noop */ }
                 marcarLead();
                 toast.success("Conta criada.");
                 navigate(APP_HOME, { replace: true });
                 return;
             }
-            const id = await createCompany();
-            const { error, needsConfirmation } = await signUp(email.trim(), senha, nome.trim(), id);
+            setCriandoConta(true);
+            const { error, needsConfirmation } = await signUp(email.trim(), senha, nome.trim());
             if (error) {
+                setCriandoConta(false);
                 const m = (error.message || "").toLowerCase();
                 if (m.includes("rate limit") || m.includes("too many")) {
+                    // a conta pode já ter sido criada numa tentativa anterior: entra e,
+                    // se faltar empresa, o modo "Quase lá" pede de novo
                     const { error: siErr } = await signIn(email.trim(), senha);
-                    if (!siErr) { marcarLead(); toast.success("Conta criada."); navigate(APP_HOME, { replace: true }); return; }
-                    await supabase.from("companies").delete().eq("id", id);
+                    if (!siErr) { navigate(APP_HOME, { replace: true }); return; }
                     setErros({ form: "Muitas tentativas. Aguarde alguns minutos e tente de novo." });
                     setErroKey((k) => k + 1);
                     return;
                 }
-                await supabase.from("companies").delete().eq("id", id);
                 if (m.includes("already registered") || m.includes("already been registered")) {
                     // erro com caminho de saída: leva pro login com o email preenchido
                     setErros({ form: "Esse email já tem conta.", formAction: "login" });
@@ -195,6 +206,7 @@ const SignupV2 = () => {
                 return;
             }
             if (needsConfirmation) {
+                setCriandoConta(false);
                 // Conta criada mas sem sessão: a confirmação de email está ativa.
                 // Mostrar a tela dedicada em vez de navegar (senão a pessoa cai
                 // no login sem entender o que aconteceu).
@@ -203,10 +215,12 @@ const SignupV2 = () => {
                 setConfirmSentTo(email.trim().toLowerCase());
                 return;
             }
-            // signUp() já direciona pro app.
+            await createCompany();
             marcarLead();
             toast.success("Conta criada.");
+            navigate(APP_HOME, { replace: true });
         } catch (err) {
+            setCriandoConta(false);
             setErros({ form: err instanceof Error ? err.message : "Não foi possível criar a conta." });
             setErroKey((k) => k + 1);
         } finally {
@@ -303,7 +317,7 @@ const SignupV2 = () => {
                                 {ssoMode ? "Quase lá" : "Criar conta"}
                             </h1>
                             <p className="mt-2.5 landing-fade-in-up landing-delay-150" style={{ color: "rgba(11,18,32,0.66)", fontSize: "1rem" }}>
-                                {ssoMode ? "Só falta o nome da sua empresa." : "Passo 1 de 3. O Raio-X é grátis e não pede cartão."}
+                                {ssoMode ? "Só falta a sua empresa e o seu WhatsApp." : "Passo 1 de 3. O Raio-X é grátis e não pede cartão."}
                             </p>
 
                             {!ssoMode && (
@@ -350,6 +364,16 @@ const SignupV2 = () => {
                                     autoComplete="organization"
                                     autoFocus={ssoMode}
                                     error={erros.empresa}
+                                    errorKey={erroKey}
+                                />
+                                <AuthField
+                                    label="Seu WhatsApp (com DDD)"
+                                    type="tel"
+                                    placeholder="(48) 99999-9999"
+                                    value={whats}
+                                    onChange={(v) => { setWhats(v); if (erros.whats) setErros((p) => ({ ...p, whats: undefined })); }}
+                                    autoComplete="tel-national"
+                                    error={erros.whats}
                                     errorKey={erroKey}
                                 />
                                 {!ssoMode && (

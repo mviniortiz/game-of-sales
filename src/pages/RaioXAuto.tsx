@@ -3,7 +3,7 @@
 // raio-x-build, modo dono), que abre em /relatorio/:token para ela conferir.
 // Nada é enviado para cliente nenhum.
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
@@ -13,6 +13,7 @@ import { EncontroProgress } from "@/components/brand/EncontroProgress";
 import { WhatsAppConnectModal } from "@/components/inbox/WhatsAppConnectModal";
 import { Bolha, Leitura, type Msg } from "@/components/eva/ConversaEva";
 import { APP_HOME } from "@/config/routes";
+import { raioXDismissKey } from "@/hooks/useEvaSetup";
 
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 const BTN_PRIMARY = `inline-flex h-11 w-full items-center justify-center rounded-full bg-[#0B1220] px-5 text-[15px] font-semibold text-white transition-all duration-150 ${EASE} hover:bg-[#1F2A3B] active:scale-[0.97] disabled:opacity-50 motion-reduce:transition-none`;
@@ -103,9 +104,16 @@ export default function RaioXAuto() {
                         </div>
                     </div>
                     {(fase === "conectar" || fase === "erro") && (
-                        <Link to={APP_HOME} className="rounded-full px-3 py-2 text-[13px] font-medium text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-2)] hover:text-[var(--vyz-text-strong)]">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (companyId) try { localStorage.setItem(raioXDismissKey(companyId), "1"); } catch { /* sem storage */ }
+                                navigate(APP_HOME);
+                            }}
+                            className="rounded-full px-3 py-2 text-[13px] font-medium text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-2)] hover:text-[var(--vyz-text-strong)]"
+                        >
                             Fazer depois
-                        </Link>
+                        </button>
                     )}
                 </div>
             </header>

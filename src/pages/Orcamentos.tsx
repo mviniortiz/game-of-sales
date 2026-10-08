@@ -22,7 +22,7 @@ import { brl, evaLine, OPEN_QUOTE_STATES, plural, quoteName, stateLine } from "@
 import { DayTicks } from "@/components/quotes/DayTicks";
 import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
 import { useAuth } from "@/contexts/AuthContext";
-import { EVA_SETUP_PATH, setupDismissKey, useEvaSetup } from "@/hooks/useEvaSetup";
+import { EVA_SETUP_PATH, raioXDismissKey, setupDismissKey, useEvaSetup } from "@/hooks/useEvaSetup";
 import { PrimeirosPassos } from "@/components/quotes/PrimeirosPassos";
 import { usePlano } from "@/hooks/usePlano";
 
@@ -138,15 +138,18 @@ export default function Orcamentos() {
   const adiou = (() => {
     try { return !!setup.companyId && localStorage.getItem(setupDismissKey(setup.companyId)) === "1"; } catch { return true; }
   })();
+  const adiouRaioX = (() => {
+    try { return !!setup.companyId && localStorage.getItem(raioXDismissKey(setup.companyId)) === "1"; } catch { return true; }
+  })();
   const { pago, carregando: planoCarregando } = usePlano();
   // Conta nova: sem assinatura vai para o Raio-X automático (o grátis); quem
   // assina cai uma vez na conversa de configuração da EVA, e quem adiou vê a
   // lista de primeiros passos. Super admin operando outra empresa nunca é levado.
   useEffect(() => {
     if (preview || !isAdmin || isSuperAdmin || planoCarregando) return;
-    if (!pago && setup.fezRaioX === false) navigate("/raio-x", { replace: true });
+    if (!pago && setup.fezRaioX === false && !adiouRaioX) navigate("/raio-x", { replace: true });
     else if (pago && setup.configured === false && !adiou) navigate(EVA_SETUP_PATH, { replace: true });
-  }, [preview, pago, planoCarregando, setup.fezRaioX, setup.configured, isAdmin, isSuperAdmin, adiou, navigate]);
+  }, [preview, pago, planoCarregando, setup.fezRaioX, setup.configured, isAdmin, isSuperAdmin, adiou, adiouRaioX, navigate]);
   const data = board.data;
   const isEmpty = !!data && data.items.length === 0 && data.totals.total_count === 0;
   // Sem parado mas com cliente esperando, abre direto no que pede ação.
@@ -158,6 +161,18 @@ export default function Orcamentos() {
         <h1 className="text-[15px] font-semibold text-[var(--vyz-text-primary)]">Orçamentos</h1>
         <PeriodFilter value={days} onChange={setDays} />
       </header>
+
+      {!preview && !pago && !planoCarregando && setup.fezRaioX === false && (
+        <section aria-label="Raio-X pendente" className="mt-4 flex flex-col gap-3 rounded-2xl border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div className="min-w-0">
+            <p className="text-[14px] font-semibold text-[var(--vyz-text-strong)]">Seu Raio-X ainda não foi feito</p>
+            <p className="mt-0.5 text-[13px] text-[var(--vyz-text-muted)]">Conecte o WhatsApp e veja em uns 3 minutos quanto está parado nas suas propostas.</p>
+          </div>
+          <Link to="/raio-x" className={`${BTN_PRIMARY} ${FOCUS} shrink-0`}>
+            Fazer meu Raio-X
+          </Link>
+        </section>
+      )}
 
       {!preview && pago && isAdmin && setup.companyId && setup.configured !== null && (
         <PrimeirosPassos companyId={setup.companyId} configured={setup.configured} connected={wa.connected} />

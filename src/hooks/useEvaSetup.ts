@@ -12,6 +12,12 @@ export function setupDismissKey(companyId: string) {
     return `vyz:eva-setup-depois:${companyId}`;
 }
 
+// Quem toca "Fazer depois" no Raio-X não é levado de volta a ele ao abrir
+// Orçamentos; o cartão de Raio-X pendente fica no topo até ele fazer.
+export function raioXDismissKey(companyId: string) {
+    return `vyz:raio-x-depois:${companyId}`;
+}
+
 export function useEvaSetup() {
     const { companyId: authCompanyId } = useAuth();
     const { activeCompanyId } = useTenant();

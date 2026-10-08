@@ -6,7 +6,7 @@ import { EncontroProgress } from "@/components/brand/EncontroProgress";
 
 const PASSOS = [
     { titulo: "Criar a conta", texto: "Você está aqui. Grátis, sem cartão." },
-    { titulo: "Conectar o WhatsApp", texto: "Um QR Code, como no WhatsApp Web. Nada é enviado." },
+    { titulo: "Conectar o WhatsApp", texto: "Por um código no celular ou QR Code. Nada é enviado." },
     { titulo: "Ver suas propostas paradas", texto: "O valor parado, quem chamar primeiro e a retomada pronta." },
 ];
 
