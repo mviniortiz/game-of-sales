@@ -59,10 +59,27 @@ serve(async (req) => {
         headers: { Authorization: `Bearer ${RESEND_API_KEY}` },
       });
       const rawText = await res.text();
-      console.log("[admin-support-inbox] status:", res.status, "body:", rawText.slice(0, 500));
       let data: any;
       try { data = JSON.parse(rawText); } catch { data = { raw: rawText }; }
       if (!res.ok) return json({ error: data?.message || `Resend API returned ${res.status}`, status: res.status, details: data }, 200);
+
+      // Marca quem escreveu: usuário do Vyzon ou lead que já pediu algo. É o
+      // que separa cliente de newsletter na aba de Suporte.
+      const emails = (data?.data || []) as Array<Record<string, any>>;
+      const addr = (from: string) => (from.match(/<([^>]+)>/)?.[1] || from).trim().toLowerCase();
+      const senders = [...new Set(emails.map((e) => addr(String(e.from || ""))))].filter(Boolean);
+      if (senders.length) {
+        const [{ data: users }, { data: leads }] = await Promise.all([
+          (supabaseAdmin as any).from("profiles").select("email").in("email", senders),
+          (supabaseAdmin as any).from("demo_requests").select("email").in("email", senders),
+        ]);
+        const usuarios = new Set((users || []).map((r: any) => String(r.email).toLowerCase()));
+        const contatos = new Set((leads || []).map((r: any) => String(r.email).toLowerCase()));
+        for (const e of emails) {
+          const a = addr(String(e.from || ""));
+          e.vyzon_contact = usuarios.has(a) ? "usuario" : contatos.has(a) ? "lead" : null;
+        }
+      }
       return json(data);
     }
 

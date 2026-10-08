@@ -18,6 +18,12 @@ const EVOLUTION_API_KEY = Deno.env.get("EVOLUTION_API_KEY");
 const SDR_EVOLUTION_INSTANCE = Deno.env.get("SDR_EVOLUTION_INSTANCE");
 const ADMIN_WHATSAPP = Deno.env.get("ADMIN_WHATSAPP"); // formato: 5511999999999
 const TAVILY_API_KEY = Deno.env.get("TAVILY_API_KEY"); // opcional — sem ele, pula enrichment
+// E-mail do Markus para o aviso de pedido de Raio-X. O WhatsApp acima depende
+// de uma instância que caiu em set/2026 ("whatsapp: falhou" nos dois últimos
+// pedidos); o e-mail pelo Resend é o aviso que não depende dela.
+const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL");
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const RESEND_FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") || "Vyzon <suporte@vyzon.com.br>";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -243,6 +249,47 @@ async function buildRaioXDigest(lead: LeadRecord): Promise<string> {
   return lines.join("\n");
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+async function sendAdminEmail(subject: string, message: string): Promise<boolean> {
+  if (!ADMIN_EMAIL || !RESEND_API_KEY) {
+    console.warn("[digest] ADMIN_EMAIL ou RESEND_API_KEY ausente — pulando e-mail");
+    return false;
+  }
+  const html = message
+    .split("\n")
+    .map((linha) => {
+      if (/^https?:\/\//.test(linha)) {
+        return `<p><a href="${escapeHtml(linha)}" style="display:inline-block;padding:10px 18px;border-radius:999px;background:#0d1421;color:#fff;text-decoration:none;font-weight:600">Chamar no WhatsApp</a></p>`;
+      }
+      return linha ? `<p style="margin:0 0 6px">${escapeHtml(linha)}</p>` : "<br>";
+    })
+    .join("");
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: RESEND_FROM_EMAIL,
+        to: [ADMIN_EMAIL],
+        subject,
+        html: `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;font-size:15px;color:#111;line-height:1.5">${html}</div>`,
+        text: message,
+      }),
+    });
+    if (!res.ok) {
+      console.error("[digest] resend status", res.status, await res.text().catch(() => ""));
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("[digest] resend error", err);
+    return false;
+  }
+}
+
 async function sendAdminWhatsApp(message: string): Promise<boolean> {
   if (!EVOLUTION_API_URL || !EVOLUTION_API_KEY || !SDR_EVOLUTION_INSTANCE || !ADMIN_WHATSAPP) {
     console.warn("[digest] WhatsApp env incompletas — pulando envio");
@@ -376,12 +423,17 @@ serve(async (req) => {
     console.log(`[digest] start lead=${record.id} email=${record.email}`);
 
     if (record.source === RAIO_X_SOURCE) {
-      const whatsappOk = await sendAdminWhatsApp(await buildRaioXDigest(record));
+      const digest = await buildRaioXDigest(record);
+      const [whatsappOk, emailOk] = await Promise.all([
+        sendAdminWhatsApp(digest),
+        sendAdminEmail(`Novo pedido de Raio-X: ${record.name || record.email}`, digest),
+      ]);
       await appendNotes(record.id, [
         `[admin-digest] ${new Date().toISOString()}`,
         `whatsapp: ${whatsappOk ? "ok" : "falhou"}`,
+        `email: ${emailOk ? "ok" : "falhou"}`,
       ]);
-      return new Response(JSON.stringify({ ok: true, whatsapp_sent: whatsappOk, raio_x: true }), {
+      return new Response(JSON.stringify({ ok: true, whatsapp_sent: whatsappOk, email_sent: emailOk, raio_x: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
