@@ -7,6 +7,7 @@ import { logLandingEvent } from "@/lib/landingFunnel";
 import { whatsappUrl } from "@/config/contact";
 import { ButtonV2 } from "@/components/landing-v2/ButtonV2";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
+import { EvaNode } from "@/components/landing/EvaNode";
 
 // Home de produção desde 29/09/2026: integradores de energia solar, oferta de
 // entrada = Raio-X grátis das propostas paradas no WhatsApp. A landing de
@@ -208,93 +209,95 @@ const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void;
     </section>
 );
 
-// Mockup do produto: à esquerda as propostas acompanhadas, à direita o
-// WhatsApp do dono recebendo a retomada pronta. Dados de exemplo.
+// Mockup do produto: as propostas acompanhadas e o WhatsApp do dono recebendo
+// a retomada no mesmo formato da aprovação real (buildDraftMessage em
+// supabase/functions/_shared/whatsappApproval.ts). Dados de exemplo. Lista em
+// vez de tabela: no celular a situação de cada proposta precisa caber na tela.
 const PROPOSALS = [
     { client: "Residência Oliveira", system: "6,2 kWp", value: "R$ 24.900", sent: "há 2 dias", status: "sem resposta", tone: DARK.amber },
     { client: "Mercado Bom Preço", system: "38 kWp", value: "R$ 118.000", sent: "há 6 h", status: "aguardando", tone: DARK.muted },
     { client: "Sítio Santa Luzia", system: "15 kWp", value: "R$ 52.300", sent: "há 5 dias", status: "retomada enviada", tone: DARK.green },
-    { client: "Clínica Vida", system: "11 kWp", value: "R$ 39.800", sent: "há 1 dia", status: "aguardando", tone: DARK.muted },
+    { client: "Clínica Vida", system: "11 kWp", value: "R$ 39.800", sent: "há 4 dias", status: "sem resposta", tone: DARK.amber },
     { client: "Casa Fernandes", system: "4,5 kWp", value: "R$ 18.700", sent: "há 9 dias", status: "fechou", tone: DARK.green },
 ];
 
+const Dot = ({ color }: { color: string }) => (
+    <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 999, background: color, display: "inline-block", flexShrink: 0 }} />
+);
+
 const ProductMock = () => (
-    <section className="mx-auto w-full max-w-[1120px] px-5 pb-16 md:px-8 md:pb-24" aria-label="Como a EVA aparece pra você">
+    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-24" aria-label="Como a EVA aparece pra você">
         <div
             className="overflow-hidden"
             style={{
                 background: DARK.bg,
                 color: DARK.text,
                 border: `1px solid ${DARK.line}`,
-                borderRadius: 8,
+                borderRadius: 12,
                 fontFamily: "Geist, Inter, system-ui, sans-serif",
                 fontSize: 14,
+                boxShadow: "0 1px 2px rgba(15,23,42,0.06), 0 30px 60px -30px rgba(15,23,42,0.45)",
             }}
         >
-            <div className="grid md:grid-cols-[1.6fr_1fr]">
-                <div className="min-w-0" style={{ borderRight: `1px solid ${DARK.line}` }}>
-                    <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: `1px solid ${DARK.line}` }}>
+            <div className="grid md:grid-cols-[1.5fr_1fr]">
+                <div className="min-w-0 md:border-r" style={{ borderColor: DARK.line }}>
+                    <div className="flex items-center justify-between gap-3 px-4 py-3" style={{ borderBottom: `1px solid ${DARK.line}` }}>
                         <span className="font-medium">Propostas acompanhadas</span>
-                        <span style={{ color: DARK.dim, fontSize: 12 }}>exemplo</span>
+                        <span className="inline-flex items-center gap-2 tabular-nums" style={{ color: DARK.amber, fontSize: 12.5 }}>
+                            <Dot color={DARK.amber} />
+                            R$ 64.700 parados
+                        </span>
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full min-w-[520px] text-left" style={{ borderCollapse: "collapse" }}>
-                            <thead>
-                                <tr style={{ color: DARK.dim, fontSize: 12 }}>
-                                    {["Cliente", "Sistema", "Valor", "Enviada", "Situação"].map((h) => (
-                                        <th key={h} className="px-4 py-2 font-normal" style={{ borderBottom: `1px solid ${DARK.line}` }}>
-                                            {h}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {PROPOSALS.map((p) => (
-                                    <tr key={p.client} style={{ borderBottom: `1px solid ${DARK.line}` }}>
-                                        <td className="px-3 py-2.5 whitespace-nowrap">{p.client}</td>
-                                        <td className="px-3 py-2.5 whitespace-nowrap tabular-nums" style={{ color: DARK.muted }}>
-                                            {p.system}
-                                        </td>
-                                        <td className="px-3 py-2.5 whitespace-nowrap tabular-nums">{p.value}</td>
-                                        <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: DARK.muted }}>
-                                            {p.sent}
-                                        </td>
-                                        <td className="px-3 py-2.5 whitespace-nowrap">
-                                            <span className="inline-flex items-center gap-2">
-                                                <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 999, background: p.tone, display: "inline-block" }} />
-                                                {p.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <ul>
+                        {PROPOSALS.map((p) => (
+                            <li key={p.client} className="flex items-center justify-between gap-3 px-4 py-3" style={{ borderBottom: `1px solid ${DARK.line}` }}>
+                                <div className="min-w-0">
+                                    <p className="truncate">{p.client}</p>
+                                    <p className="mt-0.5 truncate tabular-nums" style={{ color: DARK.dim, fontSize: 12.5 }}>
+                                        {p.system} · enviada {p.sent}
+                                    </p>
+                                </div>
+                                <div className="shrink-0 text-right">
+                                    <p className="tabular-nums">{p.value}</p>
+                                    <p className="mt-0.5 inline-flex items-center gap-1.5" style={{ color: p.tone === DARK.muted ? DARK.muted : p.tone, fontSize: 12.5 }}>
+                                        <Dot color={p.tone} />
+                                        {p.status}
+                                    </p>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
 
-                <div className="flex flex-col" style={{ background: DARK.panel }}>
-                    <div className="px-4 py-3" style={{ borderBottom: `1px solid ${DARK.line}` }}>
-                        <span className="font-medium">Seu WhatsApp</span>
-                        <span style={{ color: DARK.dim, fontSize: 12 }}> · hoje, 09:02</span>
+                <div className="flex flex-col border-t md:border-t-0" style={{ background: DARK.panel, borderColor: DARK.line }}>
+                    <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: `1px solid ${DARK.line}` }}>
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full" style={{ background: DARK.bg, border: `1px solid ${DARK.lineStrong}` }}>
+                            <EvaNode size={12} color="#a78bfa" />
+                        </span>
+                        <span className="font-medium">EVA</span>
+                        <span style={{ color: DARK.dim, fontSize: 12 }}>no seu WhatsApp · 09:02</span>
                     </div>
                     <div className="flex flex-1 flex-col gap-3 p-4">
                         <Bubble from="eva">
-                            <span style={{ color: DARK.dim, fontSize: 12 }}>EVA · proposta 2 dias sem resposta</span>
-                            <p className="mt-1">Residência Oliveira, 6,2 kWp, R$ 24.900. Rascunho da retomada:</p>
-                            <p className="mt-2" style={{ color: DARK.muted }}>
-                                “Oi, Carlos, tudo bem? Conseguiu olhar a proposta do sistema? Se ajudar, te mando a simulação
-                                com financiamento pra comparar com a sua conta de luz de hoje.”
+                            <p className="font-medium">EVA [A2] rascunho pronto</p>
+                            <p className="mt-1.5" style={{ color: DARK.muted }}>
+                                Lead: Carlos · Residência Oliveira
+                                <br />
+                                Por que agora: 2 dias sem resposta depois da proposta
                             </p>
-                            <p className="mt-2" style={{ color: DARK.dim, fontSize: 12 }}>
-                                Responda <b style={{ color: DARK.text }}>1</b> pra enviar, <b style={{ color: DARK.text }}>2</b> pra
-                                descartar, ou escreva a sua versão.
+                            <p className="mt-2">
+                                “Oi, Carlos, tudo bem? Conseguiu olhar a proposta do sistema? Se ajudar, te mando a simulação com financiamento pra
+                                comparar com a sua conta de luz de hoje.”
+                            </p>
+                            <p className="mt-2" style={{ color: DARK.dim, fontSize: 12.5 }}>
+                                Responda <b style={{ color: DARK.text }}>1</b> pra enviar, <b style={{ color: DARK.text }}>2</b> pra descartar, ou escreva a sua versão.
                             </p>
                         </Bubble>
                         <Bubble from="owner">1</Bubble>
                         <Bubble from="eva">
                             <span className="inline-flex items-center gap-2">
-                                <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 999, background: DARK.green, display: "inline-block" }} />
-                                Enviado pro Carlos do seu número, com o seu nome.
+                                <Dot color={DARK.green} />
+                                Enviado para Carlos, do seu número.
                             </span>
                         </Bubble>
                     </div>
@@ -310,7 +313,7 @@ const Bubble = ({ from, children }: { from: "eva" | "owner"; children: ReactNode
         style={{
             background: from === "owner" ? "#1f3a2c" : DARK.bg,
             border: `1px solid ${from === "owner" ? "#2b5a40" : DARK.lineStrong}`,
-            borderRadius: 6,
+            borderRadius: 8,
             lineHeight: 1.45,
         }}
     >
@@ -318,22 +321,88 @@ const Bubble = ({ from, children }: { from: "eva" | "owner"; children: ReactNode
     </div>
 );
 
-const SectionTitle = ({ children }: { children: ReactNode }) => (
-    <h2 className="lp-display text-3xl leading-tight md:text-4xl" style={{ color: "#050505" }}>
+const Eyebrow = ({ children }: { children: ReactNode }) => (
+    <p className="text-[13px] font-medium uppercase tracking-[0.08em]" style={{ color: "var(--lp-ink-40)" }}>
+        {children}
+    </p>
+);
+
+const SectionTitle = ({ children, light }: { children: ReactNode; light?: boolean }) => (
+    <h2 className="lp-display mt-2 text-[30px] leading-[1.08] md:text-[44px]" style={{ color: light ? "#f9fbff" : "#050505", letterSpacing: "-0.035em", textWrap: "balance" }}>
         {children}
     </h2>
 );
 
+// A mesma história dos anúncios: a proposta esfria dia a dia, e o 2º dia é onde
+// a EVA entra.
+const TIMELINE = [
+    { day: "Terça", title: "Proposta enviada", body: "6,2 kWp, R$ 24.900, PDF caprichado." },
+    { day: "Quarta", title: "“Vou ver em casa”", body: "O cliente leu inteiro e respondeu isso." },
+    { day: "Quinta", title: "Silêncio", body: "Você está em cima de outro telhado.", eva: true },
+    { day: "+1 semana", title: "Duzentas conversas depois", body: "A proposta desceu na lista do WhatsApp." },
+    { day: "+2 semanas", title: "Outra empresa instalou", body: "Ninguém disse não. Ninguém chamou de volta." },
+];
+
 const Pain = ({ text }: { text: string }) => (
-    <section className="mx-auto w-full max-w-[720px] px-5 pb-16 md:px-8 md:pb-24">
-        <SectionTitle>O filme de toda semana</SectionTitle>
-        <p className="mt-5 text-[17px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
-            {text}
-        </p>
-        <p className="mt-6 border-l-2 pl-4 text-[15px] leading-relaxed" style={{ borderColor: "var(--lp-line)", color: "var(--lp-ink-55)" }}>
-            62% dos consumidores já desistiram de uma compra por demora na resposta. Opinion Box e Mobile Time, Panorama
-            Mensageria 2025.
-        </p>
+    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-28">
+        <div className="max-w-[720px]">
+            <Eyebrow>O filme de toda semana</Eyebrow>
+            <SectionTitle>Proposta não morre num dia. Ela esfria.</SectionTitle>
+            <p className="mt-5 text-[16px] leading-relaxed md:text-[17px]" style={{ color: "var(--lp-ink-70)" }}>
+                {text}
+            </p>
+        </div>
+
+        <ol className="relative mt-10 grid gap-0 md:mt-14 md:grid-cols-5 md:gap-4">
+            {TIMELINE.map((t, i) => (
+                <li key={t.day} className="relative flex gap-4 pb-7 md:block md:pb-0">
+                    {/* trilho: vertical no celular, horizontal no computador */}
+                    {i < TIMELINE.length - 1 && (
+                        <span aria-hidden="true" className="absolute left-[7px] top-5 h-full w-px md:left-5 md:top-[7px] md:h-px md:w-full" style={{ background: "var(--lp-line)" }} />
+                    )}
+                    <span
+                        aria-hidden="true"
+                        className="relative z-[1] mt-1 block h-[15px] w-[15px] shrink-0 rounded-full border-2 md:mt-0"
+                        style={{
+                            borderColor: t.eva ? "var(--lp-eva)" : i >= 3 ? "#b42318" : "var(--lp-ink-40)",
+                            background: t.eva ? "var(--lp-eva)" : "var(--lp-paper)",
+                        }}
+                    />
+                    <div className="md:mt-4">
+                        <p className="text-[13px] font-medium tabular-nums" style={{ color: "var(--lp-ink-40)" }}>
+                            {t.day}
+                        </p>
+                        <p className="mt-1 text-[16px] font-medium leading-snug" style={{ color: i >= 3 ? "#b42318" : "var(--lp-ink)" }}>
+                            {t.title}
+                        </p>
+                        <p className="mt-1 text-[14px] leading-relaxed" style={{ color: "var(--lp-ink-55)" }}>
+                            {t.body}
+                        </p>
+                        {t.eva && (
+                            <div className="mt-3 rounded-[10px] border p-3 text-[13.5px] leading-snug" style={{ borderColor: "rgba(109,40,217,0.25)", background: "var(--lp-white)", color: "var(--lp-ink-90)" }}>
+                                <p className="flex items-center gap-1.5 font-medium" style={{ color: "var(--lp-eva)" }}>
+                                    <EvaNode size={11} color="var(--lp-eva)" />
+                                    Com o Vyzon
+                                </p>
+                                <p className="mt-1">A EVA te chama aqui, com a retomada pronta.</p>
+                            </div>
+                        )}
+                    </div>
+                </li>
+            ))}
+        </ol>
+
+        <div className="mt-10 flex flex-col gap-3 rounded-[12px] border p-5 sm:flex-row sm:items-center sm:gap-6 md:mt-14 md:p-6" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
+            <p className="lp-display shrink-0 text-[44px] leading-none tabular-nums md:text-[56px]" style={{ color: "#050505", letterSpacing: "-0.04em" }}>
+                62%
+            </p>
+            <p className="text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
+                dos consumidores já desistiram de uma compra por demora na resposta.
+                <span className="mt-1 block text-[13px]" style={{ color: "var(--lp-ink-40)" }}>
+                    Opinion Box e Mobile Time, Panorama Mensageria 2025.
+                </span>
+            </p>
+        </div>
     </section>
 );
 
@@ -345,23 +414,77 @@ const REPORT_ITEMS = [
 ];
 
 const WhatYouGet = () => (
-    <section className="mx-auto w-full max-w-[720px] px-5 pb-16 md:px-8 md:pb-24">
-        <SectionTitle>O que vem no Raio-X</SectionTitle>
-        <ul className="mt-6 grid gap-0">
-            {REPORT_ITEMS.map((item) => (
-                <li
-                    key={item}
-                    className="border-t py-4 text-[17px] leading-relaxed"
-                    style={{ borderColor: "var(--lp-line)", color: "var(--lp-ink-70)" }}
-                >
-                    {item}
+    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-28">
+        <div className="grid items-center gap-10 md:grid-cols-2 md:gap-14">
+            <div>
+                <Eyebrow>O Raio-X</Eyebrow>
+                <SectionTitle>O que vem no seu Raio-X</SectionTitle>
+                <ul className="mt-7 space-y-4">
+                    {REPORT_ITEMS.map((item, i) => (
+                        <li key={item} className="flex gap-3.5 text-[16px] leading-relaxed md:text-[17px]" style={{ color: "var(--lp-ink-70)" }}>
+                            <span
+                                aria-hidden="true"
+                                className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[12px] font-medium tabular-nums"
+                                style={{ background: "var(--lp-ink)", color: "var(--lp-white)" }}
+                            >
+                                {i + 1}
+                            </span>
+                            {item}
+                        </li>
+                    ))}
+                </ul>
+                <p className="mt-6 text-[16px] font-medium leading-relaxed md:text-[17px]" style={{ color: "var(--lp-ink)" }}>
+                    E uma conta simples: se uma dessas propostas fechar, quanto isso paga?
+                </p>
+            </div>
+            <ReportPreview />
+        </div>
+    </section>
+);
+
+/** Miniatura do relatório de verdade (/relatorio/:token), com dados de exemplo. */
+const ReportPreview = () => (
+    <figure
+        className="rounded-[14px] border p-5 md:p-6"
+        style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)", boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 24px 48px -28px rgba(15,23,42,0.28)" }}
+        aria-label="Exemplo de Raio-X"
+    >
+        <div className="flex items-center justify-between text-[12px]" style={{ color: "var(--lp-ink-40)" }}>
+            <span>Raio-X das propostas</span>
+            <span>exemplo</span>
+        </div>
+        <p className="lp-display mt-3 text-[40px] leading-none tabular-nums md:text-[48px]" style={{ color: "#050505", letterSpacing: "-0.045em" }}>
+            R$ 101.000
+        </p>
+        <p className="mt-2 text-[14px]" style={{ color: "var(--lp-ink-55)" }}>
+            em propostas paradas nos últimos 30 dias
+        </p>
+        <ul className="mt-5 divide-y rounded-[10px] border" style={{ borderColor: "var(--lp-line)" }}>
+            {[
+                ["Carlos", "R$ 23.900", "Esperando você há 2 dias", true],
+                ["Padaria Trigo Bom", "R$ 61.200", "Sem resposta há 8 dias", false],
+                ["Ana Paula", "R$ 15.900", "Respondeu e parou", false],
+            ].map(([name, value, status, urgent]) => (
+                <li key={name as string} className="flex items-center justify-between gap-3 px-3.5 py-3" style={{ borderColor: "var(--lp-line)" }}>
+                    <div className="min-w-0">
+                        <p className="truncate text-[14.5px] font-medium" style={{ color: "var(--lp-ink)" }}>
+                            {name}
+                        </p>
+                        <p className="text-[12.5px]" style={{ color: urgent ? "var(--lp-blue)" : "var(--lp-ink-55)" }}>
+                            {status}
+                        </p>
+                    </div>
+                    <span className="shrink-0 text-[14.5px] font-medium tabular-nums" style={{ color: "var(--lp-ink)" }}>
+                        {value}
+                    </span>
                 </li>
             ))}
         </ul>
-        <p className="mt-4 text-[17px] leading-relaxed" style={{ color: "var(--lp-ink)" }}>
-            E uma conta simples: se uma dessas propostas fechar, quanto isso paga?
+        <p className="mt-4 flex items-center gap-1.5 text-[13px]" style={{ color: "var(--lp-ink-70)" }}>
+            <EvaNode size={11} color="var(--lp-eva)" />
+            Retomada pronta para cada uma, no tom da conversa.
         </p>
-    </section>
+    </figure>
 );
 
 const STEPS = [
@@ -380,15 +503,20 @@ const STEPS = [
 ];
 
 const HowItWorks = () => (
-    <section className="mx-auto w-full max-w-[1120px] px-5 pb-16 md:px-8 md:pb-24">
+    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-28">
+        <Eyebrow>20 minutos</Eyebrow>
         <SectionTitle>Como funciona</SectionTitle>
-        <ol className="mt-8 grid gap-8 md:grid-cols-3 md:gap-10">
+        <ol className="mt-8 grid gap-3 md:mt-10 md:grid-cols-3 md:gap-4">
             {STEPS.map((s, i) => (
-                <li key={s.title} className="border-t pt-5" style={{ borderColor: "var(--lp-line)" }}>
-                    <span className="text-sm tabular-nums" style={{ color: "var(--lp-ink-40)" }}>
-                        0{i + 1}
+                <li key={s.title} className="rounded-[12px] border p-5 md:p-6" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
+                    <span
+                        className="flex h-8 w-8 items-center justify-center rounded-full border text-[14px] font-medium tabular-nums"
+                        style={{ borderColor: "var(--lp-line)", color: "var(--lp-ink)" }}
+                        aria-hidden="true"
+                    >
+                        {i + 1}
                     </span>
-                    <h3 className="mt-2 text-lg font-medium leading-snug" style={{ color: "var(--lp-ink)" }}>
+                    <h3 className="mt-4 text-[18px] font-medium leading-snug" style={{ color: "var(--lp-ink)" }}>
                         {s.title}
                     </h3>
                     <p className="mt-2 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
@@ -400,13 +528,36 @@ const HowItWorks = () => (
     </section>
 );
 
+const GUARANTEES = [
+    ["Nada sai sem você", "A EVA escreve. Quem decide se a mensagem vai é você, respondendo 1."],
+    ["Do seu número, no seu tom", "O cliente recebe do mesmo WhatsApp de sempre, com o seu nome."],
+    ["Esqueceu de responder?", "Ela não manda. Em 48 horas o rascunho expira sozinho."],
+] as const;
+
 const NotABot = () => (
-    <section className="mx-auto w-full max-w-[720px] px-5 pb-16 md:px-8 md:pb-24">
-        <SectionTitle>Não é robô falando com seu cliente</SectionTitle>
-        <p className="mt-5 text-[17px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
-            Nada sai sem você aprovar. A mensagem vai do seu número, com o seu nome, no seu tom. Se você não responder,
-            ela não sai. Em 48 horas o rascunho expira sozinho.
-        </p>
+    <section className="py-16 md:py-24" style={{ background: "#0d1421" }}>
+        <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-5 md:px-8">
+            <p className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em]" style={{ color: "#a78bfa" }}>
+                <EvaNode size={12} color="#a78bfa" />
+                EVA
+            </p>
+            <SectionTitle light>Não é robô falando com seu cliente</SectionTitle>
+            <p className="mt-4 max-w-[600px] text-[16px] leading-relaxed md:text-[17px]" style={{ color: "rgba(249,251,255,0.7)" }}>
+                É uma companheira que lembra das propostas por você e deixa a mensagem pronta. Quem fala com o cliente continua sendo você.
+            </p>
+            <ul className="mt-10 grid gap-3 md:grid-cols-3 md:gap-4">
+                {GUARANTEES.map(([title, body]) => (
+                    <li key={title} className="rounded-[12px] border p-5 md:p-6" style={{ borderColor: "rgba(249,251,255,0.12)", background: "rgba(249,251,255,0.03)" }}>
+                        <h3 className="text-[17px] font-medium" style={{ color: "#f9fbff" }}>
+                            {title}
+                        </h3>
+                        <p className="mt-2 text-[15px] leading-relaxed" style={{ color: "rgba(249,251,255,0.65)" }}>
+                            {body}
+                        </p>
+                    </li>
+                ))}
+            </ul>
+        </div>
     </section>
 );
 
@@ -431,7 +582,7 @@ const FAQ = [
 ];
 
 const Faq = () => (
-    <section className="mx-auto w-full max-w-[720px] px-5 pb-16 md:px-8 md:pb-24">
+    <section className="mx-auto w-full max-w-[720px] px-4 pb-16 pt-16 sm:px-5 md:px-8 md:pb-24 md:pt-24">
         <SectionTitle>Perguntas</SectionTitle>
         <div className="mt-6">
             {FAQ.map((f) => (
@@ -513,15 +664,30 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
     };
 
     return (
-        <section id="raio-x" className="mx-auto w-full max-w-[720px] scroll-mt-6 px-5 pb-20 md:px-8 md:pb-28">
-            <div className="border-t pt-10" style={{ borderColor: "var(--lp-line)" }}>
+        <section id="raio-x" className="mx-auto w-full max-w-[1120px] scroll-mt-6 px-4 pb-20 sm:px-5 md:px-8 md:pb-28">
+            <div
+                className="grid gap-8 rounded-[16px] border p-5 sm:p-7 md:grid-cols-[1fr_1.1fr] md:gap-12 md:p-10"
+                style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)", boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 24px 48px -32px rgba(15,23,42,0.25)" }}
+            >
+            <div>
+                <Eyebrow>Grátis, sem cartão</Eyebrow>
                 <SectionTitle>Pedir meu Raio-X</SectionTitle>
-                <p className="mt-3 text-[15px]" style={{ color: "var(--lp-ink-55)" }}>
-                    Grátis. O Markus te chama no WhatsApp pra marcar 20 minutos e montar o Raio-X com você.
+                <p className="mt-3 text-[15px] leading-relaxed md:text-[16px]" style={{ color: "var(--lp-ink-70)" }}>
+                    O Markus te chama no WhatsApp pra marcar 20 minutos e montar o Raio-X com você.
                 </p>
+                <ul className="mt-6 hidden space-y-2.5 text-[15px] md:block" style={{ color: "var(--lp-ink-70)" }}>
+                    {["Sem trocar de número", "Você vê o seu número na hora", "Nenhuma mensagem sai para os seus clientes"].map((t) => (
+                        <li key={t} className="flex items-center gap-2.5">
+                            <Dot color="var(--lp-live)" />
+                            {t}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+            <div>
 
                 {done ? (
-                    <div className="mt-8 rounded-[10px] border p-5" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
+                    <div className="rounded-[10px] border p-5" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
                         <p className="text-lg font-medium" style={{ color: "var(--lp-ink)" }}>
                             Recebemos.
                         </p>
@@ -530,7 +696,7 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                         </p>
                     </div>
                 ) : (
-                    <form onSubmit={onSubmit} onFocus={markStart} className="mt-8 grid gap-4" noValidate>
+                    <form onSubmit={onSubmit} onFocus={markStart} className="grid gap-4" noValidate>
                         <Field label="Seu nome">
                             <input className={inputCls} style={inputStyle} value={form.name} onChange={set("name")} autoComplete="name" />
                         </Field>
@@ -578,6 +744,7 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                         </div>
                     </form>
                 )}
+            </div>
             </div>
         </section>
     );
