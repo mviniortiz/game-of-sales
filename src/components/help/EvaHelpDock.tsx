@@ -100,9 +100,10 @@ export function EvaHelpDock() {
         { label: "Como conecto o WhatsApp?", q: "Como eu conecto o meu WhatsApp no Vyzon?" },
     ];
 
-    // No /inicio a EVA comercial já é a entrada (rail/bottom-sheet) — esconde o botão
-    // de ajuda aqui pra não ter dois "Perguntar à EVA" (sobretudo no mobile).
-    if (/^\/(inicio|dashboard)/.test(location.pathname)) return null;
+    // No /inicio e no /inbox a EVA já tem lugar próprio (rail, painel ou sheet):
+    // esconde o botão de ajuda pra não ter dois "Perguntar à EVA" e não cobrir
+    // a lista e a sugestão no mobile.
+    if (/^\/(inicio|dashboard|inbox)/.test(location.pathname)) return null;
 
     return (
         <div className="fixed z-[60] right-4 bottom-[88px] sm:right-6 sm:bottom-6 print:hidden">

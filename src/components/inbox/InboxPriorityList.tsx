@@ -251,7 +251,7 @@ export function InboxPriorityList({
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <p className="vz-evlist-title">Conversas</p>
                         <p className="vz-evlist-subtitle">
-                            {order === "time" ? "Ordem cronológica" : "Quem espera você e as propostas paradas primeiro"}
+                            {order === "time" ? "Ordem cronológica" : "Quem espera você primeiro"}
                         </p>
                     </div>
                     <button
@@ -328,7 +328,7 @@ export function InboxPriorityList({
             </div>
 
             {chats.length > 0 && (
-                <div role="group" aria-label="Filtrar conversas" className="flex flex-wrap gap-1.5 px-3 pt-2">
+                <div role="group" aria-label="Filtrar conversas" className="flex gap-1.5 overflow-x-auto px-3 pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {([
                         { id: "all", label: "Todas" },
                         { id: "yourTurn", label: `Sua vez${yourTurnCount ? ` (${yourTurnCount})` : ""}` },
@@ -340,7 +340,7 @@ export function InboxPriorityList({
                             type="button"
                             aria-pressed={filter === f.id}
                             onClick={() => setFilter(f.id)}
-                            className={`inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[11px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
+                            className={`inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-[11px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
                                 filter === f.id
                                     ? "bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)]"
                                     : "border border-[var(--ibx-line)] text-[var(--vyz-text-strong)] hover:bg-[var(--ibx-sunken)]"

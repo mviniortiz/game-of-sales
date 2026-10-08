@@ -87,7 +87,7 @@ export const TrialBanner = () => {
                         className="text-[12px] font-bold text-white px-3 py-1.5 rounded-full shrink-0 transition-transform hover:-translate-y-px"
                         style={{ background: s.accent, boxShadow: `0 2px 10px -3px ${s.accent}` }}
                     >
-                        {stage === "comfortable" ? "Ver planos" : "Assinar agora"}
+                        {stage === "comfortable" ? "Assinar" : "Assinar agora"}
                     </Link>
 
                     {stage !== "critical" && (
