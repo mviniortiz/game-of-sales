@@ -416,7 +416,7 @@ export default function ConfigurarEva() {
                     {fase === "whatsapp" && (
                         <div className="flex flex-col gap-2">
                             <button type="button" onClick={() => setConectar(true)} className={`${BTN_PRIMARY} w-full`}>Conectar meu WhatsApp</button>
-                            <p className="text-center text-[12px] text-[var(--vyz-text-muted)]">Você lê um QR Code no celular, como no WhatsApp Web. Nada sai para cliente sem você aprovar.</p>
+                            <p className="text-center text-[12px] text-[var(--vyz-text-muted)]">Por um código no celular ou pelo QR Code, como no WhatsApp Web. Nada sai para cliente sem você aprovar.</p>
                         </div>
                     )}
 

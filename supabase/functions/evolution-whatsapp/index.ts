@@ -1,3 +1,4 @@
+import { normalizePairingNumber } from "../_shared/pairing.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
@@ -468,13 +469,29 @@ serve(async (req) => {
       const whRes = await ensureWebhook(instanceName);
       console.log("[connect] ensureWebhook:", whRes);
 
-      // 3. If no QR yet, try connect endpoint
-      if (!qrCodeBase64) {
+      // Código de 8 letras (quem está no celular não consegue ler o próprio
+      // QR): a Whatsmiau pareia pelo número em /instance/connect?number=. Trocar
+      // entre QR e código reinicia a tentativa do lado dela, então a tela
+      // mantém o modo escolhido nas chamadas seguintes.
+      const pairingNumber = normalizePairingNumber(body.number);
+      if (body.number && !pairingNumber) {
+        return json(200, { success: false, connected: false, qrCodeBase64, pairingCode: null, pairingError: "invalid_number" });
+      }
+
+      // 3. If no QR yet (or the person wants the code), try connect endpoint
+      let pairingCode: string | null = null;
+      let pairingError: string | null = null;
+      if (!qrCodeBase64 || pairingNumber) {
         try {
-          const connectRes = await evolutionRequest(`/instance/connect/${instanceName}`, { method: "GET" });
-          console.log("[connect] connect response:", JSON.stringify(connectRes));
-          qrCodeBase64 = extractQrBase64(connectRes);
-          console.log("[connect] qr from connect:", qrCodeBase64 ? "found" : "null");
+          const path = pairingNumber ? `/instance/connect/${instanceName}?number=${pairingNumber}` : `/instance/connect/${instanceName}`;
+          const connectRes = await evolutionRequest(path, { method: "GET" });
+          console.log("[connect] connect response:", JSON.stringify({ ...connectRes, base64: connectRes?.base64 ? "…" : undefined }));
+          qrCodeBase64 = extractQrBase64(connectRes) || qrCodeBase64;
+          pairingCode = connectRes?.pairingCode || null;
+          pairingError = connectRes?.pairingError || null;
+          if (connectRes?.connected === true) {
+            return json(200, { success: true, instanceName, state: "open", connected: true, qrCodeBase64: null, pairingCode: null });
+          }
         } catch (err: any) {
           console.log("[connect] connect error:", err?.message, "status:", (err as any)?.status, "payload:", JSON.stringify((err as any)?.payload));
         }
@@ -486,6 +503,8 @@ serve(async (req) => {
         state: "connecting",
         connected: false,
         qrCodeBase64,
+        pairingCode,
+        pairingError,
       });
     }
 

@@ -128,7 +128,7 @@ export default function RaioXAuto() {
                             <button type="button" onClick={() => setConectar(true)} className={BTN_PRIMARY}>
                                 Conectar meu WhatsApp
                             </button>
-                            <p className="text-center text-[12px] text-[var(--vyz-text-muted)]">Você lê um QR Code no celular, como no WhatsApp Web.</p>
+                            <p className="text-center text-[12px] text-[var(--vyz-text-muted)]">Por um código no celular ou pelo QR Code, como no WhatsApp Web.</p>
                         </div>
                     )}
                     {(fase === "lendo" || fase === "montando") && (
