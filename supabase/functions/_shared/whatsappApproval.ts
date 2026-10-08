@@ -459,7 +459,7 @@ export async function handleOwnerCommand(
             .eq("approval_code", parsed.code)
             .maybeSingle();
         if (!data) {
-            await replyOwner(instanceName, ownerNumber, `Nao achei o rascunho ${parsed.code}. Ele ja foi resolvido ou expirou.`);
+            await replyOwner(instanceName, ownerNumber, `Não achei o rascunho ${parsed.code}. Ele já foi resolvido ou expirou.`);
             return { handled: true, action: "help" };
         }
         target = data;
@@ -479,7 +479,7 @@ export async function handleOwnerCommand(
             await replyOwner(
                 instanceName,
                 ownerNumber,
-                "Tem mais de um rascunho aberto. Responda com o codigo na frente, por exemplo: A2 1",
+                "Tem mais de um rascunho aberto. Responda com o código na frente, por exemplo: A2 1",
             );
             return { handled: true, action: "help" };
         }
@@ -505,7 +505,7 @@ export async function handleOwnerCommand(
                 approval_code: null,
             })
             .eq("id", target.id);
-        await replyOwner(instanceName, ownerNumber, "Descartado. Nao enviei nada.");
+        await replyOwner(instanceName, ownerNumber, "Descartado. Não enviei nada.");
         return { handled: true, action: "rejected", suggestionId: target.id };
     }
 
@@ -514,7 +514,7 @@ export async function handleOwnerCommand(
         ? String(parsed.replacement || "").trim()
         : String(target.suggestion?.message_text || "").trim();
     if (!finalText) {
-        await replyOwner(instanceName, ownerNumber, "O rascunho esta vazio. Nao enviei nada.");
+        await replyOwner(instanceName, ownerNumber, "O rascunho está vazio. Não enviei nada.");
         return { handled: true, action: "help", suggestionId: target.id };
     }
 
@@ -527,7 +527,7 @@ export async function handleOwnerCommand(
     const leadRaw = target.suggestion?.contact_phone || deal?.customer_phone || "";
     const leadNumber = normalizeNumber(String(leadRaw));
     if (!leadNumber) {
-        await replyOwner(instanceName, ownerNumber, "Esse lead esta sem telefone. Nao consegui enviar.");
+        await replyOwner(instanceName, ownerNumber, "Esse lead está sem telefone. Não consegui enviar.");
         return { handled: true, action: "help", suggestionId: target.id, error: "lead sem telefone" };
     }
 
@@ -537,7 +537,7 @@ export async function handleOwnerCommand(
         admin.rpc("consume_rate_limit", { p_bucket: `wa-out:${instanceName}:${leadNumber}`, p_limit: 12, p_window_seconds: 60 }),
     ]);
     if (instanceOk?.data === false || targetOk?.data === false) {
-        await replyOwner(instanceName, ownerNumber, "Muitas mensagens em sequencia agora. Espere um minuto e responda de novo.");
+        await replyOwner(instanceName, ownerNumber, "Muitas mensagens em sequência agora. Espere um minuto e responda de novo.");
         return { handled: true, action: "help", suggestionId: target.id, error: "rate_limited" };
     }
 
@@ -545,7 +545,7 @@ export async function handleOwnerCommand(
         await sendText(instanceName, leadNumber, finalText);
     } catch (err) {
         const msg = (err as Error)?.message || "falha no envio";
-        await replyOwner(instanceName, ownerNumber, `Nao consegui enviar: ${msg}`);
+        await replyOwner(instanceName, ownerNumber, `Não consegui enviar: ${msg}`);
         return { handled: true, action: "help", suggestionId: target.id, error: msg };
     }
 

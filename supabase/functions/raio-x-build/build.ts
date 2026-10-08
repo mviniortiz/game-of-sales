@@ -4,7 +4,7 @@ import { analyzeConversation, rankItems, summarize, type RxItem, type RxMessage 
 import { buildQuietQuotePrompt, buildQuotePrompt, callLLM } from "../_shared/followupDraft.ts";
 
 const WINDOW_DAYS = 90;
-const DRAFTS = 5;
+const DRAFTS = 10;
 const PAGE = 1000;
 
 type Row = {
