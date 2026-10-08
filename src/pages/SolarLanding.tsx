@@ -59,9 +59,7 @@ const WHATSAPP_MESSAGE = "Oi, Markus. Quero o Raio-X das minhas propostas de ene
 // Tokens do mockup escuro (referência: dashboard denso, Geist 14px, cantos retos).
 const DARK = {
     bg: "#161616",
-    panel: "#1c1c1c",
     line: "#232323",
-    lineStrong: "#303030",
     text: "#f9fbff",
     muted: "#7f7f7f",
     dim: "#676767",
@@ -267,37 +265,58 @@ const ProductMock = () => (
                             </li>
                         ))}
                     </ul>
+                    <p className="hidden px-4 py-4 md:block" style={{ color: DARK.dim, fontSize: 12.5 }}>
+                        Cada proposta que sai do seu WhatsApp entra nessa lista sozinha. Você não cadastra nada.
+                    </p>
                 </div>
 
-                <div className="flex flex-col border-t md:border-t-0" style={{ background: DARK.panel, borderColor: DARK.line }}>
-                    <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: `1px solid ${DARK.line}` }}>
-                        <EvaBot size={28} />
-                        <span className="font-medium">EVA</span>
-                        <span style={{ color: DARK.dim, fontSize: 12 }}>no seu WhatsApp · 09:02</span>
-                    </div>
-                    <div className="flex flex-1 flex-col gap-3 p-4">
-                        <Bubble from="eva">
-                            <p className="font-medium">EVA [A2] rascunho pronto</p>
-                            <p className="mt-1.5" style={{ color: DARK.muted }}>
+                {/* Duas conversas do WhatsApp do dono, uma embaixo da outra: a EVA
+                    entrega o rascunho e ele responde 1; a mensagem sai do número dele
+                    para o Carlos. */}
+                <div className="flex flex-col border-t md:border-t-0" style={{ background: WA.bg, borderColor: DARK.line, fontFamily: "Inter, system-ui, sans-serif" }}>
+                    <WaHeader avatar={<EvaBot size={32} />} name="EVA" sub="online" />
+                    <div className="flex flex-col gap-1 px-3 pb-4 pt-3">
+                        <WaDay>Hoje</WaDay>
+                        <WaBubble time="09:02" tail>
+                            <p className="font-semibold">EVA [A2] rascunho pronto</p>
+                            <p className="mt-1" style={{ color: WA.meta }}>
                                 Lead: Carlos · Residência Oliveira
                                 <br />
                                 Por que agora: 2 dias sem resposta depois da proposta
                             </p>
-                            <p className="mt-2">
-                                “Oi, Carlos, tudo bem? Conseguiu olhar a proposta do sistema? Se ajudar, te mando a simulação com financiamento pra
-                                comparar com a sua conta de luz de hoje.”
+                            <p className="mt-1.5">
+                                Oi, Carlos, tudo bem? Conseguiu olhar a proposta do sistema? Se ajudar, te mando a simulação com financiamento pra
+                                comparar com a sua conta de luz de hoje.
                             </p>
-                            <p className="mt-2" style={{ color: DARK.dim, fontSize: 12.5 }}>
-                                Responda <b style={{ color: DARK.text }}>1</b> pra enviar, <b style={{ color: DARK.text }}>2</b> pra descartar, ou escreva a sua versão.
+                            <p className="mt-1.5" style={{ color: WA.meta }}>
+                                Responda A2 1 para enviar, A2 2 para descartar, ou escreva o texto corrigido.
                             </p>
-                        </Bubble>
-                        <Bubble from="owner">1</Bubble>
-                        <Bubble from="eva">
-                            <span className="inline-flex items-center gap-2">
-                                <Dot color={DARK.green} />
-                                Enviado para Carlos, do seu número.
+                        </WaBubble>
+                        <WaBubble out time="09:03" tail>
+                            A2 1
+                        </WaBubble>
+                        <WaBubble time="09:03" tail>
+                            EVA Enviado para Carlos.
+                        </WaBubble>
+                    </div>
+
+                    <WaHeader
+                        avatar={
+                            <span className="flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-semibold" style={{ background: "#6a7175", color: "#fff" }}>
+                                C
                             </span>
-                        </Bubble>
+                        }
+                        name="Carlos · Residência Oliveira"
+                        sub="online"
+                    />
+                    <div className="flex flex-1 flex-col gap-1 px-3 pb-4 pt-3">
+                        <WaBubble out time="09:03" tail>
+                            Oi, Carlos, tudo bem? Conseguiu olhar a proposta do sistema? Se ajudar, te mando a simulação com financiamento pra comparar com a
+                            sua conta de luz de hoje.
+                        </WaBubble>
+                        <WaBubble time="09:05" tail>
+                            Oi! Consegui sim, pode mandar a simulação.
+                        </WaBubble>
                     </div>
                 </div>
             </div>
@@ -305,17 +324,63 @@ const ProductMock = () => (
     </section>
 );
 
-const Bubble = ({ from, children }: { from: "eva" | "owner"; children: ReactNode }) => (
-    <div
-        className={`max-w-[92%] px-3 py-2.5 ${from === "owner" ? "self-end" : "self-start"}`}
-        style={{
-            background: from === "owner" ? "#1f3a2c" : DARK.bg,
-            border: `1px solid ${from === "owner" ? "#2b5a40" : DARK.lineStrong}`,
-            borderRadius: 8,
-            lineHeight: 1.45,
-        }}
-    >
+// Cores do WhatsApp no modo escuro, para o mockup parecer o app de verdade.
+const WA = {
+    bg: "#0b141a",
+    bar: "#202c33",
+    in: "#202c33",
+    out: "#005c4b",
+    text: "#e9edef",
+    meta: "#8696a0",
+    read: "#53bdeb",
+} as const;
+
+const WaHeader = ({ avatar, name, sub }: { avatar: ReactNode; name: string; sub: string }) => (
+    <div className="flex items-center gap-3 px-3.5 py-2.5" style={{ background: WA.bar }}>
+        {avatar}
+        <div className="min-w-0 leading-tight">
+            <p className="truncate text-[14.5px] font-medium" style={{ color: WA.text }}>
+                {name}
+            </p>
+            <p className="text-[12px]" style={{ color: WA.meta }}>
+                {sub}
+            </p>
+        </div>
+    </div>
+);
+
+const WaDay = ({ children }: { children: ReactNode }) => (
+    <span className="mx-auto mb-1 rounded-md px-2.5 py-1 text-[11.5px]" style={{ background: "#182229", color: WA.meta }}>
         {children}
+    </span>
+);
+
+// Dois tiques azuis: entregue e lida.
+const WaTicks = () => (
+    <svg width="16" height="11" viewBox="0 0 16 11" aria-label="lida" role="img">
+        <path d="M11.07.66 4.93 8.1 2.2 5.43.97 6.68l3.96 3.9 7.4-9.1zM15.1.66 8.96 8.1l-.76-.75-1.23 1.25 2.06 2.03 7.4-9.1z" fill={WA.read} />
+    </svg>
+);
+
+const WaBubble = ({ out, time, tail, children }: { out?: boolean; time: string; tail?: boolean; children: ReactNode }) => (
+    <div className={`flex ${out ? "justify-end" : "justify-start"}`}>
+        <div
+            className="max-w-[88%] px-2.5 pb-1.5 pt-1.5 text-[13.5px] leading-[1.4]"
+            style={{
+                background: out ? WA.out : WA.in,
+                color: WA.text,
+                borderRadius: 8,
+                borderTopLeftRadius: !out && tail ? 0 : 8,
+                borderTopRightRadius: out && tail ? 0 : 8,
+                boxShadow: "0 1px 0.5px rgba(11,20,26,0.13)",
+            }}
+        >
+            {children}
+            <span className="float-right ml-2.5 mt-1 inline-flex items-center gap-1 text-[11px] leading-none" style={{ color: out ? "rgba(233,237,239,0.6)" : WA.meta }}>
+                {time}
+                {out && <WaTicks />}
+            </span>
+        </div>
     </div>
 );
 
