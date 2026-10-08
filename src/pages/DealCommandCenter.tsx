@@ -76,7 +76,8 @@ import { syncWonDealToSale, unsyncDealSale } from "@/utils/salesSync";
 import { usePipelineStages, DEFAULT_STAGE_CONFIGS } from "@/hooks/usePipelines";
 import { deriveLegacyStage, type StageConfig } from "@/lib/pipelineStyles";
 import { useQuoteBoard } from "@/hooks/useQuoteBoard";
-import { OPEN_QUOTE_STATES } from "@/lib/quoteText";
+import { OPEN_QUOTE_STATES, brl as brlQuote, evaLine, stateLine } from "@/lib/quoteText";
+import type { QuoteItem } from "@/hooks/useQuoteBoard";
 
 // Lazy: modais e widgets que só renderizam quando o user clica em algo específico
 const InBrowserDialer = lazy(() => import("@/components/crm/InBrowserDialer"));
@@ -136,6 +137,45 @@ const getHealthStatus = (days: number, fromConversation: boolean) => {
     if (days > 7) return { icon: ShieldOff, color: "text-rose-600", bg: "bg-rose-500/10", border: "border-rose-500/20", hex: "#F43F5E", label: "Crítico", subtitle: quiet };
     if (days > 3) return { icon: ShieldAlert, color: "text-amber-700", bg: "bg-amber-500/10", border: "border-amber-500/20", hex: "#F59E0B", label: "Atenção", subtitle: quiet };
     return { icon: Shield, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", hex: "#10B981", label: "Saudável", subtitle: "Engajamento ativo" };
+};
+
+// O orçamento aberto deste card no placar: valor, situação e o que a EVA já
+// fez. Substitui o "Status e saúde", que dizia "Saudável" com cliente há dias
+// sem responder ao orçamento.
+const QUOTE_TOM: Partial<Record<QuoteItem["state"], { dot: string; bg: string; border: string; text: string }>> = {
+    no_reply: { dot: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A", text: "#92400E" },
+    went_quiet: { dot: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A", text: "#92400E" },
+    your_turn: { dot: "#2563EB", bg: "#EFF6FF", border: "#BFDBFE", text: "#1E40AF" },
+    talking: { dot: "#10B981", bg: "#ECFDF5", border: "#A7F3D0", text: "#065F46" },
+};
+
+const QuoteCard = ({ q }: { q: QuoteItem }) => {
+    const tom = QUOTE_TOM[q.state] ?? QUOTE_TOM.talking!;
+    const eva = evaLine(q);
+    return (
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+            <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                    <FileTextIcon className="h-4 w-4 text-slate-400" />
+                    <p className="text-[13px] font-semibold text-[#0B1220]">Orçamento</p>
+                </div>
+                <span className="text-[11px] text-slate-500">enviado {safeFormatDate(q.sent_at, "dd MMM")}{q.detected_by === "pdf" ? " · PDF" : ""}</span>
+            </div>
+            <p className="text-[24px] font-semibold tabular-nums leading-none tracking-[-0.02em] text-[#0B1220]">
+                {q.amount ? brlQuote(q.amount) : <span className="text-[15px] font-medium text-slate-400">Valor não lido no arquivo</span>}
+            </p>
+            <div className="mt-3 flex items-start gap-2 rounded-xl border px-3 py-2.5" style={{ background: tom.bg, borderColor: tom.border }}>
+                <span className="mt-[5px] h-2 w-2 shrink-0 rounded-full" style={{ background: tom.dot }} aria-hidden />
+                <p className="text-[13px] font-medium leading-snug" style={{ color: tom.text }}>{stateLine(q)}</p>
+            </div>
+            {eva && (
+                <p className="mt-2.5 flex items-center gap-2 text-[12.5px] text-slate-600">
+                    <EvaBot size={18} still />
+                    {eva}
+                </p>
+            )}
+        </div>
+    );
 };
 
 // DEAL.UI.1 — gauge tipo velocímetro (arco semicircular 180°). SVG inline.
@@ -1727,7 +1767,8 @@ export default function DealCommandCenter() {
                                     </div>
                                 </TooltipProvider>
 
-                                {/* A) Status e saúde */}
+                                {/* A) Orçamento aberto (o que importa no solar) ou, sem orçamento, status e saúde */}
+                                {openQuote ? <QuoteCard q={openQuote} /> : (
                                 <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                                     <div className="flex items-center gap-2 mb-3">
                                         <TrendingUp className="h-4 w-4 text-slate-400" />
@@ -1745,6 +1786,7 @@ export default function DealCommandCenter() {
                                         </div>
                                     </div>
                                 </div>
+                                )}
 
                                 {/* B) Contato */}
                                 <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">

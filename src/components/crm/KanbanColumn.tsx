@@ -117,7 +117,7 @@ export const KanbanColumn = memo(({
       <div
         ref={setNodeRef}
         className={`
-          relative flex flex-col w-[88vw] max-w-[380px] sm:w-[280px] sm:max-w-none flex-shrink-0 h-full rounded-2xl
+          relative flex flex-col w-[88vw] max-w-[380px] sm:w-[256px] 2xl:w-[280px] sm:max-w-none flex-shrink-0 h-full rounded-2xl
           border transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] overflow-hidden
           ${isOver
             ? "border-[var(--vyz-accent-border-strong)] bg-[var(--vyz-accent-soft-4)]"

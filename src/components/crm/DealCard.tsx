@@ -831,7 +831,9 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             </span>
           )}
 
-          {/* Última atividade — addSuffix: true ("há X") para soar humano */}
+          {/* Última atividade — addSuffix: true ("há X") para soar humano. Com
+              orçamento aberto, a situação dele já diz o tempo que importa. */}
+          {!(quote && quoteStatus(quote)) && (
           <span className="flex items-center gap-1 truncate flex-1 min-w-[86px] justify-end">
             {deal.lastActivity ? (
               <>
@@ -851,6 +853,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               <span className="truncate italic">Sem atividade</span>
             )}
           </span>
+          )}
         </div>
 
         {deal.assignee_outside_company && (
