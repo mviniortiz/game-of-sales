@@ -39,7 +39,7 @@ const EvaPaywallInline = ({ onClose }: { onClose: () => void }) => {
         <button
           onClick={() => {
             onClose();
-            navigate("/upgrade?plan=plus");
+            navigate("/upgrade");
           }}
           className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors"
         >

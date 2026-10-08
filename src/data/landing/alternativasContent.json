@@ -1,7 +1,7 @@
 {
   "seo": {
     "title": "Pipedrive vs Ploomes e alternativas | Vyzon",
-    "description": "Comparativo honesto: Pipedrive vs Ploomes, Kommo, RD Station e quando a Vyzon faz sentido pra agências que vendem por conversa no WhatsApp. Atualizado em julho de 2026.",
+    "description": "Comparativo honesto: Pipedrive vs Ploomes, Kommo, RD Station e quando a Vyzon faz sentido pra integradores de energia solar que vendem por conversa no WhatsApp. Atualizado em julho de 2026.",
     "ogTitle": "Pipedrive vs Ploomes e alternativas pra quem vende por conversa",
     "ogDescription": "Tabela clara, veredito por cenário e o papel da EVA. Sem propaganda disfarçada de comparativo."
   },
@@ -17,7 +17,7 @@
   "scenarios": [
     {
       "id": "whatsapp",
-      "label": "Agência no WhatsApp",
+      "label": "Integrador solar no WhatsApp",
       "pick": "Vyzon",
       "why": "Inbox comercial + EVA assistida no fluxo de conversa. O CRM clássico sozinho não resolve follow-up e triagem no chat."
     },
@@ -97,7 +97,7 @@
       },
       {
         "feature": "Checkout / receita BR (Hotmart, Kiwify, MP)",
-        "vyzon": { "level": "yes", "text": "Integrações nativas no Pro" },
+        "vyzon": { "level": "yes", "text": "Integrações nativas" },
         "pipedrive": { "level": "partial", "text": "Via Zapier/apps" },
         "ploomes": { "level": "partial", "text": "Stack ERP, não infoproduto" },
         "kommo": { "level": "partial", "text": "Via Zapier" },
@@ -105,7 +105,7 @@
       },
       {
         "feature": "Preço em Real, time BR",
-        "vyzon": { "level": "yes", "text": "Free + Pro R$397 · suporte WA" },
+        "vyzon": { "level": "yes", "text": "R$ 497/mês, até 10 usuários · suporte WA" },
         "pipedrive": { "level": "partial", "text": "USD por usuário" },
         "ploomes": { "level": "yes", "text": "Empresa BR" },
         "kommo": { "level": "partial", "text": "USD · operação BR" },
@@ -128,7 +128,7 @@
       },
       {
         "title": "Olhe a Vyzon se…",
-        "body": "A agência (ou o comercial) vive no WhatsApp: lead chega, conversa esfria, follow-up some. A EVA lê o contexto, sugere resposta e próximo passo; o humano aprova."
+        "body": "O integrador solar (ou o comercial) vive no WhatsApp: lead chega, conversa esfria, follow-up some. A EVA lê o contexto, sugere resposta e próximo passo; o humano aprova."
       }
     ]
   },
@@ -150,7 +150,7 @@
       "tagline": "B2B brasileiro com proposta e ERP",
       "bestFor": "Empresas com ciclo de venda estruturado e documento comercial.",
       "wins": ["CPQ / propostas", "Integrações ERP BR", "Processo B2B"],
-      "gaps": ["Não é WhatsApp-first", "Overkill pra agência de conversa", "Menos foco em IA assistida de chat"],
+      "gaps": ["Não é WhatsApp-first", "Overkill pra integrador solar que vende na conversa", "Menos foco em IA assistida de chat"],
       "verdict": "Melhor quando a venda é proposta + ERP, não inbox."
     },
     {
@@ -178,8 +178,8 @@
       "name": "Vyzon",
       "domain": "vyzon.com.br",
       "tagline": "Central comercial com EVA",
-      "bestFor": "Agências e times que vendem por conversa no WhatsApp.",
-      "wins": ["EVA sugere, humano aprova", "WhatsApp + inbox comercial", "Preço em R$ (Free e Pro)"],
+      "bestFor": "Integradores de energia solar e times que vendem por conversa no WhatsApp.",
+      "wins": ["EVA sugere, humano aprova", "WhatsApp + inbox comercial", "Preço em R$ (plano único, 14 dias grátis)"],
       "gaps": ["Não é CPQ/ERP", "Não é plataforma de inbound", "Não promete robô que vende sozinho"],
       "verdict": "Melhor quando o gargalo é conversa, follow-up e CRM que mente."
     }
@@ -203,7 +203,7 @@
     },
     {
       "q": "Os preços e features desta página estão atualizados?",
-      "a": "Atualizamos em 22 de julho de 2026 com base no posicionamento público de cada produto e no que está no produto Vyzon hoje. Preços de terceiros mudam; use os sites oficiais pra fechar contrato. No Vyzon: plano Free e Pro a R$397/mês (até 5 usuários), com 14 dias grátis no Pro."
+      "a": "Atualizamos em 22 de julho de 2026 com base no posicionamento público de cada produto e no que está no produto Vyzon hoje. Preços de terceiros mudam; use os sites oficiais pra fechar contrato. No Vyzon: plano único a R$ 497/mês, tudo liberado, até 10 usuários, com 14 dias grátis sem cartão."
     }
   ],
   "footerBelief": "Comparativo bom recomenda o outro lado quando ele ganha. O resto é anúncio."

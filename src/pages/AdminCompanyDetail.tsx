@@ -22,6 +22,8 @@ interface Company {
   name: string;
   plan: string;
   logo_url: string | null;
+  subscription_status: string | null;
+  trial_ends_at: string | null;
 }
 
 export const AdminCompanyDetail = () => {
@@ -31,6 +33,7 @@ export const AdminCompanyDetail = () => {
   const { isAdmin } = useAuth();
   const [name, setName] = useState("");
   const [plan, setPlan] = useState("free");
+  const [status, setStatus] = useState("trialing");
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
@@ -53,6 +56,7 @@ export const AdminCompanyDetail = () => {
     if (company) {
       setName(company.name || "");
       setPlan(company.plan || "free");
+      setStatus(company.subscription_status || "trialing");
     }
   }, [company]);
 
@@ -79,7 +83,7 @@ export const AdminCompanyDetail = () => {
   const updateCompany = useMutation({
     mutationFn: async () => {
       if (!companyId) throw new Error("Empresa não encontrada");
-      const { error } = await supabase.from("companies").update({ name, plan }).eq("id", companyId);
+      const { error } = await supabase.from("companies").update({ name, plan, subscription_status: status }).eq("id", companyId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -181,9 +185,29 @@ export const AdminCompanyDetail = () => {
                     className="w-full h-10 rounded-md border border-border bg-card text-foreground px-3"
                   >
                     <option value="free">Free</option>
-                    <option value="pro">Pro</option>
-                    <option value="escala">Escala</option>
+                    <option value="pro">Vyzon (R$ 497)</option>
                   </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Situação</Label>
+                  {/* Cobrança manual: o cliente paga por link do Mercado Pago e aqui
+                      vira "Pago". Só "Pago" libera o plano escolhido; teste grátis
+                      vale Pro até o fim do prazo e depois cai para Free
+                      (resolveEffectivePlan em src/config/plans.ts). */}
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="w-full h-10 rounded-md border border-border bg-card text-foreground px-3"
+                  >
+                    <option value="trialing">Teste grátis</option>
+                    <option value="active">Pago</option>
+                    <option value="cancelled">Cancelado</option>
+                  </select>
+                  {status === "trialing" && company?.trial_ends_at && (
+                    <p className="text-xs text-muted-foreground">
+                      Teste até {new Date(company.trial_ends_at).toLocaleDateString("pt-BR")}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">

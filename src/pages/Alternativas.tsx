@@ -89,14 +89,13 @@ const Alternativas = () => {
     };
   }, []);
 
-  const goHome = (anchor?: string) => navigate(anchor ? `/?go=${anchor}` : "/");
   const openDemo = () => {
     trackBehavior("alternativas_cta", { target: "demo" });
     navigate("/#raio-x");
   };
   const goTrial = () => {
     trackBehavior("alternativas_cta", { target: "trial" });
-    navigate("/criar-conta?plan=plus");
+    navigate("/criar-conta");
   };
 
   const schema = {
@@ -514,12 +513,12 @@ const Alternativas = () => {
           </Link>
           {" · "}
           <button type="button" className="vz-navlink" style={{ color: "var(--lp-blue)" }} onClick={goTrial}>
-            Testar o Pro 14 dias
+            Testar 14 dias grátis
           </button>
         </p>
       </section>
 
-      <FinalCtaV2 onScheduleDemoClick={openDemo} onSecondaryClick={() => goHome("how-it-works")} />
+      <FinalCtaV2 onScheduleDemoClick={openDemo} onSecondaryClick={() => navigate("/")} />
 
       <FooterV2
         onLoginClick={() => navigate("/auth")}

@@ -19,18 +19,7 @@ const ROOT = path.resolve(__dirname, "..");
 const DIST = path.join(ROOT, "dist");
 const TEMPLATE_PATH = path.join(DIST, "index.html");
 
-// Landings SEO /crm-* DESPUBLICADAS em 2026-06-10 (posicionamento antigo,
-// 301 → home no vercel.json). Configs preservados em src/pages/seo/configs/
-// pra eventual republicação; basta reimportar e readicionar a CONFIGS.
-// const { crmGamificadoConfig } = await import(
-//     path.join(ROOT, "src/pages/seo/configs/crmGamificado.js")
-// );
-// const { crmComRankingConfig } = await import(
-//     path.join(ROOT, "src/pages/seo/configs/crmComRanking.js")
-// );
-// const { crmParaTimesConfig } = await import(
-//     path.join(ROOT, "src/pages/seo/configs/crmParaTimes.js")
-// );
+// Landings SEO /crm-* saíram em 2026-06-10 (301 → home no vercel.json).
 
 const CONFIGS = [];
 

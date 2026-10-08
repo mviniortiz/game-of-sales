@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getAttribution } from "@/lib/attribution";
 import { trackBehavior, FUNNEL_EVENTS } from "@/lib/analytics";
 import { toast } from "sonner";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { CloudWaveOrb } from "@/components/landing-v2/CloudWaveOrb";
 import { AuthField } from "@/components/auth/AuthField";
@@ -24,9 +24,10 @@ const SignupV2 = () => {
     // Mantido só pra analytics/atribuição de origem: independente do card
     // clicado, TODO cadastro entra em trial do Pro (14d) e degrada pro Free.
     const plan = (params.get("plan") || "pro").toLowerCase();
-    // Link que o Markus manda ao integrador: /criar-conta?segmento=energia_solar.
     // Vira companies.segment, que escolhe o pacote da EVA e os nomes do funil.
-    const segment = params.get("segmento") === SOLAR_SEGMENT ? SOLAR_SEGMENT : null;
+    // Solar é o único segmento que o blueprint reconhece; qualquer outro valor
+    // (ou nenhum) cairia no pacote de agência, então todo cadastro nasce solar.
+    const segment = SOLAR_SEGMENT;
     const { user, profile, companyId, isSuperAdmin, loading: authLoading, signUp, signIn, refreshProfile } = useAuth();
 
     const [nome, setNome] = useState("");
@@ -126,7 +127,7 @@ const SignupV2 = () => {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: "google",
                 options: {
-                    redirectTo: `${window.location.origin}/criar-conta?plan=${plan}${segment ? `&segmento=${segment}` : ""}`,
+                    redirectTo: `${window.location.origin}/criar-conta?plan=${plan}&segmento=${segment}`,
                     queryParams: { access_type: "offline", prompt: "consent" },
                 },
             });
@@ -263,9 +264,27 @@ const SignupV2 = () => {
         <div className="lp-v2" style={{ minHeight: "100vh", backgroundColor: "#07080A", color: "#fff" }}>
             <div className="grid min-h-screen lg:grid-cols-[0.88fr_1.12fr]">
                 <div className="relative flex flex-col px-6 py-8 sm:px-12 sm:py-10">
-                    <button onClick={() => navigate("/")} className="flex items-center self-start opacity-90 transition-opacity hover:opacity-100" aria-label="Vyzon">
-                        <ThemeLogo variant="inverse" className="h-6 w-auto" />
-                    </button>
+                    <div className="flex items-center gap-3 self-start landing-fade-in-up">
+                        <button
+                            onClick={() => navigate("/")}
+                            className="flex items-center opacity-90 transition-opacity hover:opacity-100"
+                            aria-label="Vyzon"
+                        >
+                            <ThemeLogo variant="inverse" className="h-6 w-auto" />
+                        </button>
+                        <span className="h-4 w-px" style={{ background: "rgba(255,255,255,0.18)" }} aria-hidden />
+                        <button
+                            type="button"
+                            onClick={() => navigate("/")}
+                            className="inline-flex items-center gap-1.5 text-[13px] font-medium transition-colors"
+                            style={{ color: "rgba(255,255,255,0.5)" }}
+                            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
+                        >
+                            <ArrowLeft className="h-3.5 w-3.5" />
+                            Voltar ao site
+                        </button>
+                    </div>
 
                     <div className="flex flex-1 items-center">
                         <div className="mx-auto w-full max-w-[380px] py-12">
@@ -273,7 +292,7 @@ const SignupV2 = () => {
                                 {ssoMode ? "Quase lá" : "Criar conta"}
                             </h1>
                             <p className="mt-2.5 landing-fade-in-up landing-delay-150" style={{ color: "rgba(255,255,255,0.55)", fontSize: "1rem" }}>
-                                {ssoMode ? "Só falta o nome da sua empresa." : "14 dias de Pro grátis, sem cartão. Depois, escolha o plano da sua operação."}
+                                {ssoMode ? "Só falta o nome da sua empresa." : "14 dias grátis, sem cartão, com tudo liberado."}
                             </p>
 
                             {!ssoMode && (

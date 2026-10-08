@@ -24,7 +24,9 @@ const styles: Record<Stage, { barBg: string; border: string; accent: string; tex
 };
 
 export const TrialBanner = () => {
-    const { isTrialActive, daysRemaining } = useTrial();
+    const { isTrialActive, trialEndsAt } = useTrial();
+    // Arredonda para cima, igual ao Faturamento: 13,2 dias restantes aparecem como 14.
+    const daysRemaining = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86400000)) : 0;
     const [dismissed, setDismissed] = useState(false);
 
     if (!isTrialActive || dismissed) return null;
@@ -36,9 +38,9 @@ export const TrialBanner = () => {
     const message =
         stage === "critical"
             ? daysRemaining <= 0
-                ? "Seu Pro grátis termina hoje, depois sua conta continua no Free"
-                : "Último dia de Pro grátis"
-            : `Pro grátis · ${daysRemaining} ${daysRemaining === 1 ? "dia restante" : "dias restantes"}`;
+                ? "Seu teste grátis termina hoje"
+                : "Último dia do teste grátis"
+            : `Teste grátis · ${daysRemaining} ${daysRemaining === 1 ? "dia restante" : "dias restantes"}`;
 
     return (
         <AnimatePresence>

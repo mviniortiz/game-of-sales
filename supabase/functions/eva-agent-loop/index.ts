@@ -34,9 +34,6 @@ const MODEL = "gpt-5.4-mini";
 const MAX_ITERATIONS = 6;
 const MAX_COMPLETION_TOKENS = 2000;
 
-// Limite diário de RUNS por empresa, por plano (espelha src/config/plans.ts).
-// Piso free é interno: 5 runs/dia já cobre diagnóstico; trial conta como pro.
-const PLAN_RUN_LIMIT: Record<string, number> = { free: 5, essential: 20, pro: 60, escala: 60 };
 
 async function consumeRateLimit(
     adminClient: any,

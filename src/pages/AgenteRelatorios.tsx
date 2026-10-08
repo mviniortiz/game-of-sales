@@ -1,6 +1,6 @@
 import { ReportAgent } from "@/components/admin/ReportAgent";
 import { usePlan } from "@/hooks/usePlan";
-import { Lock, Sparkles, ArrowRight, MessageSquare } from "lucide-react";
+import { Lock, ArrowRight, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EvaBot } from "@/components/eva/EvaBot";
 
@@ -95,25 +95,21 @@ const EvaPaywall = () => {
 
             <div className="flex items-center justify-center gap-2 text-xs mb-5" style={{ color: "#64748B" }}>
               <Lock className="h-3.5 w-3.5" />
-              <span>Disponível nos planos Plus e Pro</span>
+              <span>Disponível para assinantes do Vyzon</span>
             </div>
 
             <button
-              onClick={() => navigate("/upgrade?plan=plus")}
+              onClick={() => navigate("/upgrade")}
               className="w-full flex items-center justify-center gap-2 h-12 rounded-xl text-white text-sm font-semibold transition-all hover:brightness-110"
               style={{
                 background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
                 boxShadow: "0 4px 12px -4px rgba(37,99,235,0.4)",
               }}
             >
-              <Sparkles className="h-4 w-4" />
-              Fazer upgrade
+              Assinar o Vyzon
               <ArrowRight className="h-4 w-4" />
             </button>
 
-            <p className="text-[11px] mt-3" style={{ color: "#94A3B8" }}>
-              Plus: 30 consultas/dia · Pro: ilimitado
-            </p>
           </div>
         </div>
       </div>
@@ -162,7 +158,6 @@ function EvaPageHeader() {
                 fontWeight: 700,
               }}
             >
-              <Sparkles className="h-2.5 w-2.5" />
               IA Comercial
             </span>
           </div>

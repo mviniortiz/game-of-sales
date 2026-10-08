@@ -32,16 +32,6 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
         maxUsers: PLANS.free.limits.users,
         maxProducts: PLANS.free.limits.products,
     },
-    essential: {
-        metas: true,
-        gamification: true,
-        calls: false,
-        reports: true,
-        integrations: true,
-        eva: true,
-        maxUsers: PLANS.essential.limits.users,
-        maxProducts: PLANS.essential.limits.products,
-    },
     pro: {
         metas: true,
         gamification: true,
@@ -56,8 +46,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
 
 export const PLANS_INFO: Record<PlanType, { label: string; color: string }> = {
     free: { label: "Free", color: "bg-gray-500" },
-    essential: { label: "Essential", color: "bg-teal-500" },
-    pro: { label: "Pro", color: "bg-blue-500" },
+    pro: { label: "Vyzon", color: "bg-blue-500" },
 };
 
 // Feature display names for upgrade prompts

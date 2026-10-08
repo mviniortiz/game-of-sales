@@ -257,8 +257,8 @@ const ARTICLES: DocArticle[] = [
         body: "A Eva gera gráficos automaticamente quando faz sentido — barras para rankings, linhas para evolução e pizza para distribuição. Tudo inline no chat.",
       },
       {
-        heading: "Limites por plano",
-        body: "- **Free** — 10 análises por dia\n- **Pro** — 50 análises por dia, por usuário\n- Durante os 14 dias de teste, sua conta usa o limite do Pro.",
+        heading: "Limites de uso",
+        body: "- Assinatura e teste grátis: 50 análises por dia, por usuário.\n- Depois do teste, sem assinatura: 10 análises por dia.",
       },
     ],
   },
@@ -327,30 +327,22 @@ const ARTICLES: DocArticle[] = [
     title: "Planos e Preços",
     icon: CreditCard,
     category: "Conta",
-    tags: ["plano", "preço", "free", "gratuito", "pro", "escala", "upgrade", "assinatura", "pagamento", "trial"],
+    tags: ["plano", "preço", "vyzon", "upgrade", "assinatura", "pagamento", "pix", "cartão", "mercado pago", "trial"],
     content: [
       {
-        body: "O Vyzon tem um plano gratuito pra você usar sem prazo e um plano pago pra times.",
+        body: "O Vyzon tem um plano só, com tudo liberado.",
       },
       {
-        heading: "Free — grátis pra sempre",
-        body: "Para organizar a operação e testar no dia a dia.\n- 1 usuário\n- WhatsApp conectado\n- Inbox Comercial completo\n- Pipeline com agendamentos\n- EVA sugerindo respostas (10 análises/dia)\n- 10 produtos cadastrados",
+        heading: "Vyzon, R$ 497/mês",
+        body: "Tudo liberado, até 10 usuários.\n- WhatsApp conectado\n- Inbox Comercial completo\n- Pipeline com agendamentos\n- EVA com análise de intenção, fit, urgência e objeções\n- Ranking e metas do time\n- Relatórios completos",
       },
       {
-        heading: "Pro — R$ 397/mês (mais popular)",
-        body: "Para agências que recebem leads todos os dias.\n- Até 5 usuários\n- Tudo do Free\n- EVA com análise de intenção, fit, urgência e objeções (50 análises/dia por usuário)\n- Ligações com transcrição e resumo no deal\n- Ranking e metas do time\n- Relatórios completos\n- Integrações Hotmart, Kiwify e Mercado Pago",
+        heading: "Teste grátis",
+        body: "Toda conta nova começa com **14 dias grátis, sem cartão**. Seus dados ficam intactos quando o período termina.",
       },
       {
-        heading: "Escala — pra times maiores",
-        body: "Mais de 5 usuários? Fale com a gente pelo WhatsApp de suporte e montamos o plano do tamanho do seu time, com implantação acompanhada.",
-      },
-      {
-        heading: "Teste do Pro",
-        body: "Toda conta nova começa com **14 dias de Pro grátis, sem cartão**. Quando o período termina, sua conta continua no plano Free com seus dados intactos, e você assina o Pro quando fizer sentido.",
-      },
-      {
-        heading: "Como fazer upgrade",
-        body: "Vá em **Perfil** e clique no botão de upgrade, ou acesse diretamente a página de upgrade no menu.",
+        heading: "Como assinar",
+        body: "A cobrança é combinada com o nosso time. Fale com a gente pelo WhatsApp de suporte e enviamos o link de pagamento do Mercado Pago, por Pix ou cartão.",
       },
     ],
   },

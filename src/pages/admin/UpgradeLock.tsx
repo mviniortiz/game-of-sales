@@ -1,30 +1,19 @@
-// Upgrade Lock — tela cheia quando o trial expira. Light-first, azul da marca.
-// A seleção de plano + checkout é o componente compartilhado PlanPicker (mesmo
-// usado no /upgrade). Pagamento aprovado → desbloqueia e volta pro app.
+// Upgrade Lock: tela cheia quando o teste grátis acaba. Light-first, azul da
+// marca. O plano é o componente compartilhado PlanPicker (mesmo do /upgrade).
 import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import { Lock, ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
 import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { PlanPicker } from "@/components/billing/PlanPicker";
-import { APP_HOME } from "@/config/routes";
 
 export default function UpgradeLock() {
-    const navigate = useNavigate();
-    const { refreshProfile, signOut } = useAuth();
+    const { signOut } = useAuth();
 
     useEffect(() => {
         trackEvent(FUNNEL_EVENTS.TRIAL_EXPIRED);
     }, []);
-
-    const handlePaid = async () => {
-        try { await refreshProfile(); } catch { /* não crítico */ }
-        toast.success("Assinatura ativada! Bem-vindo de volta.");
-        navigate(APP_HOME);
-    };
 
     return (
         <div className="min-h-screen flex flex-col relative" style={{ background: "#F8FAFC" }}>
@@ -63,12 +52,12 @@ export default function UpgradeLock() {
                         Seu período de teste acabou
                     </h1>
                     <p className="text-[15px] leading-relaxed" style={{ color: "#64748B" }}>
-                        Escolha um plano pra continuar com o Vyzon. Seus dados, pipeline e
-                        conversas continuam salvos, é só reativar.
+                        Assine para continuar com o Vyzon. Seus dados, pipeline e
+                        conversas continuam salvos.
                     </p>
                 </motion.div>
 
-                <PlanPicker onPaid={handlePaid} />
+                <PlanPicker />
 
                 <motion.p
                     initial={{ opacity: 0 }}

@@ -130,7 +130,7 @@ const LoginV2 = () => {
                                 Entrar
                             </h1>
                             <p className="mt-2.5 landing-fade-in-up landing-delay-150" style={{ color: "rgba(255,255,255,0.55)", fontSize: "1rem" }}>
-                                Acesse sua central comercial.
+                                Acesse suas propostas e conversas.
                             </p>
 
                             <button

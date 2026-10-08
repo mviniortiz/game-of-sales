@@ -419,12 +419,12 @@ serve(async (req) => {
     }
 
     // Enforce do limite de usuários do plano (espelha src/config/plans.ts:
-    // piso free=1, essential=3, pro=10; trial ativo conta como Pro, trial
-    // expirado degrada pro piso. "escala"/"enterprise" legados = pro).
+    // piso free=1, plano único pro=10; trial ativo conta como Pro, trial
+    // expirado degrada pro piso. essential/escala/enterprise legados = pro).
     // Conta todos os profiles da empresa (inclui admin), igual à barra de uso
     // em /configuracoes/faturamento.
     if (!isSuperAdmin) {
-      const PLAN_MAX_USERS: Record<string, number> = { free: 1, essential: 3, pro: 10, escala: Infinity };
+      const PLAN_MAX_USERS: Record<string, number> = { free: 1, pro: 10 };
       const { data: planRow } = await (supabaseAdmin as any)
         .from("companies")
         .select("plan, subscription_status, trial_ends_at")
@@ -433,9 +433,7 @@ serve(async (req) => {
       // Espelho de normalizePlanId (src/config/plans.ts)
       const normalizePlan = (raw: string | null | undefined): string => {
         const v = (raw || "").toLowerCase();
-        if (v === "pro" || v === "plus") return "pro";
-        if (v === "essential" || v === "essencial") return "essential";
-        if (v === "escala" || v === "enterprise") return "pro";
+        if (["pro", "plus", "essential", "essencial", "escala", "enterprise"].includes(v)) return "pro";
         return "free";
       };
       let plan: string;
@@ -456,7 +454,7 @@ serve(async (req) => {
         if ((count ?? 0) >= maxUsers) {
           return new Response(JSON.stringify({
             error: plan === "free"
-              ? `O piso interno permite 1 usuário. Assine o Essential para ter até 3 pessoas no time.`
+              ? `O piso interno permite 1 usuário. Assine o Vyzon para ter até 10 pessoas no time.`
               : `Seu plano ${plan} permite até ${maxUsers} usuários. Fale com a gente para um plano maior.`,
             code: "PLAN_LIMIT",
           }), {

@@ -94,7 +94,7 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
             const timedOut = err instanceof Error && err.message === "__timeout__";
             setErrorMsg(
                 timedOut
-                    ? "O servidor do WhatsApp não respondeu. Ele pode estar fora do ar — verifique se o servidor Evolution está rodando."
+                    ? "Não conseguimos falar com o servidor do WhatsApp agora. Tente de novo em alguns minutos."
                     : err instanceof Error ? err.message : "Falha ao iniciar a conexão.",
             );
             setState("error");

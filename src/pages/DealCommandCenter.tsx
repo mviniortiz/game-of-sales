@@ -776,7 +776,7 @@ export default function DealCommandCenter() {
     const initiateDealCall = useMutation({
         mutationFn: async (payload: { mode: "demo" | "twilio" | "webrtc"; sellerPhone?: string | null }) => {
             if (!canUseCalls) {
-                throw new Error("Ligações exigem add-on ativo (Plus/Pro)");
+                throw new Error("Ligações exigem assinatura e o add-on ativo");
             }
             const response = await supabase.functions.invoke("deal-call-initiate", {
                 body: {
@@ -825,7 +825,7 @@ export default function DealCommandCenter() {
     const generateCallInsights = useMutation({
         mutationFn: async (callId: string) => {
             if (!canUseCalls) {
-                throw new Error("Ligações exigem add-on ativo (Plus/Pro)");
+                throw new Error("Ligações exigem assinatura e o add-on ativo");
             }
             const response = await supabase.functions.invoke("deal-call-generate-insights", {
                 body: { callId },
@@ -1284,7 +1284,7 @@ export default function DealCommandCenter() {
                                                         onClick={() => setShowCallModal(true)}
                                                     >
                                                         <PhoneCall className="h-4 w-4" />
-                                                        {canUseCalls ? "Nova ligação" : (hasCallsPlanAccess ? "Ativar add-on" : "Plus/Pro")}
+                                                        {canUseCalls ? "Nova ligação" : (hasCallsPlanAccess ? "Ativar add-on" : "Assinar")}
                                                     </Button>
                                                 </div>
 
@@ -1296,7 +1296,7 @@ export default function DealCommandCenter() {
                                                             </div>
                                                             <div className="min-w-0">
                                                                 <p className="text-sm font-semibold text-foreground">
-                                                                    {hasCallsPlanAccess ? "Ative o add-on Ligações" : "Ligações disponível no Plus e Pro"}
+                                                                    {hasCallsPlanAccess ? "Ative o add-on Ligações" : "Ligações disponível para assinantes"}
                                                                 </p>
                                                                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                                                                     {hasCallsPlanAccess ? (
@@ -1307,7 +1307,7 @@ export default function DealCommandCenter() {
                                                                     ) : (
                                                                         <>
                                                                             Seu plano atual é <span className="text-amber-300 font-medium capitalize">{currentPlan}</span>.
-                                                                            Faça upgrade para o Plus ou Pro e depois ative o add-on de Ligações.
+                                                                            Assine o Vyzon e depois ative o add-on de Ligações.
                                                                         </>
                                                                     )}
                                                                 </p>
@@ -1316,7 +1316,7 @@ export default function DealCommandCenter() {
                                                                         size="sm"
                                                                         variant="outline"
                                                                         className="border-amber-500/30 text-amber-200 hover:text-white hover:bg-amber-500/10"
-                                                                        onClick={() => navigate("/planos")}
+                                                                        onClick={() => navigate("/upgrade")}
                                                                     >
                                                                         {hasCallsPlanAccess ? "Ver add-on / planos" : "Ver planos"}
                                                                     </Button>
@@ -1683,7 +1683,7 @@ export default function DealCommandCenter() {
                                                 </button>
                                             </TooltipTrigger>
                                             <TooltipContent side="bottom" className="bg-card text-foreground text-xs border border-border">
-                                                {canUseCalls ? "Iniciar chamada" : (hasCallsPlanAccess ? "Ativar add-on" : "Upgrade Plus/Pro")}
+                                                {canUseCalls ? "Iniciar chamada" : (hasCallsPlanAccess ? "Ativar add-on" : "Assinar o Vyzon")}
                                             </TooltipContent>
                                         </Tooltip>
                                         <Tooltip>

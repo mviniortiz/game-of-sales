@@ -59,11 +59,9 @@ export const useTrial = (): TrialInfo => {
         // o plano efetivo degrada pra Free (ver resolveEffectivePlan).
         let planName: string;
         if (isTrialActive) {
-            planName = 'Pro (Trial)';
+            planName = 'Vyzon (teste grátis)';
         } else if (currentPlan === 'pro') {
-            planName = 'Pro';
-        } else if (currentPlan === 'essential') {
-            planName = 'Essential';
+            planName = 'Vyzon';
         } else {
             planName = 'Free';
         }

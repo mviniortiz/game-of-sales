@@ -6,11 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Star, Crown, Rocket, Check, ArrowRight, Users, CreditCard,
-  Loader2, AlertTriangle, Calendar, HeartCrack, Layers,
+  Loader2, AlertTriangle, Calendar, HeartCrack,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { PLAN_FEATURES, PLANS_INFO, PlanType } from "@/config/planConfig";
-import { PLANS, PLAN_ORDER, formatPrice } from "@/config/plans";
+import { PLAN_FEATURES, PlanType } from "@/config/planConfig";
+import { PLANS, formatPrice } from "@/config/plans";
 import { whatsappUrl } from "@/config/contact";
 import { CancelSubscriptionDialog } from "@/components/configuracoes/CancelSubscriptionDialog";
 import { normalizeSubscriptionStatus } from "@/lib/utils";
@@ -19,7 +19,6 @@ import { normalizeSubscriptionStatus } from "@/lib/utils";
 // em src/config/plans.ts, nada de lista hardcoded aqui.
 const PLAN_ICONS: Record<PlanType, React.ComponentType<any>> = {
   free: Star,
-  essential: Layers,
   pro: Rocket,
 };
 
@@ -102,7 +101,6 @@ export default function Faturamento() {
   // Trial expirado não é mais "trialing" pra UI: a conta degradou pro Free.
   const isTrialing = status === "trialing" && (daysLeft ?? 0) > 0;
   const isCancelled = status === "cancelled" || !!subscription?.cancelled_at;
-  const currentIndex = PLAN_ORDER.indexOf(currentPlan);
   const currentPlanData = PLANS[currentPlan];
 
   const endsAtFormatted = subscription?.ends_at
@@ -129,7 +127,7 @@ export default function Faturamento() {
           </div>
           <Button
             size="sm"
-            onClick={() => navigate(`/upgrade?plan=${currentPlan}`)}
+            onClick={() => navigate("/upgrade")}
             className="h-8 text-xs rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 shrink-0"
           >
             Reativar
@@ -144,12 +142,10 @@ export default function Faturamento() {
             <div className="flex items-center gap-3">
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
                 currentPlan === "pro" ? "bg-[rgba(37,99,235,0.12)]" :
-                currentPlan === "essential" ? "bg-[rgba(15,118,110,0.12)]" :
                 "bg-[#F1F5F9]"
               }`}>
                 <PlanIcon className={`h-5 w-5 ${
                   currentPlan === "pro" ? "text-[#2563EB]" :
-                  currentPlan === "essential" ? "text-[#0F766E]" :
                   "text-[#64748B]"
                 }`} />
               </div>
@@ -168,7 +164,7 @@ export default function Faturamento() {
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {isTrialing
-                    ? "Teste grátis do Pro"
+                    ? "Teste grátis"
                     : currentPlanData.monthlyPrice
                       ? `${formatPrice(currentPlanData.monthlyPrice)}/mês`
                       : formatPrice(currentPlanData.monthlyPrice)}
@@ -202,41 +198,23 @@ export default function Faturamento() {
         </div>
       </div>
 
-      {/* Upgrade options */}
-      {currentIndex < PLAN_ORDER.length - 1 && !isCancelled && (
-        <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-[#E6EDF5]">
-            <h2 className="text-[13px] font-semibold text-foreground">Fazer upgrade</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Mais usuários no time e EVA com limite maior</p>
+      {/* Assinar: quem ainda não paga (teste grátis, vencido ou cancelado) */}
+      {status !== "active" && (
+        <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-[13px] font-semibold text-foreground">Assinar o Vyzon</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {formatPrice(PLANS.pro.monthlyPrice)}/mês, tudo liberado. Pagamento por Pix ou cartão.
+            </p>
           </div>
-          <div className="p-3 space-y-2">
-            {PLAN_ORDER.slice(currentIndex + 1).filter((plan) => PLANS[plan].visible !== false).map((plan) => {
-              const planData = PLANS[plan];
-              const info = PLANS_INFO[plan];
-              const Icon = PLAN_ICONS[plan];
-              const priceLabel = planData.monthlyPrice
-                ? `${formatPrice(planData.monthlyPrice)}/mês`
-                : "Fale com a gente";
-              return (
-                <button
-                  key={plan}
-                  onClick={() => navigate(`/upgrade?plan=${plan}`)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 hover:border-border transition-all text-left group"
-                >
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                    plan === "pro" ? "bg-[rgba(37,99,235,0.12)]" : "bg-[rgba(15,118,110,0.12)]"
-                  }`}>
-                    <Icon className={`h-4 w-4 ${plan === "pro" ? "text-[#2563EB]" : "text-[#0B1220]"}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground">{info.label}</p>
-                    <p className="text-xs text-muted-foreground">{priceLabel} · {planData.features[0]}</p>
-                  </div>
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-0.5 group-hover:text-foreground transition-all shrink-0" />
-                </button>
-              );
-            })}
-          </div>
+          <Button
+            size="sm"
+            onClick={() => navigate("/upgrade")}
+            className="h-9 rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 shrink-0"
+          >
+            Assinar
+            <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+          </Button>
         </div>
       )}
 

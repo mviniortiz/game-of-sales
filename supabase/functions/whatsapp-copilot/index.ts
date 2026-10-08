@@ -30,8 +30,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const DAILY_LIMIT_PER_USER = 50;        // plano Pro (e trial do Pro)
-const ESSENTIAL_DAILY_LIMIT_PER_USER = 25; // plano Essential
+const DAILY_LIMIT_PER_USER = 50;        // plano único (e trial)
 const FREE_DAILY_LIMIT_PER_USER = 10;   // piso interno — espelha src/config/plans.ts
 // EVA.AUTO.1 — auto-qualificação (modo serviço) consome um balde por-empresa,
 // separado da cota manual do dono. Teto diário de novos contatos analisados.
@@ -617,8 +616,8 @@ serve(async (req) => {
         }
 
         // Limite diário por PLANO (espelha src/config/plans.ts): piso free 10/dia,
-        // essential 25/dia, pro 50/dia por usuário; trial ativo conta como Pro,
-        // expirado degrada pro piso. "escala"/"enterprise" legados = pro.
+        // plano único pro 50/dia por usuário; trial ativo conta como Pro,
+        // expirado degrada pro piso. essential/escala/enterprise legados = pro.
         let planDailyLimit = DAILY_LIMIT_PER_USER;
         if (!serviceMode && companyId) {
             const { data: comp } = await adminSupabase
@@ -628,12 +627,10 @@ serve(async (req) => {
                 .maybeSingle();
             const normalizePlan = (raw: string | null | undefined): string => {
                 const v = (raw || "").toLowerCase();
-                if (v === "pro" || v === "plus") return "pro";
-                if (v === "essential" || v === "essencial") return "essential";
-                if (v === "escala" || v === "enterprise") return "pro";
+                if (["pro", "plus", "essential", "essencial", "escala", "enterprise"].includes(v)) return "pro";
                 return "free";
             };
-            const PLAN_DAILY: Record<string, number> = { free: FREE_DAILY_LIMIT_PER_USER, essential: ESSENTIAL_DAILY_LIMIT_PER_USER, pro: DAILY_LIMIT_PER_USER, escala: DAILY_LIMIT_PER_USER };
+            const PLAN_DAILY: Record<string, number> = { free: FREE_DAILY_LIMIT_PER_USER, pro: DAILY_LIMIT_PER_USER };
             let effectivePlan = "free";
             if (comp?.subscription_status === "trialing") {
                 const ends = comp?.trial_ends_at ? new Date(comp.trial_ends_at).getTime() : NaN;

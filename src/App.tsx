@@ -9,14 +9,8 @@ const AppShell = lazy(() => import("./AppShell"));
 // (2026-06-16); /para-agencias já estava off.
 // Todas 301 → home no vercel.json.
 
-// SEO landings /crm-* DESPUBLICADAS (2026-06-10): posicionamento antigo
-// ("CRM gamificado/ranking"), conflita com o foco atual em integradores solares.
-// Rotas viram 301 → home no vercel.json. Componentes/configs em src/pages/seo/
-// preservados pra eventual republicação. Reativar = descomentar import + rota
-// + remover redirect + readicionar ao sitemap e à allowlist do CanonicalManager.
-// const CrmGamificado = lazy(() => import("./pages/seo/CrmGamificado"));
-// const CrmComRanking = lazy(() => import("./pages/seo/CrmComRanking"));
-// const CrmParaTimes = lazy(() => import("./pages/seo/CrmParaTimes"));
+// SEO landings /crm-* saíram em 2026-06-10 (posicionamento antigo de "CRM
+// gamificado/ranking"); as rotas são 301 → home no vercel.json.
 
 // Home = integradores de energia solar (Raio-X grátis). A landing de agência saiu
 // em 08/10/2026 (/agencias, /landing e /orcamento são 301 → home no vercel.json).

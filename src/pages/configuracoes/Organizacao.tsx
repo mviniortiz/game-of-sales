@@ -51,7 +51,6 @@ const maskPhone = (v: string) => {
 // são rótulos: continuam gravados como texto, como sempre foram.
 const SEGMENT_OPTIONS = [
   { value: SOLAR_SEGMENT, label: "Energia solar" },
-  { value: "Agência de marketing", label: "Agência de marketing" },
   { value: "Imobiliária / incorporadora", label: "Imobiliária / incorporadora" },
   { value: "Tecnologia / SaaS", label: "Tecnologia / SaaS" },
   { value: "Financeiro / Seguros", label: "Financeiro / Seguros" },

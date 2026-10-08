@@ -1,10 +1,15 @@
 /**
- * Vyzon — Fonte ÚNICA de planos (2026-08-21).
+ * Vyzon — Fonte ÚNICA de planos.
  *
- * Estrutura comercial: Essential R$ 197 (até 3 usuários) +
- * Pro R$ 497 (até 10 usuários). O id "free" NÃO é mais plano comercial:
- * é piso interno silencioso pra degradação de trial expirado e contas
- * legadas (nunca aparece na landing nem no checkout).
+ * Estrutura comercial (decisão de 08/10/2026): um plano só, "Vyzon",
+ * R$ 497/mês, tudo liberado, até 10 usuários. O id continua "pro" porque é o
+ * que está gravado em companies.plan. O id "free" NÃO é plano comercial: é piso
+ * interno silencioso pra degradação de trial expirado e contas legadas (nunca
+ * aparece na landing nem no checkout). "essential" e "escala" de contas antigas
+ * valem como "pro" (normalizePlanId).
+ *
+ * Cobrança manual por enquanto: o cliente paga por link do Mercado Pago e o
+ * super admin marca a empresa como paga (AdminCompanyDetail).
  *
  * Ligações e e-mail são ADICIONAIS (decisão 2026-08-21): nenhum plano os
  * inclui. Enquanto não existe cobrança de adicional no checkout, o gate de
@@ -17,7 +22,7 @@
  *   - supabase/functions/deal-call-initiate / deal-call-generate-insights
  */
 
-export type PlanId = "free" | "essential" | "pro";
+export type PlanId = "free" | "pro";
 
 export interface Plan {
     id: PlanId;
@@ -59,43 +64,22 @@ export const PLANS: Record<PlanId, Plan> = {
         },
         visible: false,
     },
-    essential: {
-        id: "essential",
-        name: "Essential",
-        description: "Pra quem quer parar de perder proposta no WhatsApp",
-        monthlyPrice: 197,
+    pro: {
+        id: "pro",
+        name: "Vyzon",
+        description: "Tudo liberado para a sua equipe parar de perder proposta no WhatsApp",
+        monthlyPrice: 497,
         annualDiscount: 10,
-        // Só o que existe no produto e o que muda entre os planos de verdade:
-        // usuários, análises da EVA (whatsapp-copilot) e execuções do agente
-        // por dia (eva-agent-loop PLAN_RUN_LIMIT). O resto é igual nos dois.
+        // Só o que existe no produto. Os limites diários da EVA e do agente
+        // (whatsapp-copilot, eva-agent-loop) são proteção de uso, não degrau
+        // de plano.
         features: [
-            "Até 3 usuários",
+            "Até 10 usuários",
             "1 WhatsApp da empresa conectado",
             "Placar de propostas: quanto está parado e há quantos dias",
             "Valor da proposta lido direto do PDF",
             "EVA escreve a retomada e você aprova pelo WhatsApp",
-            "25 leituras da EVA por pessoa por dia",
-            "20 tarefas do agente da EVA por dia",
-        ],
-        limits: {
-            users: 3,
-            products: 100,
-            evaDailyPerUser: 25,
-            whatsappNumbers: 1,
-        },
-        visible: true,
-    },
-    pro: {
-        id: "pro",
-        name: "Pro",
-        description: "Pra equipes com mais gente e mais conversa por dia",
-        monthlyPrice: 497,
-        annualDiscount: 10,
-        features: [
-            "Até 10 usuários",
-            "Tudo do Essential",
-            "50 leituras da EVA por pessoa por dia",
-            "60 tarefas do agente da EVA por dia",
+            "Pipeline, Inbox e relatórios da equipe",
         ],
         limits: {
             users: 10,
@@ -104,21 +88,20 @@ export const PLANS: Record<PlanId, Plan> = {
             whatsappNumbers: 1,
         },
         visible: true,
-        badge: "Recomendado",
         highlight: true,
     },
 };
 
 /**
  * Normaliza valores legados de companies.plan pro modelo atual.
- * plus → pro; escala/enterprise → pro (grandfathered); essencial (com s) →
- * essential; desconhecido cai no piso free (nunca dá acesso a mais).
+ * plus, essential, escala e enterprise → pro (plano único); desconhecido cai
+ * no piso free (nunca dá acesso a mais).
  */
 export function normalizePlanId(raw: string | null | undefined): PlanId {
     const value = (raw || "").toLowerCase();
     if (value === "pro") return "pro";
     if (value === "plus") return "pro";
-    if (value === "essential" || value === "essencial") return "essential";
+    if (value === "essential" || value === "essencial") return "pro";
     if (value === "escala" || value === "enterprise") return "pro";
     return "free";
 }
@@ -204,7 +187,7 @@ export const getBillingConfig = (planId: string, cycle: BillingCycle): BillingCo
 };
 
 // Plan order for comparisons (free = piso interno, sempre primeiro)
-export const PLAN_ORDER: PlanId[] = ["free", "essential", "pro"];
+export const PLAN_ORDER: PlanId[] = ["free", "pro"];
 
 // Get next plan upgrade
 export const getNextPlan = (currentPlan: string): Plan | null => {
