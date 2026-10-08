@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // F4W.7.2 (2026-05-26) — WhatsAppConnectModal
 //
-// Fluxo de conexão WhatsApp via QR Code, direto na Inbox. Real (não mock):
+// Fluxo de conexão WhatsApp via QR Code (Inbox, Raio-X e primeiros passos). Real:
 //   - action "connect" → cria/conecta instância Evolution, retorna qrCodeBase64
 //   - poll action "status" a cada 3s → quando connected=true, fecha o ciclo
 //   - QR renova a cada ~50s (expira ~60s no WhatsApp)
@@ -17,11 +17,12 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/components/ui/dialog";
-import { Loader2, CheckCircle2, AlertCircle, RefreshCw, Smartphone } from "lucide-react";
+import { Loader2, AlertCircle, RefreshCw, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 type ConnectState = "loading" | "qr" | "connected" | "error";
 
@@ -43,6 +44,10 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
     const [state, setState] = useState<ConnectState>("loading");
     const [qr, setQr] = useState<string | null>(null);
     const [errorMsg, setErrorMsg] = useState("");
+    const [qrAt, setQrAt] = useState(0);
+    const [agora, setAgora] = useState(() => Date.now());
+    // No celular, o código precisa ser lido por OUTRO aparelho: avisa antes.
+    const [noCelular] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches);
 
     const pollRef = useRef<number | null>(null);
     const qrRefreshRef = useRef<number | null>(null);
@@ -85,6 +90,7 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
             const raw = payload?.qrCodeBase64 || null;
             if (raw) {
                 setQr(raw.startsWith("data:") ? raw : `data:image/png;base64,${raw}`);
+                setQrAt(Date.now());
                 setState("qr");
             } else {
                 setErrorMsg("Não consegui gerar o QR Code agora. Tente novamente.");
@@ -142,6 +148,14 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
         return () => clearTimers();
     }, [state, checkStatus, callConnect, clearTimers]);
 
+    // Contagem até o código renovar sozinho.
+    useEffect(() => {
+        if (state !== "qr") return;
+        const t = window.setInterval(() => setAgora(Date.now()), 1000);
+        return () => window.clearInterval(t);
+    }, [state]);
+    const renovaEm = Math.max(0, Math.ceil((qrAt + QR_REFRESH_MS - agora) / 1000));
+
     const handleClose = () => {
         clearTimers();
         setState("loading");
@@ -152,123 +166,121 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
 
     return (
         <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
-            <DialogContent className="w-[95vw] max-w-[420px] bg-white border border-[#D9E2EC] p-0 overflow-hidden">
-                <DialogHeader className="px-6 pt-6 pb-3" style={{ borderBottom: "1px solid #EAF0F6" }}>
-                    <DialogTitle className="flex items-center gap-3 text-[18px] font-bold" style={{ color: "#0B1220", letterSpacing: "-0.018em" }}>
-                        <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.10)", border: "1px solid rgba(16,185,129,0.20)" }}>
-                            <WhatsAppIcon className="w-5 h-5 text-emerald-500" />
-                        </div>
-                        Conectar WhatsApp
+            <DialogContent className="max-h-[92dvh] w-[95vw] max-w-[760px] gap-0 overflow-y-auto rounded-[20px] border border-[#E6EDF5] bg-white p-0 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_32px_80px_-24px_rgba(15,23,42,0.35)]">
+                <DialogHeader className="px-6 pb-4 pt-6 text-left sm:px-8 sm:pt-7">
+                    <DialogTitle className="flex items-center gap-2.5 text-[20px] font-semibold tracking-[-0.02em] text-[#0B1220]">
+                        <span className="grid h-8 w-8 place-items-center rounded-full bg-[#25D366]/10">
+                            <WhatsAppIcon className="h-4 w-4 text-[#128C4B]" />
+                        </span>
+                        Conectar seu WhatsApp
                     </DialogTitle>
-                    <DialogDescription className="text-[12.5px] mt-1" style={{ color: "#64748B" }}>
-                        Escaneie o QR Code com o WhatsApp do seu celular para conectar à Inbox.
+                    <DialogDescription className="mt-1 text-[14px] leading-relaxed text-[#64748B]">
+                        O mesmo número que você usa com os clientes. Nada muda no seu celular.
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="px-6 py-6 flex flex-col items-center justify-center min-h-[300px]">
-                    {state === "loading" && (
-                        <div className="flex flex-col items-center gap-4">
-                            <Loader2 className="w-10 h-10 animate-spin" style={{ color: "#2563EB" }} />
-                            <p className="text-[13px] font-medium" style={{ color: "#475569" }}>
-                                Gerando QR Code seguro…
+                {state === "connected" ? (
+                    <div className="flex flex-col items-center gap-4 px-6 pb-8 pt-4 text-center sm:px-8">
+                        <EvaBot size={72} state="happy" />
+                        <div>
+                            <h3 className="text-[18px] font-semibold text-[#0B1220]">Conectado</h3>
+                            <p className="mt-1 text-[14px] text-[#64748B]">Agora eu leio suas conversas e acho as propostas.</p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleClose}
+                            className="inline-flex h-11 items-center rounded-full bg-[#0B1220] px-6 text-[15px] font-semibold text-white transition-colors duration-150 hover:bg-[#1F2A3B] active:scale-[0.97] motion-reduce:active:scale-100"
+                        >
+                            Continuar
+                        </button>
+                    </div>
+                ) : (
+                    <div className="grid gap-6 px-6 pb-6 sm:px-8 sm:pb-8 md:grid-cols-[1fr_auto] md:gap-8">
+                        {noCelular && (
+                            <p className="order-0 rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-3.5 py-2.5 text-[13px] leading-snug text-[#92400E] md:col-span-2">
+                                Está no celular? O código precisa ser lido por outro aparelho. Abra vyzon.com.br no computador e leia o código com este celular.
                             </p>
+                        )}
+                        <div className="order-2 md:order-1">
+                            <ol className="flex flex-col gap-4">
+                                {[
+                                    "Abra o WhatsApp no celular.",
+                                    "Toque em Mais opções (⋮) no Android ou em Configurações no iPhone, e depois em Aparelhos conectados.",
+                                    "Toque em Conectar um aparelho e aponte a câmera para o código.",
+                                ].map((t, i) => (
+                                    <li key={i} className="flex gap-3">
+                                        <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#0B1220] text-[12px] font-semibold text-white">{i + 1}</span>
+                                        <span className="text-[14px] leading-snug text-[#1F2A3B]">{t}</span>
+                                    </li>
+                                ))}
+                            </ol>
+                            <ul className="mt-6 flex flex-col gap-2 border-t border-[#EEF2F7] pt-5">
+                                {["Seu número continua o mesmo", "Nada sai para cliente sem você aprovar", "Dá para desconectar quando quiser, em Aparelhos conectados"].map((t) => (
+                                    <li key={t} className="flex items-center gap-2 text-[13px] text-[#64748B]">
+                                        <Check className="h-3.5 w-3.5 shrink-0 text-[#2563EB]" strokeWidth={2.5} aria-hidden />
+                                        {t}
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
-                    )}
 
-                    {state === "qr" && qr && (
-                        <div className="flex flex-col items-center gap-5 w-full">
-                            <div className="p-3 bg-white rounded-2xl" style={{ border: "1px solid #D9E2EC", boxShadow: "0 10px 30px rgba(15,23,42,0.08)" }}>
-                                <img src={qr} alt="QR Code do WhatsApp" width={208} height={208} className="block rounded-lg" />
+                        <div className="order-1 flex flex-col items-center md:order-2">
+                            <div className="relative grid h-[248px] w-[248px] place-items-center rounded-2xl border border-[#E6EDF5] bg-white">
+                                {/* cantos de leitor, na cor da marca */}
+                                {["left-2 top-2 border-l-2 border-t-2 rounded-tl-lg", "right-2 top-2 border-r-2 border-t-2 rounded-tr-lg", "bottom-2 left-2 border-b-2 border-l-2 rounded-bl-lg", "bottom-2 right-2 border-b-2 border-r-2 rounded-br-lg"].map((c) => (
+                                    <span key={c} aria-hidden className={`absolute h-6 w-6 border-[#2563EB] ${c}`} />
+                                ))}
+                                {state === "qr" && qr ? (
+                                    <img src={qr} alt="Código para conectar o WhatsApp" width={208} height={208} className="block rounded-md" />
+                                ) : state === "error" ? (
+                                    <div className="flex flex-col items-center gap-2 px-6 text-center">
+                                        <AlertCircle className="h-7 w-7 text-[#DC2626]" aria-hidden />
+                                        <p className="text-[13px] leading-snug text-[#475569]">{errorMsg}</p>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center gap-3">
+                                        <Loader2 className="h-7 w-7 animate-spin text-[#2563EB] motion-reduce:animate-none" aria-hidden />
+                                        <p className="text-[13px] text-[#64748B]">Gerando o código…</p>
+                                    </div>
+                                )}
                             </div>
-                            <div className="w-full text-center rounded-lg px-3 py-2.5" style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }}>
-                                <p className="text-[12.5px] font-semibold inline-flex items-center gap-1.5" style={{ color: "#047857" }}>
-                                    <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#10B981" }} />
-                                    Aguardando leitura do QR Code…
-                                </p>
-                                <p className="text-[11px] mt-1 leading-snug" style={{ color: "#64748B" }}>
-                                    WhatsApp → Aparelhos conectados → Conectar um aparelho
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <button
-                                    type="button"
-                                    onClick={() => void callConnect()}
-                                    className="inline-flex items-center gap-1.5 text-[12px] font-semibold transition-colors hover:text-[#1D4ED8]"
-                                    style={{ color: "#2563EB" }}
-                                >
-                                    <RefreshCw className="h-3.5 w-3.5" />
-                                    Gerar novo QR
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => void resetConnection()}
-                                    className="inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors hover:text-[#475569]"
-                                    style={{ color: "#94A3B8" }}
-                                    title="Limpa a sessão atual e gera um QR do zero"
-                                >
-                                    Resetar conexão
-                                </button>
-                            </div>
+
+                            {state === "qr" && (
+                                <>
+                                    <p className="mt-3 inline-flex items-center gap-2 text-[13px] font-medium text-[#0B1220]" role="status">
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#25D366] opacity-60 motion-reduce:animate-none" />
+                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#25D366]" />
+                                        </span>
+                                        Esperando você ler o código
+                                    </p>
+                                    <p className="mt-1 text-[12px] tabular-nums text-[#94A3B8]">
+                                        {renovaEm > 0 ? `Código novo em ${renovaEm} s` : "Renovando o código…"}
+                                    </p>
+                                </>
+                            )}
+
+                            {(state === "qr" || state === "error") && (
+                                <div className="mt-3 flex items-center gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => void callConnect()}
+                                        className="inline-flex items-center gap-1.5 rounded-full text-[13px] font-semibold text-[#2563EB] hover:text-[#1D4ED8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+                                    >
+                                        <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+                                        {state === "error" ? "Tentar de novo" : "Gerar outro código"}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => void resetConnection()}
+                                        className="rounded-full text-[13px] font-medium text-[#94A3B8] hover:text-[#475569] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+                                        title="Limpa a sessão atual e gera um código do zero"
+                                    >
+                                        Resetar conexão
+                                    </button>
+                                </div>
+                            )}
                         </div>
-                    )}
-
-                    {state === "connected" && (
-                        <div className="flex flex-col items-center gap-4 text-center">
-                            <div className="h-20 w-20 rounded-full flex items-center justify-center" style={{ background: "rgba(16,185,129,0.10)", border: "4px solid rgba(16,185,129,0.18)" }}>
-                                <CheckCircle2 className="w-10 h-10" style={{ color: "#10B981" }} />
-                            </div>
-                            <div>
-                                <h3 className="text-[16px] font-bold" style={{ color: "#0B1220" }}>WhatsApp conectado!</h3>
-                                <p className="text-[12.5px] mt-1" style={{ color: "#64748B" }}>
-                                    Suas conversas vão aparecer na Inbox.
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={handleClose}
-                                className="inline-flex items-center h-9 px-5 rounded-lg text-[13px] font-semibold text-white transition-all hover:brightness-110"
-                                style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)" }}
-                            >
-                                Concluir
-                            </button>
-                        </div>
-                    )}
-
-                    {state === "error" && (
-                        <div className="flex flex-col items-center gap-3 text-center">
-                            <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ background: "rgba(220,38,38,0.08)" }}>
-                                <AlertCircle className="w-6 h-6" style={{ color: "#DC2626" }} />
-                            </div>
-                            <p className="text-[12.5px] max-w-[280px]" style={{ color: "#64748B" }}>{errorMsg}</p>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => void callConnect()}
-                                    className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[12.5px] font-semibold transition-colors"
-                                    style={{ background: "rgba(37,99,235,0.08)", color: "#1D4ED8", border: "1px solid rgba(37,99,235,0.20)" }}
-                                >
-                                    <RefreshCw className="h-3.5 w-3.5" />
-                                    Tentar novamente
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => void resetConnection()}
-                                    className="inline-flex items-center h-9 px-4 rounded-lg text-[12.5px] font-semibold transition-colors hover:bg-[#F1F5F9]"
-                                    style={{ color: "#475569", border: "1px solid #D9E2EC" }}
-                                >
-                                    Resetar conexão
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {state !== "connected" && (
-                    <div className="px-6 py-3 flex items-center gap-2 justify-center" style={{ borderTop: "1px solid #EAF0F6", background: "#F8FAFC" }}>
-                        <Smartphone className="h-3.5 w-3.5" style={{ color: "#94A3B8" }} />
-                        <p className="text-[11px]" style={{ color: "#94A3B8" }}>
-                            Mantenha o celular conectado à internet durante a leitura.
-                        </p>
                     </div>
                 )}
             </DialogContent>
