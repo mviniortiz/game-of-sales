@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { InboxPriorityList, type InboxLeadSignal } from "@/components/inbox/InboxPriorityList";
 import { ConnectionStatusCard } from "@/components/inbox/ConnectionStatusCard";
 import { InboxConversation } from "@/components/inbox/InboxConversation";
@@ -27,7 +27,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useProspectingMode, PROSPECTING_OBJECTIVE } from "@/hooks/useProspectingMode";
 import { useConversationSummaries, normalizePhone, buildReason } from "@/hooks/useConversationSummaries";
-import { useEvaBlueprint } from "@/hooks/useEvaBlueprint";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -199,14 +198,8 @@ const Inbox = () => {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [, setTick] = useState(0);
     const isMobile = useIsMobile();
-    const navigate = useNavigate();
 
-    // EVA.INBOX (2026-06-25) — a lista da esquerda passou a ser priorizada pela
-    // EVA. Gate assistido (mesmo do Pulse): só prioriza por VALOR depois que o
-    // gestor aprova o blueprint (approved_assisted). Sem isso, cai no fallback
-    // honesto por tempo de espera.
-    const { initial: evaBlueprint } = useEvaBlueprint();
-    const evaApproved = evaBlueprint?.status === "approved_assisted";
+    // Leitura da EVA por telefone: temperatura e motivo de cada conversa da lista.
     const { signalsByPhone } = useConversationSummaries();
 
     // F5C.2 — deep link `?conversationId=<uuid>` vindo da Central de Comando.
@@ -565,10 +558,9 @@ const Inbox = () => {
                 <InboxPriorityList
                     chats={chats}
                     signals={inboxSignals}
-                    studioConfigured={evaApproved}
                     selectedChatId={selectedChatId}
                     onSelect={setSelectedChatId}
-                    onOpenStudio={() => navigate("/eva-studio")}
+                    autoSelectFirst={!isMobile}
                     loading={!chatsReady}
                     quoteByChat={quoteByChat}
                     emptyMessage={

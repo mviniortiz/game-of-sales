@@ -29,7 +29,7 @@ export function normalizePhone(phone?: string | null): string {
 // Próximas-ações que viram etiqueta curta de valor (o resto cai pra justificativa).
 const PROXIMA_ACAO_LABEL: Record<string, string> = {
     criar_oportunidade: "pronto pra avançar",
-    marcar_demo: "quer agendar",
+    marcar_demo: "quer visita",
     qualificar: "falta qualificar",
 };
 

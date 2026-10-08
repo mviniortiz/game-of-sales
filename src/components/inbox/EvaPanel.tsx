@@ -18,8 +18,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import type { QuoteItem } from "@/hooks/useQuoteBoard";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { quoteRpc, type QuoteItem, type QuoteOutcome } from "@/hooks/useQuoteBoard";
 import { brl, evaLine, stateLine } from "@/lib/quoteText";
 import { supabase } from "@/integrations/supabase/client";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -64,7 +64,6 @@ import { useEntityTags } from "@/hooks/useDealsTags";
 import { getTagColorClass, isHexColor } from "@/lib/tags";
 import type { Tag } from "@/types/tags";
 import type {
-    FitSugerido,
     KnowledgeGap,
     Qualification,
     Temperatura,
@@ -120,47 +119,7 @@ function RevealItem({
     );
 }
 
-/** Conta de 0 (ou do valor anterior) até `value` ao montar. Respeita reduced-motion. */
-function useCountUp(value: number | null, durationMs = 650): number | null {
-    const reduce = useReducedMotion();
-    const [display, setDisplay] = useState<number | null>(value);
-    const rafRef = useRef<number | null>(null);
-
-    useEffect(() => {
-        if (value === null) {
-            setDisplay(null);
-            return;
-        }
-        if (reduce) {
-            setDisplay(value);
-            return;
-        }
-        const from = 0;
-        const start = performance.now();
-        const tick = (now: number) => {
-            const t = Math.min(1, (now - start) / durationMs);
-            // easeOutCubic, alinhado à curva do projeto
-            const eased = 1 - Math.pow(1 - t, 3);
-            setDisplay(Math.round(from + (value - from) * eased));
-            if (t < 1) rafRef.current = requestAnimationFrame(tick);
-        };
-        rafRef.current = requestAnimationFrame(tick);
-        return () => {
-            if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-        };
-    }, [value, durationMs, reduce]);
-
-    return display;
-}
-
 // ─── Tradução de enums ──────────────────────────────────────────────────────
-
-const FIT_META: Record<FitSugerido, { label: string; tone: ToneKey }> = {
-    excelente: { label: "Excelente", tone: "green" },
-    bom: { label: "Bom", tone: "green" },
-    medio: { label: "Médio", tone: "amber" },
-    baixo: { label: "Baixo", tone: "orange" },
-};
 
 const TEMPERATURA_META: Record<Temperatura, { label: string; tone: ToneKey; icon: typeof Flame }> = {
     quente: { label: "Quente", tone: "rose", icon: Flame },
@@ -177,7 +136,7 @@ const URGENCIA_META: Record<Urgencia, { label: string; tone: ToneKey }> = {
 
 const INTENCAO_LABELS: Record<string, string> = {
     preco: "Preço",
-    demo: "Visita ou reunião",
+    demo: "Visita técnica",
     duvida: "Dúvida",
     suporte: "Suporte",
     compra: "Compra",
@@ -214,11 +173,24 @@ export function EvaPanel({ chat, messages, onDealLinked, onSendReply, objective,
     return <PanelContent key={chat.id} chat={chat} messages={messages} onDealLinked={onDealLinked} onSendReply={onSendReply} objective={objective} onUseReply={onUseReply} onClose={onClose} quote={quote} />;
 }
 
-// Orçamento desta conversa: o que aconteceu e o que a EVA já fez. É o fato mais
-// útil do painel quando existe, por isso vem logo abaixo do vínculo com o card.
+// Proposta desta conversa: valor, o que aconteceu e o que a EVA já fez. É o
+// fato mais útil do painel para o integrador, por isso vem logo abaixo do
+// vínculo com o card. Fechou/Perdeu marca o desfecho no placar sem sair daqui.
 function QuoteStatusCard({ quote }: { quote: QuoteItem }) {
     const parked = quote.state === "no_reply" || quote.state === "went_quiet";
     const eva = evaLine(quote);
+    const qc = useQueryClient();
+    const desfecho = useMutation({
+        mutationFn: async (outcome: QuoteOutcome) => {
+            const { error } = await quoteRpc<unknown>("set_quote_outcome", { p_quote_id: quote.id, p_outcome: outcome });
+            if (error) throw new Error(error.message);
+        },
+        onSuccess: (_d, outcome) => {
+            toast.success(outcome === "won" ? "Proposta marcada como fechada" : "Proposta marcada como perdida");
+            qc.invalidateQueries({ queryKey: ["quote-board"] });
+        },
+        onError: (e: Error) => toast.error(e.message || "Não consegui marcar"),
+    });
     return (
         <div
             className={`mx-4 mt-3 rounded-[10px] border px-3 py-2.5 ${
@@ -228,8 +200,8 @@ function QuoteStatusCard({ quote }: { quote: QuoteItem }) {
             }`}
         >
             <p className="flex items-baseline justify-between gap-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--vyz-text-muted)]">
-                Orçamento
-                {quote.amount ? <span className="text-[12px] normal-case tracking-normal tabular-nums text-[var(--vyz-text-primary)]">{brl(quote.amount)}</span> : null}
+                Proposta
+                {quote.amount ? <span className="text-[15px] normal-case tracking-[-0.01em] tabular-nums font-bold text-[var(--vyz-text-primary)]">{brl(quote.amount)}</span> : null}
             </p>
             <p className={`mt-1 text-[12.5px] leading-snug ${parked ? "font-medium text-[var(--vyz-warning)]" : "text-[var(--vyz-text-strong)]"}`}>
                 {stateLine(quote)}
@@ -240,6 +212,30 @@ function QuoteStatusCard({ quote }: { quote: QuoteItem }) {
                     {eva}
                 </p>
             )}
+            <div className="mt-2.5 flex items-center gap-1.5">
+                <button
+                    type="button"
+                    disabled={desfecho.isPending}
+                    onClick={() => desfecho.mutate("won")}
+                    className="inline-flex h-7 items-center rounded-full bg-[var(--vyz-btn-solid)] px-3 text-[11.5px] font-semibold text-[var(--vyz-btn-on)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                >
+                    Fechou
+                </button>
+                <button
+                    type="button"
+                    disabled={desfecho.isPending}
+                    onClick={() => desfecho.mutate("lost")}
+                    className="inline-flex h-7 items-center rounded-full border border-[var(--ibx-line)] bg-[var(--vyz-surface-1)] px-3 text-[11.5px] font-semibold text-[var(--vyz-text-strong)] transition-colors duration-150 hover:bg-[var(--ibx-sunken)] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                >
+                    Perdeu
+                </button>
+                <Link
+                    to="/orcamentos"
+                    className="ml-auto text-[11.5px] font-medium text-[var(--vyz-text-muted)] underline-offset-2 hover:text-[var(--vyz-text-primary)] hover:underline"
+                >
+                    Ver no placar
+                </Link>
+            </div>
         </div>
     );
 }
@@ -267,16 +263,16 @@ function SheetCloseButton({ onClose, absolute }: { onClose: () => void; absolute
 
 function EmptyPanel({ reason, onClose }: { reason: "no-chat" | "no-messages"; onClose?: () => void }) {
     const messageMap = {
-        "no-chat": "Selecione uma conversa para a EVA analisar.",
+        "no-chat": "A EVA mostra aqui a proposta, o que o cliente já contou e a próxima mensagem.",
         "no-messages":
-            "Selecione uma conversa com mensagens para a EVA analisar.",
+            "Essa conversa ainda não tem mensagem. A EVA lê assim que o cliente escrever.",
     };
     return (
         <div className="relative flex-1 flex flex-col items-center justify-center px-5 text-center">
             {onClose && <SheetCloseButton onClose={onClose} absolute />}
             <EvaBot state="idle" size={56} className="mb-4" />
             <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
-                Aguardando contexto
+                Escolha uma conversa
             </p>
             <p
                 className="text-[11.5px]"
@@ -734,13 +730,6 @@ function PanelContent({
                             <RefreshCw className="h-3.5 w-3.5" />
                         </button>
                     )}
-                    <span
-                        className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-0.5 rounded-full shrink-0 bg-[var(--vyz-surface-2)] text-[var(--vyz-text-strong)]"
-                        title="A EVA sugere. Nada sai para o cliente sem o seu ok."
-                    >
-                        <EvaBot size={16} still />
-                        Você aprova
-                    </span>
                     {/* Mobile: fecha a bottom sheet (no desktop a coluna é fixa). */}
                     {onClose && <SheetCloseButton onClose={onClose} />}
                 </div>
@@ -1488,85 +1477,40 @@ const TONE_STYLES: Record<ToneKey, { bg: string; border: string; text: string }>
 // ─── Diagnóstico rápido — a leitura em 1 olhada (faixa compacta) ────────────
 
 function QuickDiagnosis({ qualification }: { qualification: Qualification }) {
-    const reduce = useReducedMotion();
     const score = qualification.score_sugerido;
-    const animatedScore = useCountUp(score);
-    const fit = qualification.fit_sugerido ? FIT_META[qualification.fit_sugerido] : null;
     const temp = qualification.temperatura ? TEMPERATURA_META[qualification.temperatura] : null;
     const TempIcon = temp?.icon;
     const tempStyle = temp ? TONE_STYLES[temp.tone] : null;
-    const fitStyle = fit ? TONE_STYLES[fit.tone] : null;
-    const barTarget = `${score ?? 0}%`;
+    // A nota da IA vira faixa: número exato de 0 a 100 é precisão que ela não tem.
+    const chance = score === null ? null : score >= 70 ? "alta" : score >= 40 ? "média" : "baixa";
 
+    if (!temp && !chance) return null;
     return (
         <div
-            className="rounded-xl px-3.5 py-3"
+            className="flex items-center gap-3 rounded-xl px-3.5 py-2.5"
             style={{
                 background: "#FFFFFF",
                 border: "1px solid var(--ibx-line)",
                 boxShadow: "0 1px 2px rgba(15,23,42,0.03)",
             }}
         >
-            <div className="flex items-center gap-3">
-                {/* Temperatura — cor + ícone */}
-                {temp && tempStyle && (
-                    <div
-                        className="flex items-center gap-1.5 px-2 py-1 rounded-lg shrink-0"
-                        style={{ background: tempStyle.bg, border: `1px solid ${tempStyle.border}` }}
-                        title={`Temperatura: ${temp.label}`}
-                    >
-                        {TempIcon && <TempIcon className="h-3.5 w-3.5" strokeWidth={2.4} style={{ color: tempStyle.text }} />}
-                        <span className="text-[11.5px]" style={{ color: tempStyle.text, fontWeight: 700 }}>
-                            {temp.label}
-                        </span>
-                    </div>
-                )}
-
-                {/* Score grande tabular (count-up) */}
-                <div className="flex items-baseline gap-0.5 shrink-0">
-                    <span
-                        className="text-[24px] leading-none tabular-nums"
-                        style={{ color: score !== null ? "#1D4ED8" : "#94A3B8", fontWeight: 800, letterSpacing: "-0.03em" }}
-                    >
-                        {animatedScore !== null ? animatedScore : "—"}
-                    </span>
-                    <span className="text-[10.5px]" style={{ color: "#94A3B8", fontWeight: 600 }}>
-                        /100
+            {temp && tempStyle && (
+                <div
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg shrink-0"
+                    style={{ background: tempStyle.bg, border: `1px solid ${tempStyle.border}` }}
+                    title={`Temperatura: ${temp.label}`}
+                >
+                    {TempIcon && <TempIcon className="h-3.5 w-3.5" strokeWidth={2.4} style={{ color: tempStyle.text }} />}
+                    <span className="text-[11.5px]" style={{ color: tempStyle.text, fontWeight: 700 }}>
+                        {temp.label}
                     </span>
                 </div>
-
-                {/* Fit */}
-                {fit && fitStyle && (
-                    <span
-                        className="ml-auto text-[11.5px] px-2 py-0.5 rounded-md shrink-0"
-                        style={{ background: fitStyle.bg, color: fitStyle.text, fontWeight: 700 }}
-                        title={`Fit ${fit.label}`}
-                    >
-                        Fit {fit.label}
-                    </span>
-                )}
-            </div>
-
-            {/* Barra de fit fina (width animada) */}
-            <div
-                className="h-[5px] rounded-full overflow-hidden mt-2.5"
-                style={{ background: "rgba(13,20,33,0.07)" }}
-            >
-                {reduce ? (
-                    <div
-                        className="h-full rounded-full"
-                        style={{ width: barTarget, background: "linear-gradient(90deg, #2563EB, #4A8CE8)" }}
-                    />
-                ) : (
-                    <motion.div
-                        className="h-full rounded-full"
-                        style={{ background: "linear-gradient(90deg, #2563EB, #4A8CE8)" }}
-                        initial={{ width: "0%" }}
-                        animate={{ width: barTarget }}
-                        transition={{ duration: 0.6, ease: EVA_EASE, delay: 0.1 }}
-                    />
-                )}
-            </div>
+            )}
+            {chance && (
+                <p className="text-[12px]" style={{ color: "#475569" }}>
+                    Chance de fechar: <strong style={{ color: "#0B1220" }}>{chance}</strong>
+                </p>
+            )}
         </div>
     );
 }
@@ -1587,7 +1531,7 @@ function QualificationBlock({ qualification }: { qualification: Qualification })
             value: INTENCAO_LABELS[qualification.intencao] ?? qualification.intencao,
         });
     if (qualification.servico_interesse)
-        signals.push({ category: "Serviço", tone: "blue", value: qualification.servico_interesse });
+        signals.push({ category: "Interesse", tone: "blue", value: qualification.servico_interesse });
     if (qualification.objecao)
         signals.push({ category: "Objeção", tone: "rose", value: qualification.objecao });
 
@@ -1995,7 +1939,7 @@ function KnowledgeGapsList({ gaps }: { gaps: KnowledgeGap[] }) {
         <div>
             {/* Enquadramento: insumo pra afinar a EVA, não erro. */}
             <p className="text-[11.5px] mb-2.5" style={{ color: "#64748B", lineHeight: 1.5 }}>
-                Cadastrar estes pontos no contexto deixa as próximas leituras da EVA mais precisas.
+                A EVA ainda não sabe isso sobre a sua empresa. Ela aprende com as próximas conversas.
             </p>
             <ul className="space-y-2">
                 {gaps.map((g, i) => (
@@ -2168,7 +2112,7 @@ function CrmBlock({
                     Ainda não está no pipeline
                 </p>
                 <p className="text-[11.5px] mt-1" style={{ color: "#64748B" }}>
-                    Use "Criar oportunidade no pipeline" acima pra adicionar este lead.
+                    Use "Criar oportunidade" acima para colocar este cliente no funil.
                 </p>
             </div>
         );
@@ -2228,7 +2172,7 @@ function CrmBlock({
                   currency: "BRL",
                   maximumFractionDigits: 0,
               }).format(value)
-            : "R$ 0";
+            : "Sem valor";
     const updated = detailDeal.updated_at
         ? new Date(detailDeal.updated_at as string).toLocaleDateString("pt-BR", {
               day: "2-digit",

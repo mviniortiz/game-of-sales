@@ -1,28 +1,22 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// InboxPriorityList (EVA.INBOX.3, 2026-06-06) — lista de conversas reordenada
-// pela EVA, que MOSTRA O PORQUÊ. Ordenar por horário (igual WhatsApp) não
-// prioriza; a etiqueta-motivo é o que torna a reordenação confiável em vez
-// de assustadora.
+// InboxPriorityList — lista de conversas do integrador, ordenada pelo que vale
+// dinheiro e mostrando o porquê:
+//   1. "Responda agora": o cliente está esperando resposta sua (inclui quem
+//      respondeu depois de receber a proposta).
+//   2. "Propostas paradas": proposta enviada sem resposta, maior valor primeiro.
+//   3. "Outras conversas".
+// Cada linha mostra o valor da proposta e há quanto tempo ela está parada
+// (placar de orçamentos, get_quote_board). Temperatura da EVA aparece quando
+// não há proposta.
 //
-// DOIS ESTADOS, honestos como a lateral direita:
-//   A (Studio configurado) → seções "Responda agora" / "Depois", etiqueta de
-//     valor por linha, barra de risco na cor da prioridade.
-//   B (Studio vazio) → a EVA SE CALA sobre valor. Ordena pelo único sinal
-//     real: tempo esperando resposta SUA. Sinal neutro de tempo no lugar das
-//     etiquetas + ponte pro /eva-studio no topo.
-//
-// CONTROLE DO HUMANO: a ordem da EVA é o padrão, mas o botão "Por horário"
-// volta pro cronológico. A EVA propõe, o humano pode revogar.
-//
-// PRESENTATIONAL: score/temperatura são MOCK — chegam prontos via `signals`
-// (placeholder). O cálculo real (EVA Studio) entra depois trocando só a
-// origem das props; este componente NÃO calcula prioridade.
+// CONTROLE DO HUMANO: "Por horário" volta pro cronológico, como no WhatsApp.
 // ─────────────────────────────────────────────────────────────────────────────
-import { useMemo, useState, type ReactNode } from "react";
-import { ArrowRight, ChevronDown, ChevronRight, Clock3, ListOrdered, Search, X } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { ChevronDown, ChevronRight, Clock3, ListOrdered, Search, X } from "lucide-react";
 import type { QuoteItem } from "@/hooks/useQuoteBoard";
 import type { Chat } from "@/hooks/useEvolutionAPI";
 import { EvaBot } from "@/components/eva/EvaBot";
+import { ago, brl } from "@/lib/quoteText";
 
 // ─── Tipos do sinal de prioridade (placeholder do cálculo real) ─────────────
 
@@ -39,14 +33,10 @@ export interface InboxLeadSignal {
 
 export interface InboxPriorityListProps {
     chats: Chat[];
-    /** chatId → sinal. Linha sem sinal cai em "Depois" (estado A). */
+    /** chatId → sinal da EVA (temperatura, motivo, tempo de espera). */
     signals: Record<string, InboxLeadSignal>;
-    /** true = estado A (prioriza por valor); false = estado B (fallback por espera). */
-    studioConfigured: boolean;
     selectedChatId: string | null;
     onSelect: (chatId: string) => void;
-    /** Ponte do estado B → /eva-studio. */
-    onOpenStudio: () => void;
     /** Conteúdo injetado abaixo do header/busca (ex: card de conexão WhatsApp no Inbox). */
     headerSlot?: ReactNode;
     /** Primeira carga ainda não voltou: mostra esqueleto, não "nenhuma conversa". */
@@ -55,13 +45,32 @@ export interface InboxPriorityListProps {
     emptyMessage?: string;
     /** Orçamento aberto de cada conversa (placar), por id da conversa. */
     quoteByChat?: Map<string, QuoteItem>;
+    /** Sem conversa aberta, abre a primeira da fila (desktop: evita duas colunas vazias). */
+    autoSelectFirst?: boolean;
 }
 
-type ListFilter = "all" | "unread" | "quote";
+type ListFilter = "all" | "yourTurn" | "quote" | "unread";
 const isParkedQuote = (q?: QuoteItem) => !!q && (q.state === "no_reply" || q.state === "went_quiet");
-const QUOTE_ROW_LABEL: Partial<Record<QuoteItem["state"], string>> = {
-    no_reply: "Orçamento sem resposta",
-    went_quiet: "Sumiu depois do orçamento",
+
+/** Situação da proposta em poucas palavras, para a linha da lista. */
+function quoteShort(q: QuoteItem): { text: string; tone: "parked" | "turn" | "talking" } | null {
+    switch (q.state) {
+        case "no_reply":
+            return { text: `sem resposta ${ago(q.days)}`, tone: "parked" };
+        case "went_quiet":
+            return { text: `sumiu ${ago(q.days)}`, tone: "parked" };
+        case "your_turn":
+            return { text: "esperando você", tone: "turn" };
+        case "talking":
+            return { text: "em conversa", tone: "talking" };
+        default:
+            return null;
+    }
+}
+const QUOTE_TONE: Record<"parked" | "turn" | "talking", string> = {
+    parked: "var(--vyz-warning)",
+    turn: "var(--vyz-accent)",
+    talking: "var(--vyz-text-muted)",
 };
 
 const ORDER_KEY = "vyz:inbox:ordem";
@@ -124,14 +133,13 @@ function hasConversation(chat: Chat): boolean {
 export function InboxPriorityList({
     chats,
     signals,
-    studioConfigured,
     selectedChatId,
     onSelect,
-    onOpenStudio,
     headerSlot,
     loading = false,
     emptyMessage = "Nenhuma conversa ainda.",
     quoteByChat,
+    autoSelectFirst = false,
 }: InboxPriorityListProps) {
     const [filter, setFilter] = useState<ListFilter>("all");
     const [query, setQuery] = useState("");
@@ -148,6 +156,10 @@ export function InboxPriorityList({
     const [junkOpen, setJunkOpen] = useState(false);
     const [groupsOpen, setGroupsOpen] = useState(false);
 
+    /** O cliente está esperando resposta sua: respondeu depois da proposta ou mandou a última mensagem. */
+    const isYourTurn = (c: Chat) => quoteByChat?.get(c.id)?.state === "your_turn" || signals[c.id]?.waitingMinutes != null;
+    const amountOf = (c: Chat) => quoteByChat?.get(c.id)?.amount ?? 0;
+
     const { active, junk, groups } = useMemo(() => {
         const q = query.trim().toLowerCase();
         const matched = q
@@ -159,9 +171,12 @@ export function InboxPriorityList({
             : chats;
         const visible = matched
             .filter((c) => !c.isGroup)
-            .filter((c) =>
-                filter === "unread" ? c.unreadCount > 0 : filter === "quote" ? isParkedQuote(quoteByChat?.get(c.id)) : true,
-            );
+            .filter((c) => {
+                if (filter === "unread") return c.unreadCount > 0;
+                if (filter === "quote") return isParkedQuote(quoteByChat?.get(c.id));
+                if (filter === "yourTurn") return isYourTurn(c);
+                return true;
+            });
         return {
             active: visible.filter(hasConversation),
             junk: visible.filter((c) => !hasConversation(c)),
@@ -170,10 +185,12 @@ export function InboxPriorityList({
                 .filter((c) => c.isGroup)
                 .sort((a, b) => lastTime(b) - lastTime(a)),
         };
-    }, [chats, query, filter, quoteByChat]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [chats, query, filter, quoteByChat, signals]);
 
     const unreadCount = chats.filter((c) => !c.isGroup && c.unreadCount > 0).length;
     const parkedCount = chats.filter((c) => !c.isGroup && isParkedQuote(quoteByChat?.get(c.id))).length;
+    const yourTurnCount = chats.filter((c) => !c.isGroup && hasConversation(c) && isYourTurn(c)).length;
 
     // Ordenações. waitingMinutes desc = quem espera VOCÊ há mais tempo primeiro.
     const byWaiting = (a: Chat, b: Chat) => {
@@ -191,49 +208,50 @@ export function InboxPriorityList({
         if (order === "time") {
             return [{ key: "all", label: null, chats: [...active].sort((a, b) => lastTime(b) - lastTime(a)) }];
         }
-        if (!studioConfigured) {
-            // Estado B: sem valor pra priorizar — só o sinal real de espera.
-            return [{ key: "wait", label: null, chats: [...active].sort(byWaiting) }];
-        }
-        // Estado A: quentes + esfriando no topo, frios/aguardando depois.
-        const now = active
-            .filter((c) => {
-                const p = signals[c.id]?.priority;
-                return p === "quente" || p === "esfriando";
-            })
+        // Quem espera você primeiro (proposta respondida antes, depois o maior
+        // valor), depois as propostas paradas pelo maior valor, depois o resto.
+        const now = active.filter(isYourTurn).sort((a, b) => {
+            const ta = quoteByChat?.get(a.id)?.state === "your_turn" ? 0 : 1;
+            const tb = quoteByChat?.get(b.id)?.state === "your_turn" ? 0 : 1;
+            if (ta !== tb) return ta - tb;
+            if (amountOf(b) !== amountOf(a)) return amountOf(b) - amountOf(a);
+            return byWaiting(a, b);
+        });
+        const parked = active
+            .filter((c) => !isYourTurn(c) && isParkedQuote(quoteByChat?.get(c.id)))
+            .sort((a, b) => amountOf(b) - amountOf(a));
+        const rest = active
+            .filter((c) => !isYourTurn(c) && !isParkedQuote(quoteByChat?.get(c.id)))
             .sort((a, b) => {
                 const pa = PRIORITY_RANK[signals[a.id]?.priority ?? "frio"];
                 const pb = PRIORITY_RANK[signals[b.id]?.priority ?? "frio"];
                 if (pa !== pb) return pa - pb;
-                return byWaiting(a, b);
+                return lastTime(b) - lastTime(a);
             });
-        const later = active
-            .filter((c) => {
-                const p = signals[c.id]?.priority;
-                return p !== "quente" && p !== "esfriando";
-            })
-            .sort(byWaiting);
         return [
             { key: "now", label: "Responda agora", chats: now },
-            { key: "later", label: "Depois", chats: later },
+            { key: "parked", label: "Propostas paradas", chats: parked },
+            { key: "rest", label: "Outras conversas", chats: rest },
         ];
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [active, order, studioConfigured, signals]);
+    }, [active, order, signals, quoteByChat]);
+
+    const primeira = sections.find((sec) => sec.chats.length > 0)?.chats[0]?.id ?? null;
+    useEffect(() => {
+        if (autoSelectFirst && !selectedChatId && primeira) onSelect(primeira);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoSelectFirst, selectedChatId, primeira]);
 
     return (
         <div className="vz-evlist">
             {/* Header — a entidade sinaliza o modo: roxo priorizando, slate sem base */}
             <div className="vz-evlist-header">
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <EvaBot state={studioConfigured ? "idle" : "thinking"} size={26} />
+                    <EvaBot state="idle" size={26} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <p className="vz-evlist-title">Conversas</p>
                         <p className="vz-evlist-subtitle">
-                            {order === "time"
-                                ? "Ordem cronológica"
-                                : studioConfigured
-                                ? "Ordenada pela EVA por prioridade"
-                                : "Por tempo de espera · sem leitura de valor"}
+                            {order === "time" ? "Ordem cronológica" : "Quem espera você e as propostas paradas primeiro"}
                         </p>
                     </div>
                     <button
@@ -313,8 +331,9 @@ export function InboxPriorityList({
                 <div role="group" aria-label="Filtrar conversas" className="flex flex-wrap gap-1.5 px-3 pt-2">
                     {([
                         { id: "all", label: "Todas" },
+                        { id: "yourTurn", label: `Sua vez${yourTurnCount ? ` (${yourTurnCount})` : ""}` },
+                        { id: "quote", label: `Propostas paradas${parkedCount ? ` (${parkedCount})` : ""}` },
                         { id: "unread", label: `Não lidas${unreadCount ? ` (${unreadCount})` : ""}` },
-                        { id: "quote", label: `Orçamento parado${parkedCount ? ` (${parkedCount})` : ""}` },
                     ] as const).map((f) => (
                         <button
                             key={f.id}
@@ -336,22 +355,6 @@ export function InboxPriorityList({
             {/* Slot injetado pelo host (ex: card de conexão WhatsApp no Inbox). */}
             {headerSlot && <div className="vz-evlist-headerslot" style={{ padding: "10px 12px 0" }}>{headerSlot}</div>}
 
-            {/* Estado B — ponte com presença, não erro. O fallback funciona,
-                mas o valor de verdade está trancado atrás do Studio. */}
-            {!studioConfigured && order === "eva" && chats.length > 0 && (
-                <button type="button" className="vz-evlist-bridge" onClick={onOpenStudio}>
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                        <span className="vz-evlist-bridge-title">
-                            Lista por tempo de espera
-                        </span>
-                        <span className="vz-evlist-bridge-sub">
-                            Para a EVA ordenar por valor, configure o EVA Studio
-                        </span>
-                    </span>
-                    <ArrowRight style={{ width: 14, height: 14, flexShrink: 0, color: "var(--vyz-text-muted)" }} />
-                </button>
-            )}
-
             {/* Lista — overflowX hidden: lista NUNCA rola pro lado */}
             <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", paddingBottom: 8 }}>
                 {sections.map((section) => (
@@ -370,7 +373,6 @@ export function InboxPriorityList({
                                     key={chat.id}
                                     chat={chat}
                                     signal={signals[chat.id]}
-                                    showValue={studioConfigured}
                                     isSelected={chat.id === selectedChatId}
                                     onSelect={() => onSelect(chat.id)}
                                     quote={quoteByChat?.get(chat.id)}
@@ -401,7 +403,9 @@ export function InboxPriorityList({
                                 : filter === "unread"
                                 ? "Nenhuma conversa não lida."
                                 : filter === "quote"
-                                ? "Nenhum orçamento parado agora."
+                                ? "Nenhuma proposta parada agora."
+                                : filter === "yourTurn"
+                                ? "Ninguém esperando resposta sua agora."
                                 : emptyMessage}
                         </p>
                         {query.trim() && (
@@ -539,7 +543,6 @@ export function InboxPriorityList({
 function LeadRow({
     chat,
     signal,
-    showValue,
     isSelected,
     onSelect,
     quote,
@@ -547,13 +550,12 @@ function LeadRow({
     quote?: QuoteItem;
     chat: Chat;
     signal?: InboxLeadSignal;
-    /** false = estado B: nada de etiqueta/cor de valor, só o sinal de tempo. */
-    showValue: boolean;
     isSelected: boolean;
     onSelect: () => void;
 }) {
-    const priority = showValue ? signal?.priority : undefined;
+    const priority = signal?.priority;
     const unread = chat.unreadCount;
+    const q = quote ? quoteShort(quote) : null;
 
     return (
         <li>
@@ -585,9 +587,8 @@ function LeadRow({
                         {chat.lastMessage?.text}
                     </span>
 
-                    {/* Linha 3 — estado A: etiqueta-motivo; estado B: o SLOT da
-                        etiqueta aparece trancado (a ausência visível vende o
-                        Studio) e o sinal de tempo justifica a ordem à direita. */}
+                    {/* Linha 3: a proposta (valor e situação) quando existe; senão a
+                        leitura da EVA. À direita, quanto tempo o cliente espera você. */}
                     <span
                         style={{
                             display: "flex",
@@ -597,23 +598,23 @@ function LeadRow({
                             marginTop: 4,
                         }}
                     >
-                        {showValue ? (
-                            signal?.priority ? (
-                                <span className={`vz-evlist-tag vz-evlist-tag--${signal.priority}`}>
-                                    <span className="vz-evlist-tag-text">
-                                        {PRIORITY_LABEL[signal.priority]}{signal.reason ? ` · ${signal.reason}` : ""}
-                                    </span>
+                        {quote && q ? (
+                            <span className="inline-flex min-w-0 items-center gap-1.5 truncate text-[10.5px]">
+                                <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: QUOTE_TONE[q.tone] }} aria-hidden />
+                                <span className="font-semibold tabular-nums text-[var(--vyz-text-primary)]">
+                                    {quote.amount > 0 ? brl(quote.amount) : "Proposta"}
                                 </span>
-                            ) : (
-                                <span className="vz-evlist-wait">sem leitura ainda</span>
-                            )
-                        ) : quote && QUOTE_ROW_LABEL[quote.state] ? (
-                            <span className="inline-flex min-w-0 items-center gap-1 truncate text-[10.5px] font-medium text-[var(--vyz-warning)]">
-                                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--vyz-warning)]" aria-hidden />
-                                {QUOTE_ROW_LABEL[quote.state]}
+                                <span className="truncate font-medium" style={{ color: QUOTE_TONE[q.tone] }}>
+                                    {q.text}
+                                </span>
+                            </span>
+                        ) : priority ? (
+                            <span className={`vz-evlist-tag vz-evlist-tag--${priority}`}>
+                                <span className="vz-evlist-tag-text">
+                                    {PRIORITY_LABEL[priority]}{signal?.reason ? ` · ${signal.reason}` : ""}
+                                </span>
                             </span>
                         ) : (
-                            // Sem Studio, a faixa do topo já explica; a linha não repete o aviso.
                             <span aria-hidden />
                         )}
                         <span
@@ -625,16 +626,11 @@ function LeadRow({
                                 minWidth: 0,
                             }}
                         >
-                            {!showValue && (
-                                <span className="vz-evlist-wait">
-                                    {signal?.waitingMinutes != null
-                                        ? formatWaiting(signal.waitingMinutes)
-                                        : "bola com o lead"}
-                                </span>
+                            {signal?.waitingMinutes != null && (
+                                <span className="vz-evlist-wait">{formatWaiting(signal.waitingMinutes)}</span>
                             )}
                             {unread > 0 && (
                                 <span className="vz-evlist-unread">
-                                    {!showValue && "· "}
                                     {unread > 99 ? "99+" : unread} {unread === 1 ? "não lida" : "não lidas"}
                                 </span>
                             )}

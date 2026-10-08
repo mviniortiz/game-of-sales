@@ -6,11 +6,10 @@ import { useAuth } from "@/contexts/AuthContext";
 // Orienta a resposta sugerida (consultiva, rumo a marcar demo) sem perder o
 // caráter assistido (a EVA sugere, o humano aprova e envia).
 export const PROSPECTING_OBJECTIVE =
-  "Esta é uma agência de marketing abordada a frio para prospecção do Vyzon. " +
-  "O objetivo é marcar uma demo de 15 minutos. Conduza de forma natural e " +
-  "consultiva: responda dúvidas, resolva objeções e, quando houver abertura, " +
-  "ofereça horários para a demo. Nunca prometa preços ou condições fora do " +
-  "contexto da agência.";
+  "Esta é uma empresa integradora de energia solar abordada a frio para prospecção do Vyzon. " +
+  "O objetivo é marcar a conversa de 20 minutos do Raio-X grátis das propostas paradas. " +
+  "Conduza de forma natural e consultiva: responda dúvidas, resolva objeções e, quando " +
+  "houver abertura, ofereça horários. Nunca prometa preços ou condições fora do contexto da empresa.";
 
 /**
  * True quando a instância de WhatsApp do usuário atual está em MODO PROSPECÇÃO

@@ -11,10 +11,10 @@ import { Check, ArrowRight, Loader2, Pencil } from "lucide-react";
 import { EvaBot } from "@/components/eva/EvaBot";
 
 const ORCAMENTO_LABEL: Record<string, string> = {
-    informado: "Orçamento informado",
-    baixo: "Orçamento baixo",
-    adequado: "Orçamento adequado",
-    alto: "Orçamento alto",
+    informado: "Disse quanto pode investir",
+    baixo: "Pode investir pouco",
+    adequado: "Investimento compatível",
+    alto: "Pode investir bem",
 };
 
 interface EvaCreateDealNudgeProps {
