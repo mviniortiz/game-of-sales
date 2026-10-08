@@ -220,17 +220,18 @@ const RaioXReport = () => {
                 </div>
             )}
 
-            <dl className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-[10px] border md:mt-10 md:grid-cols-4" style={{ borderColor: "var(--lp-line)", background: "var(--lp-line)" }}>
-                <Stat label="Propostas encontradas" value={view.quotes} />
-                <Stat label="Paradas" value={view.stuck} />
-                <Stat label="Cliente esperando você" value={view.yourTurn} highlight={view.yourTurn > 0} />
-                <Stat label="Mensagens lidas" value={report.summary.messages_read.toLocaleString("pt-BR")} />
-            </dl>
-            {(report.summary.descartadas ?? 0) > 0 && (
-                <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--lp-ink-55)" }}>
-                    A EVA também conferiu {report.summary.descartadas} {report.summary.descartadas === 1 ? "arquivo ou mensagem com valor que não era proposta" : "arquivos ou mensagens com valor que não eram proposta"} (ficha técnica, boleto, comprovante, conversa pessoal) e deixou fora da conta.
-                </p>
+            {view.stuck > 0 && (
+                <nav className="mt-8 grid grid-cols-3 gap-2 md:mt-10 md:gap-3" aria-label="Propostas por urgência">
+                    <Faixa href="#hoje" titulo="Responda hoje" rows={view.today} tom="urgente" />
+                    <Faixa href="#semana" titulo="Retome esta semana" rows={view.week} tom="normal" />
+                    <Faixa href="#esfriaram" titulo="Esfriaram" rows={view.cold} tom="frio" />
+                </nav>
             )}
+            <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--lp-ink-55)" }}>
+                Li {report.summary.messages_read.toLocaleString("pt-BR")} mensagens dos últimos {report.summary.window_days} dias e achei {plural(view.quotes, "proposta", "propostas")}.
+                {(report.summary.descartadas ?? 0) > 0 &&
+                    ` Deixei fora da conta ${plural(report.summary.descartadas ?? 0, "arquivo ou mensagem que não era proposta", "arquivos ou mensagens que não eram proposta")} (ficha técnica, boleto, comprovante, conversa pessoal).`}
+            </p>
 
             {view.stuck > 0 && (
                 <section className="mt-12 md:mt-14" aria-labelledby="plano">
@@ -241,9 +242,9 @@ const RaioXReport = () => {
                         Em ordem de urgência. Nas maiores, a EVA já escreveu a retomada no tom da sua conversa com o cliente.
                     </p>
 
-                    <Group title="Responda hoje" hint="O cliente mandou a última mensagem e ninguém respondeu." rows={view.today} {...rowProps} />
-                    <Group title="Retome esta semana" hint="Proposta dos últimos 30 dias, sem resposta ou com o cliente quieto." rows={view.week} {...rowProps} />
-                    <Group title="Esfriaram" hint="Mais de 30 dias. Vale uma mensagem nova, não uma cobrança." rows={view.cold} collapsed {...rowProps} />
+                    <Group id="hoje" title="Responda hoje" hint="O cliente mandou a última mensagem e ninguém respondeu." rows={view.today} {...rowProps} />
+                    <Group id="semana" title="Retome esta semana" hint="Proposta dos últimos 30 dias, sem resposta ou com o cliente quieto." rows={view.week} {...rowProps} />
+                    <Group id="esfriaram" title="Esfriaram" hint="Mais de 30 dias. Vale uma mensagem nova, não uma cobrança." rows={view.cold} collapsed {...rowProps} />
                     {view.talking.length > 0 && (
                         <Group title="Em conversa" hint="Ainda andando. Nada a fazer por enquanto." rows={view.talking} collapsed {...rowProps} />
                     )}
@@ -293,16 +294,37 @@ const Shell = ({ children }: { children: React.ReactNode }) => (
     </div>
 );
 
-const Stat = ({ label, value, highlight }: { label: string; value: number | string; highlight?: boolean }) => (
-    <div className="px-4 py-3.5 md:py-4" style={{ background: "var(--lp-white)" }}>
-        <dt className="text-[12.5px] md:text-[13px]" style={{ color: "var(--lp-ink-55)" }}>
-            {label}
-        </dt>
-        <dd className="mt-1 text-[22px] font-medium tabular-nums md:text-2xl" style={{ color: highlight ? "var(--lp-blue)" : "var(--lp-ink)", letterSpacing: "-0.02em" }}>
-            {value}
-        </dd>
-    </div>
-);
+const TOM = {
+    urgente: { borda: "#F59E0B", fundo: "#FFFBEB", texto: "#92400E" },
+    normal: { borda: "var(--lp-blue)", fundo: "var(--lp-white)", texto: "var(--lp-blue)" },
+    frio: { borda: "var(--lp-line)", fundo: "var(--lp-white)", texto: "var(--lp-ink-55)" },
+} as const;
+
+/** Atalho de urgência no topo: quantas, quanto somam e leva ao grupo. */
+const Faixa = ({ href, titulo, rows, tom }: { href: string; titulo: string; rows: Row[]; tom: keyof typeof TOM }) => {
+    const ativos = rows.filter((r) => !r.item.excluded);
+    const soma = ativos.reduce((a, r) => a + (r.item.amount ?? 0), 0);
+    const c = TOM[tom];
+    const vazio = ativos.length === 0;
+    return (
+        <a
+            href={vazio ? undefined : href}
+            aria-disabled={vazio || undefined}
+            className="flex min-w-0 flex-col rounded-[10px] border px-3 py-3 transition-transform duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lp-blue)] md:px-4 md:py-4 [&:not([aria-disabled])]:hover:-translate-y-0.5 motion-reduce:transition-none"
+            style={{ borderColor: vazio ? "var(--lp-line)" : c.borda, background: vazio ? "var(--lp-white)" : c.fundo, opacity: vazio ? 0.6 : 1 }}
+        >
+            <span className="text-[12px] font-medium leading-tight md:text-[13px]" style={{ color: vazio ? "var(--lp-ink-55)" : c.texto }}>
+                {titulo}
+            </span>
+            <span className="mt-1.5 text-[22px] font-medium leading-none tabular-nums md:text-[26px]" style={{ color: "var(--lp-ink)", letterSpacing: "-0.02em" }}>
+                {ativos.length}
+            </span>
+            <span className="mt-1 truncate text-[12px] tabular-nums md:text-[13px]" style={{ color: "var(--lp-ink-55)" }}>
+                {soma > 0 ? brl(soma) : vazio ? "nenhuma" : "sem valor"}
+            </span>
+        </a>
+    );
+};
 
 type RowProps = {
     isAdmin: boolean;
@@ -310,7 +332,7 @@ type RowProps = {
     onAmount: (index: number, amount: number | null) => Promise<boolean>;
 };
 
-const Group = ({ title, hint, rows, collapsed, ...rowProps }: { title: string; hint: string; rows: Row[]; collapsed?: boolean } & RowProps) => {
+const Group = ({ id, title, hint, rows, collapsed, ...rowProps }: { id?: string; title: string; hint: string; rows: Row[]; collapsed?: boolean } & RowProps) => {
     if (rows.length === 0) return null;
     const head = (
         <div className="flex items-baseline justify-between gap-3">
@@ -328,7 +350,7 @@ const Group = ({ title, hint, rows, collapsed, ...rowProps }: { title: string; h
     );
     if (collapsed) {
         return (
-            <details className="group mt-8 border-t pt-5" style={{ borderColor: "var(--lp-line)" }}>
+            <details id={id} className="group mt-8 scroll-mt-6 border-t pt-5" style={{ borderColor: "var(--lp-line)" }}>
                 <summary className="cursor-pointer list-none rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lp-blue)]">
                     {head}
                     <p className="mt-1 text-[14px]" style={{ color: "var(--lp-ink-55)" }}>
@@ -340,7 +362,7 @@ const Group = ({ title, hint, rows, collapsed, ...rowProps }: { title: string; h
         );
     }
     return (
-        <div className="mt-8 border-t pt-5" style={{ borderColor: "var(--lp-line)" }}>
+        <div id={id} className="mt-8 scroll-mt-6 border-t pt-5" style={{ borderColor: "var(--lp-line)" }}>
             {head}
             <p className="mt-1 text-[14px]" style={{ color: "var(--lp-ink-55)" }}>
                 {hint}
@@ -355,7 +377,11 @@ const ItemCard = ({ row, isAdmin, onToggle, onAmount }: { row: Row } & RowProps)
     const [editando, setEditando] = useState(false);
     const urgent = item.status === "your_turn" && !item.excluded;
     return (
-        <li className="rounded-[10px] border p-4 md:p-5" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)", opacity: item.excluded ? 0.5 : 1 }}>
+        <li
+            className="relative overflow-hidden rounded-[10px] border p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] md:p-5"
+            style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)", opacity: item.excluded ? 0.5 : 1 }}
+        >
+            {urgent && <span className="absolute inset-y-0 left-0 w-1" style={{ background: "#F59E0B" }} aria-hidden />}
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <p className="truncate text-[17px] font-medium" style={{ color: "var(--lp-ink)", textDecoration: item.excluded ? "line-through" : undefined }}>
@@ -363,7 +389,7 @@ const ItemCard = ({ row, isAdmin, onToggle, onAmount }: { row: Row } & RowProps)
                     </p>
                     <span
                         className="mt-1 inline-block rounded-full border px-2 py-0.5 text-[12px]"
-                        style={{ borderColor: urgent ? "var(--lp-blue)" : "var(--lp-line)", color: urgent ? "var(--lp-blue)" : "var(--lp-ink-55)" }}
+                        style={{ borderColor: urgent ? "#F59E0B" : "var(--lp-line)", color: urgent ? "#92400E" : "var(--lp-ink-55)", background: urgent ? "#FFFBEB" : undefined }}
                     >
                         {item.excluded ? "Não é proposta" : STATUS_LABEL[item.status]}
                     </span>
@@ -388,28 +414,33 @@ const ItemCard = ({ row, isAdmin, onToggle, onAmount }: { row: Row } & RowProps)
                     </span>
                 )}
             </div>
-            {item.evidencia && (
-                <p className="mt-2 truncate text-[13px]" style={{ color: "var(--lp-ink-55)" }} title={item.evidencia}>
-                    {item.detected_by === "pdf" ? "Contei pelo arquivo: " : "Contei pela mensagem: "}
-                    <span style={{ color: "var(--lp-ink-70)" }}>{item.evidencia}</span>
-                </p>
-            )}
             <p className="mt-2 text-[14px] leading-snug" style={{ color: "var(--lp-ink-55)" }}>
                 Proposta {dias(item.days_since_quote)}
                 {item.status !== "no_reply" && item.status !== "talking" && ` · cliente falou ${dias(item.days_silent)}`}
                 {item.kwp ? ` · ${item.kwp.toLocaleString("pt-BR")} kWp` : ""}
-                {item.detected_by === "pdf" ? " · em PDF" : ""}
             </p>
-            {code && item.draft && <DraftAsEva code={code} item={item} draft={item.draft} />}
-            {isAdmin && (
-                <button
-                    type="button"
-                    onClick={() => onToggle(index, !item.excluded)}
-                    className="mt-3 rounded text-[12px] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lp-blue)]"
-                    style={{ color: "var(--lp-ink-40)" }}
+            {item.evidencia && (
+                <p
+                    className="mt-2 flex max-w-full items-center gap-1.5 rounded-[8px] px-2.5 py-1.5 text-[12.5px]"
+                    style={{ background: "var(--lp-paper)", color: "var(--lp-ink-70)" }}
+                    title={item.evidencia}
                 >
-                    {item.excluded ? "Voltar a contar" : "Não é proposta"}
-                </button>
+                    <span className="shrink-0" style={{ color: "var(--lp-ink-40)" }}>{item.detected_by === "pdf" ? "Arquivo" : "Mensagem"}</span>
+                    <span className="truncate">{item.evidencia}</span>
+                </p>
+            )}
+            {code && item.draft && !item.excluded && <Retomada item={item} draft={item.draft} />}
+            {isAdmin && (
+                <div className={`flex ${code && item.draft && !item.excluded ? "mt-2 justify-end" : "mt-3"}`}>
+                    <button
+                        type="button"
+                        onClick={() => onToggle(index, !item.excluded)}
+                        className="inline-flex min-h-[36px] items-center rounded-full border px-3.5 text-[13px] font-medium transition-colors hover:bg-[var(--lp-paper)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lp-blue)]"
+                        style={{ borderColor: "var(--lp-line)", color: "var(--lp-ink-55)" }}
+                    >
+                        {item.excluded ? "Voltar a contar" : "Não é proposta"}
+                    </button>
+                </div>
             )}
         </li>
     );
@@ -454,8 +485,10 @@ const ValorInput = ({ inicial, onSalvar }: { inicial: number | null; onSalvar: (
     );
 };
 
-/** A retomada como a EVA entrega no WhatsApp do dono, mais o atalho de enviar já. */
-const DraftAsEva = ({ code, item, draft }: { code: string; item: Item; draft: string }) => {
+/** A retomada como ela chega ao cliente (balão verde, saindo do seu número), com
+ *  a nota da EVA de por que agora e o atalho de enviar já. O formato do aviso
+ *  da EVA no WhatsApp do dono aparece uma vez só, na seção da companheira. */
+const Retomada = ({ item, draft }: { item: Item; draft: string }) => {
     const [copied, setCopied] = useState(false);
     const copy = async () => {
         try {
@@ -468,21 +501,22 @@ const DraftAsEva = ({ code, item, draft }: { code: string; item: Item; draft: st
     };
     return (
         <div className="mt-4">
-            <p className="text-[12.5px]" style={{ color: "var(--lp-ink-55)" }}>
-                Assim a EVA te chamaria no WhatsApp:
-            </p>
+            {item.reading && (
+                <p className="flex items-start gap-2 text-[13px] leading-snug" style={{ color: "var(--lp-ink-70)" }}>
+                    <span className="mt-[1px] shrink-0"><EvaBot size={18} still /></span>
+                    <span>{item.reading}</span>
+                </p>
+            )}
             <div className="mt-2 rounded-[10px] p-2.5 sm:p-3" style={{ background: WA_WALL }}>
-                <div className="max-w-[94%] rounded-[8px] rounded-tl-none px-3 py-2.5 text-[14.5px] leading-[1.45]" style={{ background: "#fff", color: "#111b21", boxShadow: "0 1px 0.5px rgba(11,20,26,.13)" }}>
-                    <p className="flex items-center gap-2 font-medium">
-                        <EvaBot size={20} still />
-                        EVA [{code}] rascunho pronto
-                    </p>
-                    <p className="mt-2">Lead: {item.first_name ?? "cliente"}</p>
-                    {item.reading && <p>Por que agora: {item.reading}</p>}
-                    <p className="mt-2 whitespace-pre-line">{draft}</p>
-                    <p className="mt-2" style={{ color: "#54656f" }}>
-                        Responda {code} 1 para enviar, {code} 2 para descartar, ou escreva o texto corrigido.
-                    </p>
+                <p className="mb-1.5 text-center text-[11px]" style={{ color: "#54656f" }}>
+                    Retomada pronta para {item.first_name ?? "o cliente"}
+                </p>
+                <div
+                    className="ml-auto max-w-[92%] rounded-[8px] rounded-tr-none px-3 py-2 text-[14.5px] leading-[1.45]"
+                    style={{ background: WA_OUT, color: "#111b21", boxShadow: "0 1px 0.5px rgba(11,20,26,.13)" }}
+                >
+                    <p className="whitespace-pre-line">{draft}</p>
+                    <p className="mt-0.5 text-right text-[11px]" style={{ color: "#667781" }}>do seu número</p>
                 </div>
             </div>
             <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -490,7 +524,7 @@ const DraftAsEva = ({ code, item, draft }: { code: string; item: Item; draft: st
                     href={`https://wa.me/?text=${encodeURIComponent(draft)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex min-h-[44px] items-center justify-center rounded-full px-5 text-[14px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lp-blue)] focus-visible:ring-offset-2"
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-full px-5 text-[14px] font-medium transition-transform duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lp-blue)] focus-visible:ring-offset-2 motion-reduce:transition-none"
                     style={{ background: "var(--lp-ink)", color: "var(--lp-white)" }}
                 >
                     Enviar pelo WhatsApp
@@ -498,7 +532,7 @@ const DraftAsEva = ({ code, item, draft }: { code: string; item: Item; draft: st
                 <button
                     type="button"
                     onClick={() => void copy()}
-                    className="inline-flex min-h-[44px] items-center justify-center rounded-full border px-5 text-[14px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lp-blue)] focus-visible:ring-offset-2"
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-full border px-5 text-[14px] font-medium transition-colors hover:bg-[var(--lp-paper)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lp-blue)] focus-visible:ring-offset-2"
                     style={{ borderColor: "var(--lp-line)", color: "var(--lp-ink)" }}
                     aria-live="polite"
                 >
