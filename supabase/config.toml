@@ -62,6 +62,9 @@ verify_jwt = false
 [functions.eva-site-context]
 verify_jwt = false
 
+[functions.quote-seed-history]
+verify_jwt = false
+
 [functions.lead-webhook]
 verify_jwt = false
 

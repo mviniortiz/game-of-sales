@@ -8,6 +8,7 @@ const DRAFTS = 10;
 const PAGE = 1000;
 
 type Row = {
+    id: string;
     conversation_id: string;
     contact_id: string;
     direction: "inbound" | "outbound";
@@ -17,7 +18,7 @@ type Row = {
     message_timestamp: string;
 };
 
-const COLS = "conversation_id, contact_id, direction, message_type, body, media_ref, message_timestamp";
+const COLS = "id, conversation_id, contact_id, direction, message_type, body, media_ref, message_timestamp";
 
 export async function buildRaioX(admin: SupabaseClient, companyId: string, opts: { drafts?: boolean } = {}) {
     const since = new Date(Date.now() - WINDOW_DAYS * 86_400_000).toISOString();
@@ -117,11 +118,18 @@ export async function buildRaioX(admin: SupabaseClient, companyId: string, opts:
     });
 
     const summary = { ...summarize(items), messages_read: [...byConv.values()].reduce((a, m) => a + m.length, 0), window_days: WINDOW_DAYS };
-    return { summary, items: reportItems };
+    // Para o placar: a proposta de cada conversa com o contato e o nome.
+    const quotes = ranked.map((i) => ({
+        ...i,
+        contact_id: contactOf.get(i.conversation_id) ?? null,
+        name: contacts.get(contactOf.get(i.conversation_id) ?? "")?.name ?? null,
+    }));
+    return { summary, items: reportItems, quotes };
 }
 
 function toRx(r: Row): RxMessage {
     return {
+        id: r.id,
         conversation_id: r.conversation_id,
         direction: r.direction,
         message_type: r.message_type,

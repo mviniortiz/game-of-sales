@@ -11,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { OnboardingButton } from "@/components/onboarding/OnboardingButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState, useEffect, useRef } from "react";
@@ -81,7 +80,6 @@ export const AppHeader = () => {
       </div>
 
       <div className="flex items-center gap-4">
-        <OnboardingButton />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 rounded-full px-4 gap-2">

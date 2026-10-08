@@ -399,7 +399,7 @@ export function AppSidebar() {
             {!collapsed && <ReminderBell />}
           </div>
 
-          <div className="px-3 pb-3" data-tour="register-sale-btn">
+          <div className="px-3 pb-3">
             <SidebarCta collapsed={collapsed} onClick={() => setIsNovaOportunidadeOpen(true)} />
           </div>
 

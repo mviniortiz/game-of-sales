@@ -8,7 +8,10 @@ import { ArrowUp, Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { EvaBot, type EvaBotState } from "@/components/eva/EvaBot";
+import { EvaBot } from "@/components/eva/EvaBot";
+import { EncontroProgress } from "@/components/brand/EncontroProgress";
+import { WhatsAppConnectModal } from "@/components/inbox/WhatsAppConnectModal";
+import { brl } from "@/lib/quoteText";
 import { useEvaSetup, setupDismissKey } from "@/hooks/useEvaSetup";
 import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
 import { APP_HOME } from "@/config/routes";
@@ -33,8 +36,20 @@ const CHIP_OFF = "border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-1)] te
 const CHIP_ON = "border-[#0B1220] bg-[#0B1220] text-white";
 
 type Pergunta = ReturnType<typeof perguntasPendentes>[number];
-type Fase = "site" | "lendo" | Pergunta | "resumo" | "salvando" | "pronto";
-type Msg = { de: "eva" | "voce"; texto: ReactNode };
+type Fase = "site" | "lendo" | Pergunta | "resumo" | "salvando" | "whatsapp" | "importando" | "placar";
+type Seed = {
+    quotes: number;
+    stuck: number;
+    stuck_value: number;
+    stuck_without_value: number;
+    your_turn: number;
+    top: { first_name: string | null; amount: number | null; status: string; days_silent: number }[];
+};
+
+// Continua a contagem do cadastro (passo 1 de 4): quem chega aqui já tem um feito.
+const PASSOS = ["Criar a conta", "Conhecer a empresa", "Conectar o WhatsApp", "Ver suas propostas paradas"];
+const espera = (ms: number) => new Promise((r) => setTimeout(r, ms));
+type Msg = { de: "eva" | "voce" | "bloco"; texto: ReactNode };
 
 const MOTIVO: Record<string, string> = {
     rede_social: "Instagram e Facebook eu não consigo ler, eles pedem login. Sem problema, te pergunto o que preciso.",
@@ -56,7 +71,7 @@ export default function ConfigurarEva() {
     const navigate = useNavigate();
     const qc = useQueryClient();
     const { profile, user } = useAuth();
-    const { companyId, version } = useEvaSetup();
+    const { companyId, version, configured } = useEvaSetup();
     const wa = useWhatsappConnection();
     const [empresa, setEmpresa] = useState("sua empresa");
     const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -65,8 +80,16 @@ export default function ConfigurarEva() {
     const [resumo, setResumo] = useState<SetupResumo | null>(null);
     const [texto, setTexto] = useState("");
     const [travas, setTravas] = useState<Trava[]>([]);
+    const [conectar, setConectar] = useState(false);
+    const [conversas, setConversas] = useState(0);
     const fimRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const vivo = useRef(true);
+    const inicioDecidido = useRef(false);
+    useEffect(() => {
+        vivo.current = true;
+        return () => { vivo.current = false; };
+    }, []);
 
     const primeiroNome = (profile?.nome || "").split(" ")[0];
 
@@ -77,12 +100,22 @@ export default function ConfigurarEva() {
         });
     }, [companyId]);
 
+    // Quem já ensinou a empresa para a EVA pula direto para o WhatsApp.
     useEffect(() => {
+        if (configured === null || wa.loading || inicioDecidido.current) return;
+        inicioDecidido.current = true;
+        const oi = `Oi${primeiroNome ? `, ${primeiroNome}` : ""}. Eu sou a EVA.`;
+        if (configured) {
+            setMsgs([{ de: "eva", texto: `${oi} Já conheço a ${empresa}. Falta pouco para eu começar a trabalhar.` }]);
+            irParaWhatsapp();
+            return;
+        }
         setMsgs([
-            { de: "eva", texto: `Oi${primeiroNome ? `, ${primeiroNome}` : ""}. Eu sou a EVA. Vou aprender como vocês vendem para acompanhar cada proposta com você. Leva uns 3 minutos.` },
+            { de: "eva", texto: `${oi} Vou aprender como vocês vendem para acompanhar cada proposta com você. Leva uns 3 minutos.` },
             { de: "eva", texto: "Qual o site da empresa? Eu leio e já adianto boa parte." },
         ]);
-    }, [primeiroNome]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [configured, wa.loading, primeiroNome]);
 
     useEffect(() => {
         fimRef.current?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "end" });
@@ -202,8 +235,69 @@ export default function ConfigurarEva() {
         }
         try { localStorage.removeItem(setupDismissKey(companyId)); } catch { /* sem storage */ }
         await qc.invalidateQueries({ queryKey: ["eva-setup"] });
-        setFase("pronto");
         fala({ de: "eva", texto: "Salvo. A partir de agora eu leio as conversas de vocês com isso na cabeça." });
+        irParaWhatsapp();
+    }
+
+    function irParaWhatsapp() {
+        if (wa.connected) {
+            void lerWhatsapp(false);
+            return;
+        }
+        setFase("whatsapp");
+        fala({ de: "eva", texto: "Agora conecta o WhatsApp que você usa para mandar proposta. Eu leio os últimos 90 dias e te mostro quanto dinheiro está parado." });
+    }
+
+    async function contarConversas() {
+        const { count } = await supabase.from("channel_conversations").select("id", { count: "exact", head: true }).eq("company_id", companyId!);
+        return count ?? 0;
+    }
+
+    async function gravarPlacar(): Promise<Seed | null> {
+        try {
+            const { data, error } = await supabase.functions.invoke("quote-seed-history", { body: {} });
+            if (error || !data || data.error) return null;
+            return data as Seed;
+        } catch {
+            return null;
+        }
+    }
+
+    // O histórico chega em lotes logo depois da conexão: espera a contagem de
+    // conversas parar de subir (ou 75 s) e só então procura as propostas.
+    async function lerWhatsapp(acabouDeConectar: boolean) {
+        if (!companyId) return;
+        setFase("importando");
+        fala({ de: "eva", texto: acabouDeConectar ? "Conectou. Estou lendo suas conversas para achar as propostas." : "Seu WhatsApp já está conectado. Estou lendo suas conversas para achar as propostas." });
+        const inicio = Date.now();
+        let anterior = -1;
+        let parado = 0;
+        while (vivo.current && Date.now() - inicio < 75_000) {
+            await espera(3000);
+            const n = await contarConversas();
+            setConversas(n);
+            parado = n > 0 && n === anterior ? parado + 1 : 0;
+            anterior = n;
+            if (parado >= 3 && Date.now() - inicio > 9000) break;
+        }
+        let r = await gravarPlacar();
+        if (vivo.current && r && r.quotes === 0 && anterior < 5) {
+            await espera(20_000);
+            r = (await gravarPlacar()) ?? r;
+        }
+        if (!vivo.current) return;
+        await qc.invalidateQueries({ queryKey: ["quote-board"] });
+        setFase("placar");
+        if (!r) {
+            fala({ de: "eva", texto: "Não consegui terminar a leitura agora. Sem problema: cada proposta que sair do seu WhatsApp já entra no placar sozinha." });
+        } else if (r.stuck > 0) {
+            fala({ de: "eva", texto: "Pronto. Olha o que achei nos últimos 30 dias:" }, { de: "bloco", texto: <Placar r={r} /> });
+        } else if (r.quotes > 0) {
+            fala({ de: "eva", texto: `Achei ${r.quotes === 1 ? "1 proposta" : `${r.quotes} propostas`} nos últimos 30 dias e nenhuma parada. Bom sinal.` });
+        } else {
+            fala({ de: "eva", texto: "Não achei proposta nos últimos 30 dias nesse número. Daqui pra frente, cada proposta que sair dele entra no placar sozinha." });
+        }
+        fala({ de: "eva", texto: "Daqui pra frente é assim: quando uma proposta passar 2 dias sem resposta, eu te mando no WhatsApp a retomada pronta. Você responde 1 e ela sai do seu número." });
     }
 
     function depois() {
@@ -213,20 +307,22 @@ export default function ConfigurarEva() {
         navigate(APP_HOME, { replace: true });
     }
 
-    const evaState: EvaBotState = fase === "lendo" || fase === "salvando" ? "thinking" : fase === "pronto" ? "happy" : "talking";
+    const passo = fase === "whatsapp" ? 2 : fase === "importando" ? 3 : fase === "placar" ? 4 : 1;
 
     return (
         <div className="flex h-[100dvh] flex-col overflow-hidden bg-[var(--vyz-bg)] text-[var(--vyz-text-primary)]">
             <header className="shrink-0 border-b border-[var(--vyz-border)] bg-[var(--vyz-surface-1)]">
                 <div className="mx-auto flex h-14 w-full max-w-2xl items-center justify-between gap-3 px-4">
                     <div className="flex min-w-0 items-center gap-2.5">
-                        <EvaBot state={evaState} size={30} label="EVA" />
+                        <EncontroProgress step={passo} total={4} size={34} />
                         <div className="min-w-0">
-                            <p className="text-[14px] font-semibold leading-tight">Configurar a EVA</p>
-                            <p className="truncate text-[12px] text-[var(--vyz-text-muted)]">{empresa}</p>
+                            <p className="text-[14px] font-semibold leading-tight">Primeiros passos</p>
+                            <p className="truncate text-[12px] text-[var(--vyz-text-muted)]">
+                                {passo < 4 ? `Passo ${passo + 1} de 4 · ${PASSOS[passo]}` : `Tudo pronto · ${empresa}`}
+                            </p>
                         </div>
                     </div>
-                    {fase !== "pronto" && (
+                    {fase !== "placar" && fase !== "importando" && (
                         <button type="button" onClick={depois} className="rounded-full px-3 py-2 text-[13px] font-medium text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-2)] hover:text-[var(--vyz-text-strong)]">
                             Fazer depois
                         </button>
@@ -240,6 +336,7 @@ export default function ConfigurarEva() {
                     <Bolha key={i} de={m.de}>{m.texto}</Bolha>
                 ))}
                 {fase === "lendo" && <Bolha de="eva"><span className="text-[var(--vyz-text-muted)]">Lendo o site…</span></Bolha>}
+                {fase === "importando" && <Leitura conversas={conversas} />}
 
                 {fase === "resumo" || fase === "salvando" ? (
                     resumo && <Resumo r={resumo} onChange={setResumo} />
@@ -337,21 +434,100 @@ export default function ConfigurarEva() {
                         </button>
                     )}
 
-                    {fase === "pronto" && (
-                        <div className="flex flex-col gap-2 sm:flex-row">
-                            {wa.connected ? (
-                                <Link to={APP_HOME} className={`${BTN_PRIMARY} sm:flex-1`}>Ver meus orçamentos</Link>
-                            ) : (
-                                <>
-                                    <Link to="/inbox?connect=1" className={`${BTN_PRIMARY} sm:flex-1`}>Conectar meu WhatsApp</Link>
-                                    <Link to={APP_HOME} className={`${BTN_BASE} sm:flex-1 border border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-1)] text-[var(--vyz-text-strong)] hover:bg-[var(--vyz-surface-2)]`}>Depois</Link>
-                                </>
-                            )}
+                    {fase === "whatsapp" && (
+                        <div className="flex flex-col gap-2">
+                            <button type="button" onClick={() => setConectar(true)} className={`${BTN_PRIMARY} w-full`}>Conectar meu WhatsApp</button>
+                            <p className="text-center text-[12px] text-[var(--vyz-text-muted)]">Você lê um QR Code no celular, como no WhatsApp Web. Nada sai para cliente sem você aprovar.</p>
                         </div>
+                    )}
+
+                    {fase === "importando" && (
+                        <p className="py-2 text-center text-[13px] text-[var(--vyz-text-muted)]">Costuma levar menos de 2 minutos. Pode deixar esta tela aberta.</p>
+                    )}
+
+                    {fase === "placar" && (
+                        <Link to={APP_HOME} replace className={`${BTN_PRIMARY} w-full`}>Ver meu placar</Link>
                     )}
                 </div>
             </footer>
+            <WhatsAppConnectModal
+                open={conectar}
+                onClose={() => setConectar(false)}
+                onConnected={() => {
+                    setConectar(false);
+                    void lerWhatsapp(true);
+                }}
+            />
         </div>
+    );
+}
+
+function Leitura({ conversas }: { conversas: number }) {
+    return (
+        <div className="flex max-w-[92%] items-end gap-2">
+            <span className="mb-0.5 shrink-0"><EvaBot size={24} state="thinking" /></span>
+            <div className="rounded-2xl rounded-bl-md border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-4 py-2.5 text-[15px] leading-snug text-[var(--vyz-text-strong)]">
+                {conversas > 0 ? (
+                    <>Li <span className="font-semibold tabular-nums">{conversas}</span> {conversas === 1 ? "conversa" : "conversas"} até agora…</>
+                ) : (
+                    <span className="text-[var(--vyz-text-muted)]">Esperando o histórico chegar…</span>
+                )}
+            </div>
+        </div>
+    );
+}
+
+const SITUACAO: Record<string, (d: number) => string> = {
+    no_reply: (d) => `sem resposta há ${d} ${d === 1 ? "dia" : "dias"}`,
+    went_quiet: (d) => `parou de responder há ${d} ${d === 1 ? "dia" : "dias"}`,
+    your_turn: (d) => `esperando você há ${d} ${d === 1 ? "dia" : "dias"}`,
+};
+
+// O primeiro número: o valor parado sobe de zero até o total, uma vez.
+function Placar({ r }: { r: Seed }) {
+    const [valor, setValor] = useState(0);
+    useEffect(() => {
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches || r.stuck_value === 0) {
+            setValor(r.stuck_value);
+            return;
+        }
+        let raf = 0;
+        const t0 = performance.now();
+        const anda = (t: number) => {
+            const k = Math.min(1, (t - t0) / 1100);
+            setValor(Math.round(r.stuck_value * (1 - Math.pow(1 - k, 3))));
+            if (k < 1) raf = requestAnimationFrame(anda);
+        };
+        raf = requestAnimationFrame(anda);
+        return () => cancelAnimationFrame(raf);
+    }, [r.stuck_value]);
+
+    return (
+        <section aria-label="Propostas paradas" className="flex flex-col gap-4 rounded-2xl border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_16px_40px_-20px_rgba(37,99,235,0.35)] sm:ml-8">
+            <div>
+                <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--vyz-text-muted)]">Parado no seu WhatsApp</p>
+                <p className="mt-1 font-satoshi text-[40px] font-black leading-none tracking-[-0.03em] text-[var(--vyz-text-primary)] tabular-nums">
+                    {r.stuck_value > 0 ? brl(valor) : `${r.stuck}`}
+                </p>
+                <p className="mt-1.5 text-[14px] text-[var(--vyz-text)]">
+                    em {r.stuck === 1 ? "1 proposta parada" : `${r.stuck} propostas paradas`}
+                    {r.stuck_without_value > 0 && r.stuck_value > 0 ? ` (${r.stuck_without_value} sem valor escrito na conversa)` : ""}
+                </p>
+            </div>
+            {r.top.length > 0 && (
+                <ul className="flex flex-col divide-y divide-[var(--vyz-border-subtle)] border-t border-[var(--vyz-border-subtle)]">
+                    {r.top.map((q, i) => (
+                        <li key={i} className="flex items-center justify-between gap-3 py-2.5">
+                            <span className="min-w-0">
+                                <span className="block truncate text-[14px] font-semibold text-[var(--vyz-text-strong)]">{q.first_name || "Cliente"}</span>
+                                <span className="block text-[13px] text-[var(--vyz-text-muted)]">{(SITUACAO[q.status] ?? SITUACAO.no_reply)(q.days_silent)}</span>
+                            </span>
+                            <span className="shrink-0 text-[14px] font-semibold tabular-nums text-[var(--vyz-text-strong)]">{q.amount ? brl(q.amount) : "sem valor"}</span>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </section>
     );
 }
 
@@ -360,7 +536,8 @@ function minuscula(s: string) {
     return t ? t.charAt(0).toLowerCase() + t.slice(1) : "";
 }
 
-function Bolha({ de, children }: { de: "eva" | "voce"; children: ReactNode }) {
+function Bolha({ de, children }: { de: Msg["de"]; children: ReactNode }) {
+    if (de === "bloco") return <>{children}</>;
     if (de === "voce") {
         return (
             <div className="flex justify-end">

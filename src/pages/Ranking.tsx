@@ -715,7 +715,7 @@ const Ranking = () => {
                 <>
                     {/* Pódio top 3 — olímpico (2-1-3 em desktop, 1-2-3 em mobile) */}
                     {top3.length > 0 && (
-                        <div data-tour="ranking-section" className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-12 sm:items-end">
+                        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-12 sm:items-end">
                             {/* 2º — ordem 2 em mobile, esquerda em desktop com pequeno push down */}
                             <div className="order-2 sm:order-1 sm:col-span-4 sm:pt-6">
                                 <PodiumCard

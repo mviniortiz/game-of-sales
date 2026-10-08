@@ -23,7 +23,7 @@ import { DayTicks } from "@/components/quotes/DayTicks";
 import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
 import { useAuth } from "@/contexts/AuthContext";
 import { EVA_SETUP_PATH, setupDismissKey, useEvaSetup } from "@/hooks/useEvaSetup";
-import { EvaBot } from "@/components/eva/EvaBot";
+import { PrimeirosPassos } from "@/components/quotes/PrimeirosPassos";
 
 const PERIODS = [7, 30, 90] as const;
 type Period = (typeof PERIODS)[number];
@@ -117,9 +117,13 @@ export default function Orcamentos() {
         toast.success("Desfeito.");
         return;
       }
-      toast.success(vars.outcome === "won" ? "Marcado como fechado." : "Marcado como perdido.", {
-        action: { label: "Desfazer", onClick: () => outcome.mutate({ id: vars.id, outcome: null }) },
-      });
+      // Fechou depois da retomada da EVA: o dinheiro que voltou, com o valor real.
+      const item = board.data?.items.find((it) => it.id === vars.id);
+      const voltou = vars.outcome === "won" && item?.followup_sent_at && item.amount;
+      toast.success(
+        voltou ? `${brl(item.amount!)} de volta. Essa proposta fechou depois da retomada da EVA.` : vars.outcome === "won" ? "Marcado como fechado." : "Marcado como perdido.",
+        { action: { label: "Desfazer", onClick: () => outcome.mutate({ id: vars.id, outcome: null }) } },
+      );
     },
     onSettled: () => {
       if (!preview) qc.invalidateQueries({ queryKey: ["quote-board"] });
@@ -150,7 +154,9 @@ export default function Orcamentos() {
         <PeriodFilter value={days} onChange={setDays} />
       </header>
 
-      {!preview && setup.configured === false && isAdmin && <SetupBanner />}
+      {!preview && isAdmin && setup.companyId && setup.configured !== null && (
+        <PrimeirosPassos companyId={setup.companyId} configured={setup.configured} connected={wa.connected} />
+      )}
 
       {board.isLoading || (!data && !board.isError) ? (
         <BoardSkeleton />
@@ -185,22 +191,6 @@ export default function Orcamentos() {
 }
 
 // ─── Blocos ────────────────────────────────────────────────────────────────
-function SetupBanner() {
-  return (
-    <Link
-      to={EVA_SETUP_PATH}
-      className={`mt-4 flex items-center gap-3 rounded-2xl border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors duration-150 ${EASE} hover:bg-[var(--vyz-surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]`}
-    >
-      <EvaBot size={32} state="alert" />
-      <span className="min-w-0 flex-1">
-        <span className="block text-[14px] font-semibold text-[var(--vyz-text-strong)]">A EVA ainda não conhece sua empresa</span>
-        <span className="block text-[13px] text-[var(--vyz-text-muted)]">Uma conversa de 3 minutos e ela escreve as retomadas do seu jeito.</span>
-      </span>
-      <ArrowUpRight className="h-4 w-4 shrink-0 text-[var(--vyz-text-muted)]" aria-hidden />
-    </Link>
-  );
-}
-
 function PeriodFilter({ value, onChange }: { value: Period; onChange: (p: Period) => void }) {
   return (
     <div role="radiogroup" aria-label="Período" className="inline-flex rounded-full border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-0.5">

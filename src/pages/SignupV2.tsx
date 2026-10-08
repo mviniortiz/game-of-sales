@@ -8,7 +8,7 @@ import { trackBehavior, FUNNEL_EVENTS } from "@/lib/analytics";
 import { toast } from "sonner";
 import { ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
-import { CloudWaveOrb } from "@/components/landing-v2/CloudWaveOrb";
+import { AuthPreview } from "@/components/auth/AuthPreview";
 import { AuthField } from "@/components/auth/AuthField";
 import { scorePassword, STRENGTH_META } from "@/components/auth/password";
 import { APP_HOME } from "@/config/routes";
@@ -209,8 +209,8 @@ const SignupV2 = () => {
     // formulário de email — evita o flash do form errado antes do ssoMode ligar.
     if (authLoading) {
         return (
-            <div className="lp-v2" style={{ minHeight: "100vh", backgroundColor: "#07080A", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.95rem" }}>Carregando…</span>
+            <div className="lp-v2 vz-auth-claro" style={{ minHeight: "100vh", backgroundColor: "#F6F4EF", color: "#0B1220", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ color: "rgba(11,18,32,0.66)", fontSize: "0.95rem" }}>Carregando…</span>
             </div>
         );
     }
@@ -218,19 +218,19 @@ const SignupV2 = () => {
     // Conta criada, confirmação de email pendente: tela dedicada no lugar do form.
     if (confirmSentTo) {
         return (
-            <div className="lp-v2" style={{ minHeight: "100vh", backgroundColor: "#07080A", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+            <div className="lp-v2 vz-auth-claro" style={{ minHeight: "100vh", backgroundColor: "#F6F4EF", color: "#0B1220", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
                 <div className="w-full max-w-[420px] text-center">
                     <div style={{ display: "flex", justifyContent: "center" }}>
-                        <ThemeLogo variant="inverse" className="h-6 w-auto" />
+                        <ThemeLogo variant="default" className="h-6 w-auto" />
                     </div>
-                    <h1 className="lp-display mt-10" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.4rem)", lineHeight: 1.05, letterSpacing: "-0.03em", color: "#fff" }}>
+                    <h1 className="lp-display mt-10" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.4rem)", lineHeight: 1.05, letterSpacing: "-0.03em", color: "#0B1220" }}>
                         Confirme seu email
                     </h1>
-                    <p className="mt-4 text-[15px]" style={{ color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>
+                    <p className="mt-4 text-[15px]" style={{ color: "rgba(11,18,32,0.7)", lineHeight: 1.6 }}>
                         Sua conta foi criada. Enviamos um link de ativação para{" "}
-                        <strong style={{ color: "#fff", fontWeight: 600 }}>{confirmSentTo}</strong>. Clique nele para entrar e liberar seus 14 dias grátis.
+                        <strong style={{ color: "#0B1220", fontWeight: 600 }}>{confirmSentTo}</strong>. Clique nele para entrar e liberar seus 14 dias grátis.
                     </p>
-                    <p className="mt-4 text-[13px]" style={{ color: "rgba(255,255,255,0.4)", lineHeight: 1.55 }}>
+                    <p className="mt-4 text-[13px]" style={{ color: "rgba(11,18,32,0.58)", lineHeight: 1.55 }}>
                         Não chegou em alguns minutos? Confira a caixa de spam. O link expira em 24 horas.
                     </p>
                     <button
@@ -238,7 +238,7 @@ const SignupV2 = () => {
                         onClick={reenviarConfirmacao}
                         disabled={reenviando || reenvioCooldown > 0}
                         className="mt-6 inline-flex items-center gap-2 text-[13.5px] underline underline-offset-4 transition-opacity disabled:opacity-50"
-                        style={{ color: "rgba(255,255,255,0.65)" }}
+                        style={{ color: "rgba(11,18,32,0.74)" }}
                     >
                         {reenviando && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                         {reenvioCooldown > 0
@@ -250,7 +250,7 @@ const SignupV2 = () => {
                             type="button"
                             onClick={() => navigate("/auth")}
                             className="rounded-full px-6 py-3 text-[14px] font-semibold transition-opacity hover:opacity-90"
-                            style={{ background: "#fff", color: "#0B1220" }}
+                            style={{ background: "#fff", color: "#0B1220", border: "1px solid #D7DEE9" }}
                         >
                             Já confirmei, fazer login
                         </button>
@@ -261,7 +261,7 @@ const SignupV2 = () => {
     }
 
     return (
-        <div className="lp-v2" style={{ minHeight: "100vh", backgroundColor: "#07080A", color: "#fff" }}>
+        <div className="lp-v2 vz-auth-claro" style={{ minHeight: "100vh", backgroundColor: "#F6F4EF", color: "#0B1220" }}>
             <div className="grid min-h-screen lg:grid-cols-[0.88fr_1.12fr]">
                 <div className="relative flex flex-col px-6 py-8 sm:px-12 sm:py-10">
                     <div className="flex items-center gap-3 self-start landing-fade-in-up">
@@ -270,16 +270,16 @@ const SignupV2 = () => {
                             className="flex items-center opacity-90 transition-opacity hover:opacity-100"
                             aria-label="Vyzon"
                         >
-                            <ThemeLogo variant="inverse" className="h-6 w-auto" />
+                            <ThemeLogo variant="default" className="h-6 w-auto" />
                         </button>
-                        <span className="h-4 w-px" style={{ background: "rgba(255,255,255,0.18)" }} aria-hidden />
+                        <span className="h-4 w-px" style={{ background: "rgba(11,18,32,0.14)" }} aria-hidden />
                         <button
                             type="button"
                             onClick={() => navigate("/")}
                             className="inline-flex items-center gap-1.5 text-[13px] font-medium transition-colors"
-                            style={{ color: "rgba(255,255,255,0.5)" }}
-                            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
-                            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
+                            style={{ color: "rgba(11,18,32,0.62)" }}
+                            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(11,18,32,0.9)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(11,18,32,0.62)")}
                         >
                             <ArrowLeft className="h-3.5 w-3.5" />
                             Voltar ao site
@@ -288,16 +288,16 @@ const SignupV2 = () => {
 
                     <div className="flex flex-1 items-center">
                         <div className="mx-auto w-full max-w-[380px] py-12">
-                            <h1 className="lp-display landing-fade-in-up landing-delay-100" style={{ fontSize: "clamp(2.3rem, 4vw, 2.9rem)", lineHeight: 1, letterSpacing: "-0.03em", color: "#fff" }}>
+                            <h1 className="lp-display landing-fade-in-up landing-delay-100" style={{ fontSize: "clamp(2.3rem, 4vw, 2.9rem)", lineHeight: 1, letterSpacing: "-0.03em", color: "#0B1220" }}>
                                 {ssoMode ? "Quase lá" : "Criar conta"}
                             </h1>
-                            <p className="mt-2.5 landing-fade-in-up landing-delay-150" style={{ color: "rgba(255,255,255,0.55)", fontSize: "1rem" }}>
-                                {ssoMode ? "Só falta o nome da sua empresa." : "14 dias grátis, sem cartão, com tudo liberado."}
+                            <p className="mt-2.5 landing-fade-in-up landing-delay-150" style={{ color: "rgba(11,18,32,0.66)", fontSize: "1rem" }}>
+                                {ssoMode ? "Só falta o nome da sua empresa." : "Passo 1 de 4. 14 dias grátis, sem cartão, com tudo liberado."}
                             </p>
 
                             {!ssoMode && (
                                 <>
-                                    <button type="button" onClick={handleGoogle} disabled={busy} className="mt-9 flex w-full items-center justify-center gap-2.5 rounded-full py-3 text-[14px] font-semibold transition-transform active:scale-[0.98] disabled:opacity-50 landing-fade-in-up landing-delay-200" style={{ background: "#fff", color: "#0B1220" }}>
+                                    <button type="button" onClick={handleGoogle} disabled={busy} className="mt-9 flex w-full items-center justify-center gap-2.5 rounded-full py-3 text-[14px] font-semibold transition-transform active:scale-[0.98] disabled:opacity-50 landing-fade-in-up landing-delay-200" style={{ background: "#fff", color: "#0B1220", border: "1px solid #D7DEE9" }}>
                                         {loading ? (
                                             <>
                                                 <Loader2 className="h-4 w-4 animate-spin" style={{ color: "#0B1220" }} />
@@ -311,9 +311,9 @@ const SignupV2 = () => {
                                         )}
                                     </button>
                                     <div className="my-6 flex items-center gap-3">
-                                        <span className="h-px flex-1" style={{ background: "rgba(255,255,255,0.12)" }} />
-                                        <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>ou com email</span>
-                                        <span className="h-px flex-1" style={{ background: "rgba(255,255,255,0.12)" }} />
+                                        <span className="h-px flex-1" style={{ background: "rgba(11,18,32,0.1)" }} />
+                                        <span className="text-[11px]" style={{ color: "rgba(11,18,32,0.58)" }}>ou com email</span>
+                                        <span className="h-px flex-1" style={{ background: "rgba(11,18,32,0.1)" }} />
                                     </div>
                                 </>
                             )}
@@ -369,9 +369,9 @@ const SignupV2 = () => {
                                                         onClick={() => setShowSenha((s) => !s)}
                                                         aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
                                                         className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
-                                                        style={{ color: "rgba(255,255,255,0.4)" }}
-                                                        onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.8)")}
-                                                        onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
+                                                        style={{ color: "rgba(11,18,32,0.58)" }}
+                                                        onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(11,18,32,0.86)")}
+                                                        onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(11,18,32,0.58)")}
                                                     >
                                                         {showSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                                     </button>
@@ -388,7 +388,7 @@ const SignupV2 = () => {
                                                             />
                                                         ))}
                                                     </div>
-                                                    <span className="text-[11.5px]" style={{ color: "rgba(255,255,255,0.45)" }}>
+                                                    <span className="text-[11.5px]" style={{ color: "rgba(11,18,32,0.6)" }}>
                                                         {STRENGTH_META[scorePassword(senha)].label}
                                                     </span>
                                                 </div>
@@ -399,13 +399,13 @@ const SignupV2 = () => {
 
                                 {erros.form && (
                                     <div key={`f${erroKey}`} className="vz-shake rounded-xl px-3.5 py-2.5" style={{ background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.25)" }} role="alert">
-                                        <p className="text-[13px]" style={{ color: "#FDA4AF" }}>{erros.form}</p>
+                                        <p className="text-[13px]" style={{ color: "#BE123C" }}>{erros.form}</p>
                                         {erros.formAction === "login" && (
                                             <button
                                                 type="button"
                                                 onClick={() => navigate("/auth", { state: { email: email.trim() } })}
                                                 className="mt-1 text-[12.5px] underline underline-offset-4"
-                                                style={{ color: "rgba(255,255,255,0.7)" }}
+                                                style={{ color: "rgba(11,18,32,0.78)" }}
                                             >
                                                 Fazer login com este email
                                             </button>
@@ -413,7 +413,7 @@ const SignupV2 = () => {
                                     </div>
                                 )}
 
-                                <button type="submit" disabled={busy} className="vz-btn vz-btn--light mt-3 w-full disabled:opacity-50">
+                                <button type="submit" disabled={busy} className="vz-btn vz-btn--primary mt-3 w-full disabled:opacity-50">
                                     {loading ? (
                                         <span className="flex items-center justify-center gap-2">
                                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -426,9 +426,9 @@ const SignupV2 = () => {
                             </form>
 
                             {!ssoMode && (
-                                <p className="mt-10 text-[13px]" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                <p className="mt-10 text-[13px]" style={{ color: "rgba(11,18,32,0.58)" }}>
                                     Já tem conta?{" "}
-                                    <button type="button" onClick={() => navigate("/auth")} style={{ color: "rgba(255,255,255,0.82)", fontWeight: 500 }} className="hover:underline">
+                                    <button type="button" onClick={() => navigate("/auth")} style={{ color: "rgba(11,18,32,0.88)", fontWeight: 500 }} className="hover:underline">
                                         Entrar
                                     </button>
                                 </p>
@@ -438,7 +438,7 @@ const SignupV2 = () => {
                 </div>
 
                 <div className="relative hidden p-4 sm:p-5 lg:block landing-fade-in landing-delay-200">
-                    <CloudWaveOrb palette="login" className="h-full w-full rounded-[30px]" />
+                    <AuthPreview modo="cadastro" />
                 </div>
             </div>
         </div>

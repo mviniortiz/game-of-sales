@@ -10,6 +10,8 @@
 import { detectQuote, pickProposalAmount } from "./quoteDetection.ts";
 
 export type RxMessage = {
+    /** channel_messages.id; o placar usa para gravar a proposta (quote-seed-history). */
+    id?: string;
     conversation_id: string;
     direction: "inbound" | "outbound";
     message_type: string;
@@ -25,6 +27,7 @@ export type RxStatus = "no_reply" | "went_quiet" | "your_turn" | "talking";
 
 export type RxItem = {
     conversation_id: string;
+    message_id: string | null;
     quote_at: string;
     detected_by: "pdf" | "text";
     status: RxStatus;
@@ -129,6 +132,7 @@ export function analyzeConversation(msgs: RxMessage[], now = Date.now()): RxItem
 
     const item: RxItem = {
         conversation_id: quote.conversation_id,
+        message_id: quote.id ?? null,
         quote_at: quote.ts,
         detected_by: detection.detectedBy,
         status,

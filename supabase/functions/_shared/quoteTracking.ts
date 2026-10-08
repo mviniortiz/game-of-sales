@@ -96,81 +96,16 @@ export async function trackOutboundQuote(admin: any, q: OutboundQuoteInput): Pro
             .neq("status", "closed")
             .neq("id", quoteId);
 
-        const { data: conv } = await admin
-            .from("channel_conversations")
-            .select("deal_id, contact_id")
-            .eq("id", q.conversationId)
-            .maybeSingle();
-
-        let dealId: string | null = conv?.deal_id || null;
-        if (dealId) {
-            if (quote.amount) {
-                await admin
-                    .from("deals")
-                    .update({ value: quote.amount })
-                    .eq("id", dealId)
-                    .or("value.is.null,value.eq.0");
-            }
-        } else {
-            const contactId = conv?.contact_id || q.contactId;
-            const { data: contact } = contactId
-                ? await admin.from("channel_contacts").select("name, phone_e164").eq("id", contactId).maybeSingle()
-                : { data: null };
-            const phone = (contact?.phone_e164 as string | null) || q.chatPhone || null;
-            const name = (contact?.name as string | null)?.trim() || (phone ? `+${phone}` : "Contato WhatsApp");
-
-            const ownerId = q.userId || (await companyOwner(admin, q.companyId));
-            if (!ownerId) {
-                console.warn(`[quote] empresa ${q.companyId} sem usuário: rastreio ${quoteId} fica sem card`);
-                return;
-            }
-
-            // Mesmo shape do useCreateOpportunityFromConversation, com stage 'proposal'.
-            const dealInsert: Record<string, unknown> = {
-                title: `${name} · orçamento`,
-                customer_name: name,
-                customer_phone: phone,
-                stage: "proposal",
-                user_id: ownerId,
-                company_id: q.companyId,
-                additional_contacts: phone ? [{ phone }] : [],
-                lead_source: "whatsapp",
-                source: "quote_tracking",
-            };
-            if (quote.amount) dealInsert.value = quote.amount;
-
-            const { data: deal, error: dealErr } = await admin
-                .from("deals")
-                .insert(dealInsert)
-                .select("id")
-                .single();
-            if (dealErr || !deal?.id) {
-                console.warn("[quote] criação do card falhou:", dealErr?.message);
-                return;
-            }
-            dealId = deal.id as string;
-
-            // Não sobrescreve vínculo feito em paralelo; se perder a corrida, usa o vencedor.
-            const { data: linked } = await admin
-                .from("channel_conversations")
-                .update({ deal_id: dealId })
-                .eq("id", q.conversationId)
-                .is("deal_id", null)
-                .select("id");
-            if (!linked?.length) {
-                const { data: again } = await admin
-                    .from("channel_conversations")
-                    .select("deal_id")
-                    .eq("id", q.conversationId)
-                    .maybeSingle();
-                if (again?.deal_id && again.deal_id !== dealId) {
-                    await admin.from("deals").delete().eq("id", dealId);
-                    dealId = again.deal_id as string;
-                }
-            }
-        }
-
-        await admin.from("quote_tracking").update({ deal_id: dealId }).eq("id", quoteId);
+        const dealId = await linkQuoteToDeal(admin, {
+            quoteId,
+            companyId: q.companyId,
+            userId: q.userId,
+            conversationId: q.conversationId,
+            contactId: q.contactId,
+            chatPhone: q.chatPhone,
+            amount: quote.amount,
+        });
+        if (!dealId) return;
         console.log(`[quote] rastreio ${quoteId} conversa=${q.conversationId} deal=${dealId} via=${quote.detectedBy} valor=${quote.amount ?? "-"}`);
 
         // PDF sem valor na legenda: o preço está dentro do arquivo.
@@ -185,4 +120,96 @@ export async function trackOutboundQuote(admin: any, q: OutboundQuoteInput): Pro
     } catch (e) {
         console.warn("[quote] ignorado (erro):", (e as { message?: string })?.message || e);
     }
+}
+
+export type QuoteDealLink = {
+    quoteId: string;
+    companyId: string;
+    userId: string | null;
+    conversationId: string;
+    contactId: string | null;
+    chatPhone: string | null;
+    amount: number | null;
+};
+
+// Liga o rastreio ao card da conversa; sem card, cria um no estágio Proposta.
+// Usado pelo rastreio ao vivo e pela gravação do histórico (quote-seed-history).
+// deno-lint-ignore no-explicit-any
+export async function linkQuoteToDeal(admin: any, l: QuoteDealLink): Promise<string | null> {
+    const { data: conv } = await admin
+        .from("channel_conversations")
+        .select("deal_id, contact_id")
+        .eq("id", l.conversationId)
+        .maybeSingle();
+
+    let dealId: string | null = conv?.deal_id || null;
+    if (dealId) {
+        if (l.amount) {
+            await admin
+                .from("deals")
+                .update({ value: l.amount })
+                .eq("id", dealId)
+                .or("value.is.null,value.eq.0");
+        }
+    } else {
+        const contactId = conv?.contact_id || l.contactId;
+        const { data: contact } = contactId
+            ? await admin.from("channel_contacts").select("name, phone_e164").eq("id", contactId).maybeSingle()
+            : { data: null };
+        const phone = (contact?.phone_e164 as string | null) || l.chatPhone || null;
+        const name = (contact?.name as string | null)?.trim() || (phone ? `+${phone}` : "Contato WhatsApp");
+
+        const ownerId = l.userId || (await companyOwner(admin, l.companyId));
+        if (!ownerId) {
+            console.warn(`[quote] empresa ${l.companyId} sem usuário: rastreio ${l.quoteId} fica sem card`);
+            return null;
+        }
+
+        // Mesmo shape do useCreateOpportunityFromConversation, com stage 'proposal'.
+        const dealInsert: Record<string, unknown> = {
+            title: `${name} · orçamento`,
+            customer_name: name,
+            customer_phone: phone,
+            stage: "proposal",
+            user_id: ownerId,
+            company_id: l.companyId,
+            additional_contacts: phone ? [{ phone }] : [],
+            lead_source: "whatsapp",
+            source: "quote_tracking",
+        };
+        if (l.amount) dealInsert.value = l.amount;
+
+        const { data: deal, error: dealErr } = await admin
+            .from("deals")
+            .insert(dealInsert)
+            .select("id")
+            .single();
+        if (dealErr || !deal?.id) {
+            console.warn("[quote] criação do card falhou:", dealErr?.message);
+            return null;
+        }
+        dealId = deal.id as string;
+
+        // Não sobrescreve vínculo feito em paralelo; se perder a corrida, usa o vencedor.
+        const { data: linked } = await admin
+            .from("channel_conversations")
+            .update({ deal_id: dealId })
+            .eq("id", l.conversationId)
+            .is("deal_id", null)
+            .select("id");
+        if (!linked?.length) {
+            const { data: again } = await admin
+                .from("channel_conversations")
+                .select("deal_id")
+                .eq("id", l.conversationId)
+                .maybeSingle();
+            if (again?.deal_id && again.deal_id !== dealId) {
+                await admin.from("deals").delete().eq("id", dealId);
+                dealId = again.deal_id as string;
+            }
+        }
+    }
+
+    await admin.from("quote_tracking").update({ deal_id: dealId }).eq("id", l.quoteId);
+    return dealId;
 }

@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
-import { CloudWaveOrb } from "@/components/landing-v2/CloudWaveOrb";
+import { AuthPreview } from "@/components/auth/AuthPreview";
 import { AuthField } from "@/components/auth/AuthField";
 import { APP_HOME } from "@/config/routes";
 
@@ -97,7 +97,7 @@ const LoginV2 = () => {
     const busy = loading || authLoading;
 
     return (
-        <div className="lp-v2" style={{ minHeight: "100vh", backgroundColor: "#07080A", color: "#fff" }}>
+        <div className="lp-v2 vz-auth-claro" style={{ minHeight: "100vh", backgroundColor: "#F6F4EF", color: "#0B1220" }}>
             <div className="grid min-h-screen lg:grid-cols-[0.88fr_1.12fr]">
                 {/* ── Coluna do formulário ───────────────────────────── */}
                 <div className="relative flex flex-col px-6 py-8 sm:px-12 sm:py-10">
@@ -108,16 +108,16 @@ const LoginV2 = () => {
                             aria-label="Vyzon"
                            
                         >
-                            <ThemeLogo variant="inverse" className="h-6 w-auto" />
+                            <ThemeLogo variant="default" className="h-6 w-auto" />
                         </button>
-                        <span className="h-4 w-px" style={{ background: "rgba(255,255,255,0.18)" }} aria-hidden />
+                        <span className="h-4 w-px" style={{ background: "rgba(11,18,32,0.14)" }} aria-hidden />
                         <button
                             type="button"
                             onClick={() => navigate("/")}
                             className="inline-flex items-center gap-1.5 text-[13px] font-medium transition-colors"
-                            style={{ color: "rgba(255,255,255,0.5)" }}
-                            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
-                            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
+                            style={{ color: "rgba(11,18,32,0.62)" }}
+                            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(11,18,32,0.9)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(11,18,32,0.62)")}
                         >
                             <ArrowLeft className="h-3.5 w-3.5" />
                             Voltar ao site
@@ -126,10 +126,10 @@ const LoginV2 = () => {
 
                     <div className="flex flex-1 items-center">
                         <div className="mx-auto w-full max-w-[380px] py-12">
-                            <h1 className="lp-display landing-fade-in-up landing-delay-100" style={{ fontSize: "clamp(2.3rem, 4vw, 2.9rem)", lineHeight: 1, letterSpacing: "-0.03em", color: "#fff" }}>
+                            <h1 className="lp-display landing-fade-in-up landing-delay-100" style={{ fontSize: "clamp(2.3rem, 4vw, 2.9rem)", lineHeight: 1, letterSpacing: "-0.03em", color: "#0B1220" }}>
                                 Entrar
                             </h1>
-                            <p className="mt-2.5 landing-fade-in-up landing-delay-150" style={{ color: "rgba(255,255,255,0.55)", fontSize: "1rem" }}>
+                            <p className="mt-2.5 landing-fade-in-up landing-delay-150" style={{ color: "rgba(11,18,32,0.66)", fontSize: "1rem" }}>
                                 Acesse suas propostas e conversas.
                             </p>
 
@@ -138,7 +138,7 @@ const LoginV2 = () => {
                                 onClick={handleGoogle}
                                 disabled={busy || googleLoading}
                                 className="mt-9 flex w-full items-center justify-center gap-2.5 rounded-full py-3 text-[14px] font-semibold transition-transform active:scale-[0.98] disabled:opacity-50 landing-fade-in-up landing-delay-200"
-                                style={{ background: "#fff", color: "#0B1220" }}
+                                style={{ background: "#fff", color: "#0B1220", border: "1px solid #D7DEE9" }}
                             >
                                 {googleLoading ? (
                                     <>
@@ -154,9 +154,9 @@ const LoginV2 = () => {
                             </button>
 
                             <div className="my-6 flex items-center gap-3 landing-fade-in-up landing-delay-250">
-                                <span className="h-px flex-1" style={{ background: "rgba(255,255,255,0.12)" }} />
-                                <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>ou com email</span>
-                                <span className="h-px flex-1" style={{ background: "rgba(255,255,255,0.12)" }} />
+                                <span className="h-px flex-1" style={{ background: "rgba(11,18,32,0.1)" }} />
+                                <span className="text-[11px]" style={{ color: "rgba(11,18,32,0.58)" }}>ou com email</span>
+                                <span className="h-px flex-1" style={{ background: "rgba(11,18,32,0.1)" }} />
                             </div>
 
                             <form className="flex flex-col gap-5 landing-fade-in-up landing-delay-300" onSubmit={onSubmit} noValidate>
@@ -189,9 +189,9 @@ const LoginV2 = () => {
                                             onClick={() => setShowSenha((s) => !s)}
                                             aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
                                             className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
-                                            style={{ color: "rgba(255,255,255,0.4)" }}
-                                            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.8)")}
-                                            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
+                                            style={{ color: "rgba(11,18,32,0.58)" }}
+                                            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(11,18,32,0.86)")}
+                                            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(11,18,32,0.58)")}
                                         >
                                             {showSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                         </button>
@@ -205,13 +205,13 @@ const LoginV2 = () => {
 
                                 {erros.form && (
                                     <div key={`f${erroKey}`} className="vz-shake rounded-xl px-3.5 py-2.5" style={{ background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.25)" }} role="alert">
-                                        <p className="text-[13px]" style={{ color: "#FDA4AF" }}>{erros.form}</p>
+                                        <p className="text-[13px]" style={{ color: "#BE123C" }}>{erros.form}</p>
                                         {erros.form.includes("inválidos") && (
                                             <button
                                                 type="button"
                                                 onClick={() => navigate("/recuperar-senha", { state: { email: email.trim() } })}
                                                 className="mt-1 text-[12.5px] underline underline-offset-4"
-                                                style={{ color: "rgba(255,255,255,0.7)" }}
+                                                style={{ color: "rgba(11,18,32,0.78)" }}
                                             >
                                                 Recuperar senha com este email
                                             </button>
@@ -219,7 +219,7 @@ const LoginV2 = () => {
                                     </div>
                                 )}
 
-                                <button type="submit" disabled={busy} className="vz-btn vz-btn--light mt-3 w-full disabled:opacity-50">
+                                <button type="submit" disabled={busy} className="vz-btn vz-btn--primary mt-3 w-full disabled:opacity-50">
                                     {loading ? (
                                         <span className="flex items-center justify-center gap-2">
                                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -234,17 +234,17 @@ const LoginV2 = () => {
                                     type="button"
                                     onClick={() => navigate("/recuperar-senha", { state: { email: email.trim() } })}
                                     className="self-center text-[13px] transition-colors"
-                                    style={{ color: "rgba(255,255,255,0.5)" }}
-                                    onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
-                                    onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
+                                    style={{ color: "rgba(11,18,32,0.62)" }}
+                                    onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(11,18,32,0.9)")}
+                                    onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(11,18,32,0.62)")}
                                 >
                                     Esqueci minha senha
                                 </button>
                             </form>
 
-                            <p className="mt-10 text-[13px] landing-fade-in-up landing-delay-400" style={{ color: "rgba(255,255,255,0.4)" }}>
+                            <p className="mt-10 text-[13px] landing-fade-in-up landing-delay-400" style={{ color: "rgba(11,18,32,0.58)" }}>
                                 Ainda não tem conta?{" "}
-                                <button type="button" onClick={() => navigate("/criar-conta?plan=pro", { state: { email: email.trim() } })} style={{ color: "rgba(255,255,255,0.82)", fontWeight: 500 }} className="hover:underline">
+                                <button type="button" onClick={() => navigate("/criar-conta?plan=pro", { state: { email: email.trim() } })} style={{ color: "rgba(11,18,32,0.88)", fontWeight: 500 }} className="hover:underline">
                                     Criar conta grátis
                                 </button>
                             </p>
@@ -252,23 +252,8 @@ const LoginV2 = () => {
                     </div>
                 </div>
 
-                {/* ── Coluna visual: orb + cartão de rascunho (o produto na porta) ── */}
                 <div className="relative hidden p-4 sm:p-5 lg:block">
-                    <CloudWaveOrb palette="login" className="h-full w-full rounded-[30px]" />
-                    {/* scrim: garante leitura do texto sobre a parte clara do orb */}
-                    <div
-                        aria-hidden="true"
-                        className="pointer-events-none absolute inset-x-5 bottom-5 h-[62%] rounded-b-[30px]"
-                        style={{ background: "linear-gradient(to top, rgba(4,8,20,0.62) 22%, rgba(4,8,20,0.28) 55%, transparent)" }}
-                    />
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col p-10 xl:p-14">
-                        <p className="lp-mono mb-3" style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, letterSpacing: "0.08em" }}>
-                            VYZON
-                        </p>
-                        <p className="lp-display max-w-md" style={{ fontSize: "clamp(1.5rem, 2.2vw, 2rem)", lineHeight: 1.15, letterSpacing: "-0.02em", color: "#fff" }}>
-                            A EVA cuida do operacional. Você aprova o que sai.
-                        </p>
-                    </div>
+                    <AuthPreview modo="login" />
                 </div>
             </div>
         </div>

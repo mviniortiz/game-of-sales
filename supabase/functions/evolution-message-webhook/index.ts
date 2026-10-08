@@ -793,6 +793,15 @@ async function handleMessagesSet(payload: any): Promise<Response> {
     if (!connectionId) return;
     const r = await importHistoryMessages(admin, { instanceName, companyId, userId, connectionId, messages });
     console.log(`[history] instance=${instanceName} progress=${payload.progress ?? "-"} received=${messages.length} chats=${r.importedChats} msgs=${r.importedMessages} old=${r.skippedOld} groups=${r.skippedGroups} errors=${r.errors}`);
+    // Propostas antigas entram no placar (a função espaça as rodadas sozinha).
+    if (r.importedMessages > 0) {
+      const seed = await fetch(`${SUPABASE_URL}/functions/v1/quote-seed-history`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ company_id: companyId, user_id: userId }),
+      });
+      console.log(`[history] placar: ${seed.status} ${(await seed.text()).slice(0, 160)}`);
+    }
   })().catch((err) => console.error("[history] import failed:", (err as any)?.message));
   try { (globalThis as any).EdgeRuntime?.waitUntil?.(task); } catch { /* noop */ }
   return json(200, { ok: true, received: messages.length });

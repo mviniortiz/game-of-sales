@@ -5091,3 +5091,22 @@ html.lenis, html.lenis body { height: auto; }
   .lp-v2 .vzhc-lead, .lp-v2 .vzhc-card { opacity: 1; }
   .lp-v2 .vzhc-sent { opacity: 0; }
 }
+
+/* Cadastro e login claros, na marca (out/2026). As telas de senha seguem escuras. */
+.vz-auth-claro { --auth-label: #475569; --auth-erro: #BE123C; }
+.vz-auth-claro .vz-input {
+  background: #ffffff;
+  border-color: #D7DEE9;
+  color: #0B1220;
+  font-size: 16px;
+}
+.vz-auth-claro .vz-input::placeholder { color: #94A3B8; }
+.vz-auth-claro .vz-input:hover { border-color: #B8C3D3; }
+.vz-auth-claro .vz-input:focus {
+  border-color: #2563EB;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+.vz-auth-claro .vz-input--error,
+.vz-auth-claro .vz-input--error:hover { border-color: rgba(190, 18, 60, 0.6); }
+.vz-auth-claro .vz-strength__seg { background: #E2E8F0; }

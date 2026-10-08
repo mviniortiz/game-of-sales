@@ -41,7 +41,7 @@ export const AuthField = ({
 
     return (
         <div className="flex flex-col gap-2">
-            <label htmlFor={id} className="text-[12.5px]" style={{ color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>
+            <label htmlFor={id} className="text-[12.5px]" style={{ color: "var(--auth-label, rgba(255,255,255,0.55))", fontWeight: 500 }}>
                 {label}
             </label>
             <div className={error ? "vz-shake" : undefined} key={error ? `e${errorKey}` : "ok"}>
@@ -68,7 +68,7 @@ export const AuthField = ({
                 </div>
             </div>
             {error && (
-                <p id={errorId} role="alert" className="text-[12.5px]" style={{ color: "#FB7185", lineHeight: 1.4 }}>
+                <p id={errorId} role="alert" className="text-[12.5px]" style={{ color: "var(--auth-erro, #FB7185)", lineHeight: 1.4 }}>
                     {error}
                 </p>
             )}
