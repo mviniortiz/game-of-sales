@@ -20,6 +20,9 @@
         if (loaded) return;
         loaded = true;
         cleanup();
+        // Só no site no ar: teste local sujava as gravações do Clarity e
+        // mandava visita falsa para o pixel da campanha.
+        if (!/(^|\.)vyzon\.com\.br$/.test(location.hostname)) return;
 
         // gtag.js é carregado por src/lib/analytics.ts (initAnalytics) —
         // não duplicar aqui, senão conversions disparam 2x.
