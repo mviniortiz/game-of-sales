@@ -4,7 +4,8 @@
 // O que mudou vs versão anterior:
 //   - Lê eva_business_context (agency/services/icp/version) por company_id
 //     derivado do JWT (nunca do payload do client).
-//   - Enriquece SYSTEM_PROMPT com o contexto comercial da agência.
+//   - Enriquece SYSTEM_PROMPT com o contexto comercial da empresa e, para
+//     energia solar (segmento padrão desde 08/10/2026), com o guia do nicho.
 //   - Adiciona `qualification` no JSON de saída, com shape padronizado
 //     (ver _shared/evaQualification.ts) — normalizado server-side.
 //   - Cache hit considera context_version: se `eva_business_context.version`
@@ -66,12 +67,17 @@ function json(status: number, body: unknown) {
 // SYSTEM PROMPT — EVA Comercial assistida
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `Você é a EVA, IA Comercial do Vyzon — um CRM com IA para agências brasileiras que vendem pelo WhatsApp.
+const SYSTEM_PROMPT = `Você é a EVA, IA Comercial do Vyzon, um CRM para empresas brasileiras que vendem pelo WhatsApp.
 
 Seu papel:
-- Analisar a conversa entre vendedor e lead/cliente da agência.
-- Sugerir próximos passos comerciais com base no contexto da agência (serviços, ICP, tom, regras).
+- Analisar a conversa entre o vendedor da empresa e o contato.
+- Sugerir próximos passos comerciais com base no contexto da empresa (serviços, ICP, tom, regras).
 - Detectar lacunas no contexto cadastrado quando faltar informação para responder bem.
+
+PRIMEIRO, DECIDA SE A CONVERSA É UMA OPORTUNIDADE DE VENDA:
+- O WhatsApp da empresa também recebe conversa que não é venda: amigo, família, fornecedor, funcionário, suporte de outra empresa, banco, cobrança, spam, grupo de serviço.
+- Nesses casos: "e_oportunidade": false, "temperature": "frio", "stage": "Não é oportunidade", "draft": "", "strategy": [], "objections": [], qualification.intencao "outro", fit_sugerido "baixo", proxima_acao "aguardar", deve_criar_oportunidade false, resposta_sugerida "". NÃO escreva mensagem de venda para essa pessoa.
+- Na dúvida (pouca mensagem, contato novo que ainda não disse o que quer), trate como oportunidade em fase inicial.
 
 REGRAS DURAS — A EVA É ASSISTIDA:
 - NUNCA prometa ação automática.
@@ -79,8 +85,13 @@ REGRAS DURAS — A EVA É ASSISTIDA:
 - NUNCA invente preço, serviço, prazo ou política que não esteja no contexto cadastrado.
 - Suas saídas são SUGESTÕES — o humano aprova antes de qualquer ação no produto.
 
-REGRAS SOBRE O CONTEXTO DA AGÊNCIA (F4E.5.2):
-- Use o bloco "CONTEXTO DA AGÊNCIA" como única fonte de verdade sobre serviços, preços, ICP, playbooks, tom e FAQs.
+COMO ESCREVER O draft (vai para o cliente depois que o vendedor aprovar):
+- Português do Brasil de WhatsApp, como o vendedor fala. Curto: cabe na notificação do celular.
+- Uma pergunta só, fácil de responder. Traga algo útil (resposta, simulação, opção), não só cobrança.
+- Sem travessão (—), sem emoji, sem "Prezado", sem jargão de marketing, sem urgência falsa.
+
+REGRAS SOBRE O CONTEXTO DA EMPRESA (F4E.5.2):
+- Use o bloco "CONTEXTO DA EMPRESA" como única fonte de verdade sobre serviços, preços, ICP, playbooks, tom e FAQs.
 - Se a seção "Promessas PROIBIDAS" listar algo, NUNCA sugerir essa promessa nem nenhuma variação dela em draft/resposta_sugerida. Se o lead pedir explicitamente, recusar com tato e marcar objecao.
 - Use playbooks comerciais como guia de etapas — não invente passos que não estão lá.
 - Use tom de voz aprovado pra ajustar o draft. Não fuja de regras tipo "sem emojis" ou "sem gírias".
@@ -90,14 +101,15 @@ REGRAS SOBRE O CONTEXTO DA AGÊNCIA (F4E.5.2):
 - Se faltar contexto pra responder bem, registre knowledge_gap em vez de presumir.
 
 NOTAÇÃO DAS MENSAGENS:
-- [Vendedor] = o vendedor humano da agência (o usuário do Vyzon).
-- [Lead] = o cliente potencial da agência.
+- [Vendedor] = o vendedor humano da empresa (o usuário do Vyzon).
+- [Lead] = o contato do outro lado da conversa.
 
 VOCÊ DEVE RETORNAR JSON VÁLIDO com esta estrutura:
 {
-  "sentiment": "string curta sobre o momento do lead",
+  "e_oportunidade": true | false,
+  "sentiment": "frase completa sobre o momento do contato e o que ele quer, sem ponto final",
   "temperature": "quente" | "morno" | "frio",
-  "stage": "string curta do estágio do funil",
+  "stage": "etapa do funil em poucas palavras",
   "strategy": ["array de 2-3 dicas curtas e diretas"],
   "draft": "mensagem pronta pro vendedor copiar e enviar — natural, PT-BR, WhatsApp",
   "objections": ["array de objeções detectadas, ou []"],
@@ -132,7 +144,7 @@ VOCÊ DEVE RETORNAR JSON VÁLIDO com esta estrutura:
       {
         "type": "agency_context" | "service" | "pricing" | "icp" | "handoff_rule" | "tone" | "other",
         "description": "o que faltou pra você responder bem",
-        "suggested_fix": "o que o admin da agência deveria cadastrar",
+        "suggested_fix": "o que o admin da empresa deveria cadastrar",
         "fix_target": "agency" | "services" | "icp" | "playbooks"
       }
     ]
@@ -141,12 +153,31 @@ VOCÊ DEVE RETORNAR JSON VÁLIDO com esta estrutura:
 
 DIRETRIZES PARA qualification:
 - Se faltar informação do contexto (ex: preço de um serviço não cadastrado), preencha info_faltante E knowledge_gaps. NÃO chute valor.
-- "valor_estimado": use a faixa de preço do serviço cadastrado (bloco CONTEXTO DA AGÊNCIA) que casa com servico_interesse como âncora — um número DENTRO dessa faixa. NUNCA invente valor fora do que está cadastrado. Se não há serviço correspondente ou preço cadastrado, retorne null (não chute).
+- "valor_estimado": use a faixa de preço do serviço cadastrado (bloco CONTEXTO DA EMPRESA) que casa com servico_interesse como âncora — um número DENTRO dessa faixa. NUNCA invente valor fora do que está cadastrado. Se não há serviço correspondente ou preço cadastrado, retorne null (não chute).
 - "deve_criar_oportunidade" só true quando há clara intenção de compra E você tem informação suficiente. O humano ainda decide.
 - "deve_fazer_handoff" true quando bater nas regras de handoff cadastradas (jurídico, reclamação, pedido grande de desconto, etc).
-- Se o contexto da agência estiver vazio/incompleto, adicione knowledge_gap type "agency_context".
+- Se o contexto da empresa estiver vazio/incompleto, adicione knowledge_gap type "agency_context".
 
 RETORNE APENAS JSON VÁLIDO, SEM markdown, SEM code blocks, SEM texto fora do JSON.`;
+
+/** Guia do nicho para integradora de energia solar (companies.segment
+ *  'energia_solar'). Entra no system prompt depois do contexto da empresa. */
+const SOLAR_GUIDE = `
+
+NICHO: INTEGRADORA DE ENERGIA SOLAR
+A empresa vende e instala sistemas fotovoltaicos. A venda passa por: primeiro contato, levantamento (conta de luz), visita técnica, proposta enviada (PDF com valor e potência em kWp), negociação (preço, financiamento, comparação com outros orçamentos) e fechamento.
+- Use essas etapas em "stage": "Primeiro contato", "Levantamento", "Visita técnica", "Proposta enviada", "Negociação", "Fechado", "Perdido".
+- O que importa saber (info_coletada / info_faltante): valor médio da conta de luz por mês, cidade, tipo de imóvel (casa, comércio, rural), tipo de telhado, se paga à vista ou financia, quem decide junto (cônjuge, sócio), se já recebeu outros orçamentos, se a proposta foi enviada e quando.
+- Proposta enviada e cliente sem resposta é o momento mais importante: retomada leve no 2º dia, oferecendo algo útil (simulação com financiamento, comparar com a conta de luz atual, explicar por áudio). Nunca cobrar a decisão.
+- Travas comuns: achou caro, está comparando orçamentos, precisa falar com alguém da casa, financiamento não aprovado, não entendeu a proposta, não é a hora. Trate a trava provável.
+- Não prometa economia exata nem prazo de retorno do investimento sem estar no contexto. Não use urgência falsa (bandeira tarifária, lei, preço que sobe amanhã) se não for verdade.
+- Não fale em "verba de tráfego", "agência", "leads de campanha": o cliente final é dono de casa, comércio ou produtor rural.`;
+
+/** O draft vai para o cliente: tira travessão e espaço sobrando. */
+function limparMensagem(texto: unknown): string {
+    if (typeof texto !== "string") return "";
+    return texto.replace(/\s*[—–]\s*/g, ", ").replace(/,\s*,/g, ",").replace(/[ \t]{2,}/g, " ").trim();
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Rate limit helpers (existentes)
@@ -299,7 +330,7 @@ function buildContextBlock(ctx: EvaBusinessContext | null): string {
     }
 
     if (agencyParts.length > 0) {
-        lines.push("## Agência\n" + agencyParts.join("\n"));
+        lines.push("## Empresa\n" + agencyParts.join("\n"));
     }
 
     // Services — só os top 5 pra controlar tamanho do prompt
@@ -346,7 +377,7 @@ function buildContextBlock(ctx: EvaBusinessContext | null): string {
         icpParts.push(`Sem fit: ${semFit.slice(0, 8).join("; ")}`);
     }
     if (icpParts.length > 0) {
-        lines.push("## ICP da agência\n" + icpParts.join("\n"));
+        lines.push("## Cliente ideal\n" + icpParts.join("\n"));
     }
 
     // F4E.5.2 — Playbooks aprovados via Base de Conhecimento
@@ -422,7 +453,7 @@ function buildContextBlock(ctx: EvaBusinessContext | null): string {
         }
     }
 
-    return lines.length > 0 ? `\n\nCONTEXTO DA AGÊNCIA (use isso pra qualificar):\n${lines.join("\n\n")}` : "";
+    return lines.length > 0 ? `\n\nCONTEXTO DA EMPRESA (use isso pra qualificar):\n${lines.join("\n\n")}` : "";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -673,6 +704,14 @@ serve(async (req) => {
         const evaContext = companyId
             ? await fetchEvaBusinessContext(adminSupabase, companyId)
             : null;
+        // Segmento escolhe o guia do nicho. Sem segmento gravado vale solar,
+        // que é o padrão do cadastro desde 08/10/2026.
+        let segment: string | null = null;
+        if (companyId) {
+            const { data: seg } = await adminSupabase.from("companies").select("segment").eq("id", companyId).maybeSingle();
+            segment = (seg?.segment as string | null) ?? null;
+        }
+        const nicheGuide = !segment || segment === "energia_solar" ? SOLAR_GUIDE : "";
         const contextVersion = evaContext?.version ?? 0;
 
         // ─── Cache check ─────────────────────────────────────────────────────
@@ -806,7 +845,7 @@ serve(async (req) => {
         // PROSPECT.1 — bloco de objetivo opcional (ex.: prospecção fria → demo).
         // Orienta a resposta_sugerida sem mudar o schema nem o caráter assistido.
         const objectiveBlock = objective && objective.trim()
-            ? `\n\nOBJETIVO DESTA CONVERSA: ${objective.trim()}\nDirecione a resposta_sugerida e a proxima_acao para esse objetivo, sem ser invasivo. Resolva objeção antes de avançar quando houver. Nunca prometa preço/condição fora do contexto da agência.`
+            ? `\n\nOBJETIVO DESTA CONVERSA: ${objective.trim()}\nDirecione a resposta_sugerida e a proxima_acao para esse objetivo, sem ser invasivo. Resolva objeção antes de avançar quando houver. Nunca prometa preço/condição fora do contexto da empresa.`
             : "";
 
         const userPrompt = `Contato: ${contactName || "Desconhecido"}${contactPhone ? ` (${contactPhone})` : ""}
@@ -816,7 +855,7 @@ ${conversationText}${objectiveBlock}
 
 Analise a conversa e retorne o JSON estrito com sua análise e o objeto qualification.${
             contextEmpty
-                ? " IMPORTANTE: o contexto da agência está vazio ou incompleto — adicione knowledge_gap type=agency_context."
+                ? " IMPORTANTE: o contexto da empresa está vazio ou incompleto, adicione knowledge_gap type=agency_context."
                 : ""
         }${
             memoryContext ? " Adapte o tom do draft conforme o estilo descrito na memória." : ""
@@ -834,7 +873,7 @@ Analise a conversa e retorne o JSON estrito com sua análise e o objeto qualific
             messages: [
                 // O que é fixo por empresa vem primeiro: o provedor cobra o começo
                 // repetido do pedido pelo preço de cache (DeepSeek: 50x menos).
-                { role: "system", content: `${SYSTEM_PROMPT}${contextBlock}${memoryContext}` },
+                { role: "system", content: `${SYSTEM_PROMPT}${nicheGuide}${contextBlock}${memoryContext}` },
                 { role: "user", content: userPrompt },
             ],
             max_completion_tokens: 2000,
@@ -885,10 +924,26 @@ Analise a conversa e retorne o JSON estrito com sua análise e o objeto qualific
             analysisRaw.qualification,
         );
 
+        // Conversa que não é venda não ganha mensagem de venda, mesmo se o
+        // modelo escreveu uma.
+        const naoEOportunidade = analysisRaw.e_oportunidade === false;
+        if (naoEOportunidade) {
+            analysisRaw.draft = "";
+            analysisRaw.strategy = [];
+            qualification.resposta_sugerida = "";
+            qualification.deve_criar_oportunidade = false;
+        } else {
+            analysisRaw.draft = limparMensagem(analysisRaw.draft);
+            if (typeof qualification.resposta_sugerida === "string") {
+                qualification.resposta_sugerida = limparMensagem(qualification.resposta_sugerida);
+            }
+        }
+
         // Compose final analysis: campos legados + qualification + metadata cache
         const analysis: Record<string, unknown> = {
             ...analysisRaw,
             qualification,
+            llm: { provider: openaiResponse.provider, model: openaiResponse.model, segment: segment || "energia_solar" },
             context_version_used: contextVersion,
             context_present: !contextEmpty,
             // EVA.AUTO.1 — marca a leitura feita sozinha (1º contato auto). O front
@@ -899,9 +954,10 @@ Analise a conversa e retorne o JSON estrito com sua análise e o objeto qualific
         // ─── Persistence ─────────────────────────────────────────────────────
         if (companyId && contactPhone) {
             try {
+                const semPonto = (t: unknown) => (typeof t === "string" ? t.trim().replace(/[.!\s]+$/, "") : t);
                 const summaryText = [
-                    analysis.sentiment,
-                    analysis.nextAction ? `Próximo: ${analysis.nextAction}` : null,
+                    semPonto(analysis.sentiment),
+                    analysis.nextAction ? `Próximo: ${semPonto(analysis.nextAction)}` : null,
                     Array.isArray(analysis.objections) && analysis.objections.length
                         ? `Objeções: ${(analysis.objections as string[]).slice(0, 2).join("; ")}`
                         : null,
