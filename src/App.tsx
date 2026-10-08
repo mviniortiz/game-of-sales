@@ -6,11 +6,11 @@ import { CanonicalManager } from "@/components/CanonicalManager";
 
 const AppShell = lazy(() => import("./AppShell"));
 // Personas /para-* DESPUBLICADAS: /para-infoprodutores + /para-saas-b2b removidas
-// (2026-06-16, foco único na home/agências); /para-agencias já estava off.
+// (2026-06-16); /para-agencias já estava off.
 // Todas 301 → home no vercel.json.
 
 // SEO landings /crm-* DESPUBLICADAS (2026-06-10): posicionamento antigo
-// ("CRM gamificado/ranking"), conflita com o foco atual em agências/conversa.
+// ("CRM gamificado/ranking"), conflita com o foco atual em integradores solares.
 // Rotas viram 301 → home no vercel.json. Componentes/configs em src/pages/seo/
 // preservados pra eventual republicação. Reativar = descomentar import + rota
 // + remover redirect + readicionar ao sitemap e à allowlist do CanonicalManager.
@@ -18,11 +18,10 @@ const AppShell = lazy(() => import("./AppShell"));
 // const CrmComRanking = lazy(() => import("./pages/seo/CrmComRanking"));
 // const CrmParaTimes = lazy(() => import("./pages/seo/CrmParaTimes"));
 
-// Home = integradores de energia solar (Raio-X grátis). A landing de agência
-// (LandingV2) vive em /agencias; /landing e /orcamento são 301 no vercel.json.
+// Home = integradores de energia solar (Raio-X grátis). A landing de agência saiu
+// em 08/10/2026 (/agencias, /landing e /orcamento são 301 → home no vercel.json).
 // O login v2 virou a página de /auth (dentro do AppShell, com AuthProvider).
 const SolarLanding = lazy(() => import("./pages/SolarLanding"));
-const LandingV2 = lazy(() => import("./pages/LandingV2"));
 const RaioXReport = lazy(() => import("./pages/RaioXReport"));
 
 // Página por ângulo de anúncio; ângulo desconhecido cai na home.
@@ -57,7 +56,6 @@ const App = () => (
         <Route path="/" element={<Suspense fallback={<LazyFallback />}><SolarLanding /></Suspense>} />
         <Route path="/raio-x/:angulo" element={<SolarAngleRoute />} />
         <Route path="/relatorio/:token" element={<Suspense fallback={<LazyFallback />}><RaioXReport /></Suspense>} />
-        <Route path="/agencias" element={<Suspense fallback={<LazyFallback />}><LandingV2 /></Suspense>} />
         <Route path="/blog" element={<Suspense fallback={<LazyFallback />}><BlogV2 /></Suspense>} />
         <Route path="/blog/:slug" element={<Suspense fallback={<LazyFallback />}><BlogPostV2 /></Suspense>} />
         <Route path="/alternativas" element={<Suspense fallback={<LazyFallback />}><Alternativas /></Suspense>} />

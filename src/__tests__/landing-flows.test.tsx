@@ -64,8 +64,8 @@ vi.mock('@/lib/analytics', () => ({
 
 describe('Landing critical flows', () => {
     // PricingSection/LigacoesSection eram da landing antiga (Landing.tsx), que
-    // saiu da árvore de rotas (App.tsx roteia SolarLanding em "/" e LandingV2
-    // em "/agencias"). Nenhum outro arquivo do app importa esses dois
+    // saiu da árvore de rotas (App.tsx roteia SolarLanding em "/"). Nenhum
+    // outro arquivo do app importa esses dois
     // componentes; testes removidos (2026-07-14).
 
     it('NavigatingOverlay mostra o plano capitalizado', async () => {

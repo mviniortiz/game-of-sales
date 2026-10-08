@@ -1,11 +1,12 @@
 # CLAUDE.md — Vyzon (game-of-sales)
 
-> **Vyzon é a Central Comercial com EVA para agências BR que vendem por
-> conversa.** O lead chega por WhatsApp/Instagram/formulário, a EVA lê cada
-> atendimento, aponta quem está pronto e sugere o próximo passo; o time
-> aprova e a oportunidade segue no pipeline. Posicionamento canônico em
-> produção: `index.html`. (Atualizado 2026-07-28; substitui a versão longa,
-> cujo detalhe migrou pra fontes de verdade, docs e skills.)
+> **Vyzon é para integradores de energia solar que vendem pelo WhatsApp.**
+> A EVA acompanha cada proposta que sai do WhatsApp, avisa no 2º dia sem
+> resposta e entrega a retomada pronta; o dono responde 1 e ela sai do número
+> dele. Entrada comercial: Raio-X grátis das propostas paradas. Posicionamento
+> canônico em produção: `index.html` + `src/pages/SolarLanding.tsx`.
+> (Atualizado 2026-10-08: o nicho de agências foi abandonado e /agencias
+> redireciona para a home.)
 
 ## Inegociável — autonomia GRADUADA (decisão 2026-08-21; substitui o híbrido de 2026-06-12)
 
@@ -63,8 +64,7 @@ está BLOQUEADO por billing; não criar workflows.
    (`src/components/eva/EvaBot.tsx`). Nunca personagem com rosto realista,
    corpo ou estilo anime.
 6. **Fonte de verdade > prosa.** Antes de citar em copy, LER:
-   - Preços/planos: `src/config/plans.ts` (landing espelha
-     `src/data/landing/pricing.ts`; limites hardcoded nas edges
+   - Preços/planos: `src/config/plans.ts` (limites hardcoded nas edges
      `admin-create-seller`, `whatsapp-copilot`, `deal-call-initiate`,
      `deal-call-generate-insights` — mudou plano, redeploya as 4).
    - Integrações: `src/config/integrationsConfig.ts` (não confirmada no
@@ -111,8 +111,8 @@ está BLOQUEADO por billing; não criar workflows.
 - Cadastro: trial Pro 14 dias SEM cartão; expirou → degrada pra Free em
   runtime (`resolveEffectivePlan`). Cartão só em `/upgrade` / Faturamento
   (`PlanCheckoutForm`, checkout transparente MP).
-- CTAs: demo → `EvaDemoModal` (agenda real via `calendar-slots` +
-  `calendar-book`); trial → `/criar-conta?plan=X`. `DemoScheduleSection` e
+- CTAs: home solar → formulário do Raio-X (`demo_requests`
+  source='orcamento_teste') ou WhatsApp do Markus; trial → `/criar-conta?plan=X`. `DemoScheduleSection` e
   `NativeScheduler` estão órfãos, não usar como referência.
 - WhatsApp nativo (QR, não oficial): servidor Whatsmiau no Railway, que fala
   as rotas da Evolution, por isso as edges seguem `evolution-whatsapp` e

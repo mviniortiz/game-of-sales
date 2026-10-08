@@ -65,13 +65,6 @@ const SIMPLE_ROUTES = [
             description: "Termos e condições de uso da plataforma Vyzon.",
         },
     },
-    {
-        slug: "agencias",
-        seo: {
-            title: "Vyzon para agências | Sua agência responde lead sem abrir sistema nenhum",
-            description: "A EVA lê cada conversa do WhatsApp, abre a oportunidade no funil e te manda a próxima mensagem pronta no seu WhatsApp. Você responde 1 e ela sai. Teste 14 dias grátis, sem cartão.",
-        },
-    },
 ];
 
 // Hub /alternativas — fonte única: src/data/landing/alternativasContent.json

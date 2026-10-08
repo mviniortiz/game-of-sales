@@ -9,7 +9,6 @@ const ORIGIN = "https://vyzon.com.br";
 // /r/:token) cai no canonical da home.
 const SELF_CANONICAL = new Set<string>([
   // /para-* e /crm-* despublicadas (301 → home). /alternativas republicada 2026-07-22.
-  "/agencias",
   "/alternativas",
   "/changelog",
   "/politica-privacidade",

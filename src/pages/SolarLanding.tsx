@@ -10,8 +10,8 @@ import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { EvaBot, EvaBotStage } from "@/components/eva/EvaBot";
 
 // Home de produção desde 29/09/2026: integradores de energia solar, oferta de
-// entrada = Raio-X grátis das propostas paradas no WhatsApp. A landing de
-// agência vive em /agencias. SEO desta página fica no index.html; manter em
+// entrada = Raio-X grátis das propostas paradas no WhatsApp. SEO desta
+// página fica no index.html; manter em
 // sincronia (title, description, FAQPage e o <noscript>).
 //
 // Cadastro vai pra demo_requests com source='orcamento_teste': o trigger do SDR
@@ -852,7 +852,6 @@ const Footer = () => (
     <footer className="mx-auto flex w-full max-w-[1120px] flex-wrap items-center justify-between gap-3 px-5 py-8 text-sm md:px-8" style={{ color: "var(--lp-ink-40)" }}>
         <span>Vyzon</span>
         <nav className="flex flex-wrap gap-5">
-            <Link to="/agencias">Para agências</Link>
             <Link to="/politica-privacidade">Privacidade</Link>
             <Link to="/termos-de-servico">Termos</Link>
         </nav>

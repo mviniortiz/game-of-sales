@@ -115,7 +115,12 @@
         },
         {
             "source": "/landing",
-            "destination": "/agencias",
+            "destination": "/",
+            "statusCode": 301
+        },
+        {
+            "source": "/agencias",
+            "destination": "/",
             "statusCode": 301
         }
     ],

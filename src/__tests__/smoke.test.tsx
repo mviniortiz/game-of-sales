@@ -151,21 +151,6 @@ describe('Smoke Tests - Public Pages', () => {
         expect(container.firstChild).toBeTruthy();
     });
 
-    it('Landing (v2) renders without crashing', async () => {
-        const { default: LandingV2 } = await import('@/pages/LandingV2');
-        const { container } = render(
-            <MemoryRouter>
-                <LandingV2 />
-            </MemoryRouter>
-        );
-        expect(container.firstChild).toBeTruthy();
-        // LandingV2 monta ~17 seções (várias com canvas/WebGL como CloudWaveOrb,
-        // que em jsdom cai no fallback "Not implemented: getContext" repetidas
-        // vezes) + framer-motion + Lottie. Isso passa dos 5s default mesmo sem
-        // travar de verdade (~7-8s observado localmente); timeout maior em vez
-        // de mockar cada seção individualmente.
-    }, 20000);
-
     it('Home solar renders with the Raio-X form', async () => {
         const { default: SolarLanding } = await import('@/pages/SolarLanding');
         render(
