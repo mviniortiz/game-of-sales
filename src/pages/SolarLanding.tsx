@@ -31,10 +31,10 @@ type AngleCopy = { h1: string; h1Accent: string; sub: string; pain: string };
 
 const ANGLES: Record<SolarAngle, AngleCopy> = {
     sumiu: {
-        h1: "Mandou a proposta de energia solar",
+        h1: "Mandou o orçamento de energia solar",
         h1Accent: "e o cliente sumiu?",
-        sub: "O Vyzon lê as conversas de orçamento do seu WhatsApp e mostra quais propostas pararam, há quantos dias e quanto valem. Para cada uma, a mensagem de retomada já vem pronta.",
-        pain: "Você pega a conta de luz, dimensiona o sistema, faz a simulação e manda uma proposta caprichada. O cliente responde que vai conversar em casa. E some. Enquanto isso você está em cima de outro telhado, e a proposta de R$ 25 mil fica parada no meio de duzentas conversas.",
+        sub: "O Vyzon olha o seu WhatsApp e mostra quais clientes pararam de responder. E já deixa pronta a mensagem para você chamar cada um de novo.",
+        pain: "Você pega a conta de luz, dimensiona o sistema e manda um orçamento caprichado. O cliente diz que vai ver em casa. E some. Você está em cima de outro telhado. O orçamento de R$ 25 mil fica perdido no meio de duzentas conversas.",
     },
     parado: {
         h1: "Quanto dinheiro está parado",
@@ -45,14 +45,14 @@ const ANGLES: Record<SolarAngle, AngleCopy> = {
     "vou-pensar": {
         h1: "“Vou pensar”",
         h1Accent: "quase nunca é um não.",
-        sub: "É uma dúvida que o cliente não falou: a parcela, a garantia, alguém em casa. O Vyzon acha essas propostas no seu WhatsApp e escreve a retomada que pergunta no que ele ficou pensando.",
+        sub: "É uma dúvida que o cliente não falou: a parcela, a garantia, alguém em casa. O Vyzon acha esses orçamentos no seu WhatsApp e escreve a mensagem que pergunta no que ele ficou pensando.",
         pain: "O cliente diz que vai pensar e você respeita o tempo dele. Passa um dia, três, uma semana. Ninguém pergunta o que ficou faltando, e a dúvida que dava pra resolver numa mensagem vira proposta perdida pro concorrente que ligou de volta.",
     },
 };
 
 const TITLE = "Propostas de energia solar paradas no WhatsApp | Vyzon";
 const DESCRIPTION =
-    "Mandou a proposta e o cliente sumiu? O Vyzon mostra quais propostas de energia solar pararam no seu WhatsApp e entrega a retomada pronta. Raio-X grátis.";
+    "Mandou o orçamento de energia solar e o cliente sumiu? O Vyzon mostra quais clientes pararam de responder no seu WhatsApp e deixa a mensagem pronta para chamar de novo. Raio-X grátis.";
 
 const MONTHLY_RANGES = ["Até 10", "De 10 a 30", "Mais de 30"];
 
@@ -145,9 +145,10 @@ const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
             <main>
                 <Hero copy={copy} onCta={() => trackFormCta("hero")} onWhatsapp={() => trackWhatsappClick("hero")} />
                 <ProductMock />
+                <HowItWorks />
                 <Pain text={copy.pain} />
                 <WhatYouGet />
-                <HowItWorks />
+                <NoDiaADia />
                 <NotABot />
                 <Faq />
                 <SignupForm angle={angle} onWhatsapp={() => trackWhatsappClick("form_error")} />
@@ -193,7 +194,7 @@ const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void;
         <div className="mt-8 flex flex-col items-center gap-3 landing-fade-in-up-lg landing-delay-300">
             <div className="flex flex-wrap items-center justify-center gap-3">
                 <Link to={RAIO_X_AUTO} className="vz-btn vz-btn--primary" onClick={onCta}>
-                    <span>Fazer meu Raio-X agora</span>
+                    <span>Fazer meu Raio-X grátis</span>
                     <span className="vz-btn__arrow" aria-hidden="true">
                         →
                     </span>
@@ -209,7 +210,7 @@ const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void;
                 </a>
             </div>
             <span className="text-sm" style={{ color: "var(--lp-ink-55)" }}>
-                Grátis, sem cartão. Conecte o WhatsApp e em 3 minutos você vê quanto está parado.{" "}
+                O Raio-X é a lista dos orçamentos que ficaram sem resposta, com quanto eles somam. Grátis, sem cartão, em 3 minutos.{" "}
                 <a href="#raio-x" className="underline underline-offset-4">
                     Prefere fazer comigo?
                 </a>
@@ -225,7 +226,7 @@ const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void;
 const PROPOSALS = [
     { client: "Residência Oliveira", system: "6,2 kWp", value: "R$ 24.900", sent: "há 2 dias", status: "sem resposta", tone: DARK.amber },
     { client: "Mercado Bom Preço", system: "38 kWp", value: "R$ 118.000", sent: "há 6 h", status: "aguardando", tone: DARK.muted },
-    { client: "Sítio Santa Luzia", system: "15 kWp", value: "R$ 52.300", sent: "há 5 dias", status: "retomada enviada", tone: DARK.green },
+    { client: "Sítio Santa Luzia", system: "15 kWp", value: "R$ 52.300", sent: "há 5 dias", status: "chamou de novo", tone: DARK.green },
     { client: "Clínica Vida", system: "11 kWp", value: "R$ 39.800", sent: "há 4 dias", status: "sem resposta", tone: DARK.amber },
     { client: "Casa Fernandes", system: "4,5 kWp", value: "R$ 18.700", sent: "há 9 dias", status: "fechou", tone: DARK.green },
 ];
@@ -458,7 +459,7 @@ const Pain = ({ text }: { text: string }) => (
                                     <EvaBot size={22} state="alert" />
                                     Com o Vyzon
                                 </p>
-                                <p className="mt-1">A EVA te chama aqui, com a retomada pronta.</p>
+                                <p className="mt-1">A EVA te avisa aqui, com a mensagem pronta.</p>
                             </div>
                         )}
                     </div>
@@ -481,10 +482,10 @@ const Pain = ({ text }: { text: string }) => (
 );
 
 const REPORT_ITEMS = [
-    "Quantas propostas saíram nas conversas que você mandou.",
+    "Quantos orçamentos você mandou nos últimos 90 dias.",
     "Quais ficaram sem resposta, e há quantos dias.",
-    "Quanto elas somam, pelo valor que aparece na conversa.",
-    "A mensagem de retomada pronta pra cada cliente, no seu tom.",
+    "Quanto eles somam.",
+    "A mensagem pronta para chamar cada cliente de novo, do seu jeito.",
 ];
 
 const WhatYouGet = () => (
@@ -508,7 +509,10 @@ const WhatYouGet = () => (
                     ))}
                 </ul>
                 <p className="mt-6 text-[16px] font-medium leading-relaxed md:text-[17px]" style={{ color: "var(--lp-ink)" }}>
-                    E uma conta simples: se uma dessas propostas fechar, quanto isso paga?
+                    Uma integradora com mais de 2 anos faz, em média, 22 orçamentos por mês. Quantos dos seus ficaram sem resposta?
+                </p>
+                <p className="mt-2 text-[13px]" style={{ color: "var(--lp-ink-55)" }}>
+                    Fonte: Greener, Estudo Estratégico de Geração Distribuída, pesquisa de julho e agosto de 2025.
                 </p>
             </div>
             <ReportPreview />
@@ -556,30 +560,30 @@ const ReportPreview = () => (
         </ul>
         <p className="mt-4 flex items-center gap-2 text-[13px]" style={{ color: "var(--lp-ink-70)" }}>
             <EvaBot size={20} still />
-            Retomada pronta para cada uma, no tom da conversa.
+            Mensagem pronta para chamar cada um de novo.
         </p>
     </figure>
 );
 
 const STEPS = [
     {
-        title: "O Markus te chama no WhatsApp",
-        body: "Você pede o Raio-X aqui embaixo e combina um horário de 20 minutos, por vídeo ou ligação.",
+        title: "Crie sua conta",
+        body: "Nome, WhatsApp e e-mail. Não pede cartão.",
     },
     {
-        title: "Na conversa, o seu número",
-        body: "Você conecta o WhatsApp da empresa por QR code, sem trocar de número, e vê na hora quais propostas pararam, há quantos dias e quanto somam.",
+        title: "Conecte o seu WhatsApp",
+        body: "Como no WhatsApp Web, por um código no celular. O número continua o mesmo. Nada é enviado para cliente.",
     },
     {
-        title: "Se quiser, a EVA segue acompanhando",
-        body: "Cada proposta nova que sai do seu WhatsApp passa a ser acompanhada. Dois dias sem resposta e a retomada chega pronta no seu celular.",
+        title: "Veja o que ficou parado",
+        body: "Em uns 3 minutos aparece cada orçamento sem resposta, há quantos dias e quanto vale. Com a mensagem pronta para chamar de novo.",
     },
 ];
 
 const HowItWorks = () => (
     <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-28">
-        <Eyebrow>20 minutos</Eyebrow>
-        <SectionTitle>Como funciona</SectionTitle>
+        <Eyebrow>3 minutos</Eyebrow>
+        <SectionTitle>Como funciona o Raio-X</SectionTitle>
         <ol className="mt-8 grid gap-3 md:mt-10 md:grid-cols-3 md:gap-4">
             {STEPS.map((s, i) => (
                 <li key={s.title} className="rounded-[12px] border p-5 md:p-6" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
@@ -602,10 +606,42 @@ const HowItWorks = () => (
     </section>
 );
 
+// O produto depois do Raio-X, só com o que existe no app: aviso da EVA no 2º dia
+// (eva-quote-followup + aprovação por WhatsApp), placar /orcamentos, Inbox por
+// prioridade e funil com o valor parado no topo.
+const NO_DIA = [
+    ["Avisa no 2º dia sem resposta", "No seu WhatsApp, com a mensagem pronta. Você responde 1 e ela sai do seu número."],
+    ["Lista de orçamentos", "Todo orçamento que sai do seu WhatsApp entra na lista sozinho. Você vê quem respondeu, quem sumiu e quanto está parado."],
+    ["Conversas em ordem", "Primeiro o cliente que está esperando você. Depois os orçamentos parados, do maior para o menor."],
+    ["Funil de vendas", "Do primeiro contato até o fechado, com quanto vale cada etapa e quanto está parado."],
+] as const;
+
+const NoDiaADia = () => (
+    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-28">
+        <Eyebrow>Depois do Raio-X</Eyebrow>
+        <SectionTitle>O que o Vyzon faz todo dia</SectionTitle>
+        <p className="mt-4 max-w-[560px] text-[16px] leading-relaxed md:text-[17px]" style={{ color: "var(--lp-ink-70)" }}>
+            O Raio-X mostra o que já ficou parado. Com o Vyzon ligado, nenhum orçamento novo fica esquecido.
+        </p>
+        <ul className="mt-8 grid gap-3 sm:grid-cols-2 md:mt-10 md:gap-4">
+            {NO_DIA.map(([titulo, texto]) => (
+                <li key={titulo} className="rounded-[12px] border p-5 md:p-6" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
+                    <h3 className="text-[18px] font-medium leading-snug" style={{ color: "var(--lp-ink)" }}>
+                        {titulo}
+                    </h3>
+                    <p className="mt-2 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
+                        {texto}
+                    </p>
+                </li>
+            ))}
+        </ul>
+    </section>
+);
+
 const GUARANTEES = [
     ["Nada sai sem você", "A EVA escreve. Quem decide se a mensagem vai é você, respondendo 1."],
     ["Do seu número, no seu tom", "O cliente recebe do mesmo WhatsApp de sempre, com o seu nome."],
-    ["Esqueceu de responder?", "Ela não manda. Em 48 horas o rascunho expira sozinho."],
+    ["Esqueceu de responder?", "Ela não manda. Depois de 48 horas, a mensagem é descartada."],
 ] as const;
 
 // O dia da EVA em cinco estados, na mesma ordem do produto real.
@@ -613,7 +649,7 @@ const EVA_STEPS = [
     { state: "idle", text: "Esperando a próxima proposta sair" },
     { state: "thinking", text: "Lendo as conversas do seu WhatsApp" },
     { state: "alert", text: "Achei: Carlos, 2 dias sem resposta" },
-    { state: "talking", text: "Escrevendo a retomada no seu tom" },
+    { state: "talking", text: "Escrevendo a mensagem do seu jeito" },
     { state: "happy", text: "Você respondeu 1. Enviada do seu número" },
 ] as const;
 
@@ -659,6 +695,10 @@ const NotABot = () => (
 // Espelhado no FAQPage do index.html: mudou aqui, muda lá.
 const FAQ = [
     {
+        q: "O que é o Raio-X?",
+        a: "É uma lista dos orçamentos que você mandou pelo WhatsApp nos últimos 90 dias e que ficaram sem resposta. Mostra há quantos dias cada um está parado, quanto eles somam e a mensagem pronta para chamar cada cliente de novo. É grátis.",
+    },
+    {
         q: "Quanto custa?",
         a: "O Raio-X é grátis. Se depois você quiser que a EVA acompanhe as suas propostas todo mês, o Vyzon custa R$ 497 por mês, com tudo liberado para até 10 pessoas da equipe. Não tem teste: o Raio-X já mostra o que o Vyzon acha no seu WhatsApp.",
     },
@@ -672,7 +712,7 @@ const FAQ = [
     },
     {
         q: "A EVA responde meus clientes sozinha?",
-        a: "Não. Ela escreve a retomada e manda pra você. A mensagem só sai se você aprovar.",
+        a: "Não. Ela escreve a mensagem e manda pra você. Só sai se você responder 1.",
     },
 ];
 
