@@ -113,15 +113,21 @@ está BLOQUEADO por billing; não criar workflows.
 - Rotas públicas/SEO em `App.tsx`; `/auth`, `/criar-conta` e o app
   autenticado (catch-all) em `AppShell.tsx`. `/onboarding` e `/register` são
   redirects de compatibilidade.
-- Plano único "Vyzon" R$ 497 (id `pro`). Cadastro: teste de 14 dias SEM
-  cartão; expirou → degrada pra Free em runtime (`resolveEffectivePlan`).
+- Plano único "Vyzon" R$ 497 (id `pro`). SEM teste grátis (08/10/2026): conta
+  nova nasce free/inactive (o `guard_company_billing` força) e o grátis é o
+  Raio-X automático (`/raio-x` → edge `raio-x-build` em modo dono → relatório
+  em `/relatorio/:token`, que o dono confere e corrige). Paga = assinatura
+  `active` (`company_is_paid()` no banco, `usePlano()` no front). Sem
+  assinatura: só placar, assinatura, conta e ajuda (`rotaGratis`); a EVA não
+  lê, não rascunha, não roda agente nem aprende (filtro nas funções de cron).
   Cobrança MANUAL desde 08/10/2026: /upgrade abre o WhatsApp do Markus, ele
   manda link do Mercado Pago e marca "Pago" em AdminCompanyDetail. Plano e
   assinatura só mudam por service_role ou super admin (trigger
   `guard_company_billing`). Edges mercadopago-* estão dormentes e o webhook
   não valida assinatura; não religar sem consertar.
-- CTAs: home solar → formulário do Raio-X (`demo_requests`
-  source='orcamento_teste') ou WhatsApp do Markus; trial → `/criar-conta?plan=X`. `DemoScheduleSection` e
+- CTAs: home solar → Raio-X automático (`/criar-conta?segmento=energia_solar`,
+  o cadastro dispara o Lead do pixel) e, como segunda opção, o formulário do
+  Raio-X com o Markus (`demo_requests` source='orcamento_teste') ou WhatsApp. `DemoScheduleSection` e
   `NativeScheduler` estão órfãos, não usar como referência.
 - WhatsApp nativo (QR, não oficial): servidor Whatsmiau no Railway, que fala
   as rotas da Evolution, por isso as edges seguem `evolution-whatsapp` e

@@ -155,13 +155,7 @@ export default function Profile() {
   const effectiveCompanyId = activeCompanyId || companyId;
 
   const company = companies.find(c => c.id === effectiveCompanyId);
-  const trialEndsAt = company?.trial_ends_at;
   const subscriptionStatus = company?.subscription_status || "active";
-  const isTrialing = subscriptionStatus === "trialing";
-
-  const daysLeft = trialEndsAt
-    ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : null;
 
   useEffect(() => {
     if (user) loadProfile();
@@ -388,7 +382,7 @@ export default function Profile() {
 
   const statusLabels: Record<string, string> = {
     active: "Ativo",
-    trialing: "Trial",
+    inactive: "Sem plano",
     expired: "Expirado",
     cancelled: "Cancelado",
   };
@@ -431,7 +425,7 @@ export default function Profile() {
             <span className="text-[11px] font-semibold uppercase tracking-wide">{planInfo.label}</span>
             <span className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
               subscriptionStatus === "active" ? "bg-emerald-500/20 text-emerald-400" :
-              isTrialing ? "bg-amber-500/20 text-amber-400" :
+              subscriptionStatus === "inactive" ? "bg-zinc-500/20 text-zinc-400" :
               "bg-rose-500/20 text-rose-400"
             }`}>
               {statusLabels[subscriptionStatus] || subscriptionStatus}
@@ -460,9 +454,6 @@ export default function Profile() {
                   <p className="text-sm font-bold text-foreground">Plano {planInfo.label}</p>
                   <p className="text-xs text-muted-foreground">
                     {planPriceLabel(currentPlan)}
-                    {isTrialing && daysLeft !== null && (
-                      <span className="text-amber-400 font-medium"> · {daysLeft}d restantes no trial</span>
-                    )}
                   </p>
                 </div>
               </div>

@@ -5,10 +5,9 @@ import { EvaBot } from "@/components/eva/EvaBot";
 import { EncontroProgress } from "@/components/brand/EncontroProgress";
 
 const PASSOS = [
-    { titulo: "Criar a conta", texto: "Você está aqui. 14 dias grátis, sem cartão." },
-    { titulo: "Contar para a EVA como vocês vendem", texto: "Ela lê seu site e pergunta só o que faltou." },
-    { titulo: "Conectar o WhatsApp", texto: "Um QR Code, como no WhatsApp Web." },
-    { titulo: "Ver suas propostas paradas", texto: "O valor parado e quem chamar primeiro." },
+    { titulo: "Criar a conta", texto: "Você está aqui. Grátis, sem cartão." },
+    { titulo: "Conectar o WhatsApp", texto: "Um QR Code, como no WhatsApp Web. Nada é enviado." },
+    { titulo: "Ver suas propostas paradas", texto: "O valor parado, quem chamar primeiro e a retomada pronta." },
 ];
 
 const EXEMPLO = [
@@ -32,9 +31,9 @@ export function AuthPreview({ modo }: { modo: "cadastro" | "login" }) {
     return (
         <div className="flex h-full flex-col justify-center gap-8 rounded-[28px] border border-[#E6EDF5] bg-white p-10 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_60px_-32px_rgba(15,23,42,0.25)] xl:p-14">
             <div className="flex items-center gap-4">
-                <EncontroProgress step={0} total={4} size={52} />
+                <EncontroProgress step={0} total={3} size={52} />
                 <p className="font-satoshi text-[26px] font-black leading-tight tracking-[-0.02em] text-[#0B1220] xl:text-[30px]">
-                    Em 4 minutos você vê quanto está parado no seu WhatsApp.
+                    Em 3 minutos você vê quanto está parado no seu WhatsApp.
                 </p>
             </div>
 

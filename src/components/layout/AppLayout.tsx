@@ -4,10 +4,10 @@ import { motion, useReducedMotion } from "framer-motion";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { EvaLiveIsland } from "@/components/eva/EvaLiveIsland";
-import { TrialBanner } from "./TrialBanner";
+import { FaixaPlanoGratis, TelaDoPlano } from "./PlanoGratis";
 import { EvaHelpDock } from "@/components/help/EvaHelpDock";
 import { AskEvaPalette } from "@/components/help/AskEvaPalette";
-import { useTrial } from "@/hooks/useTrial";
+import { rotaGratis, usePlano } from "@/hooks/usePlano";
 
 // Page titles alinhados com nova nomenclatura visual da nav (F3 2026-05-19).
 // Rotas novas (/inicio, /inbox, etc) são as principais; antigas redirect silencioso.
@@ -38,23 +38,23 @@ const getPageTitle = (pathname: string) => {
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const reduceMotion = useReducedMotion();
-  const { isTrialActive } = useTrial();
+  const { pago, carregando } = usePlano();
+  const semPlano = !carregando && !pago;
 
   useEffect(() => {
     const title = getPageTitle(location.pathname);
     document.title = `Vyzon | ${title}`;
   }, [location.pathname]);
 
-  // Trial expirado NÃO bloqueia mais o app: o plano efetivo degrada pra Free
-  // (resolveEffectivePlan) e os limites fazem o trabalho de upgrade.
+  // Sem assinatura, o grátis é o Raio-X e o placar; as telas em que a EVA age
+  // mostram o caminho para assinar.
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full text-[#0B1220]" style={{ background: "#F6F4EF" }}>
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Trial Banner — faixa horizontal no topo da área de conteúdo (não como coluna) */}
-          {isTrialActive && <TrialBanner />}
+          {semPlano && <FaixaPlanoGratis />}
           <header
             className="h-14 flex items-center gap-2 sm:gap-4 px-3 sm:px-4 relative"
             style={{
@@ -84,7 +84,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
             >
-              {children}
+              {semPlano && !rotaGratis(location.pathname) ? <TelaDoPlano /> : children}
             </motion.div>
           </main>
         </div>

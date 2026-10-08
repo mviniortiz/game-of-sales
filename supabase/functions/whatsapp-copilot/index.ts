@@ -31,7 +31,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const DAILY_LIMIT_PER_USER = 50;        // plano único (e trial)
+const DAILY_LIMIT_PER_USER = 50;        // plano único (assinatura ativa)
 const FREE_DAILY_LIMIT_PER_USER = 10;   // piso interno — espelha src/config/plans.ts
 // EVA.AUTO.1 — auto-qualificação (modo serviço) consome um balde por-empresa,
 // separado da cota manual do dono. Teto diário de novos contatos analisados.
@@ -648,13 +648,14 @@ serve(async (req) => {
         }
 
         // Limite diário por PLANO (espelha src/config/plans.ts): piso free 10/dia,
-        // plano único pro 50/dia por usuário; trial ativo conta como Pro,
-        // expirado degrada pro piso. essential/escala/enterprise legados = pro.
+        // plano único pro 50/dia por usuário. Só assinatura ativa vale o plano
+        // contratado; qualquer outra situação é o piso (sem teste grátis desde
+        // 08/10/2026). essential/escala/enterprise legados = pro.
         let planDailyLimit = DAILY_LIMIT_PER_USER;
         if (!serviceMode && companyId) {
             const { data: comp } = await adminSupabase
                 .from("companies")
-                .select("plan, subscription_status, trial_ends_at")
+                .select("plan, subscription_status")
                 .eq("id", companyId)
                 .maybeSingle();
             const normalizePlan = (raw: string | null | undefined): string => {
@@ -664,10 +665,7 @@ serve(async (req) => {
             };
             const PLAN_DAILY: Record<string, number> = { free: FREE_DAILY_LIMIT_PER_USER, pro: DAILY_LIMIT_PER_USER };
             let effectivePlan = "free";
-            if (comp?.subscription_status === "trialing") {
-                const ends = comp?.trial_ends_at ? new Date(comp.trial_ends_at).getTime() : NaN;
-                effectivePlan = !Number.isNaN(ends) && ends >= Date.now() ? "pro" : "free";
-            } else if (comp?.subscription_status === "active") {
+            if (comp?.subscription_status === "active") {
                 effectivePlan = normalizePlan(comp?.plan);
             }
             planDailyLimit = PLAN_DAILY[effectivePlan] ?? FREE_DAILY_LIMIT_PER_USER;

@@ -419,15 +419,15 @@ serve(async (req) => {
     }
 
     // Enforce do limite de usuários do plano (espelha src/config/plans.ts:
-    // piso free=1, plano único pro=10; trial ativo conta como Pro, trial
-    // expirado degrada pro piso. essential/escala/enterprise legados = pro).
+    // piso free=1, plano único pro=10. Só assinatura ativa vale o plano
+    // contratado; o resto é o piso. essential/escala/enterprise legados = pro).
     // Conta todos os profiles da empresa (inclui admin), igual à barra de uso
     // em /configuracoes/faturamento.
     if (!isSuperAdmin) {
       const PLAN_MAX_USERS: Record<string, number> = { free: 1, pro: 10 };
       const { data: planRow } = await (supabaseAdmin as any)
         .from("companies")
-        .select("plan, subscription_status, trial_ends_at")
+        .select("plan, subscription_status")
         .eq("id", targetCompanyId)
         .single();
       // Espelho de normalizePlanId (src/config/plans.ts)
@@ -436,15 +436,9 @@ serve(async (req) => {
         if (["pro", "plus", "essential", "essencial", "escala", "enterprise"].includes(v)) return "pro";
         return "free";
       };
-      let plan: string;
-      if (planRow?.subscription_status === "trialing") {
-        const ends = planRow?.trial_ends_at ? new Date(planRow.trial_ends_at).getTime() : NaN;
-        plan = !Number.isNaN(ends) && ends >= Date.now() ? "pro" : "free";
-      } else if (planRow?.subscription_status === "active") {
-        plan = normalizePlan(planRow?.plan);
-      } else {
-        plan = "free";
-      }
+      const plan = planRow?.subscription_status === "active"
+        ? normalizePlan(planRow?.plan)
+        : "free";
       const maxUsers = PLAN_MAX_USERS[plan] ?? 1;
       if (Number.isFinite(maxUsers)) {
         const { count } = await (supabaseAdmin as any)

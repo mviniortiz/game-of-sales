@@ -24,6 +24,7 @@ import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
 import { useAuth } from "@/contexts/AuthContext";
 import { EVA_SETUP_PATH, setupDismissKey, useEvaSetup } from "@/hooks/useEvaSetup";
 import { PrimeirosPassos } from "@/components/quotes/PrimeirosPassos";
+import { usePlano } from "@/hooks/usePlano";
 
 const PERIODS = [7, 30, 90] as const;
 type Period = (typeof PERIODS)[number];
@@ -137,11 +138,15 @@ export default function Orcamentos() {
   const adiou = (() => {
     try { return !!setup.companyId && localStorage.getItem(setupDismissKey(setup.companyId)) === "1"; } catch { return true; }
   })();
-  // Conta nova cai na conversa de configuração uma vez; quem adiou vê o aviso.
-  // Super admin operando outra empresa nunca é levado.
+  const { pago, carregando: planoCarregando } = usePlano();
+  // Conta nova: sem assinatura vai para o Raio-X automático (o grátis); quem
+  // assina cai uma vez na conversa de configuração da EVA, e quem adiou vê a
+  // lista de primeiros passos. Super admin operando outra empresa nunca é levado.
   useEffect(() => {
-    if (!preview && setup.configured === false && isAdmin && !isSuperAdmin && !adiou) navigate(EVA_SETUP_PATH, { replace: true });
-  }, [preview, setup.configured, isAdmin, isSuperAdmin, adiou, navigate]);
+    if (preview || !isAdmin || isSuperAdmin || planoCarregando) return;
+    if (!pago && setup.fezRaioX === false) navigate("/raio-x", { replace: true });
+    else if (pago && setup.configured === false && !adiou) navigate(EVA_SETUP_PATH, { replace: true });
+  }, [preview, pago, planoCarregando, setup.fezRaioX, setup.configured, isAdmin, isSuperAdmin, adiou, navigate]);
   const data = board.data;
   const isEmpty = !!data && data.items.length === 0 && data.totals.total_count === 0;
   // Sem parado mas com cliente esperando, abre direto no que pede ação.
@@ -154,7 +159,7 @@ export default function Orcamentos() {
         <PeriodFilter value={days} onChange={setDays} />
       </header>
 
-      {!preview && isAdmin && setup.companyId && setup.configured !== null && (
+      {!preview && pago && isAdmin && setup.companyId && setup.configured !== null && (
         <PrimeirosPassos companyId={setup.companyId} configured={setup.configured} connected={wa.connected} />
       )}
 

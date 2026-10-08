@@ -107,23 +107,17 @@ export function normalizePlanId(raw: string | null | undefined): PlanId {
 }
 
 /**
- * Plano EFETIVO de uma empresa: trial ativo experimenta o Pro completo;
- * trial expirado degrada pro piso free. Espelhada nas edges
- * admin-create-seller e whatsapp-copilot.
+ * Plano EFETIVO de uma empresa: assinatura ativa vale o plano contratado; sem
+ * assinatura é o piso free (sem teste grátis desde 08/10/2026). Espelhada nas
+ * edges admin-create-seller e whatsapp-copilot.
  */
 export function resolveEffectivePlan(
     rawPlan: string | null | undefined,
     subscriptionStatus: string | null | undefined,
-    trialEndsAt: string | null | undefined,
+    // Mantido na assinatura para não quebrar quem chama; não decide mais nada.
+    _trialEndsAt?: string | null | undefined,
 ): PlanId {
-    if (subscriptionStatus === "trialing" && trialEndsAt) {
-        const ends = new Date(trialEndsAt).getTime();
-        if (!Number.isNaN(ends) && ends >= Date.now()) return "pro";
-        return "free";
-    }
     if (subscriptionStatus === "active") return normalizePlanId(rawPlan);
-    if (subscriptionStatus === "trialing") return "free"; // trialing sem data = expirado
-    // expired/cancelled/desconhecido: degrada
     return "free";
 }
 

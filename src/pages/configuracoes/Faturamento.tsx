@@ -13,7 +13,7 @@ import { PLAN_FEATURES, PlanType } from "@/config/planConfig";
 import { PLANS, formatPrice } from "@/config/plans";
 import { whatsappUrl } from "@/config/contact";
 import { CancelSubscriptionDialog } from "@/components/configuracoes/CancelSubscriptionDialog";
-import { normalizeSubscriptionStatus } from "@/lib/utils";
+import { normalizeSubscriptionStatus, type SubscriptionStatus } from "@/lib/utils";
 
 // Ícones por plano — os dados (preço, features, limites) vêm da fonte única
 // em src/config/plans.ts, nada de lista hardcoded aqui.
@@ -23,8 +23,7 @@ const PLAN_ICONS: Record<PlanType, React.ComponentType<any>> = {
 };
 
 interface Subscription {
-  status: "active" | "trialing" | "expired" | "cancelled";
-  trial_ends_at: string | null;
+  status: SubscriptionStatus;
   cancelled_at: string | null;
   ends_at: string | null;
   mp_subscription_id: string | null;
@@ -51,7 +50,7 @@ export default function Faturamento() {
     const [companyRes, teamRes] = await Promise.all([
       supabase
         .from("companies")
-        .select("subscription_status, trial_ends_at, subscription_cancelled_at, subscription_ends_at, mp_subscription_id")
+        .select("subscription_status, subscription_cancelled_at, subscription_ends_at, mp_subscription_id")
         .eq("id", effectiveCompanyId)
         .maybeSingle(),
       supabase.from("profiles").select("id", { count: "exact", head: true }).eq("company_id", effectiveCompanyId),
@@ -60,7 +59,7 @@ export default function Faturamento() {
     if (companyRes.data) {
       setSubscription({
         status: normalizeSubscriptionStatus(companyRes.data.subscription_status),
-        trial_ends_at: companyRes.data.trial_ends_at,
+
         cancelled_at: companyRes.data.subscription_cancelled_at,
         ends_at: companyRes.data.subscription_ends_at,
         mp_subscription_id: companyRes.data.mp_subscription_id,
@@ -95,11 +94,6 @@ export default function Faturamento() {
 
   const PlanIcon = PLAN_ICONS[currentPlan];
   const status = subscription?.status || "active";
-  const daysLeft = subscription?.trial_ends_at
-    ? Math.max(0, Math.ceil((new Date(subscription.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : null;
-  // Trial expirado não é mais "trialing" pra UI: a conta degradou pro Free.
-  const isTrialing = status === "trialing" && (daysLeft ?? 0) > 0;
   const isCancelled = status === "cancelled" || !!subscription?.cancelled_at;
   const currentPlanData = PLANS[currentPlan];
 
@@ -118,7 +112,7 @@ export default function Faturamento() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground">
-              Assinatura cancelada — ativa até {endsAtFormatted}
+              Assinatura cancelada, ativa até {endsAtFormatted}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
               Você mantém acesso ao <strong className="text-foreground">{planInfo.label}</strong> até
@@ -156,21 +150,16 @@ export default function Faturamento() {
                     !subscription ? "bg-[var(--vyz-surface-2)] text-[var(--vyz-text-muted)]" :
                     isCancelled ? "bg-[var(--vyz-danger-bg)] text-[var(--vyz-danger)]" :
                     status === "expired" ? "bg-[var(--vyz-warning-bg)] text-[var(--vyz-warning)]" :
-                    isTrialing ? "bg-[var(--vyz-warning-bg)] text-[var(--vyz-warning)]" :
+                    status !== "active" ? "bg-[var(--vyz-surface-2)] text-[var(--vyz-text-muted)]" :
                     "bg-[var(--vyz-success-bg)] text-[var(--vyz-success)]"
                   }`}>
-                    {!subscription ? "Sem dados" : isCancelled ? "Cancelado" : status === "expired" ? "Vencido" : isTrialing ? "Em teste" : "Ativo"}
+                    {!subscription ? "Sem dados" : isCancelled ? "Cancelado" : status === "expired" ? "Vencido" : status !== "active" ? "Sem plano" : "Ativo"}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {isTrialing
-                    ? "Teste grátis"
-                    : currentPlanData.monthlyPrice
-                      ? `${formatPrice(currentPlanData.monthlyPrice)}/mês`
-                      : formatPrice(currentPlanData.monthlyPrice)}
-                  {isTrialing && daysLeft !== null && (
-                    <span className="text-amber-400 font-medium"> · {daysLeft}d restantes, depois sua conta continua no Free</span>
-                  )}
+                  {currentPlanData.monthlyPrice
+                    ? `${formatPrice(currentPlanData.monthlyPrice)}/mês`
+                    : formatPrice(currentPlanData.monthlyPrice)}
                 </p>
               </div>
             </div>
@@ -198,7 +187,7 @@ export default function Faturamento() {
         </div>
       </div>
 
-      {/* Assinar: quem ainda não paga (teste grátis, vencido ou cancelado) */}
+      {/* Assinar: quem ainda não paga (sem plano, vencido ou cancelado) */}
       {status !== "active" && (
         <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] p-5 flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex-1 min-w-0">
@@ -218,8 +207,8 @@ export default function Faturamento() {
         </div>
       )}
 
-      {/* Danger zone */}
-      {!isCancelled && (
+      {/* Danger zone: só existe o que cancelar quando a assinatura está paga */}
+      {status === "active" && !isCancelled && (
         <div className="pt-6 mt-2 border-t border-border/30">
           <div className="flex items-center justify-between gap-4 px-1">
             <div className="flex-1 min-w-0">
@@ -227,9 +216,7 @@ export default function Faturamento() {
                 Cancelar assinatura
               </p>
               <p className="text-[11px] text-muted-foreground/60 mt-0.5 leading-relaxed">
-                {isTrialing
-                  ? "Encerra o trial imediatamente e sua conta vira Free."
-                  : "Você mantém acesso até o fim do ciclo pago atual."}
+                Você mantém acesso até o fim do ciclo pago atual.
               </p>
             </div>
             <button

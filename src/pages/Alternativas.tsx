@@ -93,8 +93,8 @@ const Alternativas = () => {
     trackBehavior("alternativas_cta", { target: "demo" });
     navigate("/#raio-x");
   };
-  const goTrial = () => {
-    trackBehavior("alternativas_cta", { target: "trial" });
+  const goSignup = () => {
+    trackBehavior("alternativas_cta", { target: "signup" });
     navigate("/criar-conta");
   };
 
@@ -512,8 +512,8 @@ const Alternativas = () => {
             Ler o blog →
           </Link>
           {" · "}
-          <button type="button" className="vz-navlink" style={{ color: "var(--lp-blue)" }} onClick={goTrial}>
-            Testar 14 dias grátis
+          <button type="button" className="vz-navlink" style={{ color: "var(--lp-blue)" }} onClick={goSignup}>
+            Fazer o Raio-X grátis
           </button>
         </p>
       </section>

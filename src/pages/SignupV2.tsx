@@ -13,16 +13,16 @@ import { AuthField } from "@/components/auth/AuthField";
 import { scorePassword, STRENGTH_META } from "@/components/auth/password";
 import { APP_HOME } from "@/config/routes";
 
-// Cadastro SIMPLES (substitui o wizard de onboarding): 1 tela → conta criada com
-// trial de 14 dias ativo (sem cartão) → direto pro app. Trata 2 modos: (a) novo
+// Cadastro SIMPLES: 1 tela → conta criada sem plano (sem teste grátis desde
+// 08/10/2026) → Raio-X automático no app. Trata 2 modos: (a) novo
 // usuário (nome+empresa+email+senha ou Google); (b) usuário que entrou via Google
 // e ainda não tem empresa (pede só o nome da empresa). Rota /criar-conta.
 const SignupV2 = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [params] = useSearchParams();
-    // Mantido só pra analytics/atribuição de origem: independente do card
-    // clicado, TODO cadastro entra em trial do Pro (14d) e degrada pro Free.
+    // Mantido só pra analytics/atribuição de origem: a conta nasce sem plano
+    // (o banco força isso no guard_company_billing).
     const plan = (params.get("plan") || "pro").toLowerCase();
     // Vira companies.segment, que escolhe o pacote da EVA e os nomes do funil.
     // Solar é o único segmento que o blueprint reconhece; qualquer outro valor
@@ -98,13 +98,21 @@ const SignupV2 = () => {
         }
     };
 
-    // cria a company já com o trial de 14 dias ligado; devolve o id
-    const createCompanyWithTrial = async (): Promise<string> => {
-        const trialEnds = new Date(Date.now() + 14 * 86400000).toISOString();
+    // Conta criada é o Lead da campanha do Meta (o Raio-X automático começa
+    // aqui). Analytics nunca derruba o cadastro.
+    const marcarLead = () => {
+        try {
+            (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq?.("track", "Lead", { content_name: "raio_x_auto" });
+        } catch {
+            /* sem pixel */
+        }
+        trackBehavior(FUNNEL_EVENTS.REGISTER_COMPLETE, { plan });
+    };
+
+    // cria a company sem plano; devolve o id
+    const createCompany = async (): Promise<string> => {
         const attribution = getAttribution() || {};
-        // plan: 'pro' fixo — o trial é sempre do Pro; ao expirar, resolveEffectivePlan
-        // degrada a conta pro Free (não existe mais bloqueio de trial expirado).
-        const base = { name: empresa.trim(), plan: "pro", subscription_status: "trialing", trial_ends_at: trialEnds, segment, ...attribution };
+        const base = { name: empresa.trim(), plan: "free", subscription_status: "inactive", segment, ...attribution };
         // id gerado no cliente nos DOIS caminhos: dispensa o .select() pós-insert,
         // que dependia de policy de SELECT que o usuário recém-criado não tem
         // (RLS de companies só permite ler a própria empresa DEPOIS do vínculo).
@@ -156,19 +164,20 @@ const SignupV2 = () => {
         setLoading(true);
         try {
             if (ssoMode) {
-                await createCompanyWithTrial();
+                await createCompany();
                 try { await refreshProfile(); } catch { /* noop */ }
-                toast.success("Tudo pronto! 14 dias grátis liberados.");
+                marcarLead();
+                toast.success("Conta criada.");
                 navigate(APP_HOME, { replace: true });
                 return;
             }
-            const id = await createCompanyWithTrial();
+            const id = await createCompany();
             const { error, needsConfirmation } = await signUp(email.trim(), senha, nome.trim(), id);
             if (error) {
                 const m = (error.message || "").toLowerCase();
                 if (m.includes("rate limit") || m.includes("too many")) {
                     const { error: siErr } = await signIn(email.trim(), senha);
-                    if (!siErr) { toast.success("Conta criada! 14 dias grátis liberados."); navigate(APP_HOME, { replace: true }); return; }
+                    if (!siErr) { marcarLead(); toast.success("Conta criada."); navigate(APP_HOME, { replace: true }); return; }
                     await supabase.from("companies").delete().eq("id", id);
                     setErros({ form: "Muitas tentativas. Aguarde alguns minutos e tente de novo." });
                     setErroKey((k) => k + 1);
@@ -190,11 +199,13 @@ const SignupV2 = () => {
                 // Mostrar a tela dedicada em vez de navegar (senão a pessoa cai
                 // no login sem entender o que aconteceu).
                 trackBehavior(FUNNEL_EVENTS.REGISTER_START, { step: "confirm_email_sent", plan });
+                marcarLead();
                 setConfirmSentTo(email.trim().toLowerCase());
                 return;
             }
-            // signUp() já direciona pro app; o trial está ativo na company.
-            toast.success("Conta criada! 14 dias grátis liberados.");
+            // signUp() já direciona pro app.
+            marcarLead();
+            toast.success("Conta criada.");
         } catch (err) {
             setErros({ form: err instanceof Error ? err.message : "Não foi possível criar a conta." });
             setErroKey((k) => k + 1);
@@ -228,7 +239,7 @@ const SignupV2 = () => {
                     </h1>
                     <p className="mt-4 text-[15px]" style={{ color: "rgba(11,18,32,0.7)", lineHeight: 1.6 }}>
                         Sua conta foi criada. Enviamos um link de ativação para{" "}
-                        <strong style={{ color: "#0B1220", fontWeight: 600 }}>{confirmSentTo}</strong>. Clique nele para entrar e liberar seus 14 dias grátis.
+                        <strong style={{ color: "#0B1220", fontWeight: 600 }}>{confirmSentTo}</strong>. Clique nele para entrar e fazer o seu Raio-X.
                     </p>
                     <p className="mt-4 text-[13px]" style={{ color: "rgba(11,18,32,0.58)", lineHeight: 1.55 }}>
                         Não chegou em alguns minutos? Confira a caixa de spam. O link expira em 24 horas.
@@ -292,7 +303,7 @@ const SignupV2 = () => {
                                 {ssoMode ? "Quase lá" : "Criar conta"}
                             </h1>
                             <p className="mt-2.5 landing-fade-in-up landing-delay-150" style={{ color: "rgba(11,18,32,0.66)", fontSize: "1rem" }}>
-                                {ssoMode ? "Só falta o nome da sua empresa." : "Passo 1 de 4. 14 dias grátis, sem cartão, com tudo liberado."}
+                                {ssoMode ? "Só falta o nome da sua empresa." : "Passo 1 de 3. O Raio-X é grátis e não pede cartão."}
                             </p>
 
                             {!ssoMode && (
@@ -420,7 +431,7 @@ const SignupV2 = () => {
                                             Criando…
                                         </span>
                                     ) : (
-                                        ssoMode ? "Entrar na Vyzon" : "Começar 14 dias grátis"
+                                        ssoMode ? "Entrar na Vyzon" : "Criar conta e fazer o Raio-X"
                                     )}
                                 </button>
                             </form>

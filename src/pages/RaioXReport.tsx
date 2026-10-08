@@ -6,9 +6,10 @@ import { EvaBot } from "@/components/eva/EvaBot";
 
 // Relatório do Raio-X (/relatorio/:token), aberto na conversa de 20 minutos e
 // mandado depois pro integrador, que quase sempre lê no celular. Público pelo
-// token; mostra só primeiro nome, valor, dias e a retomada sugerida, nunca o
-// texto das conversas. Super admin vê o botão "Não é proposta", e os números
-// se refazem a partir dos itens.
+// token; mostra só primeiro nome, valor, dias, o motivo de ter contado (nome do
+// PDF ou trecho) e a retomada sugerida. Quem é da empresa do relatório (ou o
+// super admin) confere: tira o que não é proposta e preenche o valor que faltou;
+// os números se refazem a partir dos itens.
 //
 // A retomada aparece do jeito que a EVA manda no WhatsApp do dono
 // (buildDraftMessage em supabase/functions/_shared/whatsappApproval.ts). Se
@@ -27,6 +28,9 @@ type Item = {
     reading: string | null;
     draft: string | null;
     excluded?: boolean;
+    /** Nome do PDF ou trecho do texto que fez a EVA contar como proposta. */
+    evidencia?: string | null;
+    amount_by_owner?: boolean;
 };
 
 type Report = {
@@ -34,6 +38,7 @@ type Report = {
     created_at: string;
     summary: { messages_read: number; window_days: number };
     items: Item[];
+    can_edit?: boolean;
 };
 
 type Row = { item: Item; index: number; code: string | null };
@@ -63,7 +68,6 @@ const RaioXReport = () => {
     const { token = "" } = useParams();
     const [report, setReport] = useState<Report | null>(null);
     const [state, setState] = useState<"loading" | "ready" | "missing">("loading");
-    const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
         document.title = "Raio-X das propostas | Vyzon";
@@ -85,11 +89,6 @@ const RaioXReport = () => {
                 setState("ready");
             } else setState("missing");
         });
-        void supabase.auth.getUser().then(async ({ data }) => {
-            if (!data.user) return;
-            const { data: me } = await supabase.from("profiles").select("is_super_admin").eq("id", data.user.id).maybeSingle();
-            if (alive) setIsAdmin(Boolean(me?.is_super_admin));
-        });
         return () => {
             alive = false;
         };
@@ -103,6 +102,17 @@ const RaioXReport = () => {
         if (error) setReport(report);
     };
 
+    const setAmount = async (index: number, amount: number | null) => {
+        if (!report) return false;
+        const prev = report;
+        setReport({ ...report, items: report.items.map((it, i) => (i === index ? { ...it, amount, amount_by_owner: true } : it)) });
+        const { error } = await supabase.rpc("raio_x_set_amount" as never, { p_token: token, p_index: index, p_amount: amount } as never);
+        if (error) setReport(prev);
+        return !error;
+    };
+
+    const isAdmin = Boolean(report?.can_edit);
+
     const view = useMemo(() => {
         const all = report?.items ?? [];
         let drafted = 0;
@@ -111,7 +121,7 @@ const RaioXReport = () => {
             index,
             code: item.draft && !item.excluded && item.status !== "talking" ? codeAt(drafted++) : null,
         }));
-        // O integrador não vê o que o Markus marcou como "não é proposta".
+        // Quem só recebeu o link não vê o que foi marcado como "não é proposta".
         const visible = rows.filter((r) => isAdmin || !r.item.excluded);
         const valid = rows.filter((r) => !r.item.excluded).map((r) => r.item);
         const stuck = valid.filter((i) => i.status !== "talking");
@@ -162,7 +172,7 @@ const RaioXReport = () => {
     const headline = view.recentValue > 0 ? view.recentValue : view.totalValue;
     const headlineScope = view.recentValue > 0 ? "nos últimos 30 dias" : `nos últimos ${report.summary.window_days} dias`;
     const created = new Date(report.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
-    const rowProps = { isAdmin, onToggle: (index: number, ex: boolean) => void toggle(index, ex) };
+    const rowProps = { isAdmin, onToggle: (index: number, ex: boolean) => void toggle(index, ex), onAmount: setAmount };
 
     return (
         <Shell>
@@ -182,9 +192,9 @@ const RaioXReport = () => {
                         <p className="mt-3 max-w-[560px] text-[16px] leading-relaxed md:text-[17px]" style={{ color: "var(--lp-ink-70)" }}>
                             {headline > 0
                                 ? `em propostas paradas no seu WhatsApp ${headlineScope}, pelo valor escrito nas conversas.`
-                                : `paradas no seu WhatsApp ${headlineScope}. O valor está nos PDFs, que o Raio-X não abre.`}
+                                : `paradas no seu WhatsApp ${headlineScope}. ${isAdmin ? "Preencha o valor de cada uma abaixo para ver o total." : "O valor está nos PDFs, que o Raio-X não abre."}`}
                             {headline > 0 && view.withoutValue > 0 &&
-                                ` Mais ${plural(view.withoutValue, "proposta", "propostas")} com o valor só no PDF, fora dessa soma.`}
+                                ` Mais ${plural(view.withoutValue, "proposta", "propostas")} sem valor escrito, fora dessa soma.`}
                         </p>
                         {view.biggest?.amount && (
                             <p className="mt-4 max-w-[560px] text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-90)" }}>
@@ -197,6 +207,18 @@ const RaioXReport = () => {
                     </>
                 )}
             </header>
+
+            {isAdmin && view.quotes > 0 && (
+                <div className="mt-6 rounded-[10px] border p-4 md:p-5" style={{ borderColor: "var(--lp-blue)", background: "var(--lp-white)" }}>
+                    <p className="text-[15px] font-medium" style={{ color: "var(--lp-ink)" }}>
+                        Confira em 1 minuto
+                    </p>
+                    <p className="mt-1 text-[14px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
+                        Em cada proposta aparece o que me fez contar ela. Se não for proposta, toque em "Não é proposta". Se faltar o valor, preencha.
+                        O total se refaz na hora.
+                    </p>
+                </div>
+            )}
 
             <dl className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-[10px] border md:mt-10 md:grid-cols-4" style={{ borderColor: "var(--lp-line)", background: "var(--lp-line)" }}>
                 <Stat label="Propostas encontradas" value={view.quotes} />
@@ -233,8 +255,11 @@ const RaioXReport = () => {
                     As retomadas deste relatório são rascunhos. Com o Vyzon ligado, a EVA acompanha cada proposta nova que sai do seu WhatsApp e te chama
                     quando ela para. Você confere, responde 1 e a mensagem sai do seu número.
                 </p>
-                <Link to="/criar-conta?segmento=energia_solar" className="vz-btn vz-btn--primary mt-6 inline-flex w-full justify-center sm:w-auto">
-                    <span>Testar 14 dias grátis</span>
+                <Link
+                    to={isAdmin ? "/upgrade" : "/criar-conta?segmento=energia_solar"}
+                    className="vz-btn vz-btn--primary mt-6 inline-flex w-full justify-center sm:w-auto"
+                >
+                    <span>{isAdmin ? "Ligar a EVA nas minhas propostas" : "Fazer o Raio-X do meu WhatsApp"}</span>
                     <span className="vz-btn__arrow" aria-hidden="true">
                         →
                     </span>
@@ -244,7 +269,7 @@ const RaioXReport = () => {
             <p className="mt-8 pb-14 text-[13px] leading-relaxed md:text-sm" style={{ color: "var(--lp-ink-40)" }}>
                 Como contamos: PDF enviado (menos boleto, contrato e recibo) ou mensagem com valor e palavra de orçamento, nos últimos{" "}
                 {report.summary.window_days} dias, fora de grupos. Parada: sem resposta há 2 dias ou mais, cliente que parou de responder há 3 dias
-                ou mais, ou cliente esperando resposta há 1 dia ou mais. Valor só quando aparece escrito na conversa.
+                ou mais, ou cliente esperando resposta há 1 dia ou mais. Valor quando aparece escrito na conversa ou quando você preencheu.
             </p>
         </Shell>
     );
@@ -274,7 +299,11 @@ const Stat = ({ label, value, highlight }: { label: string; value: number | stri
     </div>
 );
 
-type RowProps = { isAdmin: boolean; onToggle: (index: number, excluded: boolean) => void };
+type RowProps = {
+    isAdmin: boolean;
+    onToggle: (index: number, excluded: boolean) => void;
+    onAmount: (index: number, amount: number | null) => Promise<boolean>;
+};
 
 const Group = ({ title, hint, rows, collapsed, ...rowProps }: { title: string; hint: string; rows: Row[]; collapsed?: boolean } & RowProps) => {
     if (rows.length === 0) return null;
@@ -316,8 +345,9 @@ const Group = ({ title, hint, rows, collapsed, ...rowProps }: { title: string; h
     );
 };
 
-const ItemCard = ({ row, isAdmin, onToggle }: { row: Row } & RowProps) => {
+const ItemCard = ({ row, isAdmin, onToggle, onAmount }: { row: Row } & RowProps) => {
     const { item, index, code } = row;
+    const [editando, setEditando] = useState(false);
     const urgent = item.status === "your_turn" && !item.excluded;
     return (
         <li className="rounded-[10px] border p-4 md:p-5" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)", opacity: item.excluded ? 0.5 : 1 }}>
@@ -333,10 +363,32 @@ const ItemCard = ({ row, isAdmin, onToggle }: { row: Row } & RowProps) => {
                         {item.excluded ? "Não é proposta" : STATUS_LABEL[item.status]}
                     </span>
                 </div>
-                <span className="shrink-0 text-[17px] font-medium tabular-nums" style={{ color: item.amount ? "var(--lp-ink)" : "var(--lp-ink-40)" }}>
-                    {item.amount ? brl(item.amount) : "valor no PDF"}
-                </span>
+                {isAdmin && !item.excluded && (editando || !item.amount) ? (
+                    <ValorInput
+                        inicial={item.amount}
+                        onSalvar={async (v) => {
+                            if (await onAmount(index, v)) setEditando(false);
+                        }}
+                    />
+                ) : (
+                    <span className="shrink-0 text-right">
+                        <span className="block text-[17px] font-medium tabular-nums" style={{ color: item.amount ? "var(--lp-ink)" : "var(--lp-ink-40)" }}>
+                            {item.amount ? brl(item.amount) : "valor no PDF"}
+                        </span>
+                        {isAdmin && item.amount && !item.excluded && (
+                            <button type="button" onClick={() => setEditando(true)} className="text-[12px] underline-offset-4 hover:underline" style={{ color: "var(--lp-ink-40)" }}>
+                                corrigir
+                            </button>
+                        )}
+                    </span>
+                )}
             </div>
+            {item.evidencia && (
+                <p className="mt-2 truncate text-[13px]" style={{ color: "var(--lp-ink-55)" }} title={item.evidencia}>
+                    {item.detected_by === "pdf" ? "Contei pelo arquivo: " : "Contei pela mensagem: "}
+                    <span style={{ color: "var(--lp-ink-70)" }}>{item.evidencia}</span>
+                </p>
+            )}
             <p className="mt-2 text-[14px] leading-snug" style={{ color: "var(--lp-ink-55)" }}>
                 Proposta {dias(item.days_since_quote)}
                 {item.status !== "no_reply" && item.status !== "talking" && ` · cliente falou ${dias(item.days_silent)}`}
@@ -355,6 +407,45 @@ const ItemCard = ({ row, isAdmin, onToggle }: { row: Row } & RowProps) => {
                 </button>
             )}
         </li>
+    );
+};
+
+/** Valor em reais digitado pelo dono quando o histórico não trouxe. */
+const ValorInput = ({ inicial, onSalvar }: { inicial: number | null; onSalvar: (v: number | null) => void }) => {
+    const [txt, setTxt] = useState(inicial ? String(inicial) : "");
+    const valor = (() => {
+        const limpo = txt.replace(/[^\d,]/g, "").replace(",", ".");
+        const n = Number(limpo);
+        return limpo && Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+    })();
+    return (
+        <form
+            className="flex shrink-0 items-center gap-1.5"
+            onSubmit={(e) => {
+                e.preventDefault();
+                if (valor) onSalvar(valor);
+            }}
+        >
+            <label className="sr-only" htmlFor={`valor-${inicial ?? "novo"}`}>Valor da proposta</label>
+            <span className="text-[14px]" style={{ color: "var(--lp-ink-55)" }}>R$</span>
+            <input
+                id={`valor-${inicial ?? "novo"}`}
+                inputMode="numeric"
+                placeholder="quanto era?"
+                value={txt}
+                onChange={(e) => setTxt(e.target.value)}
+                className="h-9 w-28 rounded-[8px] border px-2.5 text-[16px] tabular-nums outline-none focus:ring-2 focus:ring-[var(--lp-blue)]"
+                style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)", color: "var(--lp-ink)" }}
+            />
+            <button
+                type="submit"
+                disabled={!valor}
+                className="h-9 rounded-full px-3 text-[13px] font-semibold text-white disabled:opacity-40"
+                style={{ background: "var(--lp-ink)" }}
+            >
+                Ok
+            </button>
+        </form>
     );
 };
 

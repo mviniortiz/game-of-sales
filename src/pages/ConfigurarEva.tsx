@@ -8,12 +8,13 @@ import { ArrowUp, Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { EvaBot } from "@/components/eva/EvaBot";
+import { Bolha, Leitura, type Msg } from "@/components/eva/ConversaEva";
 import { EncontroProgress } from "@/components/brand/EncontroProgress";
 import { WhatsAppConnectModal } from "@/components/inbox/WhatsAppConnectModal";
 import { brl } from "@/lib/quoteText";
 import { useEvaSetup, setupDismissKey } from "@/hooks/useEvaSetup";
 import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
+import { useLeituraHistorico } from "@/hooks/useLeituraHistorico";
 import { APP_HOME } from "@/config/routes";
 import {
     composeContext,
@@ -48,8 +49,7 @@ type Seed = {
 
 // Continua a contagem do cadastro (passo 1 de 4): quem chega aqui já tem um feito.
 const PASSOS = ["Criar a conta", "Conhecer a empresa", "Conectar o WhatsApp", "Ver suas propostas paradas"];
-const espera = (ms: number) => new Promise((r) => setTimeout(r, ms));
-type Msg = { de: "eva" | "voce" | "bloco"; texto: ReactNode };
+
 
 const MOTIVO: Record<string, string> = {
     rede_social: "Instagram e Facebook eu não consigo ler, eles pedem login. Sem problema, te pergunto o que preciso.",
@@ -81,15 +81,10 @@ export default function ConfigurarEva() {
     const [texto, setTexto] = useState("");
     const [travas, setTravas] = useState<Trava[]>([]);
     const [conectar, setConectar] = useState(false);
-    const [conversas, setConversas] = useState(0);
     const fimRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const vivo = useRef(true);
+    const { conversas, aguardar, vivo, espera } = useLeituraHistorico(companyId);
     const inicioDecidido = useRef(false);
-    useEffect(() => {
-        vivo.current = true;
-        return () => { vivo.current = false; };
-    }, []);
 
     const primeiroNome = (profile?.nome || "").split(" ")[0];
 
@@ -248,11 +243,6 @@ export default function ConfigurarEva() {
         fala({ de: "eva", texto: "Agora conecta o WhatsApp que você usa para mandar proposta. Eu leio os últimos 90 dias e te mostro quanto dinheiro está parado." });
     }
 
-    async function contarConversas() {
-        const { count } = await supabase.from("channel_conversations").select("id", { count: "exact", head: true }).eq("company_id", companyId!);
-        return count ?? 0;
-    }
-
     async function gravarPlacar(): Promise<Seed | null> {
         try {
             const { data, error } = await supabase.functions.invoke("quote-seed-history", { body: {} });
@@ -263,23 +253,12 @@ export default function ConfigurarEva() {
         }
     }
 
-    // O histórico chega em lotes logo depois da conexão: espera a contagem de
-    // conversas parar de subir (ou 75 s) e só então procura as propostas.
+    // Espera o histórico chegar e só então procura as propostas.
     async function lerWhatsapp(acabouDeConectar: boolean) {
         if (!companyId) return;
         setFase("importando");
         fala({ de: "eva", texto: acabouDeConectar ? "Conectou. Estou lendo suas conversas para achar as propostas." : "Seu WhatsApp já está conectado. Estou lendo suas conversas para achar as propostas." });
-        const inicio = Date.now();
-        let anterior = -1;
-        let parado = 0;
-        while (vivo.current && Date.now() - inicio < 75_000) {
-            await espera(3000);
-            const n = await contarConversas();
-            setConversas(n);
-            parado = n > 0 && n === anterior ? parado + 1 : 0;
-            anterior = n;
-            if (parado >= 3 && Date.now() - inicio > 9000) break;
-        }
+        const anterior = await aguardar();
         let r = await gravarPlacar();
         if (vivo.current && r && r.quotes === 0 && anterior < 5) {
             await espera(20_000);
@@ -462,20 +441,6 @@ export default function ConfigurarEva() {
     );
 }
 
-function Leitura({ conversas }: { conversas: number }) {
-    return (
-        <div className="flex max-w-[92%] items-end gap-2">
-            <span className="mb-0.5 shrink-0"><EvaBot size={24} state="thinking" /></span>
-            <div className="rounded-2xl rounded-bl-md border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-4 py-2.5 text-[15px] leading-snug text-[var(--vyz-text-strong)]">
-                {conversas > 0 ? (
-                    <>Li <span className="font-semibold tabular-nums">{conversas}</span> {conversas === 1 ? "conversa" : "conversas"} até agora…</>
-                ) : (
-                    <span className="text-[var(--vyz-text-muted)]">Esperando o histórico chegar…</span>
-                )}
-            </div>
-        </div>
-    );
-}
 
 const SITUACAO: Record<string, (d: number) => string> = {
     no_reply: (d) => `sem resposta há ${d} ${d === 1 ? "dia" : "dias"}`,
@@ -536,24 +501,6 @@ function minuscula(s: string) {
     return t ? t.charAt(0).toLowerCase() + t.slice(1) : "";
 }
 
-function Bolha({ de, children }: { de: Msg["de"]; children: ReactNode }) {
-    if (de === "bloco") return <>{children}</>;
-    if (de === "voce") {
-        return (
-            <div className="flex justify-end">
-                <p className="max-w-[85%] rounded-2xl rounded-br-md bg-[#0B1220] px-4 py-2.5 text-[15px] leading-snug text-white">{children}</p>
-            </div>
-        );
-    }
-    return (
-        <div className="flex max-w-[92%] items-end gap-2">
-            <span className="mb-0.5 shrink-0"><EvaBot size={24} still state="idle" /></span>
-            <div className="rounded-2xl rounded-bl-md border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-4 py-2.5 text-[15px] leading-snug text-[var(--vyz-text-strong)] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-                {children}
-            </div>
-        </div>
-    );
-}
 
 function Opcoes({ children }: { children: ReactNode }) {
     return <div className="flex flex-wrap gap-2">{children}</div>;

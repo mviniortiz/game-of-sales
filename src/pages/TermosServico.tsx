@@ -170,11 +170,11 @@ const TermosServico = () => {
               específicas para cada nível. Os detalhes e preços de cada plano estão disponíveis
               na página de planos.
             </p>
-            <SubHeading>5.2 Teste Grátis</SubHeading>
+            <SubHeading>5.2 Raio-X Grátis e Assinatura</SubHeading>
             <p>
-              Oferecemos 14 dias de teste grátis em todos os planos pagos. Durante o período de
-              teste você não será cobrado. Ao término do período, a cobrança será iniciada
-              automaticamente, salvo cancelamento prévio.
+              Criar a conta e receber o Raio-X das propostas paradas é grátis e não gera
+              cobrança. As demais funcionalidades exigem a assinatura do plano pago, cobrada
+              somente a partir da contratação.
             </p>
             <SubHeading>5.3 Alterações de Preço</SubHeading>
             <p>

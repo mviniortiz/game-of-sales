@@ -245,7 +245,7 @@ const LoginV2 = () => {
                             <p className="mt-10 text-[13px] landing-fade-in-up landing-delay-400" style={{ color: "rgba(11,18,32,0.58)" }}>
                                 Ainda não tem conta?{" "}
                                 <button type="button" onClick={() => navigate("/criar-conta?plan=pro", { state: { email: email.trim() } })} style={{ color: "rgba(11,18,32,0.88)", fontWeight: 500 }} className="hover:underline">
-                                    Criar conta grátis
+                                    Fazer meu Raio-X grátis
                                 </button>
                             </p>
                         </div>

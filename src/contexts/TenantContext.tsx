@@ -12,7 +12,7 @@ interface Company {
   plan: string;
   logo_url: string | null;
   trial_ends_at: string | null;
-  subscription_status: 'active' | 'trialing' | 'expired' | 'cancelled';
+  subscription_status: 'active' | 'inactive' | 'expired' | 'cancelled';
 }
 
 interface TenantContextType {
@@ -192,9 +192,8 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
     [companies, activeCompanyId]
   );
 
-  // Plano EFETIVO: trial ativo experimenta o Pro; trial expirado degrada pra
-  // free (sem tela de bloqueio). Valores legados (basic/starter/plus) são
-  // normalizados em resolveEffectivePlan.
+  // Plano EFETIVO: assinatura ativa vale o plano; o resto é free. Valores
+  // legados (basic/starter/plus) são normalizados em resolveEffectivePlan.
   const currentPlan: PlanType = useMemo(() => {
     if (!activeCompany) return 'free';
     return resolveEffectivePlan(

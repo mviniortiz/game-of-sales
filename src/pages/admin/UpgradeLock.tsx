@@ -1,6 +1,7 @@
-// Upgrade Lock: tela cheia quando o teste grátis acaba. Light-first, azul da
-// marca. O plano é o componente compartilhado PlanPicker (mesmo do /upgrade).
+// Upgrade Lock: tela cheia para conta sem assinatura ativa. Light-first, azul
+// da marca. O plano é o componente compartilhado PlanPicker (mesmo do /upgrade).
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Lock, ArrowLeft } from "lucide-react";
 import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
@@ -12,7 +13,7 @@ export default function UpgradeLock() {
     const { signOut } = useAuth();
 
     useEffect(() => {
-        trackEvent(FUNNEL_EVENTS.TRIAL_EXPIRED);
+        trackEvent(FUNNEL_EVENTS.PLAN_LOCK_VIEW);
     }, []);
 
     return (
@@ -49,12 +50,16 @@ export default function UpgradeLock() {
                     className="text-center mb-10 max-w-lg"
                 >
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2.5" style={{ color: "#0B1220" }}>
-                        Seu período de teste acabou
+                        Assine para a EVA agir
                     </h1>
                     <p className="text-[15px] leading-relaxed" style={{ color: "#64748B" }}>
-                        Assine para continuar com o Vyzon. Seus dados, pipeline e
-                        conversas continuam salvos.
+                        O Raio-X das propostas paradas é grátis. O aviso no 2º dia, as
+                        retomadas, o Inbox e o funil ficam liberados com a assinatura.
+                        Seus dados e conversas continuam salvos.
                     </p>
+                    <Link to="/raio-x" className="inline-block mt-3 text-[13px] font-semibold hover:underline" style={{ color: "#2563EB" }}>
+                        Ver meu Raio-X grátis
+                    </Link>
                 </motion.div>
 
                 <PlanPicker />

@@ -84,7 +84,7 @@ serve(async (req) => {
       "🆕 Novo cadastro na Vyzon",
       "",
       record.name || "Empresa",
-      `Plano: ${plan} (trial)`,
+      `Plano: ${plan} (sem assinatura)`,
     ];
     if (owner?.nome) lines.push(`Nome: ${owner.nome}`);
     if (owner?.email) lines.push(`Email: ${owner.email}`);

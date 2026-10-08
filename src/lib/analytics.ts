@@ -73,9 +73,8 @@ export const FUNNEL_EVENTS = {
   PAYMENT_SUCCESS: "payment_success",
   PAYMENT_ERROR: "payment_error",
 
-  // Trial
-  TRIAL_ACTIVATED: "trial_activated",
-  TRIAL_EXPIRED: "trial_expired",
+  // Plano
+  PLAN_LOCK_VIEW: "plan_lock_view",
   UPGRADE_CLICK: "upgrade_click",
 
   // Demo

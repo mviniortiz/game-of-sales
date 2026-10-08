@@ -160,14 +160,7 @@ serve(async (req) => {
                 currency_id: "BRL",
             };
 
-            // Only add free trial for new subscriptions, not upgrades
-            if (!upgrade) {
-                autoRecurring.free_trial = {
-                    frequency: 14,
-                    frequency_type: "days",
-                };
-            }
-
+            // Sem teste grátis desde 08/10/2026: a cobrança começa na contratação.
             subscriptionBody.auto_recurring = autoRecurring;
         } else {
             // Legacy: use pre-created MP plan
@@ -179,10 +172,6 @@ serve(async (req) => {
                 end_date: null,
                 transaction_amount: null,
                 currency_id: "BRL",
-                free_trial: {
-                    frequency: 14,
-                    frequency_type: "days",
-                },
             };
         }
 
@@ -230,8 +219,9 @@ serve(async (req) => {
         const companyUpdate: Record<string, any> = {
             mp_subscription_id: mpData.id,
             mp_customer_id: mpData.payer_id?.toString() || null,
-            subscription_status: upgrade ? "active" : "trialing",
-            ...(upgrade ? {} : { trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() }),
+            // Assinatura nova só vira "active" quando o webhook confirma a
+            // autorização no Mercado Pago (mercadopago-webhook).
+            subscription_status: upgrade ? "active" : "inactive",
         };
 
         console.log("[MP] Updating company:", companyId, JSON.stringify(companyUpdate));
@@ -239,7 +229,7 @@ serve(async (req) => {
             .from("companies")
             .update(companyUpdate)
             .eq("id", companyId)
-            .select("id, subscription_status, trial_ends_at, mp_subscription_id")
+            .select("id, subscription_status, mp_subscription_id")
             .single();
 
         if (updateError) {

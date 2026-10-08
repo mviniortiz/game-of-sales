@@ -1,12 +1,14 @@
 // raio-x-build — monta o Raio-X das propostas paradas de uma empresa a partir do
-// histórico do WhatsApp conectado (90 dias). Quem chama é o Markus, super admin,
-// na conversa de 20 minutos com o integrador; o resultado fica em
-// raio_x_reports e abre em /relatorio/:token.
+// histórico do WhatsApp conectado (90 dias). Quem chama: o Markus, super admin,
+// na conversa de 20 minutos com o integrador, ou o próprio dono no Raio-X
+// automático (/raio-x). O resultado fica em raio_x_reports e abre em
+// /relatorio/:token, onde quem é da empresa confere e corrige.
 //
 // Só lê e escreve rascunho dentro do relatório: nenhuma mensagem sai daqui.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildRaioX } from "./build.ts";
+import { seedQuotesFromHistory } from "../_shared/quoteSeed.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -30,10 +32,27 @@ Deno.serve(async (req) => {
     if (!user) return json({ error: "unauthorized" }, 401);
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-    const { data: me } = await admin.from("profiles").select("is_super_admin").eq("id", user.id).maybeSingle();
-    if (!me?.is_super_admin) return json({ error: "forbidden" }, 403);
+    const { data: me } = await admin.from("profiles").select("is_super_admin, company_id").eq("id", user.id).maybeSingle();
+    const body = await req.json().catch(() => ({})) as { company_id?: string; demo_request_id?: string };
+    const demoRequestId = body.demo_request_id;
 
-    const { company_id: companyId, demo_request_id: demoRequestId } = await req.json().catch(() => ({}));
+    // Super admin monta o de qualquer empresa (conversa de 20 min). O dono monta
+    // o da própria empresa sozinho (Raio-X automático), até 3 por dia.
+    let companyId: string | undefined;
+    const autoatendimento = !me?.is_super_admin;
+    if (me?.is_super_admin) {
+        companyId = body.company_id;
+    } else {
+        const { data: role } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+        if (!role || !me?.company_id) return json({ error: "forbidden" }, 403);
+        companyId = me.company_id;
+        const { count } = await admin
+            .from("raio_x_reports")
+            .select("id", { count: "exact", head: true })
+            .eq("company_id", companyId)
+            .gte("created_at", new Date(Date.now() - 86_400_000).toISOString());
+        if ((count ?? 0) >= 3) return json({ error: "limite", message: "Você já fez 3 Raio-X hoje. Abra o último ou tente amanhã." }, 429);
+    }
     if (!companyId) return json({ error: "company_id obrigatório" }, 400);
 
     const { data: company } = await admin.from("companies").select("id, name").eq("id", companyId).maybeSingle();
@@ -58,6 +77,15 @@ Deno.serve(async (req) => {
         items: reportItems,
     });
     if (insErr) return json({ error: `gravar falhou: ${insErr.message}` }, 500);
+
+    // No automático, as propostas também entram no placar do app.
+    if (autoatendimento) {
+        try {
+            await seedQuotesFromHistory(admin, companyId, user.id);
+        } catch (e) {
+            console.warn("[raio-x-build] placar:", e instanceof Error ? e.message : e);
+        }
+    }
 
     return json({ token, summary });
 });

@@ -58,7 +58,7 @@ const ARTICLES: DocArticle[] = [
       },
       {
         heading: "1. Crie sua conta",
-        body: "Acesse vyzon.com.br e clique em **Começar grátis**. Preencha seus dados, escolha um plano e complete o cadastro. Você terá **14 dias de trial gratuito** pra testar todas as funcionalidades do seu plano.",
+        body: "Acesse vyzon.com.br/criar-conta e preencha seus dados. Criar a conta é grátis: você conecta o WhatsApp e recebe o **Raio-X grátis** das propostas paradas. Para a EVA agir no dia a dia, assine o plano Vyzon.",
       },
       {
         heading: "2. Configure sua empresa",
@@ -327,7 +327,7 @@ const ARTICLES: DocArticle[] = [
     title: "Planos e Preços",
     icon: CreditCard,
     category: "Conta",
-    tags: ["plano", "preço", "vyzon", "upgrade", "assinatura", "pagamento", "pix", "cartão", "mercado pago", "trial"],
+    tags: ["plano", "preço", "vyzon", "upgrade", "assinatura", "pagamento", "pix", "cartão", "mercado pago", "raio-x"],
     content: [
       {
         body: "O Vyzon tem um plano só, com tudo liberado.",
@@ -337,8 +337,8 @@ const ARTICLES: DocArticle[] = [
         body: "Tudo liberado, até 10 usuários.\n- WhatsApp conectado\n- Inbox Comercial completo\n- Pipeline com agendamentos\n- EVA com análise de intenção, fit, urgência e objeções\n- Ranking e metas do time\n- Relatórios completos",
       },
       {
-        heading: "Teste grátis",
-        body: "Toda conta nova começa com **14 dias grátis, sem cartão**. Seus dados ficam intactos quando o período termina.",
+        heading: "Raio-X grátis",
+        body: "Criar a conta e receber o **Raio-X das propostas paradas** é grátis. O aviso no 2º dia, as retomadas, o Inbox e o funil ficam liberados com a assinatura.",
       },
       {
         heading: "Como assinar",

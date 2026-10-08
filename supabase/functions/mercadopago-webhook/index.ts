@@ -196,23 +196,15 @@ async function handleSubscriptionEvent(data: any) {
 
     // Map MP status to our status
     const statusMap: Record<string, string> = {
-        "authorized": "trialing",
-        "pending": "trialing",
+        "authorized": "active",
+        "pending": "inactive",
         "paused": "paused",
         "cancelled": "canceled",
         "finished": "canceled"
     };
 
-    // Check if trial is over and subscription is active
-    let newStatus = statusMap[subscription.status] || subscription.status;
-
-    // If status is authorized and trial has ended, mark as active
-    if (subscription.status === "authorized") {
-        const trialEnd = new Date(subscription.auto_recurring?.free_trial?.first_invoice_offset);
-        if (trialEnd && new Date() > trialEnd) {
-            newStatus = "active";
-        }
-    }
+    // Sem teste grátis desde 08/10/2026: autorizada no MP = paga.
+    const newStatus = statusMap[subscription.status] || subscription.status;
 
     // Update company in Supabase
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);

@@ -102,9 +102,20 @@ export async function buildRaioX(admin: SupabaseClient, companyId: string, opts:
         if (out?.message_draft) drafts.set(item.conversation_id, { reading: out.suggestion_text, draft: out.message_draft });
     }));
 
+    // Por que a EVA achou que era proposta: o nome do PDF ou o trecho do texto.
+    // O dono confere isso no relatório e tira o que não for.
+    const evidencia = (i: RxItem): string | null => {
+        const m = (byConv.get(i.conversation_id) ?? []).find((x) => x.id === i.message_id);
+        if (!m) return null;
+        if (m.message_type === "document") return m.media_ref?.file_name || m.media_ref?.caption || "PDF";
+        const t = (m.body || m.media_ref?.caption || "").replace(/\s+/g, " ").trim();
+        return t ? (t.length > 140 ? `${t.slice(0, 137)}...` : t) : null;
+    };
+
     const reportItems = ranked.map((i) => {
         const name = contacts.get(contactOf.get(i.conversation_id) ?? "")?.name ?? null;
         return {
+            evidencia: evidencia(i),
             first_name: name ? name.trim().split(/\s+/)[0] : null,
             status: i.status,
             days_since_quote: i.days_since_quote,

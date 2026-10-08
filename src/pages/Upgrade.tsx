@@ -2,12 +2,12 @@
 // aviso de limite ou Faturamento). Mesmo PlanPicker da tela de teste expirado.
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "@phosphor-icons/react";
-import { useTrial } from "@/hooks/useTrial";
+import { usePlano } from "@/hooks/usePlano";
 import { PlanPicker } from "@/components/billing/PlanPicker";
 
 export default function Upgrade() {
     const navigate = useNavigate();
-    const { subscriptionStatus } = useTrial();
+    const { pago } = usePlano();
 
     return (
         <div className="px-4 sm:px-6 py-8 sm:py-10 max-w-5xl mx-auto">
@@ -27,7 +27,7 @@ export default function Upgrade() {
             </div>
 
             <div className="flex justify-center">
-                <PlanPicker paid={subscriptionStatus === "active"} />
+                <PlanPicker paid={pago} />
             </div>
         </div>
     );

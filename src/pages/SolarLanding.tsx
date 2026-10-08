@@ -19,6 +19,8 @@ import { EvaBot, EvaBotStage } from "@/components/eva/EvaBot";
 // senão o dono do negócio receberia o pitch de agência. O contato é manual.
 
 const SOURCE = "orcamento_teste";
+// Raio-X automático: cadastro e, depois, /raio-x no app.
+const RAIO_X_AUTO = "/criar-conta?segmento=energia_solar";
 const FUNNEL_PAGE = "solar";
 
 // Um ângulo por anúncio: a página repete a dor que a pessoa acabou de ver.
@@ -164,9 +166,9 @@ const Header = ({ onCta }: { onCta: () => void }) => (
             <Link to="/auth" className="text-sm" style={{ color: "var(--lp-ink-55)" }}>
                 Entrar
             </Link>
-            <a href="#raio-x" className="vz-btn vz-btn--primary vz-btn--sm" onClick={onCta}>
-                <span>Pedir Raio-X</span>
-            </a>
+            <Link to={RAIO_X_AUTO} className="vz-btn vz-btn--primary vz-btn--sm" onClick={onCta}>
+                <span>Fazer meu Raio-X</span>
+            </Link>
         </div>
     </header>
 );
@@ -190,12 +192,12 @@ const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void;
         </p>
         <div className="mt-8 flex flex-col items-center gap-3 landing-fade-in-up-lg landing-delay-300">
             <div className="flex flex-wrap items-center justify-center gap-3">
-                <a href="#raio-x" className="vz-btn vz-btn--primary" onClick={onCta}>
-                    <span>Quero meu Raio-X grátis</span>
+                <Link to={RAIO_X_AUTO} className="vz-btn vz-btn--primary" onClick={onCta}>
+                    <span>Fazer meu Raio-X agora</span>
                     <span className="vz-btn__arrow" aria-hidden="true">
                         →
                     </span>
-                </a>
+                </Link>
                 <a
                     href={whatsappUrl(WHATSAPP_MESSAGE)}
                     target="_blank"
@@ -207,7 +209,10 @@ const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void;
                 </a>
             </div>
             <span className="text-sm" style={{ color: "var(--lp-ink-55)" }}>
-                Grátis, sem cartão. Uma conversa de 20 minutos e você vê o seu número.
+                Grátis, sem cartão. Conecte o WhatsApp e em 3 minutos você vê quanto está parado.{" "}
+                <a href="#raio-x" className="underline underline-offset-4">
+                    Prefere fazer comigo?
+                </a>
             </span>
         </div>
     </section>
@@ -655,7 +660,7 @@ const NotABot = () => (
 const FAQ = [
     {
         q: "Quanto custa?",
-        a: "O Raio-X é grátis. Se depois você quiser que a EVA acompanhe as suas propostas todo mês, o Vyzon custa R$ 497 por mês, com tudo liberado para até 10 pessoas da equipe e 14 dias grátis para testar.",
+        a: "O Raio-X é grátis. Se depois você quiser que a EVA acompanhe as suas propostas todo mês, o Vyzon custa R$ 497 por mês, com tudo liberado para até 10 pessoas da equipe. Não tem teste: o Raio-X já mostra o que o Vyzon acha no seu WhatsApp.",
     },
     {
         q: "O que vocês fazem com as minhas conversas?",
@@ -761,9 +766,10 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
             >
             <div>
                 <Eyebrow>Grátis, sem cartão</Eyebrow>
-                <SectionTitle>Pedir meu Raio-X</SectionTitle>
+                <SectionTitle>Prefere fazer o Raio-X comigo?</SectionTitle>
                 <p className="mt-3 text-[15px] leading-relaxed md:text-[16px]" style={{ color: "var(--lp-ink-70)" }}>
-                    O Markus te chama no WhatsApp pra marcar 20 minutos e montar o Raio-X com você.
+                    O Markus te chama no WhatsApp pra marcar 20 minutos e montar o Raio-X com você. Se quiser na hora, sozinho,{" "}
+                    <Link to={RAIO_X_AUTO} className="underline underline-offset-4">faça o automático</Link>.
                 </p>
                 <ul className="mt-6 hidden space-y-2.5 text-[15px] md:block" style={{ color: "var(--lp-ink-70)" }}>
                     {["Sem trocar de número", "Você vê o seu número na hora", "Nenhuma mensagem sai para os seus clientes"].map((t) => (

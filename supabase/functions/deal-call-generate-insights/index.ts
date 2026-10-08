@@ -289,20 +289,17 @@ serve(async (req) => {
       if (!isSuperAdmin) {
         const { data: company } = await (adminSupabase as any)
           .from("companies")
-          .select("plan, subscription_status, trial_ends_at")
+          .select("plan, subscription_status")
           .eq("id", call.company_id)
           .single();
 
-        // Plano efetivo (espelha src/config/plans.ts): trial ativo = Pro.
+        // Plano efetivo (espelha src/config/plans.ts): só assinatura ativa vale.
         // Ligações são ADICIONAL (2026-08-21); enquanto não há cobrança de
         // adicional, o gate exige plano pago ("escala"/"enterprise" legados
         // contam como pro).
         const rawPlan = String(company?.plan || "free").toLowerCase();
         let companyPlan = "free";
-        if (company?.subscription_status === "trialing") {
-          const ends = company?.trial_ends_at ? new Date(company.trial_ends_at).getTime() : NaN;
-          companyPlan = !Number.isNaN(ends) && ends >= Date.now() ? "pro" : "free";
-        } else if (company?.subscription_status === "active") {
+        if (company?.subscription_status === "active") {
           companyPlan = ["pro", "plus", "escala", "enterprise", "essential"].includes(rawPlan) ? "pro"
             : "free";
         }

@@ -47,6 +47,11 @@ type Deal = FollowupDeal;
 async function fetchStaleDeals(filterCompanyId?: string): Promise<Deal[]> {
     const cutoff = new Date(Date.now() - STALE_DAYS_DEFAULT * 86400000).toISOString();
 
+    // A EVA só age em empresa paga (sem teste grátis desde 08/10/2026).
+    const { data: pagas } = await supabase.from("companies").select("id").eq("subscription_status", "active");
+    const pagasIds = ((pagas ?? []) as Array<{ id: string }>).map((c) => c.id);
+    if (pagasIds.length === 0) return [];
+
     let query = supabase
         .from("deals")
         .select(
@@ -55,6 +60,7 @@ async function fetchStaleDeals(filterCompanyId?: string): Promise<Deal[]> {
         .lt("updated_at", cutoff)
         .not("stage", "in", `(${SKIP_STAGES.map((s) => `"${s}"`).join(",")})`)
         .order("updated_at", { ascending: true })
+        .in("company_id", pagasIds)
         .limit(MAX_DEALS_PER_RUN);
 
     if (filterCompanyId) {

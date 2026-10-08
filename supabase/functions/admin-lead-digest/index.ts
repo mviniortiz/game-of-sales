@@ -3,7 +3,7 @@
 // 1. Enriquece a empresa (web search via Tavily — opcional, com fallback gracioso)
 // 2. Gera resumo executivo via OpenAI (Claude/GPT)
 // 3. Envia WhatsApp pro admin (via Evolution API)
-// 4. Cria conta demo pré-populada (auth + profile + company, trial 14 dias)
+// 4. Cria conta demo pré-populada (auth + profile + company, sem plano)
 // 5. Atualiza demo_requests.notes com status
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
@@ -356,8 +356,6 @@ async function createDemoAccount(lead: LeadRecord): Promise<{
     }
 
     const userId = created.user.id;
-    const now = new Date();
-    const trialEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
 
     // Cria company
     const companyName = lead.company || (lead.name ? `${lead.name} — Demo` : "Demo Account");
@@ -365,8 +363,9 @@ async function createDemoAccount(lead: LeadRecord): Promise<{
       .from("companies")
       .insert({
         name: companyName,
-        subscription_status: "trialing",
-        trial_ends_at: trialEnd.toISOString(),
+        // Sem teste grátis desde 08/10/2026: conta nasce sem plano.
+        plan: "free",
+        subscription_status: "inactive",
       })
       .select("id")
       .single();

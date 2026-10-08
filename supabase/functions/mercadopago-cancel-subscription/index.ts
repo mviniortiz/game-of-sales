@@ -204,7 +204,7 @@ serve(async (req) => {
             }
         }
 
-        // Access stays until end of paid cycle (or now, if trialing / never paid).
+        // Access stays until end of paid cycle (or now, if never paid).
         const endsAt = nextBillingDate || new Date().toISOString();
         const cancelledAt = new Date().toISOString();
 
