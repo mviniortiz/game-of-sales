@@ -2,7 +2,7 @@
 // antes de a pessoa começar (o passo 1 é este, já em andamento) e um exemplo do
 // placar que ela vai ver, marcado como exemplo. No login, a EVA esperando.
 import { EvaBot } from "@/components/eva/EvaBot";
-import { EncontroProgress } from "@/components/brand/EncontroProgress";
+import { VyzonMark } from "@/components/brand/VyzonMark";
 
 const PASSOS = [
     { titulo: "Criar a conta", texto: "Você está aqui. Grátis, sem cartão." },
@@ -31,7 +31,7 @@ export function AuthPreview({ modo }: { modo: "cadastro" | "login" }) {
     return (
         <div className="flex h-full flex-col justify-center gap-8 rounded-[28px] border border-[#E6EDF5] bg-white p-10 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_60px_-32px_rgba(15,23,42,0.25)] xl:p-14">
             <div className="flex items-center gap-4">
-                <EncontroProgress step={0} total={3} size={52} />
+                <VyzonMark size={52} />
                 <p className="font-satoshi text-[26px] font-black leading-tight tracking-[-0.02em] text-[#0B1220] xl:text-[30px]">
                     Em 3 minutos você vê quanto está parado no seu WhatsApp.
                 </p>

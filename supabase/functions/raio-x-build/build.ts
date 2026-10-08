@@ -2,6 +2,7 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { analyzeConversation, rankItems, summarize, type RxItem, type RxMessage } from "../_shared/raioX.ts";
 import { buildQuietQuotePrompt, buildQuotePrompt, callLLM } from "../_shared/followupDraft.ts";
+import { checarPropostas } from "./checagem.ts";
 
 const WINDOW_DAYS = 90;
 const DRAFTS = 10;
@@ -20,7 +21,7 @@ type Row = {
 
 const COLS = "id, conversation_id, contact_id, direction, message_type, body, media_ref, message_timestamp";
 
-export async function buildRaioX(admin: SupabaseClient, companyId: string, opts: { drafts?: boolean } = {}) {
+export async function buildRaioX(admin: SupabaseClient, companyId: string, opts: { drafts?: boolean; checar?: boolean } = {}) {
     const since = new Date(Date.now() - WINDOW_DAYS * 86_400_000).toISOString();
 
     // 1. Candidatas: mensagens da empresa que podem ser proposta (PDF ou valor em reais).
@@ -75,14 +76,27 @@ export async function buildRaioX(admin: SupabaseClient, companyId: string, opts:
         }
     }
 
-    const items: RxItem[] = [];
+    const found: RxItem[] = [];
     for (const [, msgs] of byConv) {
         const item = analyzeConversation(msgs);
-        if (item) items.push(item);
+        if (item) found.push(item);
     }
+
+    // 4. A IA confere cada candidata e tira o que não é proposta. Valor escrito
+    // na conversa completa o que a regra não achou (PDF antigo vem sem valor).
+    const nomeDe = (convId: string) => contacts.get(contactOf.get(convId) ?? "")?.name ?? null;
+    const vereditos = opts.checar === false ? found.map(() => null) : await checarPropostas(found, byConv, nomeDe);
+    const descartadas = found
+        .map((i, k) => ({ i, v: vereditos[k] }))
+        .filter(({ v }) => v?.proposta === false)
+        .map(({ i, v }) => ({ conversation_id: i.conversation_id, nome: nomeDe(i.conversation_id), motivo: v!.motivo }));
+    const items = found
+        .map((i, k) => ({ i, v: vereditos[k] }))
+        .filter(({ v }) => v?.proposta !== false)
+        .map(({ i, v }) => (i.amount == null && v?.valor ? { ...i, amount: v.valor } : i));
     const ranked = rankItems(items);
 
-    // 4. Retomada pronta pras maiores paradas. Fica só no relatório.
+    // 5. Retomada pronta pras maiores paradas. Fica só no relatório.
     const drafts = new Map<string, { reading: string; draft: string }>();
     const toDraft = ranked.filter((i) => i.status !== "talking").slice(0, DRAFTS);
     if (opts.drafts !== false) await Promise.all(toDraft.map(async (item) => {
@@ -128,14 +142,14 @@ export async function buildRaioX(admin: SupabaseClient, companyId: string, opts:
         };
     });
 
-    const summary = { ...summarize(items), messages_read: [...byConv.values()].reduce((a, m) => a + m.length, 0), window_days: WINDOW_DAYS };
+    const summary = { ...summarize(items), descartadas: descartadas.length, messages_read: [...byConv.values()].reduce((a, m) => a + m.length, 0), window_days: WINDOW_DAYS };
     // Para o placar: a proposta de cada conversa com o contato e o nome.
     const quotes = ranked.map((i) => ({
         ...i,
         contact_id: contactOf.get(i.conversation_id) ?? null,
         name: contacts.get(contactOf.get(i.conversation_id) ?? "")?.name ?? null,
     }));
-    return { summary, items: reportItems, quotes };
+    return { summary, items: reportItems, quotes, descartadas };
 }
 
 function toRx(r: Row): RxMessage {

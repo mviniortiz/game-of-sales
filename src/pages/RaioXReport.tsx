@@ -36,7 +36,7 @@ type Item = {
 type Report = {
     company_name: string | null;
     created_at: string;
-    summary: { messages_read: number; window_days: number };
+    summary: { messages_read: number; window_days: number; descartadas?: number };
     items: Item[];
     can_edit?: boolean;
 };
@@ -226,6 +226,11 @@ const RaioXReport = () => {
                 <Stat label="Cliente esperando você" value={view.yourTurn} highlight={view.yourTurn > 0} />
                 <Stat label="Mensagens lidas" value={report.summary.messages_read.toLocaleString("pt-BR")} />
             </dl>
+            {(report.summary.descartadas ?? 0) > 0 && (
+                <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--lp-ink-55)" }}>
+                    A EVA também conferiu {report.summary.descartadas} {report.summary.descartadas === 1 ? "arquivo ou mensagem com valor que não era proposta" : "arquivos ou mensagens com valor que não eram proposta"} (ficha técnica, boleto, comprovante, conversa pessoal) e deixou fora da conta.
+                </p>
+            )}
 
             {view.stuck > 0 && (
                 <section className="mt-12 md:mt-14" aria-labelledby="plano">

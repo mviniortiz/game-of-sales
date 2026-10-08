@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bolha, Leitura, type Msg } from "@/components/eva/ConversaEva";
-import { EncontroProgress } from "@/components/brand/EncontroProgress";
+import { VyzonMark } from "@/components/brand/VyzonMark";
 import { WhatsAppConnectModal } from "@/components/inbox/WhatsAppConnectModal";
 import { brl } from "@/lib/quoteText";
 import { useEvaSetup, setupDismissKey } from "@/hooks/useEvaSetup";
@@ -260,7 +260,7 @@ export default function ConfigurarEva() {
         fala({ de: "eva", texto: acabouDeConectar ? "Conectou. Estou lendo suas conversas para achar as propostas." : "Seu WhatsApp já está conectado. Estou lendo suas conversas para achar as propostas." });
         const anterior = await aguardar();
         let r = await gravarPlacar();
-        if (vivo.current && r && r.quotes === 0 && anterior < 5) {
+        if (vivo.current && r && r.quotes === 0 && anterior.conversas < 5) {
             await espera(20_000);
             r = (await gravarPlacar()) ?? r;
         }
@@ -293,7 +293,7 @@ export default function ConfigurarEva() {
             <header className="shrink-0 border-b border-[var(--vyz-border)] bg-[var(--vyz-surface-1)]">
                 <div className="mx-auto flex h-14 w-full max-w-2xl items-center justify-between gap-3 px-4">
                     <div className="flex min-w-0 items-center gap-2.5">
-                        <EncontroProgress step={passo} total={4} size={34} />
+                        <VyzonMark size={30} />
                         <div className="min-w-0">
                             <p className="text-[14px] font-semibold leading-tight">Primeiros passos</p>
                             <p className="truncate text-[12px] text-[var(--vyz-text-muted)]">

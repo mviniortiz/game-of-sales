@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { EncontroProgress } from "@/components/brand/EncontroProgress";
+import { VyzonMark } from "@/components/brand/VyzonMark";
 import { EVA_SETUP_PATH } from "@/hooks/useEvaSetup";
 
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
@@ -70,7 +70,7 @@ export function PrimeirosPassos({ companyId, configured, connected }: { companyI
     return (
         <section aria-label="Primeiros passos" className="mt-4 rounded-2xl border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:p-5">
             <div className="flex items-center gap-3">
-                <EncontroProgress step={feitos} total={itens.length} size={36} />
+                <VyzonMark size={36} />
                 <div className="min-w-0 flex-1">
                     <p className="text-[14px] font-semibold text-[var(--vyz-text-strong)]">Primeiros passos</p>
                     <p className="text-[13px] text-[var(--vyz-text-muted)]">{feitos} de {itens.length} feitos</p>

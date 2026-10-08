@@ -1,0 +1,30 @@
+/* Palco do Raio-X automático: entradas curtas e o pensamento da EVA trocando.
+   Só transform e opacity; com movimento reduzido, tudo aparece no lugar. */
+.rx-entra {
+  animation: rx-entra 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.rx-pensamento {
+  animation: rx-pensa 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.rx-contador {
+  animation: rx-entra 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.rx-contador:nth-child(2) { animation-delay: 0.08s; }
+.rx-contador:nth-child(3) { animation-delay: 0.16s; }
+
+@keyframes rx-entra {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes rx-pensa {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rx-entra,
+  .rx-pensamento,
+  .rx-contador {
+    animation: none;
+  }
+}

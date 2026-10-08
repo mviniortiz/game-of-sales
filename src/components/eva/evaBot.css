@@ -164,6 +164,49 @@
   animation: eva-bot-pulse 1.2s var(--soft) infinite;
 }
 
+/* ── pensando: olha pra cima e vai de um lado pro outro devagar, com pausas,
+   um olho meio apertado, cabeça inclinada e bolinhas de pensamento subindo */
+.eva-bot__thought {
+  position: absolute;
+  right: calc(var(--s) * -0.16);
+  top: calc(var(--s) * -0.2);
+  width: calc(var(--s) * 0.4);
+  height: calc(var(--s) * 0.4);
+  pointer-events: none;
+}
+.eva-bot__thought i {
+  position: absolute;
+  border-radius: 50%;
+  /* mesma cor do corpo, com borda clara: aparece em fundo claro e escuro */
+  background: radial-gradient(circle at 35% 30%, #34508a 0%, #1b2b4e 70%);
+  box-shadow: 0 0 0 max(1px, calc(var(--s) * 0.014)) rgba(255, 255, 255, 0.85), 0 calc(var(--s) * 0.02) calc(var(--s) * 0.05) rgba(13, 20, 33, 0.22);
+  opacity: 0;
+  transform: scale(0.2);
+}
+.eva-bot__thought i:nth-child(1) { left: 0; bottom: 0; width: calc(var(--s) * 0.075); height: calc(var(--s) * 0.075); }
+.eva-bot__thought i:nth-child(2) { left: 26%; bottom: 30%; width: calc(var(--s) * 0.11); height: calc(var(--s) * 0.11); }
+.eva-bot__thought i:nth-child(3) { right: 0; top: 0; width: calc(var(--s) * 0.16); height: calc(var(--s) * 0.16); }
+.eva-bot[data-state="pondering"] .eva-bot__thought i {
+  animation: eva-bot-bubble 2.4s var(--ease) infinite;
+}
+.eva-bot[data-state="pondering"] .eva-bot__thought i:nth-child(2) { animation-delay: 0.22s; }
+.eva-bot[data-state="pondering"] .eva-bot__thought i:nth-child(3) { animation-delay: 0.44s; }
+.eva-bot[data-state="pondering"] .eva-bot__body {
+  animation: eva-bot-ponder 4.8s var(--soft) infinite;
+}
+.eva-bot[data-state="pondering"] .eva-bot__eyes {
+  animation: eva-bot-recall 4.8s var(--soft) infinite;
+}
+.eva-bot[data-state="pondering"] .eva-bot__eye:first-child::before {
+  transform: scaleY(0.62) translateY(12%);
+}
+.eva-bot[data-state="pondering"] .eva-bot__eye:last-child::before {
+  animation: eva-bot-blink 4.8s var(--soft) infinite;
+}
+.eva-bot[data-state="pondering"] .eva-bot__dot {
+  animation: eva-bot-pulse 1.8s var(--soft) infinite;
+}
+
 /* ── achou algo: olhos arregalam, pulinho com achatamento, onda âmbar */
 .eva-bot[data-state="alert"] .eva-bot__body {
   animation: eva-bot-hop 0.75s var(--ease) 1, eva-bot-idle 6.4s var(--soft) 0.75s infinite;
@@ -299,6 +342,23 @@
   30% { transform: translateZ(0) translateY(calc(var(--s) * -0.12)) rotate(-8deg) scale(1.04); }
   62% { transform: translateZ(0) translateY(0) rotate(5deg) scale(0.98); }
 }
+@keyframes eva-bot-ponder {
+  0%, 100% { transform: translateZ(0) rotate(-4deg) translateY(0); }
+  45% { transform: translateZ(0) rotate(4deg) translateY(calc(var(--s) * -0.02)); }
+  60% { transform: translateZ(0) rotate(4deg) translateY(calc(var(--s) * -0.02)); }
+}
+/* olhar de quem está lembrando: pra cima à direita, pausa, pra cima à esquerda */
+@keyframes eva-bot-recall {
+  0%, 8% { transform: translate3d(calc(var(--s) * 0.06), calc(var(--s) * -0.07), 0); }
+  38%, 52% { transform: translate3d(calc(var(--s) * -0.06), calc(var(--s) * -0.075), 0); }
+  80%, 100% { transform: translate3d(calc(var(--s) * 0.06), calc(var(--s) * -0.07), 0); }
+}
+@keyframes eva-bot-bubble {
+  0% { opacity: 0; transform: translate3d(calc(var(--s) * -0.04), calc(var(--s) * 0.05), 0) scale(0.2); }
+  25% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  70% { opacity: 1; transform: translate3d(0, calc(var(--s) * -0.02), 0) scale(1); }
+  100% { opacity: 0; transform: translate3d(calc(var(--s) * 0.02), calc(var(--s) * -0.05), 0) scale(0.85); }
+}
 @keyframes eva-bot-ring {
   0% { opacity: 0.7; transform: scale(1); }
   100% { opacity: 0; transform: scale(1.55); }
@@ -308,5 +368,10 @@
   .eva-bot *,
   .eva-bot *::before {
     animation: none !important;
+  }
+  /* parada, a última bolinha fica visível: ainda dá pra ver que ela pensa */
+  .eva-bot[data-state="pondering"] .eva-bot__thought i:nth-child(3) {
+    opacity: 1;
+    transform: none;
   }
 }

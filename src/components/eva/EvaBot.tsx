@@ -7,10 +7,11 @@ import "./evaBot.css";
 // de estado.
 //   idle      esperando, respira, pisca e olha em volta (sorri com o mouse em cima)
 //   thinking  lendo as conversas, olhos varrem de um lado pro outro
+//   pondering pensando: olha pra cima, aperta um olho e solta bolinhas de pensamento
 //   alert     achou proposta parada, pulinho, onda e ponto âmbar
 //   talking   escrevendo a retomada, boquinha de digitando
 //   happy     retomada enviada ou negócio fechado, olhos em arco e onda verde
-export type EvaBotState = "idle" | "thinking" | "alert" | "talking" | "happy";
+export type EvaBotState = "idle" | "thinking" | "pondering" | "alert" | "talking" | "happy";
 
 // Nomes de estado que telas e hooks mais antigos ainda usam.
 const LEGACY: Record<string, EvaBotState> = {
@@ -27,7 +28,7 @@ const LEGACY: Record<string, EvaBotState> = {
 export function evaBotFrom(state: string | null | undefined): EvaBotState {
     if (!state) return "idle";
     if (state in LEGACY) return LEGACY[state];
-    return (["idle", "thinking", "alert", "talking", "happy"] as const).includes(state as EvaBotState) ? (state as EvaBotState) : "idle";
+    return (["idle", "thinking", "pondering", "alert", "talking", "happy"] as const).includes(state as EvaBotState) ? (state as EvaBotState) : "idle";
 }
 
 // Um só ouvinte de ponteiro para todas as EVAs da tela.
@@ -148,6 +149,11 @@ export function EvaBot({
             aria-hidden={label ? undefined : true}
         >
             <span className="eva-bot__ring" />
+            <span className="eva-bot__thought">
+                <i />
+                <i />
+                <i />
+            </span>
             <span className="eva-bot__body">
                 <span className="eva-bot__dot" />
                 <span ref={faceRef} className="eva-bot__face">
