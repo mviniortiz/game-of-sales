@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
-import { EvaNode } from "@/components/landing/EvaNode";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 // Relatório do Raio-X (/relatorio/:token), aberto na conversa de 20 minutos e
 // mandado depois pro integrador, que quase sempre lê no celular. Público pelo
@@ -377,8 +377,8 @@ const DraftAsEva = ({ code, item, draft }: { code: string; item: Item; draft: st
             </p>
             <div className="mt-2 rounded-[10px] p-2.5 sm:p-3" style={{ background: WA_WALL }}>
                 <div className="max-w-[94%] rounded-[8px] rounded-tl-none px-3 py-2.5 text-[14.5px] leading-[1.45]" style={{ background: "#fff", color: "#111b21", boxShadow: "0 1px 0.5px rgba(11,20,26,.13)" }}>
-                    <p className="flex items-center gap-1.5 font-medium">
-                        <EvaNode size={12} color="var(--lp-eva)" />
+                    <p className="flex items-center gap-2 font-medium">
+                        <EvaBot size={20} still />
                         EVA [{code}] rascunho pronto
                     </p>
                     <p className="mt-2">Lead: {item.first_name ?? "cliente"}</p>
@@ -422,9 +422,9 @@ const STEPS = [
 /** A EVA como companheira: o fluxo de verdade, com o exemplo da maior parada. */
 const Companion = ({ example }: { example: Row | null }) => (
     <section className="mt-14 md:mt-16" aria-labelledby="eva">
-        <p className="flex items-center gap-2 text-[13px] font-medium" style={{ color: "var(--lp-eva)" }}>
-            <EvaNode size={13} color="var(--lp-eva)" />
-            EVA
+        <p className="flex items-center gap-3 text-[13px] font-medium" style={{ color: "var(--lp-eva)" }}>
+            <EvaBot size={44} />
+            EVA, sua companheira
         </p>
         <h2 id="eva" className="lp-display mt-2 text-[26px] leading-tight md:text-3xl" style={{ color: "var(--lp-ink)" }}>
             Uma companheira que lembra das propostas por você
@@ -465,9 +465,7 @@ const PhoneThread = ({ code, name, draft }: { code: string; name: string | null;
     return (
         <figure className="mx-auto w-full max-w-[320px] overflow-hidden rounded-[22px] border" style={{ borderColor: "var(--lp-line)", background: WA_WALL }} aria-label="Exemplo da conversa com a EVA no WhatsApp">
             <div className="flex items-center gap-2.5 px-4 py-3" style={{ background: "var(--lp-white)" }}>
-                <span className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "var(--lp-paper)" }}>
-                    <EvaNode size={14} color="var(--lp-eva)" />
-                </span>
+                <EvaBot size={32} state="talking" />
                 <div>
                     <p className="text-[14px] font-medium" style={{ color: "#111b21" }}>
                         EVA

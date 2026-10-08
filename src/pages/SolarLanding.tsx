@@ -7,7 +7,7 @@ import { logLandingEvent } from "@/lib/landingFunnel";
 import { whatsappUrl } from "@/config/contact";
 import { ButtonV2 } from "@/components/landing-v2/ButtonV2";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
-import { EvaNode } from "@/components/landing/EvaNode";
+import { EvaBot, EvaBotStage } from "@/components/eva/EvaBot";
 
 // Home de produção desde 29/09/2026: integradores de energia solar, oferta de
 // entrada = Raio-X grátis das propostas paradas no WhatsApp. A landing de
@@ -271,9 +271,7 @@ const ProductMock = () => (
 
                 <div className="flex flex-col border-t md:border-t-0" style={{ background: DARK.panel, borderColor: DARK.line }}>
                     <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: `1px solid ${DARK.line}` }}>
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full" style={{ background: DARK.bg, border: `1px solid ${DARK.lineStrong}` }}>
-                            <EvaNode size={12} color="#a78bfa" />
-                        </span>
+                        <EvaBot size={28} />
                         <span className="font-medium">EVA</span>
                         <span style={{ color: DARK.dim, fontSize: 12 }}>no seu WhatsApp · 09:02</span>
                     </div>
@@ -380,8 +378,8 @@ const Pain = ({ text }: { text: string }) => (
                         </p>
                         {t.eva && (
                             <div className="mt-3 rounded-[10px] border p-3 text-[13.5px] leading-snug" style={{ borderColor: "rgba(109,40,217,0.25)", background: "var(--lp-white)", color: "var(--lp-ink-90)" }}>
-                                <p className="flex items-center gap-1.5 font-medium" style={{ color: "var(--lp-eva)" }}>
-                                    <EvaNode size={11} color="var(--lp-eva)" />
+                                <p className="flex items-center gap-2 font-medium" style={{ color: "var(--lp-eva)" }}>
+                                    <EvaBot size={22} state="alert" />
                                     Com o Vyzon
                                 </p>
                                 <p className="mt-1">A EVA te chama aqui, com a retomada pronta.</p>
@@ -480,8 +478,8 @@ const ReportPreview = () => (
                 </li>
             ))}
         </ul>
-        <p className="mt-4 flex items-center gap-1.5 text-[13px]" style={{ color: "var(--lp-ink-70)" }}>
-            <EvaNode size={11} color="var(--lp-eva)" />
+        <p className="mt-4 flex items-center gap-2 text-[13px]" style={{ color: "var(--lp-ink-70)" }}>
+            <EvaBot size={20} still />
             Retomada pronta para cada uma, no tom da conversa.
         </p>
     </figure>
@@ -534,18 +532,27 @@ const GUARANTEES = [
     ["Esqueceu de responder?", "Ela não manda. Em 48 horas o rascunho expira sozinho."],
 ] as const;
 
+// O dia da EVA em cinco estados, na mesma ordem do produto real.
+const EVA_STEPS = [
+    { state: "idle", text: "Esperando a próxima proposta sair" },
+    { state: "thinking", text: "Lendo as conversas do seu WhatsApp" },
+    { state: "alert", text: "Achei: Carlos, 2 dias sem resposta" },
+    { state: "talking", text: "Escrevendo a retomada no seu tom" },
+    { state: "happy", text: "Você respondeu 1. Enviada do seu número" },
+] as const;
+
 const NotABot = () => (
     <section className="py-16 md:py-24" style={{ background: "#0d1421" }}>
-        <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-5 md:px-8">
+        <div className="mx-auto grid w-full max-w-[1120px] items-center gap-12 px-4 sm:px-5 md:grid-cols-[1fr_360px] md:gap-14 md:px-8">
+        <div className="order-2 md:order-1">
             <p className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em]" style={{ color: "#a78bfa" }}>
-                <EvaNode size={12} color="#a78bfa" />
-                EVA
+                EVA, sua companheira
             </p>
             <SectionTitle light>Não é robô falando com seu cliente</SectionTitle>
             <p className="mt-4 max-w-[600px] text-[16px] leading-relaxed md:text-[17px]" style={{ color: "rgba(249,251,255,0.7)" }}>
                 É uma companheira que lembra das propostas por você e deixa a mensagem pronta. Quem fala com o cliente continua sendo você.
             </p>
-            <ul className="mt-10 grid gap-3 md:grid-cols-3 md:gap-4">
+            <ul className="mt-10 grid gap-3">
                 {GUARANTEES.map(([title, body]) => (
                     <li key={title} className="rounded-[12px] border p-5 md:p-6" style={{ borderColor: "rgba(249,251,255,0.12)", background: "rgba(249,251,255,0.03)" }}>
                         <h3 className="text-[17px] font-medium" style={{ color: "#f9fbff" }}>
@@ -557,6 +564,18 @@ const NotABot = () => (
                     </li>
                 ))}
             </ul>
+        </div>
+        <div className="order-1 flex justify-center rounded-[20px] border px-6 py-10 md:order-2 md:py-14" style={{ borderColor: "rgba(249,251,255,0.1)", background: "radial-gradient(circle at 50% 35%, rgba(52,80,138,0.35), rgba(13,20,33,0) 70%)" }}>
+            <EvaBotStage
+                steps={[...EVA_STEPS]}
+                size={128}
+                renderText={(text) => (
+                    <p className="min-h-[48px] max-w-[260px] text-center text-[16px] font-medium leading-snug" style={{ color: "#f9fbff" }}>
+                        {text}
+                    </p>
+                )}
+            />
+        </div>
         </div>
     </section>
 );

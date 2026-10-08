@@ -30,6 +30,7 @@ import type { PipelineDealContext } from "@/hooks/usePipelineContextData";
 // F6T.2 — tags transversais (sistema F6T.1) substituem visualmente o deal_tags legado
 import type { Tag } from "@/types/tags";
 import { getTagColorClass, isHexColor } from "@/lib/tags";
+import { EvaBot } from "@/components/eva/EvaBot";
 
 export interface StageNeighbors {
   prev: { id: string; title: string; color: string } | null;
@@ -699,12 +700,10 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               {/* Leitura da EVA: superfície neutra, o roxo fica só no rótulo. */}
               <div className="flex items-center gap-1.5 min-w-0">
                 <span
-                  className={`inline-flex items-baseline gap-1.5 min-w-0 max-w-full px-2 py-1 rounded-md border text-[10.5px] leading-snug ${toneClass}`}
+                  className={`inline-flex items-center gap-1.5 min-w-0 max-w-full pl-1 pr-2 py-1 rounded-md border text-[10.5px] leading-snug ${toneClass}`}
                   title={readText}
                 >
-                  <span className={`font-semibold uppercase tracking-wide text-[9px] flex-shrink-0 ${tone === "eva" ? "text-[var(--vyz-eva)]" : "opacity-80"}`}>
-                    EVA
-                  </span>
+                  <EvaBot size={16} still state={tone === "amber" ? "alert" : quoteEva ? "talking" : "idle"} label="EVA" className="self-center" />
                   <span className="line-clamp-2 font-medium">{readText}</span>
                 </span>
               </div>

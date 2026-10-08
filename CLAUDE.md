@@ -57,8 +57,11 @@ está BLOQUEADO por billing; não criar workflows.
    "automatize suas vendas", "robô que vende sozinho", promessa de automação
    total.
 5. **Visual:** sem ícones Sparkles/Zap; sem orbe/partícula/glow de IA
-   genérica; EVA é entidade ABSTRATA (EvaCoreVisual/EvaNode), nunca
-   avatar/rosto; roxo `#6d28d9` só como micro-acento.
+   genérica; roxo `#6d28d9` só como micro-acento. EVA é um ícone vivo
+   no jeito do Grok Bot (decisão do Markus em 08/10/2026): corpo arredondado
+   e dois olhos que mudam de forma por estado, feito em CSS
+   (`src/components/eva/EvaBot.tsx`). Nunca personagem com rosto realista,
+   corpo ou estilo anime.
 6. **Fonte de verdade > prosa.** Antes de citar em copy, LER:
    - Preços/planos: `src/config/plans.ts` (landing espelha
      `src/data/landing/pricing.ts`; limites hardcoded nas edges

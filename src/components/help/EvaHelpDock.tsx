@@ -1,4 +1,4 @@
-// EvaHelpDock — a orb flutuante de AJUDA do produto (a "Holly" do Vyzon, na voz
+// EvaHelpDock — o botão flutuante de AJUDA do produto, com a EVA (a "Holly" do Vyzon, na voz
 // da EVA). Pill no canto → painel com chips + chat. Responde "como usar o Vyzon"
 // via edge function eva-help. NÃO é a EVA comercial (que lê pipeline/conversas).
 //
@@ -8,8 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUp, CircleNotch, NotePencil, X } from "@phosphor-icons/react";
-import { EvaThinkingOrb } from "@/components/eva/EvaThinkingOrb";
-import { useEvaOrbCycle } from "@/hooks/useEvaOrbCycle";
+import { EvaBot } from "@/components/eva/EvaBot";
 import { useTypewriter } from "@/hooks/useTypewriter";
 import { useEvaHelpChat } from "@/hooks/useEvaHelpChat";
 
@@ -66,25 +65,9 @@ export function EvaHelpDock() {
     const [open, setOpen] = useState(false);
     const [input, setInput] = useState("");
     const { messages, loading, animateIdx, ask: askChat, reset, reloadFromStorage } = useEvaHelpChat(pageLabel);
-    const orb = useEvaOrbCycle({
-        open,
-        lifePulse: !open && !reduce,
-    });
 
     const threadRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        if (loading) orb.onAskStart();
-        else if (messages.length > 0) {
-            const last = messages[messages.length - 1];
-            if (last?.role === "assistant") orb.onAnswerStart(last.content.length);
-            else orb.onIdle();
-        } else {
-            orb.onIdle();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loading]);
 
     const scrollToEnd = () => {
         if (threadRef.current) threadRef.current.scrollTop = threadRef.current.scrollHeight;
@@ -117,7 +100,7 @@ export function EvaHelpDock() {
         { label: "Como conecto o WhatsApp?", q: "Como eu conecto o meu WhatsApp no Vyzon?" },
     ];
 
-    // No /inicio a EVA comercial já é a entrada (rail/bottom-sheet) — esconde a orb
+    // No /inicio a EVA comercial já é a entrada (rail/bottom-sheet) — esconde o botão
     // de ajuda aqui pra não ter dois "Perguntar à EVA" (sobretudo no mobile).
     if (/^\/(inicio|dashboard)/.test(location.pathname)) return null;
 
@@ -145,15 +128,7 @@ export function EvaHelpDock() {
                         >
                             {/* Header */}
                             <div className="flex items-center gap-2.5 px-4 py-3 border-b" style={{ borderColor: "#F1F5F9" }}>
-                                <EvaThinkingOrb
-                                    state={loading ? "working" : orb.state}
-                                    size={20}
-                                    displaySize={26}
-                                    theme="light"
-                                    paused={!!reduce}
-                                    className="shrink-0"
-                                    aria-label="EVA"
-                                />
+                                <EvaBot size={28} state={loading ? "thinking" : "idle"} label="EVA" />
                                 <div className="min-w-0 flex-1">
                                     <p className="text-[13.5px] font-bold leading-tight" style={{ color: "#0B1220" }}>EVA</p>
                                     <p className="text-[11px] leading-tight" style={{ color: "#64748B" }}>Ajuda com o Vyzon</p>
@@ -286,15 +261,7 @@ export function EvaHelpDock() {
                         }}
                         aria-label="Perguntar à EVA"
                     >
-                        <EvaThinkingOrb
-                            state={orb.state}
-                            size={64}
-                            displaySize={34}
-                            theme="light"
-                            paused={!!reduce}
-                            className="shrink-0"
-                            aria-hidden
-                        />
+                        <EvaBot size={34} />
                         <span className="text-[14px] font-semibold" style={{ color: "#0B1220" }}>Perguntar à EVA</span>
                     </motion.button>
                 )}

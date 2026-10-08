@@ -1,0 +1,229 @@
+/* EvaBot: a EVA como ícone vivo, feito só com CSS. Todas as medidas são frações
+   de --s (o lado do ícone), então o mesmo desenho vale de 16px a 200px.
+   Só transform e opacity animam: o navegador entrega isso na placa de vídeo, a
+   60fps ou mais, sem recalcular layout a cada quadro. Por isso cada olho é um
+   invólucro com duas camadas: a pílula (::before) e o arco do sorriso (::after). */
+
+.eva-bot {
+  --s: 40px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --soft: cubic-bezier(0.45, 0, 0.55, 1);
+  position: relative;
+  display: inline-block;
+  width: var(--s);
+  height: var(--s);
+  flex-shrink: 0;
+  border-radius: 50%;
+  /* luz vindo de cima à esquerda: dá volume de bolinha, sem brilho neon */
+  background:
+    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 32%),
+    radial-gradient(circle at 38% 30%, #34508a 0%, #1b2b4e 48%, #0b1220 100%);
+  box-shadow:
+    inset 0 0 0 max(1px, calc(var(--s) * 0.012)) rgba(255, 255, 255, 0.1),
+    inset 0 calc(var(--s) * -0.05) calc(var(--s) * 0.1) rgba(0, 0, 0, 0.35),
+    0 calc(var(--s) * 0.06) calc(var(--s) * 0.14) rgba(13, 20, 33, 0.26),
+    0 calc(var(--s) * 0.01) calc(var(--s) * 0.03) rgba(13, 20, 33, 0.18);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* o pontinho é a assinatura da EVA: roxo, âmbar quando acha algo, verde quando dá certo */
+.eva-bot__dot {
+  position: absolute;
+  top: 13%;
+  right: 19%;
+  width: calc(var(--s) * 0.085);
+  height: calc(var(--s) * 0.085);
+  border-radius: 50%;
+  background: #a78bfa;
+  box-shadow: 0 0 0 calc(var(--s) * 0.018) rgba(11, 18, 32, 0.6);
+  transition: background-color 0.35s var(--ease), transform 0.45s var(--ease);
+}
+
+.eva-bot__eyes {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--s) * 0.13);
+  padding-top: calc(var(--s) * 0.02);
+  transition: transform 0.5s var(--ease);
+  will-change: transform;
+}
+
+.eva-bot__eye {
+  position: relative;
+  width: calc(var(--s) * 0.16);
+  height: calc(var(--s) * 0.25);
+  transition: transform 0.45s var(--ease);
+}
+.eva-bot__eye::before,
+.eva-bot__eye::after {
+  content: "";
+  position: absolute;
+  will-change: transform, opacity;
+}
+/* a pílula */
+.eva-bot__eye::before {
+  inset: 0;
+  border-radius: calc(var(--s) * 0.08);
+  background: #fff;
+  box-shadow: 0 0 calc(var(--s) * 0.05) rgba(255, 255, 255, 0.25);
+  transition: transform 0.45s var(--ease), opacity 0.25s var(--ease);
+}
+/* o arco do sorriso (^), escondido até o estado feliz */
+.eva-bot__eye::after {
+  left: -6%;
+  right: -6%;
+  top: 30%;
+  height: calc(var(--s) * 0.11);
+  border: calc(var(--s) * 0.048) solid #fff;
+  border-bottom: 0;
+  border-radius: calc(var(--s) * 0.12) calc(var(--s) * 0.12) 0 0;
+  opacity: 0;
+  transform: translateY(calc(var(--s) * 0.04)) scale(0.6);
+  transition: transform 0.5s var(--ease), opacity 0.3s var(--ease);
+}
+
+/* esperando: respira, pisca e olha em volta de vez em quando */
+.eva-bot[data-state="idle"] {
+  animation: eva-bot-breathe 3.6s var(--soft) infinite;
+}
+.eva-bot[data-state="idle"] .eva-bot__eye::before {
+  animation: eva-bot-blink 4.8s var(--soft) infinite;
+}
+.eva-bot[data-state="idle"] .eva-bot__eyes {
+  animation: eva-bot-look 8s var(--soft) infinite;
+}
+
+/* lendo: olhos viram barras que varrem, o corpo balança de leve */
+.eva-bot[data-state="thinking"] {
+  animation: eva-bot-sway 2.4s var(--soft) infinite;
+}
+.eva-bot[data-state="thinking"] .eva-bot__eye::before {
+  transform: scaleY(0.3);
+}
+.eva-bot[data-state="thinking"] .eva-bot__eyes {
+  animation: eva-bot-scan 1.4s var(--soft) infinite alternate;
+}
+.eva-bot[data-state="thinking"] .eva-bot__dot {
+  animation: eva-bot-pulse 1.2s var(--soft) infinite;
+}
+
+/* achou algo: olhos arregalam, pulinho com achatamento e o ponto fica âmbar */
+.eva-bot[data-state="alert"] {
+  animation: eva-bot-hop 0.75s var(--ease) 1;
+}
+.eva-bot[data-state="alert"] .eva-bot__eye::before {
+  transform: scale(1.14, 1.2);
+}
+.eva-bot[data-state="alert"] .eva-bot__dot {
+  background: #f59e0b;
+  transform: scale(1.3);
+}
+
+/* escrevendo: os olhos sobem e descem em alternância */
+.eva-bot[data-state="talking"] {
+  animation: eva-bot-breathe 1.8s var(--soft) infinite;
+}
+.eva-bot[data-state="talking"] .eva-bot__eye::before {
+  transform: scaleY(0.82);
+}
+.eva-bot[data-state="talking"] .eva-bot__eye {
+  animation: eva-bot-talk 0.9s var(--soft) infinite;
+}
+.eva-bot[data-state="talking"] .eva-bot__eye:last-child {
+  animation-delay: -0.45s;
+}
+
+/* deu certo: a pílula some, o arco aparece (^ ^) e ela dá um pulinho */
+.eva-bot[data-state="happy"] {
+  animation: eva-bot-joy 0.9s var(--ease) 1;
+}
+.eva-bot[data-state="happy"] .eva-bot__eye::before {
+  opacity: 0;
+  transform: scale(0.4, 0.2);
+}
+.eva-bot[data-state="happy"] .eva-bot__eye::after {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.eva-bot[data-state="happy"] .eva-bot__dot {
+  background: #22c55e;
+}
+
+/* sombra no chão do palco: acompanha a respiração e os pulos de longe */
+.eva-bot-floor {
+  width: calc(var(--s) * 0.62);
+  height: calc(var(--s) * 0.09);
+  margin-top: calc(var(--s) * -0.1);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+}
+
+/* parada: mesmo desenho, sem loop (listas com muitos itens, como o pipeline) */
+.eva-bot[data-still] {
+  animation: none !important;
+}
+.eva-bot[data-still] .eva-bot__eyes,
+.eva-bot[data-still] .eva-bot__eye,
+.eva-bot[data-still] .eva-bot__eye::before,
+.eva-bot[data-still] .eva-bot__dot {
+  animation: none !important;
+}
+
+@keyframes eva-bot-breathe {
+  0%, 100% { transform: translateZ(0) scale(1, 1); }
+  50% { transform: translateZ(0) scale(1.03, 0.98); }
+}
+@keyframes eva-bot-blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  93% { transform: scaleY(0.08); }
+  96% { transform: scaleY(1); }
+}
+@keyframes eva-bot-look {
+  0%, 28%, 100% { transform: translate3d(0, 0, 0); }
+  36%, 48% { transform: translate3d(calc(var(--s) * -0.06), calc(var(--s) * -0.015), 0); }
+  58%, 70% { transform: translate3d(calc(var(--s) * 0.06), calc(var(--s) * -0.015), 0); }
+  80% { transform: translate3d(0, 0, 0); }
+}
+@keyframes eva-bot-sway {
+  0%, 100% { transform: translateZ(0) rotate(0) scale(1); }
+  30% { transform: translateZ(0) rotate(-4deg) scale(1.02, 0.98); }
+  70% { transform: translateZ(0) rotate(4deg) scale(0.98, 1.02); }
+}
+@keyframes eva-bot-scan {
+  from { transform: translate3d(calc(var(--s) * -0.07), 0, 0); }
+  to { transform: translate3d(calc(var(--s) * 0.07), 0, 0); }
+}
+@keyframes eva-bot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.8); }
+}
+@keyframes eva-bot-hop {
+  0% { transform: translateZ(0) translateY(0) scale(1, 1); }
+  18% { transform: translateZ(0) translateY(0) scale(1.1, 0.88); }
+  48% { transform: translateZ(0) translateY(calc(var(--s) * -0.13)) scale(0.94, 1.07); }
+  76% { transform: translateZ(0) translateY(0) scale(1.05, 0.95); }
+  100% { transform: translateZ(0) translateY(0) scale(1, 1); }
+}
+@keyframes eva-bot-talk {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, calc(var(--s) * -0.05), 0); }
+}
+@keyframes eva-bot-joy {
+  0%, 100% { transform: translateZ(0) translateY(0) rotate(0); }
+  30% { transform: translateZ(0) translateY(calc(var(--s) * -0.11)) rotate(-7deg); }
+  62% { transform: translateZ(0) translateY(0) rotate(4deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eva-bot,
+  .eva-bot__eyes,
+  .eva-bot__eye,
+  .eva-bot__eye::before,
+  .eva-bot__dot {
+    animation: none !important;
+  }
+}

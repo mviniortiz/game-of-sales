@@ -71,8 +71,9 @@ Tokens live in `src/index.css`. Always use tokens, never hardcode hex when a tok
 
 A EVA é **entidade abstrata** — o núcleo de plasma `EvaCoreVisual`
 (`src/components/eva-studio/EvaCoreVisual.tsx`), reativo a estado
-(idle/analyzing/ready/attention). **Não é avatar/rosto.** Em micro-contextos
-(badges, ≤32px) use o glifo `EvaNode`. Nunca reintroduzir o avatar fotográfico.
+(idle/analyzing/ready/attention). Desde 08/10/2026 a EVA é um ícone vivo no jeito do Grok Bot
+(`EvaBot`: corpo arredondado, olhos que mudam por estado), decisão do Markus. Em micro-contextos
+(badges, ≤32px) use o glifo `EvaNode`. Nunca reintroduzir o avatar fotográfico antigo.
 
 ## Acessibilidade & Performance
 
@@ -86,7 +87,7 @@ A EVA é **entidade abstrata** — o núcleo de plasma `EvaCoreVisual`
 - Não misturar `--lp-*` com `--vyz-*` na mesma superfície.
 - Não usar glow/neon, gradientes berrantes, emojis decorativos na UI core.
 - Não hardcodar cor quando há token. Não criar um estilo visual novo sem pedido.
-- Não animar sem fallback de reduced-motion. Não reintroduzir avatar da EVA.
+- Não animar sem fallback de reduced-motion. Não reintroduzir o avatar fotográfico antigo da EVA.
 
 ## Checklist antes de fechar
 
