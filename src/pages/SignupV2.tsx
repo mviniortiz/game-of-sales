@@ -39,13 +39,14 @@ const SignupV2 = () => {
     const segment = SOLAR_SEGMENT;
     const { user, profile, companyId, isSuperAdmin, loading: authLoading, signUp, signIn, refreshProfile } = useAuth();
 
-    const [nome, setNome] = useState("");
-    const [empresa, setEmpresa] = useState("");
-    const [whats, setWhats] = useState("");
-    const [email, setEmail] = useState(
-        // veio do login com o email preenchido (amarração do fluxo)
-        (((location.state as { email?: string } | null)?.email) ?? "").toLowerCase(),
-    );
+    // Veio do login (só e-mail) ou do formulário do Raio-X na home (todos os
+    // campos): a pessoa não digita de novo o que acabou de digitar.
+    const veio = (location.state as { email?: string; nome?: string; empresa?: string; whats?: string } | null) ?? {};
+    const [nome, setNome] = useState(veio.nome ?? "");
+    const [empresa, setEmpresa] = useState(veio.empresa ?? "");
+    const [whats, setWhats] = useState(veio.whats ?? "");
+    const [email, setEmail] = useState((veio.email ?? "").toLowerCase());
+    const veioPreenchido = !!(veio.nome && veio.email);
     const [senha, setSenha] = useState("");
     const [loading, setLoading] = useState(false);
     const [erros, setErros] = useState<{ nome?: string; empresa?: string; whats?: string; email?: string; senha?: string; form?: string; formAction?: "login" }>({});
@@ -317,7 +318,7 @@ const SignupV2 = () => {
                                 {ssoMode ? "Quase lá" : "Criar conta"}
                             </h1>
                             <p className="mt-2.5 landing-fade-in-up landing-delay-150" style={{ color: "rgba(11,18,32,0.66)", fontSize: "1rem" }}>
-                                {ssoMode ? "Só falta a sua empresa e o seu WhatsApp." : "Passo 1 de 3. O Raio-X é grátis e não pede cartão."}
+                                {ssoMode ? "Só falta a sua empresa e o seu WhatsApp." : veioPreenchido ? "Já trouxemos o que você digitou. Só falta criar uma senha." : "Passo 1 de 3. O Raio-X é grátis e não pede cartão."}
                             </p>
 
                             {!ssoMode && (
@@ -351,7 +352,7 @@ const SignupV2 = () => {
                                         value={nome}
                                         onChange={(v) => { setNome(v); if (erros.nome) setErros((p) => ({ ...p, nome: undefined })); }}
                                         autoComplete="name"
-                                        autoFocus
+                                        autoFocus={!veioPreenchido}
                                         error={erros.nome}
                                         errorKey={erroKey}
                                     />
@@ -396,6 +397,7 @@ const SignupV2 = () => {
                                                 value={senha}
                                                 onChange={(v) => { setSenha(v); if (erros.senha) setErros((p) => ({ ...p, senha: undefined })); }}
                                                 autoComplete="new-password"
+                                                autoFocus={veioPreenchido}
                                                 error={erros.senha}
                                                 errorKey={erroKey}
                                                 rightSlot={

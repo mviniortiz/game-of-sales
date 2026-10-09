@@ -151,7 +151,7 @@ const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
                 <NoDiaADia />
                 <NotABot />
                 <Faq />
-                <SignupForm angle={angle} onWhatsapp={() => trackWhatsappClick("form_error")} />
+                <SignupForm angle={angle} onWhatsapp={trackWhatsappClick} />
             </main>
             <Footer />
         </div>
@@ -740,7 +740,7 @@ const Faq = () => (
     </section>
 );
 
-const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () => void }) => {
+const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: (placement: string) => void }) => {
     const [form, setForm] = useState<FormState>(EMPTY_FORM);
     const [submitting, setSubmitting] = useState(false);
     const [done, setDone] = useState(false);
@@ -834,11 +834,31 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                 {done ? (
                     <div className="rounded-[10px] border p-5" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
                         <p className="text-lg font-medium" style={{ color: "var(--lp-ink)" }}>
-                            Recebemos.
+                            Recebemos, {form.name.trim().split(" ")[0]}.
                         </p>
-                        <p className="mt-1 text-[15px]" style={{ color: "var(--lp-ink-70)" }}>
-                            O Markus te chama no WhatsApp pra marcar os 20 minutos.
+                        <p className="mt-1 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
+                            O Markus te chama no WhatsApp pra marcar os 20 minutos. Se não quiser esperar, dá pra ver o seu Raio-X agora mesmo, em 3 minutos.
                         </p>
+                        <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
+                            <Link
+                                to={RAIO_X_AUTO}
+                                state={{ nome: form.name.trim(), email: form.email.trim(), whats: form.phone.trim(), empresa: form.company.trim() }}
+                                onClick={() => logLandingEvent(FUNNEL_PAGE, angle, "cta_click", { placement: "form_done" })}
+                                className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--lp-ink)] px-6 text-[15px] font-semibold text-white"
+                            >
+                                Ver meu Raio-X agora →
+                            </Link>
+                            <a
+                                href={whatsappUrl(`Oi Markus, sou ${form.name.trim()} da ${form.company.trim()}. Acabei de pedir o Raio-X no site.`)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => onWhatsapp("form_done")}
+                                className="inline-flex h-12 items-center justify-center rounded-full border px-6 text-[15px] font-semibold"
+                                style={{ borderColor: "var(--lp-line)", color: "var(--lp-ink)" }}
+                            >
+                                Falar com o Markus agora
+                            </a>
+                        </div>
                     </div>
                 ) : (
                     <form onSubmit={onSubmit} onFocus={markStart} className="grid gap-4" noValidate>
@@ -882,7 +902,7 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                         {error && (
                             <p className="text-sm" role="alert" style={{ color: "#b42318" }}>
                                 {error}{" "}
-                                <a href={whatsappUrl(WHATSAPP_MESSAGE)} target="_blank" rel="noopener noreferrer" className="underline" onClick={onWhatsapp}>
+                                <a href={whatsappUrl(WHATSAPP_MESSAGE)} target="_blank" rel="noopener noreferrer" className="underline" onClick={() => onWhatsapp("form_error")}>
                                     Abrir WhatsApp
                                 </a>
                             </p>
