@@ -79,7 +79,6 @@ export const KanbanColumn = memo(({
   showAssignee = true,
 }: KanbanColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
-  const Icon = stage.icon;
 
   // LP-PIPE.2 — proporção do valor desta coluna vs a maior coluna do board.
   // Barra hairline dá a sensação de "onde está o dinheiro" sem números extras.
@@ -99,10 +98,8 @@ export const KanbanColumn = memo(({
     return rate;
   }, [showConversionRate, total.count, previousStageCount]);
 
-  // Map stage color text-* → bg-* for stage dot e accent bar superior
+  // Cor da etapa (text-* → bg-*) para o ponto do cabeçalho e a barra de valor.
   const dotBg = stage.color.replace("text-", "bg-").replace("-400", "-500");
-  // Stage accent bar: gradient sutil da cor do stage (F5P.4e)
-  const accentBg = stage.color.replace("text-", "bg-").replace("-400", "-500");
 
   return (
     <div className="flex items-stretch gap-0 h-full snap-start">
@@ -113,9 +110,8 @@ export const KanbanColumn = memo(({
         </div>
       )}
 
-      {/* F5P.4c — 3 níveis tonais: board (claro) → coluna (slate-100) →
-          card (branco). Inverte estratégia anterior pra dar contraste real
-          em light mode. Em dark o card-secondary já cria diferença. */}
+      {/* A coluna é só um trilho quase invisível no fundo do app: quem tem peso
+          visual são os cards brancos, não as caixas das etapas. */}
       <div
         ref={setNodeRef}
         className={`
@@ -123,28 +119,19 @@ export const KanbanColumn = memo(({
           border transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] overflow-hidden
           ${isOver
             ? "border-[var(--vyz-accent-border-strong)] bg-[var(--vyz-accent-soft-4)]"
-            : "border-slate-200/70 bg-slate-100/70 dark:border-border/40 dark:bg-card/40"
+            : "border-transparent bg-[rgba(15,23,42,0.03)] dark:bg-card/40"
           }
         `}
       >
-        {/* Barra superior com a cor da etapa; vira azul enquanto um card passa por cima. */}
-        <div
-          className={`absolute top-0 left-0 right-0 h-[3px] ${isOver ? "bg-[var(--vyz-accent)]" : accentBg} transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]`}
-        />
-
-        {/* F5P.4e — Column Header com bg distinto (white em light / card em dark)
-            cria grouping visual com cards e separação clara do "track" da coluna */}
-        {/* Uma linha: etapa, quantidade e valor. Antes eram duas linhas e 84px
-            de cabeçalho, com a palavra "Total" ocupando espaço para explicar um
-            número que só pode ser o total da coluna. Os 40px que sobraram vão
-            para os cards, que é o que a pessoa veio ver. */}
-        <div className="px-3.5 pt-3 pb-2.5 bg-white/60 dark:bg-card/30 border-b border-border/40">
+        {/* Uma linha: etapa, quantidade e valor. Embaixo, a barra de quanto
+            dinheiro está nesta etapa comparada à maior. */}
+        <div className="px-3.5 pt-3.5 pb-2">
           <div className="flex items-center gap-2">
-            <Icon className={`h-4 w-4 ${stage.color} flex-shrink-0`} strokeWidth={2.2} />
+            <span className={`h-2 w-2 rounded-full flex-shrink-0 ${dotBg}`} aria-hidden />
             <span className="font-semibold text-foreground text-[13px] tracking-tight truncate">
               {stage.title}
             </span>
-            <span className={`inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-md text-[10.5px] font-bold tabular-nums bg-muted/60 dark:bg-card/60 ${stage.color}`} style={{ boxShadow: "inset 0 0 0 1px currentColor" }}>
+            <span className="text-[12px] font-semibold tabular-nums text-[var(--vyz-text-muted)]">
               {total.count}
             </span>
             {total.value > 0 && (

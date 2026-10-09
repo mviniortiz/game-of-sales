@@ -104,7 +104,7 @@ function SidebarCta({ collapsed, onClick }: { collapsed: boolean; onClick: () =>
       type="button"
       onClick={onClick}
       aria-label="Novo lead"
-      className={`relative w-full flex items-center justify-center gap-1.5 h-9 rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] text-[13px] font-semibold tracking-[-0.01em] transition-[transform,box-shadow,opacity] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:opacity-90 active:scale-[0.97] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.3)] shadow-[0_1px_2px_rgba(8,8,8,0.16),0_6px_16px_-8px_rgba(8,8,8,0.4)]`}
+      className={`relative w-full flex items-center justify-center gap-1.5 h-9 rounded-full border border-[#E2E8F0] bg-white text-[#0B1220] text-[13px] font-semibold tracking-[-0.01em] transition-[transform,box-shadow,background-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#F8FAFC] active:scale-[0.97] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.3)] shadow-[0_1px_2px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-white/5 dark:text-white`}
     >
       <Plus size={15} weight="bold" aria-hidden />
       {!collapsed && <span>Novo lead</span>}

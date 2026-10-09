@@ -57,12 +57,37 @@ export function AssistantBubble({ content, animate, onTick }: { content: string;
     );
 }
 
+// No computador o botão mora no cabeçalho do app: flutuando, ele cobria o
+// valor das linhas encostadas na direita (Orçamentos, Pipeline).
+const ABRIR_EVENTO = "vyz:eva-ajuda-abrir";
+const temLugarProprio = (pathname: string) => /^\/(inicio|dashboard|inbox)/.test(pathname);
+
+export function PerguntarEvaCabecalho() {
+    const location = useLocation();
+    if (temLugarProprio(location.pathname)) return null;
+    return (
+        <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event(ABRIR_EVENTO))}
+            className="hidden sm:inline-flex h-9 items-center gap-2 rounded-full border border-[#E2E8F0] bg-white pl-1 pr-3.5 text-[13px] font-semibold text-[#0B1220] shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-[background-color,box-shadow] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#F8FAFC] hover:shadow-[0_2px_8px_-2px_rgba(15,23,42,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+        >
+            <EvaBot size={28} still />
+            Perguntar à EVA
+        </button>
+    );
+}
+
 export function EvaHelpDock() {
     const reduce = useReducedMotion();
     const location = useLocation();
     const pageLabel = useMemo(() => labelForPath(location.pathname), [location.pathname]);
 
     const [open, setOpen] = useState(false);
+    useEffect(() => {
+        const abrir = () => setOpen(true);
+        window.addEventListener(ABRIR_EVENTO, abrir);
+        return () => window.removeEventListener(ABRIR_EVENTO, abrir);
+    }, []);
     const [input, setInput] = useState("");
     const { messages, loading, animateIdx, ask: askChat, reset, reloadFromStorage } = useEvaHelpChat(pageLabel);
 
@@ -103,7 +128,7 @@ export function EvaHelpDock() {
     // No /inicio e no /inbox a EVA já tem lugar próprio (rail, painel ou sheet):
     // esconde o botão de ajuda pra não ter dois "Perguntar à EVA" e não cobrir
     // a lista e a sugestão no mobile.
-    if (/^\/(inicio|dashboard|inbox)/.test(location.pathname)) return null;
+    if (temLugarProprio(location.pathname)) return null;
 
     return (
         <div className="fixed z-[60] right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-6 sm:bottom-6 print:hidden">
@@ -254,7 +279,7 @@ export function EvaHelpDock() {
                         exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
                         whileHover={reduce ? undefined : { scale: 1.03 }}
                         whileTap={reduce ? undefined : { scale: 0.96 }}
-                        className="inline-flex items-center gap-2.5 h-12 px-[6px] sm:pl-2 sm:pr-4 rounded-full transition-shadow hover:shadow-lg"
+                        className="inline-flex sm:hidden items-center h-12 px-[6px] rounded-full transition-shadow hover:shadow-lg"
                         style={{
                             background: "#FFFFFF",
                             border: "1px solid #E2E8F0",
@@ -263,7 +288,6 @@ export function EvaHelpDock() {
                         aria-label="Perguntar à EVA"
                     >
                         <EvaBot size={34} />
-                        <span className="hidden sm:inline text-[14px] font-semibold" style={{ color: "#0B1220" }}>Perguntar à EVA</span>
                     </motion.button>
                 )}
             </AnimatePresence>

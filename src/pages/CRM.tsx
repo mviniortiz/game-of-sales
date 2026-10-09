@@ -1253,7 +1253,7 @@ export default function CRM() {
 
   return (
     <>
-      <div className="vz-page-full -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6 flex flex-col text-foreground bg-background min-w-0 overflow-hidden">
+      <div className="vz-page-full -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6 flex flex-col text-foreground min-w-0 overflow-hidden">
         {/* F5P.4e — Header com Phosphor duotone + toolbar reestruturada.
             Row 1 = título / stats / ações. Row 2 = search à esquerda, controles à direita (sem spacer flex-1 que squeezava o search). */}
         <div className="flex flex-col gap-2.5 px-4 sm:px-6 py-3 sm:py-3.5 border-b border-border bg-card shadow-sm">

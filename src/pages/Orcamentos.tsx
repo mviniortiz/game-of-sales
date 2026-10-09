@@ -244,7 +244,7 @@ function Scoreboard({ totals, onPick }: { totals: QuoteBoard["totals"]; onPick: 
   return (
     <section aria-label="Placar" className="mt-6">
       <p className="font-satoshi text-[44px] font-black leading-[1.0] tracking-[-0.04em] text-[var(--vyz-text-primary)] sm:text-[64px]">
-        {brl(totals.parked_amount)} <span className="text-[var(--vyz-text-muted)]">parados</span>
+        {brl(totals.parked_amount)} <span className="text-[0.5em] font-bold tracking-[-0.02em] text-[var(--vyz-text-muted)]">parados</span>
       </p>
       <p className="mt-2 text-[15px] text-[var(--vyz-text)]">
         {totals.parked_count === 0

@@ -1051,7 +1051,7 @@ export default function DealCommandCenter() {
 
     return (
         <>
-            <div className="min-h-[calc(100vh-64px)] bg-[#F8FAFC]">
+            <div className="min-h-[calc(100vh-64px)] bg-[#F6F4EF]">
                 {showConfetti && (
                     <Suspense fallback={null}>
                         <Confetti show={showConfetti} />
@@ -1059,7 +1059,7 @@ export default function DealCommandCenter() {
                 )}
 
                 {/* â"€â"€ HEADER â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-                <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
+                <div className="sticky top-0 z-40 bg-[#F6F4EF]/90 backdrop-blur-xl border-b border-[#E7E3DA]">
                     <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
 
                         {/* Breadcrumb row */}
@@ -1247,9 +1247,9 @@ export default function DealCommandCenter() {
                                         {/* â"€â"€ Histórico â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                                         {activeTab === "historico" && (
                                             <div className="flex flex-col">
-                                                <div className="px-5 py-4 sm:py-5 sm:min-h-[300px]">
+                                                <div className="px-5 py-4 sm:py-5">
                                                     {timeline.length === 0 ? (
-                                                        <div className="flex items-center gap-2.5 text-muted-foreground sm:flex-col sm:justify-center sm:gap-0 sm:py-14">
+                                                        <div className="flex items-center gap-2.5 text-muted-foreground sm:flex-col sm:justify-center sm:gap-0 sm:py-8">
                                                             <StickyNote className="h-4 w-4 shrink-0 opacity-50 sm:h-8 sm:w-8 sm:mb-3 sm:opacity-40" />
                                                             <p className="text-[13px] sm:text-sm">Nenhuma nota ainda. Escreva a primeira abaixo.</p>
                                                         </div>
@@ -1717,7 +1717,7 @@ export default function DealCommandCenter() {
                                                 <button
                                                     onClick={() => setShowCallModal(true)}
                                                     disabled={!canUseCalls}
-                                                    className={`${canUseCalls ? "flex" : "hidden lg:flex"} flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed`}
+                                                    className={`${canUseCalls ? "flex" : "hidden"} flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed`}
                                                 >
                                                     <Phone className="h-4 w-4 text-emerald-400" />
                                                     <span className="text-[10px] font-medium text-muted-foreground">Ligar</span>
@@ -1745,7 +1745,7 @@ export default function DealCommandCenter() {
                                                 <button
                                                     onClick={() => deal.customer_email && window.open(`mailto:${deal.customer_email}`, "_blank")}
                                                     disabled={!deal.customer_email}
-                                                    className={`${deal.customer_email ? "flex" : "hidden lg:flex"} flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-blue-500/40 hover:bg-blue-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed`}
+                                                    className={`${deal.customer_email ? "flex" : "hidden"} flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-blue-500/40 hover:bg-blue-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed`}
                                                 >
                                                     <Mail className="h-4 w-4 text-blue-400" />
                                                     <span className="text-[10px] font-medium text-muted-foreground">Email</span>
@@ -2064,19 +2064,9 @@ function DealConversationContextBlock({
         );
     }
 
-    // Sem conversa vinculada → empty state mas ainda exibe estrutura
-    if (!ctx.conversation) {
-        return (
-            <div className="hidden lg:block bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2">
-                    Contexto da conversa
-                </p>
-                <p className="text-sm text-slate-500 leading-relaxed">
-                    Nenhuma conversa vinculada a esta oportunidade.
-                </p>
-            </div>
-        );
-    }
+    // Sem conversa vinculada não há o que mostrar; o card do orçamento e o
+    // botão Responder já levam para o WhatsApp do cliente.
+    if (!ctx.conversation) return null;
 
     const { conversation, contact, lastMessages, summary, qualification, isStaleByMessages, relatedGaps, openConversationHref } = ctx;
 
