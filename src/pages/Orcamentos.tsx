@@ -588,8 +588,9 @@ const BTN_BASE = `inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-[
 const BTN_PRIMARY = `${BTN_BASE} bg-[#0B1220] text-white hover:bg-[#1F2A3B]`;
 const BTN_OUTLINE = `${BTN_BASE} border border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-1)] text-[var(--vyz-text-strong)] hover:bg-[var(--vyz-surface-2)]`;
 
-// O histórico importado na conexão não abre rastreio, então logo depois de
-// conectar o placar fica vazio até a primeira proposta nova sair.
+// Vazio com WhatsApp conectado: nenhuma proposta na janela escolhida. Contas
+// conectadas depois de 08/10/2026 já trazem as propostas dos últimos 30 dias
+// (quote-seed-history); as anteriores só contam o que sai depois da conexão.
 function EmptyState({ days, connected, checking }: { days: number; connected: boolean; checking: boolean }) {
   return (
     <section
@@ -602,7 +603,7 @@ function EmptyState({ days, connected, checking }: { days: number; connected: bo
       </h2>
       <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-[var(--vyz-text)]">
         {connected
-          ? "Seu WhatsApp está conectado. Cada orçamento que você enviar a partir de agora, em PDF ou numa mensagem com valor, aparece aqui. As conversas antigas importadas na conexão não entram no placar."
+          ? "Seu WhatsApp está conectado. Cada orçamento que você enviar, em PDF ou numa mensagem com valor, entra aqui sozinho, com o valor e há quantos dias o cliente não responde."
           : "Assim que você enviar um orçamento pelo WhatsApp, em PDF ou numa mensagem com valor, ele aparece aqui."}
       </p>
       <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-[var(--vyz-text)]">

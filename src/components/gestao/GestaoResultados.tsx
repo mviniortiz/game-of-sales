@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { useQuoteBoard } from "@/hooks/useQuoteBoard";
 import { brl, monthStartIso } from "./format";
+import { plural } from "@/lib/quoteText";
 
 type DealRow = { id: string; user_id: string | null; value: number | null; stage: string | null; updated_at: string };
 type ProfileRow = { id: string; nome: string | null };
@@ -75,10 +76,10 @@ export function GestaoResultados() {
   const failed = board.isError || data.isError;
 
   const tiles = [
-    { label: "Parado agora", value: brl(totals?.parked_amount ?? 0), sub: `${totals?.parked_count ?? 0} orçamentos sem resposta`, tone: "warn" as const },
-    { label: "Esperando vocês", value: brl(totals?.your_turn_amount ?? 0), sub: `${totals?.your_turn_count ?? 0} clientes responderam`, tone: "accent" as const },
-    { label: "Recuperado pela EVA", value: brl(totals?.recovered_amount ?? 0), sub: `${totals?.recovered_count ?? 0} fechados depois da retomada`, tone: "eva" as const },
-    { label: "Fechado no mês", value: brl(wonMonth.value), sub: `${wonMonth.count} negócios ganhos`, tone: "plain" as const },
+    { label: "Parado agora", value: brl(totals?.parked_amount ?? 0), sub: `${plural(totals?.parked_count ?? 0, "orçamento sem resposta", "orçamentos sem resposta")}`, tone: "warn" as const },
+    { label: "Esperando vocês", value: brl(totals?.your_turn_amount ?? 0), sub: `${plural(totals?.your_turn_count ?? 0, "cliente respondeu", "clientes responderam")}`, tone: "accent" as const },
+    { label: "Recuperado pela EVA", value: brl(totals?.recovered_amount ?? 0), sub: `${plural(totals?.recovered_count ?? 0, "fechado", "fechados")} depois da retomada`, tone: "eva" as const },
+    { label: "Fechado no mês", value: brl(wonMonth.value), sub: `${plural(wonMonth.count, "negócio ganho", "negócios ganhos")}`, tone: "plain" as const },
   ];
 
   return (

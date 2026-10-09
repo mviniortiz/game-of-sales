@@ -114,7 +114,7 @@ export function AvatarUpload({ currentAvatarUrl, userInitials, onUpload, uploadi
             type="button"
           >
             <Upload className="h-4 w-4 mr-2" />
-            Escolher Foto
+            Escolher foto
           </Button>
           <p className="text-sm text-muted-foreground mt-2">
             JPG, PNG ou GIF. Máx 2MB.
