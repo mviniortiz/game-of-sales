@@ -5,7 +5,7 @@ import { FooterV2 } from "@/components/landing-v2/FooterV2";
 import { BlogCover } from "@/components/landing-v2/BlogCover";
 import { ButtonV2 } from "@/components/landing-v2/ButtonV2";
 import { Rise } from "@/components/landing/animation/Rise";
-import { getBlogPost, formatBlogDate, readMinutes, type BlogBlock } from "@/data/landing/blogPosts";
+import { BLOG_POSTS, getBlogPost, formatBlogDate, readMinutes, type BlogBlock } from "@/data/landing/blogPosts";
 
 // Post individual do blog (rota /blog/:slug). Conteúdo em blocos (h2/p/ul/quote),
 // barra de progresso de leitura, reveal-on-scroll por bloco (transform-only, com
@@ -136,7 +136,7 @@ const BlogPostV2 = () => {
         <div className="lp-v2 min-h-screen w-full" style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}>
             <ReadingProgress accent={post.accent} />
             <NavV2
-                onCTAClick={() => navigate("/#raio-x")}
+                onCTAClick={() => navigate("/criar-conta?segmento=energia_solar")}
                 onLoginClick={() => navigate("/auth")}
                 onBlogClick={() => navigate("/blog")}
             />
@@ -209,15 +209,30 @@ const BlogPostV2 = () => {
                             Quantas propostas estão paradas no seu WhatsApp?
                         </h2>
                         <p className="mx-auto mt-2.5 max-w-md text-[14.5px]" style={{ color: "rgba(5,5,5,0.6)", lineHeight: 1.55 }}>
-                            No Raio-X grátis, a gente olha com você as propostas do último mês e mostra quais pararam e quanto elas somam. Leva 20 minutos.
+                            O Raio-X grátis lê o seu WhatsApp e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva 3 minutos, e nada é enviado aos seus clientes.
                         </p>
                         <div className="mt-6 flex justify-center">
-                            <ButtonV2 variant="primary" showArrow onClick={() => navigate("/#raio-x")}>
+                            <ButtonV2 variant="primary" showArrow onClick={() => navigate("/criar-conta?segmento=energia_solar")}>
                                 Fazer meu Raio-X grátis
                             </ButtonV2>
                         </div>
                     </div>
                 </Rise>
+
+                {/* leia também: liga os posts entre si (ajuda o Google a entender o conjunto) */}
+                <nav aria-label="Leia também" className="mt-12">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.12em]" style={{ color: "rgba(5,5,5,0.5)" }}>Leia também</p>
+                    <ul className="mt-3 divide-y" style={{ borderTop: "1px solid var(--lp-line)", borderBottom: "1px solid var(--lp-line)" }}>
+                        {BLOG_POSTS.filter((p) => p.slug !== post.slug).slice(0, 3).map((p) => (
+                            <li key={p.slug} style={{ borderColor: "var(--lp-line)" }}>
+                                <a href={`/blog/${p.slug}`} onClick={(e) => { e.preventDefault(); navigate(`/blog/${p.slug}`); }}
+                                    className="block py-3.5 text-[15px] font-medium hover:underline" style={{ color: "var(--lp-ink)" }}>
+                                    {p.title}
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
             </article>
 
             <FooterV2 onLoginClick={() => navigate("/auth")} onBlogClick={() => navigate("/blog")} />

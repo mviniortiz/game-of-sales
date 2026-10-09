@@ -31,7 +31,7 @@ const BlogV2 = () => {
     return (
         <div className="lp-v2 min-h-screen w-full" style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}>
             <NavV2
-                onCTAClick={() => navigate("/#raio-x")}
+                onCTAClick={() => navigate("/criar-conta?segmento=energia_solar")}
                 onLoginClick={() => navigate("/auth")}
                 onBlogClick={() => navigate("/blog")}
             />

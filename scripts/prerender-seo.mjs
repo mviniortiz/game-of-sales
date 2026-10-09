@@ -37,7 +37,7 @@ const SIMPLE_ROUTES = [
         slug: "changelog",
         seo: {
             title: "Changelog · Vyzon",
-            description: "Novidades, melhorias e correções do Vyzon — a Central Comercial com EVA para agências que vendem por conversa.",
+            description: "Novidades, melhorias e correções do Vyzon, o sistema que acompanha as propostas de energia solar que você manda pelo WhatsApp.",
         },
     },
     {
@@ -85,8 +85,8 @@ function renderRichNoscript(config) {
         <p style="font-size:18px;color:#333;margin:0 0 16px;max-width:680px;">${escapeHtml(config.hero.subheadline)}</p>
         <p style="font-size:14px;color:#555;margin:0 0 20px;">${escapeHtml(config.hero.microcopy)}</p>
         <p style="margin:0 0 32px;">
-          <a href="/onboarding?plan=plus" style="display:inline-block;padding:10px 18px;background:#00b25c;color:#fff;text-decoration:none;border-radius:8px;margin:0 6px 6px 0;"><strong>Testar grátis por 14 dias</strong></a>
-          <a href="/#agendar-demo" style="display:inline-block;padding:10px 18px;border:1px solid #999;color:#111;text-decoration:none;border-radius:8px;">Agendar demonstração</a>
+          <a href="/criar-conta?segmento=energia_solar" style="display:inline-block;padding:10px 18px;background:#111;color:#fff;text-decoration:none;border-radius:999px;margin:0 6px 6px 0;"><strong>Fazer meu Raio-X grátis</strong></a>
+          <a href="/#raio-x" style="display:inline-block;padding:10px 18px;border:1px solid #999;color:#111;text-decoration:none;border-radius:999px;">Fazer o Raio-X com o Markus</a>
         </p>
       </header>
 
@@ -146,8 +146,8 @@ function renderRichNoscript(config) {
           <h2 style="font-size:22px;margin:0 0 8px;">${escapeHtml(config.finalCta.title)}</h2>
           <p style="color:#444;margin:0 0 12px;">${escapeHtml(config.finalCta.body)}</p>
           <p style="margin:0;">
-            <a href="/#agendar-demo" style="display:inline-block;padding:10px 18px;background:#00b25c;color:#fff;text-decoration:none;border-radius:8px;margin:0 6px 6px 0;"><strong>Agendar demonstração</strong></a>
-            <a href="/onboarding?plan=plus" style="display:inline-block;padding:10px 18px;border:1px solid #999;color:#111;text-decoration:none;border-radius:8px;">Começar teste grátis</a>
+            <a href="/criar-conta?segmento=energia_solar" style="display:inline-block;padding:10px 18px;background:#111;color:#fff;text-decoration:none;border-radius:999px;margin:0 6px 6px 0;"><strong>Fazer meu Raio-X grátis</strong></a>
+            <a href="/#raio-x" style="display:inline-block;padding:10px 18px;border:1px solid #999;color:#111;text-decoration:none;border-radius:999px;">Fazer o Raio-X com o Markus</a>
           </p>
         </section>
       </main>
@@ -352,7 +352,7 @@ function renderBlogBlock(b) {
     return `<p style="color:#222;margin:0 0 16px;">${escapeHtml(b.text)}</p>`;
 }
 
-function renderBlogPostNoscript(post) {
+function renderBlogPostNoscript(post, todos = []) {
     const paras = post.content.map(renderBlogBlock).join("\n          ");
     const faqHtml = (post.faq && post.faq.length)
         ? `\n        <h2 style="font-size:21px;line-height:1.3;margin:30px 0 10px;">Perguntas frequentes</h2>\n        ${post.faq.map((f) => `<h3 style="font-size:17px;line-height:1.35;margin:22px 0 6px;">${escapeHtml(f.q)}</h3><p style="color:#222;margin:0 0 16px;">${escapeHtml(f.a)}</p>`).join("\n        ")}`
@@ -367,12 +367,14 @@ function renderBlogPostNoscript(post) {
         <p style="font-size:18px;color:#333;margin:0 0 24px;">${escapeHtml(post.excerpt)}</p>
           ${paras}${faqHtml}
         <p style="margin:28px 0 0;">
-          <a href="/onboarding?plan=plus" style="display:inline-block;padding:10px 18px;background:#1556C0;color:#fff;text-decoration:none;border-radius:8px;margin:0 6px 6px 0;"><strong>Testar 14 dias grátis</strong></a>
-          <a href="/?demo=1" style="display:inline-block;padding:10px 18px;border:1px solid #999;color:#111;text-decoration:none;border-radius:8px;">Ver a EVA em ação</a>
-        </p>
+          <a href="/criar-conta?segmento=energia_solar" style="display:inline-block;padding:10px 18px;background:#111;color:#fff;text-decoration:none;border-radius:999px;margin:0 6px 6px 0;"><strong>Fazer meu Raio-X grátis</strong></a>
+          <span style="display:block;font-size:13px;color:#555;margin-top:6px;">Grátis · 3 minutos · nada é enviado aos seus clientes</span>
+        </p>${todos.filter((p) => p.slug !== post.slug).length ? `
+        <h2 style="font-size:17px;margin:32px 0 8px;">Leia também</h2>
+        <ul style="padding-left:20px;margin:0;">${todos.filter((p) => p.slug !== post.slug).map((p) => `<li style="margin:0 0 8px;"><a href="/blog/${escapeAttr(p.slug)}" style="color:#1556C0;">${escapeHtml(p.title)}</a></li>`).join("")}</ul>` : ""}
       </article>
       <footer style="border-top:1px solid #eee;margin-top:28px;padding-top:20px;font-size:13px;color:#555;">
-        <p style="margin:0;"><strong>Vyzon</strong>, Central Comercial com EVA para agências que vendem por conversa.</p>
+        <p style="margin:0;"><strong>Vyzon</strong>, o sistema que acompanha cada proposta de energia solar que você manda pelo WhatsApp. <a href="/" style="color:#1556C0;">vyzon.com.br</a></p>
       </footer>
     </div>
   </noscript>`;
@@ -458,7 +460,7 @@ async function buildBlogPost(post) {
     html = html.replace(/<meta property="og:image" content="[^"]*" \/>/, `<meta property="og:image" content="${ogImg}" />`);
     html = html.replace(/<meta name="twitter:image" content="[^"]*" \/>/, `<meta name="twitter:image" content="${ogImg}" />`);
     html = stripHomeNoscripts(html);
-    html = html.replace("</body>", `${renderBlogPostNoscript(post)}\n</body>`);
+    html = html.replace("</body>", `${renderBlogPostNoscript(post, BLOG_POSTS)}\n</body>`);
     html = stripHomeJsonLd(html);
     html = html.replace("</head>", `  ${renderBlogPostJsonLd(post)}\n</head>`);
 
@@ -581,8 +583,7 @@ async function buildAlternativas(data) {
       <p style="font-size:17px;color:#222;margin:0 0 12px;max-width:720px;font-weight:500;">${escapeHtml(data.hero.bluf)}</p>
       <p style="font-size:15px;color:#555;margin:0 0 24px;max-width:680px;">${escapeHtml(data.hero.sub)}</p>
       <p style="margin:0 0 28px;">
-        <a href="/?demo=1" style="display:inline-block;padding:10px 18px;background:#1556C0;color:#fff;text-decoration:none;border-radius:999px;margin:0 6px 6px 0;"><strong>Ver a EVA em ação</strong></a>
-        <a href="/criar-conta?plan=plus" style="display:inline-block;padding:10px 18px;border:1px solid #999;color:#111;text-decoration:none;border-radius:999px;">Testar o Pro 14 dias</a>
+        <a href="/criar-conta?segmento=energia_solar" style="display:inline-block;padding:10px 18px;background:#111;color:#fff;text-decoration:none;border-radius:999px;margin:0 6px 6px 0;"><strong>Fazer meu Raio-X grátis</strong></a>
       </p>
 
       <h2 style="font-size:22px;margin:28px 0 12px;">Veredito por cenário</h2>

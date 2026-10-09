@@ -183,10 +183,225 @@
     ]
   },
   {
+    "slug": "modelo-proposta-comercial-energia-solar",
+    "category": "Comercial",
+    "date": "2026-10-09",
+    "title": "Modelo de proposta comercial de energia solar: o que colocar, em que ordem e como enviar pelo WhatsApp",
+    "excerpt": "Um modelo de proposta em 9 partes para integradora de energia solar, com o resumo de uma página que o cliente lê de verdade e o jeito certo de mandar pelo WhatsApp sem ela sumir na conversa.",
+    "coverText": "Uma página que vende.",
+    "accent": "#0E3E8A",
+    "content": [
+      {
+        "type": "p",
+        "text": "Toda integradora tem um modelo de proposta. O problema é que a maioria foi montada para mostrar o trabalho técnico, e não para ajudar o cliente a decidir. Vira um PDF de dez páginas com tabela de geração, ficha do inversor e foto de telhado, e o cliente pula tudo até achar o preço."
+      },
+      {
+        "type": "p",
+        "text": "Uma boa proposta de energia solar faz o contrário: responde em uma página o que o cliente quer saber e deixa o detalhe técnico para quem quiser conferir. Abaixo está um modelo em 9 partes, na ordem em que o cliente lê, e o que fazer depois de enviar."
+      },
+      {
+        "type": "h2",
+        "text": "O que o cliente quer saber antes de qualquer coisa"
+      },
+      {
+        "type": "p",
+        "text": "Quem pede orçamento de energia solar chega com quatro perguntas na cabeça. Se a proposta responde as quatro logo no começo, ela é lida. Se não responde, ela é comparada só pelo preço."
+      },
+      {
+        "type": "ol",
+        "items": [
+          "Quanto eu pago de luz hoje e quanto vou pagar depois.",
+          "Quanto custa, e se cabe no meu bolso (à vista, parcelado ou financiado).",
+          "Em quanto tempo o dinheiro volta.",
+          "Por que fechar com você, e não com a empresa que mandou o orçamento mais barato."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "Modelo de proposta comercial de energia solar em 9 partes"
+      },
+      {
+        "type": "ol",
+        "items": [
+          "Capa: nome do cliente, endereço da instalação, data e validade da proposta. Validade curta, de 7 a 15 dias, porque preço de equipamento muda.",
+          "Resumo em uma página: conta de luz de hoje, sistema proposto (kWp e quantidade de módulos), investimento, economia por mês e tempo de retorno. É a página mais importante da proposta.",
+          "Consumo e dimensionamento: média de consumo em kWh dos últimos 12 meses, potência do sistema e geração estimada por mês. Mostre a conta, não só o resultado.",
+          "Equipamentos: marca e modelo dos módulos e do inversor, tipo de estrutura e garantia de cada um.",
+          "Investimento e formas de pagamento: valor à vista, parcelado no cartão e financiado. No financiamento, coloque a parcela ao lado da conta de luz de hoje.",
+          "Retorno: economia por mês e por ano, tempo de retorno e o que acontece com a conta depois que o sistema se paga.",
+          "Prazos: projeto, aprovação na distribuidora e instalação. O cliente quer saber quando a conta vai baixar, não só quando o técnico chega.",
+          "Garantias e pós-venda: quem resolve se o inversor parar, em quanto tempo, e se tem monitoramento.",
+          "Próximo passo: o que o cliente faz para aprovar (responder, assinar, pagar a entrada) e até quando vale a proposta."
+        ]
+      },
+      {
+        "type": "example",
+        "title": "Exemplo de resumo de uma página (números ilustrativos)",
+        "body": [
+          "Conta de luz hoje: R$ 480 por mês. Sistema: 6,2 kWp, 11 módulos. Investimento: R$ 24.900 à vista.",
+          "Financiado em 60 vezes: parcela perto do que você já paga de luz. Depois de quitado, a conta cai para a taxa mínima da distribuidora.",
+          "Validade: 10 dias. Para aprovar, responda esta mensagem e a gente agenda a visita técnica."
+        ]
+      },
+      {
+        "type": "p",
+        "text": "O exemplo acima é ilustrativo. Os números da sua proposta vêm da conta do cliente, da irradiação da cidade e da simulação de financiamento do banco que você usa."
+      },
+      {
+        "type": "h2",
+        "text": "Word ou PDF?"
+      },
+      {
+        "type": "p",
+        "text": "Monte o modelo em Word ou Google Docs, porque é mais fácil de editar a cada cliente. Mas envie em PDF: ele abre igual em qualquer celular, não desconfigura e não deixa o cliente mexer no preço sem querer."
+      },
+      {
+        "type": "h2",
+        "text": "Como mandar a proposta pelo WhatsApp sem ela sumir"
+      },
+      {
+        "type": "p",
+        "text": "Aqui está o ponto em que a maioria das propostas se perde. Num evento do Canal Solar, o CEO da Bluesun, Roberto Caurim, disse que o PDF solto no WhatsApp fica no meio de outras propostas e o cliente acaba olhando só o preço da última linha. O PDF não é o problema. O problema é mandar só o PDF."
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Junto com o arquivo, mande uma mensagem de três linhas com o número principal: a conta de hoje, a parcela e o tempo de retorno.",
+          "Se puder, explique em um áudio curto ou numa ligação de cinco minutos. Conversa vende mais que arquivo.",
+          "Combine o próximo contato antes de se despedir: \"Te chamo na quinta para tirar as dúvidas, pode ser?\"",
+          "Anote a data de envio. Sem isso, você não sabe quais propostas estão esperando resposta."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "Depois de enviar: o que fazer nos próximos dias"
+      },
+      {
+        "type": "p",
+        "text": "A proposta não morre num dia. Ela esfria. Se o cliente visualizou e não respondeu em dois dias, é hora do primeiro contato, com uma pergunta simples sobre a dúvida que ele pode ter ficado. No quinto dia, um motivo novo, como uma condição de financiamento. No décimo, uma última mensagem que deixa a porta aberta."
+      },
+      {
+        "type": "p",
+        "text": "O difícil não é saber o que mandar. É lembrar de cada proposta no meio de visita, instalação e cliente ligando. Por isso vale ter uma lista simples com cliente, valor, data de envio e último contato, e olhar essa lista todo dia."
+      },
+      {
+        "type": "p",
+        "text": "Se você quer saber quanto já está parado hoje, o Raio-X grátis do Vyzon lê o seu WhatsApp e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva 3 minutos, e nada é enviado aos seus clientes."
+      }
+    ],
+    "faq": [
+      {
+        "q": "O que não pode faltar numa proposta comercial de energia solar?",
+        "a": "Conta de luz atual, sistema proposto em kWp, investimento com as formas de pagamento, economia por mês, tempo de retorno, equipamentos com garantia, prazos de instalação e o próximo passo para aprovar. O mais importante é ter tudo isso resumido numa primeira página."
+      },
+      {
+        "q": "Qual a validade de uma proposta de energia solar?",
+        "a": "Entre 7 e 15 dias é o mais comum, porque o preço de módulos e inversores muda. Validade curta também ajuda o cliente a decidir."
+      },
+      {
+        "q": "É melhor mandar a proposta em PDF ou por mensagem?",
+        "a": "Os dois. Envie o PDF, que abre igual em qualquer celular, junto com uma mensagem curta com os números principais. Só o arquivo tende a ser comparado apenas pelo preço."
+      },
+      {
+        "q": "Quanto tempo esperar para cobrar resposta da proposta?",
+        "a": "Dois dias depois de o cliente visualizar sem responder é um bom momento para o primeiro contato. Depois, no quinto e no décimo dia, com um motivo novo em cada mensagem."
+      }
+    ]
+  },
+  {
+    "slug": "proposta-energia-solar-pdf-whatsapp",
+    "category": "Comercial",
+    "date": "2026-10-09",
+    "title": "Proposta de energia solar em PDF pelo WhatsApp: por que ela se perde e como evitar",
+    "excerpt": "O cliente visualiza o PDF, não responde, e a proposta afunda na conversa. Os motivos mais comuns e o que fazer para cada orçamento enviado ter resposta.",
+    "coverText": "Ela afunda na conversa.",
+    "accent": "#0E3E8A",
+    "content": [
+      {
+        "type": "p",
+        "text": "A cena é conhecida. Você manda a proposta em PDF pelo WhatsApp, aparecem os dois tracinhos azuis, e mais nada. No dia seguinte chegam outras conversas, o grupo da família, o fornecedor, outro cliente, e a proposta vai subindo até sumir da tela. Do seu lado e do lado do cliente."
+      },
+      {
+        "type": "p",
+        "text": "Isso não acontece por falta de interesse. Quem pede orçamento de energia solar tem uma conta de luz que incomoda. Acontece porque o WhatsApp é bom para conversar e ruim para acompanhar decisão grande."
+      },
+      {
+        "type": "h2",
+        "text": "Por que a proposta em PDF se perde"
+      },
+      {
+        "type": "ol",
+        "items": [
+          "O cliente pede orçamento para mais de uma empresa. Num evento do Canal Solar, o CEO da Bluesun, Roberto Caurim, disse que o PDF fica no meio de outras propostas e o cliente acaba olhando só o preço da última linha.",
+          "O PDF chega sem explicação. Dez páginas técnicas sem ninguém para dizer o que importa viram uma comparação de preço.",
+          "Não há data combinada. Se ninguém disse quando vai voltar a falar, a conversa simplesmente para.",
+          "A dúvida do cliente fica sem dono. Financiamento, telhado, prazo da distribuidora: ele pensa em perguntar depois e não pergunta.",
+          "Do lado da integradora, ninguém lembra. No meio de visita técnica e instalação, a proposta de terça já saiu da cabeça na sexta."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "Quantas propostas você manda por mês?"
+      },
+      {
+        "type": "p",
+        "text": "Numa pesquisa da Greener com integradoras, publicada pelo Canal Solar em 2025, as empresas com mais de dois anos de mercado fazem em média 22 orçamentos por mês. Mesmo que só um quarto deles fique sem resposta, são cinco ou seis propostas por mês esfriando sem ninguém perceber."
+      },
+      {
+        "type": "h2",
+        "text": "Como evitar que a proposta se perca"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Mande o PDF junto com uma mensagem curta: conta de hoje, parcela e tempo de retorno, em três linhas.",
+          "Explique a proposta numa ligação ou num áudio de dois minutos. Conversa cria confiança que arquivo não cria.",
+          "Combine o próximo contato antes de terminar: um dia e um motivo.",
+          "Se o cliente visualizou e não respondeu, chame no segundo dia com uma pergunta simples. Não espere uma semana.",
+          "Tenha uma lista de propostas abertas, com cliente, valor, data de envio e último contato, e olhe essa lista todo dia."
+        ]
+      },
+      {
+        "type": "example",
+        "title": "Exemplo de mensagem para acompanhar o PDF (ilustrativa)",
+        "body": [
+          "Oi, Carlos. Te mandei a proposta do sistema de 6,2 kWp. Resumindo: hoje você paga R$ 480 de luz, e financiado a parcela fica perto disso.",
+          "Te chamo na quinta para tirar as dúvidas, pode ser?"
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "O problema não é o PDF. É o que acontece depois"
+      },
+      {
+        "type": "p",
+        "text": "Dá para manter a lista de propostas numa planilha, e para quem manda poucas por mês funciona. O que costuma falhar é a disciplina de olhar todo dia, no meio da rotina."
+      },
+      {
+        "type": "p",
+        "text": "Se você quer ver quanto já está parado no seu WhatsApp hoje, o Raio-X grátis do Vyzon lê as suas conversas e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva 3 minutos, e nada é enviado aos seus clientes."
+      }
+    ],
+    "faq": [
+      {
+        "q": "Devo parar de mandar proposta em PDF pelo WhatsApp?",
+        "a": "Não precisa. O PDF é prático e abre em qualquer celular. O que muda o resultado é mandar junto uma mensagem curta com os números principais, explicar a proposta numa conversa e combinar o próximo contato."
+      },
+      {
+        "q": "O cliente visualizou a proposta e não respondeu. O que eu faço?",
+        "a": "Espere dois dias e chame com uma pergunta simples sobre a dúvida que ele pode ter, como o financiamento ou o prazo. Evite \"e aí, conseguiu ver?\", que cobra sem ajudar."
+      },
+      {
+        "q": "Como saber quantas propostas estão sem resposta?",
+        "a": "Anote cada proposta enviada com data e valor e marque quando o cliente responder. Se preferir não fazer à mão, o Raio-X grátis do Vyzon lista as propostas sem resposta direto do seu WhatsApp."
+      }
+    ]
+  },
+  {
     "slug": "follow-up-proposta-energia-solar",
     "category": "Comercial",
     "date": "2026-10-08",
-    "title": "Follow-up de proposta de energia solar: o que mandar no dia 2, no dia 5 e no dia 10",
+    "title": "Follow-up de proposta de energia solar: exemplos do que mandar no dia 2, no dia 5 e no dia 10",
     "excerpt": "Uma cadência simples para acompanhar cada proposta enviada pelo WhatsApp sem parecer insistente, com a mensagem pronta para cada contato e a hora certa de parar.",
     "coverText": "O 2º dia decide.",
     "accent": "#0E3E8A",

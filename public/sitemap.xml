@@ -11,7 +11,7 @@
   <!-- Conteúdo / conta -->
   <url>
     <loc>https://vyzon.com.br/blog</loc>
-    <lastmod>2026-06-21</lastmod>
+    <lastmod>2026-10-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -25,6 +25,18 @@
   <url>
     <loc>https://vyzon.com.br/blog/cliente-sumiu-depois-do-orcamento-energia-solar</loc>
     <lastmod>2026-10-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://vyzon.com.br/blog/modelo-proposta-comercial-energia-solar</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://vyzon.com.br/blog/proposta-energia-solar-pdf-whatsapp</loc>
+    <lastmod>2026-10-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
