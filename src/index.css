@@ -622,6 +622,26 @@ All colors MUST be HSL.
   animation: landing-fade-in-up-lg 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Exemplo de propostas da home: as linhas entram uma a uma (só transform, o
+   conteúdo pinta na hora) e as paradas ganham fundo âmbar quando o total
+   termina de subir. */
+@keyframes mock-row-in {
+  from { transform: translate3d(-14px, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+@keyframes mock-parada {
+  from { background-color: rgba(251, 191, 36, 0); }
+  to { background-color: rgba(251, 191, 36, 0.09); }
+}
+.mock-row { animation: mock-row-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.mock-row--parada {
+  animation: mock-row-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both, mock-parada 0.6s ease-out 1.7s both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mock-row, .mock-row--parada { animation: none; }
+  .mock-row--parada { background-color: rgba(251, 191, 36, 0.09); }
+}
+
 .landing-delay-100 { animation-delay: 100ms; }
 .landing-delay-150 { animation-delay: 150ms; }
 .landing-delay-200 { animation-delay: 200ms; }

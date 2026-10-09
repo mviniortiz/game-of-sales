@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent, trackDemoConversion, FUNNEL_EVENTS } from "@/lib/analytics";
@@ -27,22 +27,27 @@ const FUNNEL_PAGE = "solar";
 // "sumiu" é a home; os outros vivem em /raio-x/:angulo (noindex).
 export type SolarAngle = "sumiu" | "parado" | "vou-pensar";
 
-type AngleCopy = { h1: string; h1Accent: string; sub: string; pain: string };
+// kicker: a linha acima da headline repete a dor do anúncio; a headline vende a
+// oferta (o que, em quanto tempo, de graça) e a sub explica o Raio-X.
+type AngleCopy = { kicker: string; h1: string; h1Accent: string; sub: string; pain: string };
 
 const ANGLES: Record<SolarAngle, AngleCopy> = {
     sumiu: {
-        h1: "Mandou o orçamento de energia solar",
-        h1Accent: "e o cliente sumiu?",
-        sub: "O Vyzon olha o seu WhatsApp e mostra quais clientes pararam de responder. E já deixa pronta a mensagem para você chamar cada um de novo.",
+        kicker: "Mandou o orçamento de energia solar e o cliente sumiu?",
+        h1: "Veja em 3 minutos quanto dinheiro está parado",
+        h1Accent: "nos orçamentos do seu WhatsApp.",
+        sub: "O Raio-X lê o seu WhatsApp e lista cada proposta que ficou sem resposta, e há quantos dias. Você confere e vê quanto está parado.",
         pain: "Você pega a conta de luz, dimensiona o sistema e manda um orçamento caprichado. O cliente diz que vai ver em casa. E some. Você está em cima de outro telhado. O orçamento de R$ 25 mil fica perdido no meio de duzentas conversas.",
     },
     parado: {
+        kicker: "Para integrador de energia solar",
         h1: "Quanto dinheiro está parado",
         h1Accent: "no seu WhatsApp agora?",
         sub: "Doze propostas de R$ 25 mil sem resposta são R$ 300 mil esperando alguém chamar de volta. O Raio-X mostra o seu número de verdade, proposta por proposta.",
         pain: "Ninguém soma as propostas que ficaram sem resposta. Cada uma parece pequena sozinha, perdida entre o grupo da obra, o fornecedor e o cliente novo. Somadas, quase sempre dão mais do que o faturamento do mês.",
     },
     "vou-pensar": {
+        kicker: "O cliente disse que ia pensar e sumiu?",
         h1: "“Vou pensar”",
         h1Accent: "quase nunca é um não.",
         sub: "É uma dúvida que o cliente não falou: a parcela, a garantia, alguém em casa. O Vyzon acha esses orçamentos no seu WhatsApp e escreve a mensagem que pergunta no que ele ficou pensando.",
@@ -174,9 +179,12 @@ const Header = ({ onCta }: { onCta: () => void }) => (
 );
 
 const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void; onWhatsapp: () => void }) => (
-    <section className="mx-auto w-full max-w-[1120px] px-5 pb-10 pt-14 text-center md:px-8 md:pb-14 md:pt-24">
+    <section className="mx-auto w-full max-w-[1120px] px-5 pb-10 pt-10 text-center md:px-8 md:pb-14 md:pt-20">
+        <p className="mx-auto max-w-[620px] text-[15px] font-semibold landing-fade-in-up-lg" style={{ color: "#050505", textWrap: "balance" }}>
+            {copy.kicker}
+        </p>
         <h1
-            className="lp-display mx-auto max-w-4xl landing-fade-in-up-lg landing-delay-100"
+            className="lp-display mx-auto mt-4 max-w-4xl landing-fade-in-up-lg landing-delay-100"
             style={{ fontSize: "clamp(2rem, 5.2vw, 4rem)", lineHeight: 1.05, letterSpacing: "-0.04em", color: "#050505", textWrap: "balance" }}
         >
             {copy.h1}{" "}
@@ -186,33 +194,30 @@ const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void;
         </h1>
         <p
             className="mx-auto mt-7 max-w-[580px] landing-fade-in-up-lg landing-delay-200"
-            style={{ fontSize: "clamp(0.9375rem, 1.3vw, 1.0625rem)", lineHeight: 1.55, color: "rgba(5,5,5,0.68)" }}
+            style={{ fontSize: "clamp(1rem, 1.3vw, 1.0625rem)", lineHeight: 1.55, color: "rgba(5,5,5,0.8)" }}
         >
             {copy.sub}
         </p>
         <div className="mt-8 flex flex-col items-center gap-3 landing-fade-in-up-lg landing-delay-300">
-            <div className="flex flex-wrap items-center justify-center gap-3">
-                <Link to={RAIO_X_AUTO} className="vz-btn vz-btn--primary" onClick={onCta}>
-                    <span>Fazer meu Raio-X grátis</span>
-                    <span className="vz-btn__arrow" aria-hidden="true">
-                        →
-                    </span>
-                </Link>
-                <a
-                    href={whatsappUrl(WHATSAPP_MESSAGE)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="vz-btn vz-btn--secondary"
-                    onClick={onWhatsapp}
-                >
-                    <span>Falar no WhatsApp</span>
-                </a>
-            </div>
-            <span className="text-sm" style={{ color: "var(--lp-ink-55)" }}>
-                O Raio-X é a lista dos orçamentos que ficaram sem resposta, com quanto eles somam. Grátis, sem cartão, em 3 minutos.{" "}
+            <Link to={RAIO_X_AUTO} className="vz-btn vz-btn--primary" onClick={onCta}>
+                <span>Ver quanto está parado</span>
+                <span className="vz-btn__arrow" aria-hidden="true">
+                    →
+                </span>
+            </Link>
+            <span className="text-[15px] font-medium" style={{ color: "rgba(5,5,5,0.78)" }}>
+                Grátis · 3 minutos · nada é enviado aos seus clientes
+            </span>
+            <span className="text-sm" style={{ color: "rgba(5,5,5,0.62)" }}>
+                Prefere fazer comigo?{" "}
                 <a href="#raio-x" className="underline underline-offset-4">
-                    Prefere fazer comigo?
+                    Peça o Raio-X
+                </a>{" "}
+                ou{" "}
+                <a href={whatsappUrl(WHATSAPP_MESSAGE)} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4" onClick={onWhatsapp}>
+                    chame no WhatsApp
                 </a>
+                .
             </span>
         </div>
     </section>
@@ -229,6 +234,28 @@ const PROPOSALS = [
     { client: "Clínica Vida", system: "11 kWp", value: "R$ 39.800", sent: "há 4 dias", status: "sem resposta", tone: DARK.amber },
     { client: "Casa Fernandes", system: "4,5 kWp", value: "R$ 18.700", sent: "há 9 dias", status: "fechou", tone: DARK.green },
 ];
+
+// O total do exemplo sobe até o valor final na primeira tela: mostra o resultado
+// do Raio-X antes de a pessoa rolar. Começa no valor final (prerender e
+// movimento reduzido mostram o número pronto) e só anima no navegador.
+const PARADO_EXEMPLO = 64700;
+const CountUp = ({ to, ms = 1100, delay = 450 }: { to: number; ms?: number; delay?: number }) => {
+    const [n, setN] = useState(to);
+    useLayoutEffect(() => {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        setN(0);
+        let raf = 0;
+        const t0 = performance.now() + delay;
+        const step = (now: number) => {
+            const k = Math.min(1, Math.max(0, (now - t0) / ms));
+            setN(Math.round(to * (1 - Math.pow(1 - k, 3))));
+            if (k < 1) raf = requestAnimationFrame(step);
+        };
+        raf = requestAnimationFrame(step);
+        return () => cancelAnimationFrame(raf);
+    }, [to, ms, delay]);
+    return <>{n.toLocaleString("pt-BR")}</>;
+};
 
 const Dot = ({ color }: { color: string }) => (
     <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 999, background: color, display: "inline-block", flexShrink: 0 }} />
@@ -254,12 +281,16 @@ const ProductMock = () => (
                         <span className="font-medium">Propostas acompanhadas</span>
                         <span className="inline-flex items-center gap-2 tabular-nums" style={{ color: DARK.amber, fontSize: 12.5 }}>
                             <Dot color={DARK.amber} />
-                            R$ 64.700 parados
+                            R$ <CountUp to={PARADO_EXEMPLO} /> parados
                         </span>
                     </div>
                     <ul>
-                        {PROPOSALS.map((p) => (
-                            <li key={p.client} className="flex items-center justify-between gap-3 px-4 py-3" style={{ borderBottom: `1px solid ${DARK.line}` }}>
+                        {PROPOSALS.map((p, i) => (
+                            <li
+                                key={p.client}
+                                className={`mock-row flex items-center justify-between gap-3 px-4 py-3${p.status === "sem resposta" ? " mock-row--parada" : ""}`}
+                                style={{ borderBottom: `1px solid ${DARK.line}`, animationDelay: p.status === "sem resposta" ? `${200 + i * 110}ms, 1700ms` : `${200 + i * 110}ms` }}
+                            >
                                 <div className="min-w-0">
                                     <p className="truncate">{p.client}</p>
                                     <p className="mt-0.5 truncate tabular-nums" style={{ color: DARK.dim, fontSize: 12.5 }}>
@@ -492,7 +523,7 @@ const WhatYouGet = () => (
         <div className="grid items-center gap-10 md:grid-cols-2 md:gap-14">
             <div>
                 <Eyebrow>O Raio-X</Eyebrow>
-                <SectionTitle>O que vem no seu Raio-X</SectionTitle>
+                <SectionTitle>No Raio-X, as maiores propostas paradas já vêm com a mensagem pronta</SectionTitle>
                 <ul className="mt-7 space-y-4">
                     {REPORT_ITEMS.map((item, i) => (
                         <li key={item} className="flex gap-3.5 text-[16px] leading-relaxed md:text-[17px]" style={{ color: "var(--lp-ink-70)" }}>
@@ -582,7 +613,7 @@ const STEPS = [
 const HowItWorks = () => (
     <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-28">
         <Eyebrow>3 minutos</Eyebrow>
-        <SectionTitle>Como funciona o Raio-X</SectionTitle>
+        <SectionTitle>Crie a conta, conecte o WhatsApp e veja o seu número</SectionTitle>
         <ol className="mt-8 grid gap-3 md:mt-10 md:grid-cols-3 md:gap-4">
             {STEPS.map((s, i) => (
                 <li key={s.title} className="rounded-[12px] border p-5 md:p-6" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
@@ -618,7 +649,7 @@ const NO_DIA = [
 const NoDiaADia = () => (
     <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-28">
         <Eyebrow>Depois do Raio-X</Eyebrow>
-        <SectionTitle>O que o Vyzon faz todo dia</SectionTitle>
+        <SectionTitle>Assinando, a EVA avisa no 2º dia de cada proposta nova</SectionTitle>
         <p className="mt-4 max-w-[560px] text-[16px] leading-relaxed md:text-[17px]" style={{ color: "var(--lp-ink-70)" }}>
             O Raio-X mostra o que já ficou parado. Com o Vyzon ligado, nenhum orçamento novo fica esquecido.
         </p>
@@ -659,7 +690,7 @@ const NotABot = () => (
             <p className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em]" style={{ color: "#a78bfa" }}>
                 EVA, sua companheira
             </p>
-            <SectionTitle light>Não é robô falando com seu cliente</SectionTitle>
+            <SectionTitle light>Nada sai para o seu cliente sem o seu ok</SectionTitle>
             <p className="mt-4 max-w-[600px] text-[16px] leading-relaxed md:text-[17px]" style={{ color: "rgba(249,251,255,0.7)" }}>
                 É uma companheira que lembra das propostas por você e deixa a mensagem pronta. Quem fala com o cliente continua sendo você.
             </p>
@@ -717,7 +748,7 @@ const FAQ = [
 
 const Faq = () => (
     <section className="mx-auto w-full max-w-[720px] px-4 pb-16 pt-16 sm:px-5 md:px-8 md:pb-24 md:pt-24">
-        <SectionTitle>Perguntas</SectionTitle>
+        <SectionTitle>O que todo integrador pergunta antes</SectionTitle>
         <div className="mt-6">
             {FAQ.map((f) => (
                 <details key={f.q} className="group border-t py-4" style={{ borderColor: "var(--lp-line)" }}>
