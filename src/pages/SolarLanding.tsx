@@ -54,7 +54,6 @@ const TITLE = "Propostas de energia solar paradas no WhatsApp | Vyzon";
 const DESCRIPTION =
     "Mandou o orçamento de energia solar e o cliente sumiu? O Vyzon mostra quais clientes pararam de responder no seu WhatsApp e deixa a mensagem pronta para chamar de novo. Raio-X grátis.";
 
-const MONTHLY_RANGES = ["Até 10", "De 10 a 30", "Mais de 30"];
 
 const WHATSAPP_MESSAGE = "Oi, Markus. Quero o Raio-X das minhas propostas de energia solar.";
 
@@ -73,11 +72,11 @@ type FormState = {
     name: string;
     phone: string;
     email: string;
-    company: string;
-    monthly: string;
 };
 
-const EMPTY_FORM: FormState = { name: "", phone: "", email: "", company: "", monthly: "" };
+// Três campos: quem chega frio do anúncio desistia diante de cinco. Empresa e
+// volume de propostas o Markus pergunta na conversa.
+const EMPTY_FORM: FormState = { name: "", phone: "", email: "" };
 
 const normalizePhone = (raw: string) => {
     const digits = raw.replace(/\D/g, "");
@@ -759,8 +758,6 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: (pla
         form.name.trim().length < 2 && "seu nome",
         !(phoneDigits.length === 10 || phoneDigits.length === 11) && "WhatsApp com DDD",
         !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) && "e-mail",
-        form.company.trim().length < 2 && "nome da empresa",
-        form.monthly === "" && "propostas por mês",
     ].filter(Boolean) as string[];
     const valid = faltando.length === 0;
     const [tentou, setTentou] = useState(false);
@@ -782,8 +779,7 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: (pla
             name: form.name.trim(),
             email: form.email.trim(),
             phone,
-            company: form.company.trim(),
-            biggest_pain: `Energia solar. Propostas por mês: ${form.monthly}`,
+            biggest_pain: "Energia solar",
             source: SOURCE,
             ...getAttribution(),
         };
@@ -795,8 +791,8 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: (pla
             return;
         }
         const leadId = typeof data === "string" ? data : undefined;
-        trackEvent(FUNNEL_EVENTS.ORCAMENTO_LEAD, { segment: "energia_solar", monthly: form.monthly, angle });
-        logLandingEvent(FUNNEL_PAGE, angle, "form_submit", { monthly: form.monthly });
+        trackEvent(FUNNEL_EVENTS.ORCAMENTO_LEAD, { segment: "energia_solar", angle });
+        logLandingEvent(FUNNEL_PAGE, angle, "form_submit");
         void trackDemoConversion({ email: payload.email, phone, leadId });
         try {
             (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq?.("track", "Lead", { content_name: "raio_x_solar" });
@@ -842,14 +838,14 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: (pla
                         <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
                             <Link
                                 to={RAIO_X_AUTO}
-                                state={{ nome: form.name.trim(), email: form.email.trim(), whats: form.phone.trim(), empresa: form.company.trim() }}
+                                state={{ nome: form.name.trim(), email: form.email.trim(), whats: form.phone.trim() }}
                                 onClick={() => logLandingEvent(FUNNEL_PAGE, angle, "cta_click", { placement: "form_done" })}
                                 className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--lp-ink)] px-6 text-[15px] font-semibold text-white"
                             >
                                 Ver meu Raio-X agora →
                             </Link>
                             <a
-                                href={whatsappUrl(`Oi Markus, sou ${form.name.trim()} da ${form.company.trim()}. Acabei de pedir o Raio-X no site.`)}
+                                href={whatsappUrl(`Oi Markus, sou ${form.name.trim()}. Acabei de pedir o Raio-X no site.`)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={() => onWhatsapp("form_done")}
@@ -879,21 +875,6 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: (pla
                         <Field label="Seu e-mail">
                             <input className={inputCls} style={inputStyle} value={form.email} onChange={set("email")} inputMode="email" autoComplete="email" />
                         </Field>
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <Field label="Nome da empresa">
-                                <input className={inputCls} style={inputStyle} value={form.company} onChange={set("company")} autoComplete="organization" />
-                            </Field>
-                            <Field label="Propostas por mês">
-                                <select className={inputCls} style={inputStyle} value={form.monthly} onChange={set("monthly")}>
-                                    <option value="">Escolha</option>
-                                    {MONTHLY_RANGES.map((m) => (
-                                        <option key={m} value={m}>
-                                            {m}
-                                        </option>
-                                    ))}
-                                </select>
-                            </Field>
-                        </div>
                         {tentou && !valid && (
                             <p className="text-sm" role="alert" style={{ color: "#b42318" }}>
                                 Falta preencher: {faltando.join(", ")}.

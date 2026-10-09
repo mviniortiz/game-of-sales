@@ -49,6 +49,9 @@ const SignupV2 = () => {
     const [whats, setWhats] = useState(veio.whats ?? "");
     const [email, setEmail] = useState((veio.email ?? "").toLowerCase());
     const veioPreenchido = !!(veio.nome && veio.email);
+    // Dentro do app do Instagram/Facebook o Google recusa o login (navegador
+    // embutido), e é de lá que vem o anúncio: o botão só levaria a um erro.
+    const navegadorDeApp = typeof navigator !== "undefined" && /Instagram|FBAN|FBAV|FB_IAB|Messenger/i.test(navigator.userAgent);
     const [senha, setSenha] = useState("");
     const [loading, setLoading] = useState(false);
     const [erros, setErros] = useState<{ nome?: string; empresa?: string; whats?: string; email?: string; senha?: string; form?: string; formAction?: "login" }>({});
@@ -330,10 +333,10 @@ const SignupV2 = () => {
                                 {ssoMode ? "Quase lá" : "Criar conta"}
                             </h1>
                             <p className="mt-2.5 landing-fade-in-up landing-delay-150" style={{ color: "rgba(11,18,32,0.66)", fontSize: "1rem" }}>
-                                {ssoMode ? "Só falta a sua empresa e o seu WhatsApp." : veioPreenchido ? "Já trouxemos o que você digitou. Só falta criar uma senha." : "Passo 1 de 3. O Raio-X é grátis e não pede cartão."}
+                                {ssoMode ? "Só falta a sua empresa e o seu WhatsApp." : veioPreenchido ? (veio.empresa ? "Já trouxemos o que você digitou. Só falta criar uma senha." : "Já trouxemos o que você digitou. Falta o nome da empresa e uma senha.") : "Passo 1 de 3. O Raio-X é grátis e não pede cartão."}
                             </p>
 
-                            {!ssoMode && (
+                            {!ssoMode && !navegadorDeApp && (
                                 <>
                                     <button type="button" onClick={handleGoogle} disabled={busy} className="mt-9 flex w-full items-center justify-center gap-2.5 rounded-full py-3 text-[14px] font-semibold transition-transform active:scale-[0.98] disabled:opacity-50 landing-fade-in-up landing-delay-200" style={{ background: "#fff", color: "#0B1220", border: "1px solid #D7DEE9" }}>
                                         {loading ? (
@@ -356,7 +359,7 @@ const SignupV2 = () => {
                                 </>
                             )}
 
-                            <form className={`flex flex-col gap-5 landing-fade-in-up landing-delay-300 ${ssoMode ? "mt-9" : ""}`} onSubmit={onSubmit} noValidate>
+                            <form className={`flex flex-col gap-5 landing-fade-in-up landing-delay-300 ${ssoMode || navegadorDeApp ? "mt-9" : ""}`} onSubmit={onSubmit} noValidate>
                                 {!ssoMode && (
                                     <AuthField
                                         label="Seu nome"
@@ -375,7 +378,7 @@ const SignupV2 = () => {
                                     value={empresa}
                                     onChange={(v) => { setEmpresa(v); if (erros.empresa) setErros((p) => ({ ...p, empresa: undefined })); }}
                                     autoComplete="organization"
-                                    autoFocus={ssoMode}
+                                    autoFocus={ssoMode || (veioPreenchido && !veio.empresa)}
                                     error={erros.empresa}
                                     errorKey={erroKey}
                                 />
@@ -409,7 +412,7 @@ const SignupV2 = () => {
                                                 value={senha}
                                                 onChange={(v) => { setSenha(v); if (erros.senha) setErros((p) => ({ ...p, senha: undefined })); }}
                                                 autoComplete="new-password"
-                                                autoFocus={veioPreenchido}
+                                                autoFocus={veioPreenchido && !!veio.empresa}
                                                 error={erros.senha}
                                                 errorKey={erroKey}
                                                 rightSlot={
