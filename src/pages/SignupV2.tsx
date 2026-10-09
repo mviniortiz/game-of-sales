@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getAttribution } from "@/lib/attribution";
 import { trackBehavior, FUNNEL_EVENTS } from "@/lib/analytics";
+import { logLandingEvent } from "@/lib/landingFunnel";
 import { toast } from "sonner";
 import { ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
@@ -25,6 +26,7 @@ function whatsDigitos(v: string): string {
     return d.length === 10 || d.length === 11 ? "55" + d : d;
 }
 const whatsValido = (v: string) => /^55\d{10,11}$/.test(whatsDigitos(v));
+const FUNNEL_PAGE = "signup";
 
 const SignupV2 = () => {
     const navigate = useNavigate();
@@ -67,6 +69,9 @@ const SignupV2 = () => {
     // Analytics: início do registro (chegou no cadastro), com o plano escolhido.
     useEffect(() => {
         trackBehavior(FUNNEL_EVENTS.REGISTER_START, { plan });
+        // Mesmo funil da home (landing_events, mesma sessão e UTM): o GA4 só
+        // carrega após a 1ª interação e não mostra onde o clique do anúncio parou.
+        logLandingEvent(FUNNEL_PAGE, "solar", "view");
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -171,8 +176,12 @@ const SignupV2 = () => {
         }
         setErros(next);
         setErroKey((k) => k + 1);
-        if (Object.keys(next).length > 0) return;
+        if (Object.keys(next).length > 0) {
+            logLandingEvent(FUNNEL_PAGE, "solar", "form_error", { fields: Object.keys(next).join(",") });
+            return;
+        }
 
+        logLandingEvent(FUNNEL_PAGE, "solar", "form_submit", { step: ssoMode ? "company" : "account" });
         setLoading(true);
         try {
             if (ssoMode) {
@@ -187,6 +196,7 @@ const SignupV2 = () => {
             if (error) {
                 setCriandoConta(false);
                 const m = (error.message || "").toLowerCase();
+                logLandingEvent(FUNNEL_PAGE, "solar", "form_error", { reason: m.slice(0, 80) });
                 if (m.includes("rate limit") || m.includes("too many")) {
                     // a conta pode já ter sido criada numa tentativa anterior: entra e,
                     // se faltar empresa, o modo "Quase lá" pede de novo
@@ -212,6 +222,7 @@ const SignupV2 = () => {
                 // Mostrar a tela dedicada em vez de navegar (senão a pessoa cai
                 // no login sem entender o que aconteceu).
                 trackBehavior(FUNNEL_EVENTS.REGISTER_START, { step: "confirm_email_sent", plan });
+                logLandingEvent(FUNNEL_PAGE, "solar", "form_submit", { step: "confirm_email" });
                 marcarLead();
                 setConfirmSentTo(email.trim().toLowerCase());
                 return;
@@ -222,6 +233,7 @@ const SignupV2 = () => {
             navigate(APP_HOME, { replace: true });
         } catch (err) {
             setCriandoConta(false);
+            logLandingEvent(FUNNEL_PAGE, "solar", "form_error", { reason: (err instanceof Error ? err.message : "erro").slice(0, 80) });
             setErros({ form: err instanceof Error ? err.message : "Não foi possível criar a conta." });
             setErroKey((k) => k + 1);
         } finally {
