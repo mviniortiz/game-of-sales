@@ -60,11 +60,14 @@ export function AssistantBubble({ content, animate, onTick }: { content: string;
 // No computador o botão mora no cabeçalho do app: flutuando, ele cobria o
 // valor das linhas encostadas na direita (Orçamentos, Pipeline).
 const ABRIR_EVENTO = "vyz:eva-ajuda-abrir";
+// No Inbox a EVA tem painel próprio. No Início, o botão redondo flutuante
+// cobria a fila no celular, então lá só o do cabeçalho (computador) abre.
 const temLugarProprio = (pathname: string) => /^\/(inicio|dashboard|inbox)/.test(pathname);
+const temPainelProprio = (pathname: string) => /^\/inbox/.test(pathname);
 
 export function PerguntarEvaCabecalho() {
     const location = useLocation();
-    if (temLugarProprio(location.pathname)) return null;
+    if (temPainelProprio(location.pathname)) return null;
     return (
         <button
             type="button"
@@ -128,7 +131,7 @@ export function EvaHelpDock() {
     // No /inicio e no /inbox a EVA já tem lugar próprio (rail, painel ou sheet):
     // esconde o botão de ajuda pra não ter dois "Perguntar à EVA" e não cobrir
     // a lista e a sugestão no mobile.
-    if (temLugarProprio(location.pathname)) return null;
+    if (temLugarProprio(location.pathname) && !open) return null;
 
     return (
         <div className="fixed z-[60] right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-6 sm:bottom-6 print:hidden">

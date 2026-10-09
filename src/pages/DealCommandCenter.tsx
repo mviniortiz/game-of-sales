@@ -1828,7 +1828,7 @@ export default function DealCommandCenter() {
                                         </div>
                                     ) : (
                                         <div className="space-y-2.5">
-                                            <SidebarRow label="Valor da proposta" value={deal.value ? formatBRL(deal.value) : "Sem valor"} strong />
+                                            {/* O valor já está no topo da página e no card do orçamento. */}
                                             <SidebarRow label="Criado" value={safeFormatDate(deal.created_at, "dd MMM yyyy")} />
                                             <SidebarRow label="Atualizado" value={safeFormatDistance(deal.updated_at)} />
                                         </div>

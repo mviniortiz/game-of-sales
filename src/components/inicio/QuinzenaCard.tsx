@@ -76,9 +76,9 @@ export function QuinzenaCard({ days, responseMedianMin, loading }: { days: Quinz
             </ul>
 
             <div className="flex items-baseline justify-between gap-3 border-t border-[var(--vyz-border-subtle)] pt-2.5 text-[13.5px]">
-                <span className="text-[var(--vyz-text)]">Primeira resposta, mediana</span>
+                <span className="text-[var(--vyz-text)]">Seu tempo para responder</span>
                 <span className={responseMedianMin != null ? "font-semibold tabular-nums text-[var(--vyz-text-primary)]" : "text-[12.5px] text-[var(--vyz-text-muted)]"}>
-                    {responseMedianMin != null ? formatMinutes(responseMedianMin) : "sem conversa respondida"}
+                    {responseMedianMin != null ? formatMinutes(responseMedianMin) : "ainda sem dado"}
                 </span>
             </div>
         </section>

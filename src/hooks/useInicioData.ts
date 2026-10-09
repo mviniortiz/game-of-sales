@@ -63,6 +63,16 @@ export function usePipelineStages() {
         .eq("company_id", effectiveCompanyId!);
       if (error) throw error;
 
+      // Nome que a própria empresa deu à etapa ("Visita técnica" em vez de
+      // "Qualificação"). Opcional: se falhar, fica o nome padrão.
+      const { data: etapas } = await supabase
+        .from("pipeline_stages")
+        .select("legacy_key, title, position")
+        .eq("company_id", effectiveCompanyId!)
+        .order("position");
+      const nomes: Partial<Record<string, string>> = {};
+      for (const e of etapas ?? []) if (e.legacy_key && !nomes[e.legacy_key]) nomes[e.legacy_key] = e.title;
+
       const init = Object.fromEntries(
         PIPELINE_STAGE_KEYS.map((k) => [k, { count: 0, total: 0, values: [] as number[] }]),
       ) as Record<PipelineStageKey, { count: number; total: number; values: number[] }>;
@@ -78,7 +88,7 @@ export function usePipelineStages() {
 
       return PIPELINE_STAGE_KEYS.map((key) => ({
         key,
-        name: STAGE_META[key].name,
+        name: nomes[key] ?? STAGE_META[key].name,
         color: STAGE_META[key].color,
         count: init[key].count,
         totalValue: init[key].total,

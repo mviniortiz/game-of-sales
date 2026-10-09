@@ -55,7 +55,7 @@ function Row({ label, ariaName, stage, color, maxTotal, onClick }: {
             type="button"
             onClick={onClick}
             aria-label={`${ariaName}: ${stage.count} ${stage.count === 1 ? "oportunidade" : "oportunidades"}, ${brlCompact(stage.totalValue)}`}
-            className="grid w-full grid-cols-[84px_minmax(0,1fr)_78px] items-center gap-2.5 rounded-md py-[7px] text-left text-[12.5px] outline-none transition-colors duration-150 hover:bg-[var(--vyz-surface-2)] focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+            className="grid w-full grid-cols-[112px_minmax(0,1fr)_78px] items-center gap-2.5 rounded-md py-[7px] text-left text-[12.5px] outline-none transition-colors duration-150 hover:bg-[var(--vyz-surface-2)] focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
         >
             <span className="truncate text-[var(--vyz-text)]">{label}</span>
             <span className="flex min-w-0 items-center">

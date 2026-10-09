@@ -833,7 +833,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
         if (!d.is_hot) continue;
         addPriority({
             id: dealKey(d.id),
-            title: `Deal quente parado: ${d.title || d.customer_name || "Oportunidade"}`,
+            title: `Negócio quente parado: ${d.title || d.customer_name || "Oportunidade"}`,
             description: `Stage atual: ${d.stage}. Sem atualização há ${Math.floor((Date.now() - new Date(d.updated_at).getTime()) / 86400_000)}d.`,
             reason: "Stale deal marcado como quente",
             priority: "high",
@@ -885,7 +885,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
             id: dealKey(d.id),
             title: `${d.title || d.customer_name || "Oportunidade"} sem atualização`,
             description: `Stage: ${d.stage}. Última atividade ${Math.floor((Date.now() - new Date(d.updated_at).getTime()) / 86400_000)}d atrás.`,
-            reason: "Deal parado há mais de 7d",
+            reason: "Sem atualização há mais de 7 dias",
             priority: "medium",
             actionLabel: "Ver oportunidade",
             href: `/deals/${d.id}`,

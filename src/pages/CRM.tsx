@@ -1334,10 +1334,13 @@ export default function CRM() {
                 onClick={toggleSelectionMode}
                 aria-label={selectionMode ? "Selecionando" : "Selecionar"}
                 aria-pressed={selectionMode}
-                className={`min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9 rounded-full ${selectionMode ? "bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90" : "border-border hover:bg-muted text-foreground"}`}
+                title="Selecionar vários para mover ou apagar"
+                className={`min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-9 h-9 rounded-full ${selectionMode ? "bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90" : "border-border hover:bg-muted text-foreground"}`}
               >
-                <CheckSquarePh size={16} weight="duotone" className="sm:mr-2" />
-                <span className="hidden sm:inline">{selectionMode ? "Selecionando" : "Selecionar"}</span>
+                <CheckSquarePh size={16} weight="duotone" className={selectionMode ? "sm:mr-2" : ""} />
+                {/* Fora do modo de seleção fica só o ícone: são ações de vez em quando
+                    e, com texto, pesavam tanto quanto "Nova oportunidade". */}
+                {selectionMode && <span className="hidden sm:inline">Selecionando</span>}
               </Button>
 
               {selectionMode && (
@@ -1360,10 +1363,10 @@ export default function CRM() {
                 size="sm"
                 onClick={() => setShowConfig(true)}
                 aria-label="Configurar funil"
-                className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9 rounded-full"
+                title="Configurar etapas do funil"
+                className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-9 h-9 rounded-full"
               >
-                <SettingsPh size={16} weight="duotone" className="sm:mr-2" />
-                <span className="hidden sm:inline">Configurar</span>
+                <SettingsPh size={16} weight="duotone" />
               </Button>
 
               <Button

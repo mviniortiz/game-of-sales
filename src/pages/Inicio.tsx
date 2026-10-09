@@ -17,7 +17,7 @@ import { QuinzenaCard, type QuinzenaDay } from "@/components/inicio/QuinzenaCard
 import { useEvaDiary } from "@/hooks/useEvaDiary";
 import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
 import { useQuoteBoard } from "@/hooks/useQuoteBoard";
-import { brl, plural } from "@/lib/quoteText";
+import { brl, plural, OPEN_QUOTE_STATES } from "@/lib/quoteText";
 import { useEvolutionSender } from "@/hooks/useEvolutionSender";
 import {
     loadLiveActions,
@@ -137,10 +137,14 @@ const Inicio = () => {
     const { dayItems, pendingAll } = useMemo(() => {
         const nowMs = Date.now();
         const source = preview ? AGORA_SAMPLE_PRIORITIES : cc.dailyPriorities;
-        const day = source.filter((p) => !isSnoozed(actions.state, p.id, nowMs));
+        // Negócio com orçamento aberto já aparece na lista de orçamentos, com
+        // valor e retomada; repetir ele no topo da fila mostrava o mesmo
+        // cliente duas vezes na mesma tela.
+        const comOrcamento = new Set((quoteBoard.data?.items ?? []).filter((q) => OPEN_QUOTE_STATES.includes(q.state) && q.deal_id).map((q) => q.deal_id));
+        const day = source.filter((p) => !isSnoozed(actions.state, p.id, nowMs) && !(p.source === "deal" && p.dealId && comOrcamento.has(p.dealId)));
         const pending = day.filter((p) => !isResolved(actions.state, p.id));
         return { dayItems: day, pendingAll: pending };
-    }, [cc.dailyPriorities, actions.state, preview]);
+    }, [cc.dailyPriorities, actions.state, preview, quoteBoard.data]);
     const queueLoading = preview ? false : cc.loading;
 
     // A linha do banco fica 'active' com a sessão caída; na Evolution, o check ao
@@ -215,7 +219,7 @@ const Inicio = () => {
     return (
         <div className="vz-stagger space-y-5 sm:space-y-6 mx-auto w-full max-w-[1920px] 2xl:px-2">
             {/* Cabeçalho: data, saudação e a frase do dia. */}
-            <header className="flex flex-col gap-4 rounded-[16px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-5 py-6 sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:py-7">
+            <header className="flex flex-col gap-3 px-1 pt-1 sm:flex-row sm:items-end sm:justify-between">
                 <div className="min-w-0">
                     <p className="text-[12.5px] font-medium text-[var(--vyz-text-muted)]">{today}</p>
                     <h1
@@ -231,7 +235,7 @@ const Inicio = () => {
                     onClick={() => void handleRefresh()}
                     disabled={refreshing}
                     whileTap={reduce ? undefined : { scale: 0.97 }}
-                    className="inline-flex h-10 shrink-0 items-center gap-2 self-start rounded-full border border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-1)] px-4 text-[13px] font-medium text-[var(--vyz-text)] transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[var(--vyz-surface-2)] hover:text-[var(--vyz-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 disabled:opacity-70 sm:self-auto"
+                    className="inline-flex h-9 shrink-0 items-center gap-2 self-start rounded-full px-3 text-[13px] font-medium text-[var(--vyz-text-muted)] transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[var(--vyz-surface-2)] hover:text-[var(--vyz-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 disabled:opacity-70 sm:self-auto"
                 >
                     <motion.span
                         className="inline-flex"
