@@ -25,6 +25,7 @@ import type { Chat, MessageLine } from "@/hooks/useEvolutionAPI";
 import { useProfilePic } from "@/hooks/useProfilePic";
 import { cn } from "@/lib/utils";
 import { EvaBot } from "@/components/eva/EvaBot";
+import { formatPhone } from "@/lib/formatPhone";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // InboxConversation (F4C.2, 2026-05-19)
@@ -650,7 +651,7 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
             <button
                 type="button"
                 onClick={handleOpen}
-                className="h-8 pl-1.5 pr-2 rounded-full flex items-center gap-1.5 transition-colors"
+                className="h-10 pl-2 pr-2.5 rounded-full flex items-center gap-1.5 transition-colors"
                 style={{ background: "rgba(109,40,217,0.08)", border: "1px solid rgba(109,40,217,0.18)" }}
                 aria-label="Abrir análise da EVA"
                 title="Análise da EVA"
@@ -658,7 +659,7 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                 {analyzing ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: "#6D28D9" }} />
                 ) : (
-                    <EvaBot size={20} />
+                    <EvaBot size={24} />
                 )}
                 {/* Ponto de temperatura: prova visual de que a EVA leu (e o quê). */}
                 {!analyzing && temp && (
@@ -706,17 +707,17 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                         <button
                             type="button"
                             onClick={dismissHint}
-                            className="h-5 w-5 -mt-0.5 -mr-0.5 rounded flex items-center justify-center shrink-0 transition-colors hover:bg-[var(--ibx-sunken)]"
+                            className="h-9 w-9 -mt-2 -mr-2 rounded-full flex items-center justify-center shrink-0 transition-colors hover:bg-[var(--ibx-sunken)]"
                             style={{ color: "#94A3B8" }}
                             aria-label="Dispensar dica"
                         >
-                            <X className="h-3 w-3" />
+                            <X className="h-3.5 w-3.5" />
                         </button>
                     </div>
                     <button
                         type="button"
                         onClick={handleOpen}
-                        className="mt-2.5 w-full h-8 rounded-full text-[12px] font-semibold inline-flex items-center justify-center gap-1.5 bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                        className="mt-2.5 w-full h-10 rounded-full text-[12px] font-semibold inline-flex items-center justify-center gap-1.5 bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                     >
                         Ver análise da EVA
                         <ArrowUp className="h-3.5 w-3.5" />
@@ -747,7 +748,7 @@ function ConversationHeader({
     const picUrl = useProfilePic(chat.chatJid || chat.phone, chat.profilePicUrl);
     return (
         <div
-            className="px-4 sm:px-5 py-3.5 flex items-center gap-3"
+            className="pl-3 pr-2 sm:px-5 py-2.5 sm:py-3.5 flex items-center gap-1.5 sm:gap-3"
             style={{
                 borderBottom: "1px solid var(--ibx-line)",
                 background: "#FFFFFF",
@@ -757,14 +758,14 @@ function ConversationHeader({
                 <button
                     type="button"
                     onClick={onBack}
-                    className="h-8 w-8 -ml-1 rounded-md flex items-center justify-center hover:bg-[var(--ibx-sunken)] transition-colors shrink-0"
+                    className="h-10 w-10 -ml-2 md:h-8 md:w-8 md:-ml-1 rounded-full flex items-center justify-center hover:bg-[var(--ibx-sunken)] transition-colors shrink-0"
                     aria-label="Voltar"
                 >
                     <ArrowLeft className="h-4 w-4" style={{ color: "#475569" }} />
                 </button>
             )}
 
-            <Avatar className="h-10 w-10 shrink-0">
+            <Avatar className="h-9 w-9 sm:h-10 sm:w-10 shrink-0">
                 {picUrl && <AvatarImage src={picUrl} alt={chat.name} />}
                 <AvatarFallback
                     className="text-[12px] font-semibold text-white"
@@ -784,10 +785,10 @@ function ConversationHeader({
                     </span>
                     {chat.phone && (
                         <span
-                            className="text-[11px] tabular-nums"
+                            className="hidden md:inline text-[11px] tabular-nums"
                             style={{ color: "#94A3B8" }}
                         >
-                            · {chat.phone}
+                            · {formatPhone(chat.phone)}
                         </span>
                     )}
                 </div>
@@ -807,8 +808,13 @@ function ConversationHeader({
                             </span>
                         </span>
                     ) : (
-                        <span className="inline-flex items-center gap-1 text-[10.5px] text-[var(--vyz-text-muted)]">
-                            WhatsApp
+                        <span className="inline-flex items-center gap-1 text-[11.5px] md:text-[10.5px] tabular-nums text-[var(--vyz-text-muted)]">
+                            {chat.phone ? (
+                                <>
+                                    <span className="md:hidden whitespace-nowrap">{formatPhone(chat.phone).replace(/^\+55 /, "")}</span>
+                                    <span className="hidden md:inline">WhatsApp</span>
+                                </>
+                            ) : "WhatsApp"}
                         </span>
                     )}
                 </div>
@@ -823,7 +829,7 @@ function ConversationHeader({
                     type="button"
                     onClick={onRefresh}
                     disabled={isRefreshing}
-                    className="h-8 w-8 rounded-md flex items-center justify-center hover:bg-[var(--ibx-sunken)] transition-colors shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="h-10 w-10 md:h-8 md:w-8 rounded-full flex items-center justify-center hover:bg-[var(--ibx-sunken)] transition-colors shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
                     aria-label="Atualizar histórico"
                     title="Atualizar histórico"
                 >
@@ -1304,7 +1310,7 @@ function MediaPreviewBar({
                             onClick={onSend}
                             disabled={sending}
                             aria-label="Enviar mídia"
-                            className="h-9 w-9 rounded-full flex items-center justify-center text-white transition-all hover:brightness-110 disabled:opacity-50"
+                            className="h-10 w-10 md:h-9 md:w-9 rounded-full flex items-center justify-center text-white transition-all hover:brightness-110 disabled:opacity-50"
                             style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)", boxShadow: "0 4px 12px -4px rgba(37,99,235,0.4)" }}
                         >
                             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" strokeWidth={2.6} />}
@@ -1410,7 +1416,7 @@ function Composer({
                     type="button"
                     onClick={onAttach}
                     disabled={!onAttach}
-                    className="h-8 w-8 rounded-lg flex items-center justify-center transition-colors shrink-0 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="h-10 w-10 md:h-8 md:w-8 rounded-full flex items-center justify-center transition-colors shrink-0 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed"
                     style={{ color: "#64748B" }}
                     title={onAttach ? "Anexar imagem, vídeo ou documento" : "Anexo indisponível"}
                     aria-label="Anexar mídia"
@@ -1421,7 +1427,7 @@ function Composer({
                 <button
                     type="button"
                     onClick={() => setShowTemplates((v) => !v)}
-                    className="h-8 w-8 rounded-lg flex items-center justify-center transition-colors shrink-0 hover:bg-white"
+                    className="h-10 w-10 md:h-8 md:w-8 rounded-full flex items-center justify-center transition-colors shrink-0 hover:bg-white"
                     style={{ color: showTemplates ? "#2563EB" : "#94A3B8" }}
                     title="Templates de mensagem"
                     aria-label="Templates de mensagem"
@@ -1436,9 +1442,9 @@ function Composer({
                     onKeyDown={onKeyDown}
                     onFocus={() => setFocused(true)}
                     onBlur={() => setFocused(false)}
-                    placeholder="Responder como humano…"
+                    placeholder="Mensagem"
                     rows={1}
-                    className="flex-1 bg-transparent outline-none text-base md:text-[13.5px] py-1.5 px-1 resize-none max-h-32"
+                    className="flex-1 bg-transparent outline-none text-base md:text-[13.5px] py-2 md:py-1.5 px-1 resize-none max-h-32"
                     style={{ color: "#0B1220", lineHeight: 1.45 }}
                 />
 
@@ -1446,7 +1452,7 @@ function Composer({
                     <button
                         type="button"
                         onClick={onOpenAudio}
-                        className="h-8 w-8 rounded-lg flex items-center justify-center transition-colors shrink-0 hover:bg-white"
+                        className="h-10 w-10 md:h-8 md:w-8 rounded-full flex items-center justify-center transition-colors shrink-0 hover:bg-white"
                         style={{ color: "#64748B" }}
                         title="Gravar áudio"
                         aria-label="Gravar áudio"
@@ -1462,7 +1468,7 @@ function Composer({
                     disabled={!value.trim() || sending}
                     aria-label={sending ? "Enviando mensagem" : "Enviar mensagem"}
                     title="Enviar"
-                    className="h-9 w-9 rounded-full flex items-center justify-center text-white transition-all hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                    className="h-10 w-10 md:h-9 md:w-9 rounded-full flex items-center justify-center text-white transition-all hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                     style={{
                         background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
                         boxShadow: "0 4px 12px -4px rgba(37,99,235,0.4)",

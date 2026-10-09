@@ -217,7 +217,7 @@ function QuoteStatusCard({ quote }: { quote: QuoteItem }) {
                     type="button"
                     disabled={desfecho.isPending}
                     onClick={() => desfecho.mutate("won")}
-                    className="inline-flex h-7 items-center rounded-full bg-[var(--vyz-btn-solid)] px-3 text-[11.5px] font-semibold text-[var(--vyz-btn-on)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                    className="inline-flex h-9 md:h-7 items-center rounded-full bg-[var(--vyz-btn-solid)] px-4 md:px-3 text-[13px] md:text-[11.5px] font-semibold text-[var(--vyz-btn-on)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                 >
                     Fechou
                 </button>
@@ -225,13 +225,13 @@ function QuoteStatusCard({ quote }: { quote: QuoteItem }) {
                     type="button"
                     disabled={desfecho.isPending}
                     onClick={() => desfecho.mutate("lost")}
-                    className="inline-flex h-7 items-center rounded-full border border-[var(--ibx-line)] bg-[var(--vyz-surface-1)] px-3 text-[11.5px] font-semibold text-[var(--vyz-text-strong)] transition-colors duration-150 hover:bg-[var(--ibx-sunken)] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                    className="inline-flex h-9 md:h-7 items-center rounded-full border border-[var(--ibx-line)] bg-[var(--vyz-surface-1)] px-4 md:px-3 text-[13px] md:text-[11.5px] font-semibold text-[var(--vyz-text-strong)] transition-colors duration-150 hover:bg-[var(--ibx-sunken)] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                 >
                     Perdeu
                 </button>
                 <Link
                     to="/orcamentos"
-                    className="ml-auto text-[11.5px] font-medium text-[var(--vyz-text-muted)] underline-offset-2 hover:text-[var(--vyz-text-primary)] hover:underline"
+                    className="ml-auto -my-2.5 py-2.5 md:m-0 md:p-0 text-[12.5px] md:text-[11.5px] font-medium text-[var(--vyz-text-muted)] underline-offset-2 hover:text-[var(--vyz-text-primary)] hover:underline"
                 >
                     Ver no placar
                 </Link>
@@ -249,7 +249,7 @@ function SheetCloseButton({ onClose, absolute }: { onClose: () => void; absolute
             onClick={onClose}
             aria-label="Fechar análise da EVA"
             className={cn(
-                "h-7 w-7 rounded-full flex items-center justify-center shrink-0 transition-colors",
+                "h-10 w-10 md:h-7 md:w-7 rounded-full flex items-center justify-center shrink-0 transition-colors",
                 absolute && "absolute top-3 right-3 z-10",
             )}
             style={{ background: "var(--ibx-sunken)", color: "#64748B" }}
@@ -932,7 +932,7 @@ function DealLinkBanner({
                 <button
                     type="button"
                     onClick={() => onOpenDeal(effectiveDealId)}
-                    className="inline-flex items-center gap-1 text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
+                    className="inline-flex items-center gap-1 -my-2.5 py-2.5 px-1 md:m-0 md:p-0 text-[12.5px] md:text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
                     style={{ color: "#1D4ED8" }}
                 >
                     Abrir oportunidade
@@ -961,7 +961,7 @@ function DealLinkBanner({
                     <button
                         type="button"
                         onClick={onLinkExisting}
-                        className="inline-flex items-center gap-1 text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
+                        className="inline-flex items-center gap-1 -my-2.5 py-2.5 px-1 md:m-0 md:p-0 text-[12.5px] md:text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
                         style={{ color: "#B45309" }}
                     >
                         <Link2 className="h-3 w-3" />
@@ -971,7 +971,7 @@ function DealLinkBanner({
                 <button
                     type="button"
                     onClick={() => onOpenDeal(effectiveDealId)}
-                    className="inline-flex items-center gap-1 text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
+                    className="inline-flex items-center gap-1 -my-2.5 py-2.5 px-1 md:m-0 md:p-0 text-[12.5px] md:text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
                     style={{ color: "#1D4ED8" }}
                 >
                     Abrir
@@ -994,7 +994,7 @@ function DealLinkBanner({
             <button
                 type="button"
                 onClick={onCreate}
-                className="inline-flex items-center gap-1 text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
+                className="inline-flex items-center gap-1 -my-2.5 py-2.5 px-1 md:m-0 md:p-0 text-[12.5px] md:text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
                 style={{ color: "#1D4ED8" }}
             >
                 <Plus className="h-3 w-3" />
@@ -1004,7 +1004,7 @@ function DealLinkBanner({
                 <button
                     type="button"
                     onClick={onLinkExisting}
-                    className="inline-flex items-center gap-1 text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
+                    className="inline-flex items-center gap-1 -my-2.5 py-2.5 px-1 md:m-0 md:p-0 text-[12.5px] md:text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
                     style={{ color: "#64748B" }}
                 >
                     <Link2 className="h-3 w-3" />

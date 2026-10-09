@@ -104,6 +104,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { EvaBot } from "@/components/eva/EvaBot";
+import { formatPhone } from "@/lib/formatPhone";
 
 // â"€â"€â"€ Constants â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
@@ -223,17 +224,6 @@ const safeFormatDistance = (input: unknown): string => {
     try { return formatDistanceToNow(d, { locale: ptBR, addSuffix: true }); } catch { return "—"; }
 };
 
-const formatPhone = (phone?: string | null) => {
-    if (!phone) return "Sem telefone";
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length === 13 && digits.startsWith("55")) {
-        return `+${digits.slice(0, 2)} (${digits.slice(2, 4)}) ${digits.slice(4, 9)}-${digits.slice(9)}`;
-    }
-    if (digits.length === 11) {
-        return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-    }
-    return phone;
-};
 
 const getCallStatusBadge = (status?: string) => {
     switch (status) {

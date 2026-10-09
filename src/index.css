@@ -1364,6 +1364,9 @@ All colors MUST be HSL.
   flex-shrink: 0;
 }
 .vz-evlist-toggle:hover { background: #f1ede7; }
+@media (max-width: 767px) {
+  .vz-evlist-toggle { height: 36px; padding: 0 12px; border-radius: 999px; font-size: 12px; }
+}
 
 /* Ponte pro EVA Studio (estado B) — convite com presença, não erro.
    O fallback resolve a dor de hoje mas tem que vender o Studio de amanhã. */
@@ -1527,9 +1530,18 @@ All colors MUST be HSL.
   text-overflow: ellipsis;
 }
 .vz-evlist-unread {
-  font-size: 10px;
-  color: #94a3b8;
-  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--vyz-accent, #2563eb);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 

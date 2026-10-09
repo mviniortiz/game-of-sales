@@ -303,10 +303,9 @@ export function InboxPriorityList({
                             }
                         }}
                         placeholder="Buscar nome ou telefone"
-                        className="text-base md:text-[12px] border border-[var(--ibx-line)] outline-none transition-[border-color,box-shadow] duration-150 focus:border-[var(--vyz-accent)] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] [&::-webkit-search-cancel-button]:hidden"
+                        className="h-10 md:h-[34px] text-base md:text-[12px] border border-[var(--ibx-line)] outline-none transition-[border-color,box-shadow] duration-150 focus:border-[var(--vyz-accent)] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] [&::-webkit-search-cancel-button]:hidden"
                         style={{
                             width: "100%",
-                            height: 34,
                             paddingLeft: 32,
                             paddingRight: query ? 30 : 12,
                             borderRadius: 999,
@@ -319,7 +318,7 @@ export function InboxPriorityList({
                             type="button"
                             aria-label="Limpar busca"
                             onClick={() => setQuery("")}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded-full text-[var(--vyz-text-muted)] hover:bg-[var(--ibx-line)] transition-colors duration-150"
+                            className="absolute right-1 md:right-2 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 md:h-5 md:w-5 items-center justify-center rounded-full text-[var(--vyz-text-muted)] hover:bg-[var(--ibx-line)] transition-colors duration-150"
                         >
                             <X style={{ width: 11, height: 11 }} />
                         </button>
@@ -340,7 +339,7 @@ export function InboxPriorityList({
                             type="button"
                             aria-pressed={filter === f.id}
                             onClick={() => setFilter(f.id)}
-                            className={`inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-[11px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
+                            className={`inline-flex h-9 md:h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 md:px-2.5 text-[12.5px] md:text-[11px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
                                 filter === f.id
                                     ? "bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)]"
                                     : "border border-[var(--ibx-line)] text-[var(--vyz-text-strong)] hover:bg-[var(--ibx-sunken)]"
@@ -555,7 +554,11 @@ function LeadRow({
 }) {
     const priority = signal?.priority;
     const unread = chat.unreadCount;
-    const q = quote ? quoteShort(quote) : null;
+    const wait = signal?.waitingMinutes != null ? formatWaiting(signal.waitingMinutes) : null;
+    const short = quote ? quoteShort(quote) : null;
+    // Cliente esperando: o tempo de espera vai junto da proposta, uma vez só.
+    const q = short && short.tone === "turn" && wait ? { ...short, text: `${wait.replace("esperando", "esperando você há")}` } : short;
+    const showWait = !!wait && !(short && short.tone === "turn");
 
     return (
         <li>
@@ -579,6 +582,11 @@ function LeadRow({
                         <span className="vz-evlist-time">
                             {formatTimeAgo(chat.lastMessage?.time)}
                         </span>
+                        {unread > 0 && (
+                            <span className="vz-evlist-unread" aria-label={`${unread} ${unread === 1 ? "não lida" : "não lidas"}`}>
+                                {unread > 99 ? "99+" : unread}
+                            </span>
+                        )}
                     </span>
 
                     {/* Linha 2: prévia (1 linha, truncada) */}
@@ -626,14 +634,7 @@ function LeadRow({
                                 minWidth: 0,
                             }}
                         >
-                            {signal?.waitingMinutes != null && (
-                                <span className="vz-evlist-wait">{formatWaiting(signal.waitingMinutes)}</span>
-                            )}
-                            {unread > 0 && (
-                                <span className="vz-evlist-unread">
-                                    {unread > 99 ? "99+" : unread} {unread === 1 ? "não lida" : "não lidas"}
-                                </span>
-                            )}
+                            {showWait && <span className="vz-evlist-wait">{wait}</span>}
                         </span>
                     </span>
                 </span>

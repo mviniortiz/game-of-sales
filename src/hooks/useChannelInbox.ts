@@ -131,12 +131,12 @@ function lastMessageText(row: LastMessageRow | undefined): string {
     if (row.body) return row.body;
     if (caption) return caption;
     switch (row.message_type) {
-        case "audio":    return "[áudio]";
-        case "image":    return "[imagem]";
-        case "video":    return "[vídeo]";
-        case "document": return "[documento]";
-        case "location": return "[localização]";
-        case "contacts": return "[contato]";
+        case "audio":    return "Áudio";
+        case "image":    return "Foto";
+        case "video":    return "Vídeo";
+        case "document": return (row.media_ref?.["file_name"] as string | undefined) || "Documento";
+        case "location": return "Localização";
+        case "contacts": return "Contato";
         default:         return "";
     }
 }
