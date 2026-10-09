@@ -30,6 +30,7 @@ export interface BlogPost {
     featured?: boolean;
     content: BlogBlock[]; // corpo em blocos
     faq?: { q: string; a: string }[]; // perguntas frequentes (GEO: FAQPage + trecho extraível por IA)
+    downloads?: { label: string; href: string }[]; // arquivos grátis do post (ex.: modelo em Word e PDF), sem cadastro
 }
 
 export const BLOG_CATEGORIES = ["Comercial", "Crescimento"] as const;

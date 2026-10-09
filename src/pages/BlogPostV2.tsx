@@ -168,6 +168,21 @@ const BlogPostV2 = () => {
                     </div>
                 </Rise>
 
+                {post.downloads?.length ? (
+                    <div className="mt-8 rounded-2xl px-6 py-5" style={{ background: "#fff", border: "1px solid var(--lp-line)" }}>
+                        <p className="text-[15px] font-semibold" style={{ color: "var(--lp-ink)" }}>Baixe o modelo grátis, sem cadastro</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                            {post.downloads.map((d) => (
+                                <a key={d.href} href={d.href} download
+                                    className="inline-flex min-h-[44px] items-center rounded-full px-5 text-[14px] font-semibold transition-colors"
+                                    style={{ background: "var(--lp-ink)", color: "#fff" }}>
+                                    {d.label}
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+                ) : null}
+
                 <div className="mt-10 flex flex-col gap-5">
                     {post.content.map((block, i) => (
                         <Rise key={i}>

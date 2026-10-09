@@ -365,6 +365,7 @@ function renderBlogPostNoscript(post, todos = []) {
         <p style="font-size:13px;color:#555;margin:0 0 8px;">${escapeHtml(post.category)} · ${escapeHtml(formatBlogDate(post.date))}</p>
         <h1 style="font-size:32px;line-height:1.15;margin:0 0 14px;">${escapeHtml(post.title)}</h1>
         <p style="font-size:18px;color:#333;margin:0 0 24px;">${escapeHtml(post.excerpt)}</p>
+          ${(post.downloads || []).length ? `<p style="margin:0 0 20px;padding:14px 16px;border:1px solid #e6e4dd;border-radius:10px;"><strong>Baixe o modelo grátis, sem cadastro:</strong> ${post.downloads.map((d) => `<a href="${escapeAttr(d.href)}" style="color:#1556C0;">${escapeHtml(d.label)}</a>`).join(" · ")}</p>` : ""}
           ${paras}${faqHtml}
         <p style="margin:28px 0 0;">
           <a href="/criar-conta?segmento=energia_solar" style="display:inline-block;padding:10px 18px;background:#111;color:#fff;text-decoration:none;border-radius:999px;margin:0 6px 6px 0;"><strong>Fazer meu Raio-X grátis</strong></a>
