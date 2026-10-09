@@ -44,7 +44,16 @@ export class ErrorBoundary extends Component<Props, State> {
       // Only auto-reload once per 30s to avoid infinite loops
       if (Date.now() - lastReload > 30000) {
         sessionStorage.setItem(reloadKey, String(Date.now()));
-        window.location.reload();
+        // Recarregar não basta quando o navegador guardou uma resposta errada
+        // para um arquivo do app (ex.: a página HTML no lugar do .js, pedida no
+        // meio de um deploy): ele usaria a mesma cópia. Buscar de novo com
+        // cache "reload" troca a cópia guardada antes de recarregar.
+        const urls = new Set(
+          performance.getEntriesByType("resource").map((e) => e.name).filter((u) => u.includes("/assets/")),
+        );
+        const falhou = msg.match(/https?:\/\/\S+\.js/)?.[0];
+        if (falhou) urls.add(falhou);
+        Promise.allSettled([...urls].map((u) => fetch(u, { cache: "reload" }))).finally(() => window.location.reload());
         return;
       }
     }
