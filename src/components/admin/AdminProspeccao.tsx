@@ -197,12 +197,12 @@ export function AdminProspeccao() {
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             {Object.entries(porVersao).map(([nome, x]) => (
               <div key={nome} className="rounded-lg border border-[var(--vyz-border)] p-3">
-                <p className="text-[13px] font-semibold capitalize text-[var(--vyz-text-primary)]">{VERSAO[nome] || nome}</p>
+                <p className="text-[13px] font-semibold text-[var(--vyz-text-primary)]">{VERSAO[nome] || nome}</p>
                 <p className="mt-1 text-[20px] font-semibold tracking-[-0.02em] text-[var(--vyz-text-primary)]">
                   {x.abordados ? Math.round((x.responderam / x.abordados) * 100) : 0}%
                   <span className="ml-1 text-[12.5px] font-normal text-[var(--vyz-text-muted)]">responderam</span>
                 </p>
-                <p className="text-[12.5px] text-[var(--vyz-text-muted)]">{x.responderam} de {x.abordados} · {x.conversas} conversas</p>
+                <p className="text-[12.5px] text-[var(--vyz-text-muted)]">{x.responderam} de {x.abordados} · {x.conversas} {x.conversas === 1 ? "conversa" : "conversas"}</p>
               </div>
             ))}
           </div>
