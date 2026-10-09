@@ -173,7 +173,7 @@ const LIST_TH = "text-[10.5px] uppercase font-semibold tracking-[0.07em] text-mu
 const FILTERS_KEY = "vyz:pipeline:filtros";
 type SavedFilters = {
   view?: "kanban" | "list";
-  sort?: "position" | "az" | "za" | "value_desc" | "value_asc" | "created" | "updated";
+  sort?: "urgencia" | "position" | "az" | "za" | "value_desc" | "value_asc" | "created" | "updated";
   sellers?: string[];
   status?: "all" | "open" | "won" | "lost";
   active?: "all" | "active" | "inactive";
@@ -235,7 +235,7 @@ export default function CRM() {
   const [selectedSellers, setSelectedSellers] = useState<string[]>(saved.sellers ?? []); // vazio = todos
   const [filterStatusKind, setFilterStatusKind] = useState<"all" | "open" | "won" | "lost">(saved.status ?? "all");
   const [filterActive, setFilterActive] = useState<"all" | "active" | "inactive">(saved.active ?? "all");
-  const [sortBy, setSortBy] = useState<"position" | "az" | "za" | "value_desc" | "value_asc" | "created" | "updated">(saved.sort ?? "position");
+  const [sortBy, setSortBy] = useState<"urgencia" | "position" | "az" | "za" | "value_desc" | "value_asc" | "created" | "updated">(saved.sort ?? "urgencia");
   const [dealToDelete, setDealToDelete] = useState<Deal | null>(null);
 
   // Múltiplos funis (pipelines)
@@ -460,25 +460,6 @@ export default function CRM() {
   );
   const firstStageId = STAGES[0]?.id;
 
-  // Ordenação compartilhada (kanban por coluna + lista). "position" = ordem manual.
-  const sortDeals = useCallback(
-    (arr: Deal[]): Deal[] => {
-      const a = [...arr];
-      const ts = (d: Deal, f: "created_at" | "updated_at") => new Date(d[f] || d.created_at || 0).getTime();
-      switch (sortBy) {
-        case "az": return a.sort((x, y) => x.title.localeCompare(y.title, "pt-BR"));
-        case "za": return a.sort((x, y) => y.title.localeCompare(x.title, "pt-BR"));
-        case "value_desc": return a.sort((x, y) => (Number(y.value) || 0) - (Number(x.value) || 0));
-        case "value_asc": return a.sort((x, y) => (Number(x.value) || 0) - (Number(y.value) || 0));
-        case "created": return a.sort((x, y) => ts(y, "created_at") - ts(x, "created_at"));
-        case "updated": return a.sort((x, y) => ts(y, "updated_at") - ts(x, "updated_at"));
-        case "position":
-        default: return a.sort((x, y) => x.position - y.position);
-      }
-    },
-    [sortBy],
-  );
-
   // Placar de orçamentos cruzado por card: o orçamento aberto mais recente de cada deal.
   const { query: quoteQuery } = useQuoteBoard(30);
   const quoteByDeal = useMemo(() => {
@@ -493,6 +474,38 @@ export default function CRM() {
 
   const parkedCount = quoteQuery.data?.totals.parked_count ?? 0;
   const parkedAmount = quoteQuery.data?.totals.parked_amount ?? 0;
+
+  // Ordenação compartilhada (kanban por coluna + lista). "position" = ordem manual.
+  const sortDeals = useCallback(
+    (arr: Deal[]): Deal[] => {
+      const a = [...arr];
+      const ts = (d: Deal, f: "created_at" | "updated_at") => new Date(d[f] || d.created_at || 0).getTime();
+      switch (sortBy) {
+        case "az": return a.sort((x, y) => x.title.localeCompare(y.title, "pt-BR"));
+        case "za": return a.sort((x, y) => y.title.localeCompare(x.title, "pt-BR"));
+        case "value_desc": return a.sort((x, y) => (Number(y.value) || 0) - (Number(x.value) || 0));
+        case "value_asc": return a.sort((x, y) => (Number(x.value) || 0) - (Number(y.value) || 0));
+        case "created": return a.sort((x, y) => ts(y, "created_at") - ts(x, "created_at"));
+        case "updated": return a.sort((x, y) => ts(y, "updated_at") - ts(x, "updated_at"));
+        case "urgencia": {
+          // Cliente esperando > orçamento parado (maior valor primeiro) > em
+          // conversa > aberto sem orçamento (mais recente) > fechado.
+          const rank = (d: Deal) => {
+            if (kindOf(d.stage_id) !== "open") return 4;
+            const q = quoteByDeal.get(d.id);
+            if (!q) return 3;
+            return q.state === "your_turn" ? 0 : q.state === "talking" ? 2 : 1;
+          };
+          const valor = (d: Deal) => quoteByDeal.get(d.id)?.amount ?? (Number(d.value) || 0);
+          return a.sort((x, y) => rank(x) - rank(y) || (rank(x) === 3 ? ts(y, "updated_at") - ts(x, "updated_at") : valor(y) - valor(x)));
+        }
+        case "position":
+        default: return a.sort((x, y) => x.position - y.position);
+      }
+    },
+    [sortBy, kindOf, quoteByDeal],
+  );
+
 
   // Pipeline único de filtragem (vendedor multi + busca + avançados + status + ativo).
   // Usado por dealsByStage, stageTotals, filteredDeals e allVisibleDealIds.
@@ -1214,7 +1227,7 @@ export default function CRM() {
             type="button"
             aria-pressed={active}
             onClick={() => setViewMode(v.id)}
-            className={`h-7 rounded-full px-3 text-[11.5px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
+            className={`h-9 sm:h-7 rounded-full px-3.5 sm:px-3 text-[13px] sm:text-[11.5px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
               active
                 ? "bg-muted text-foreground shadow-sm ring-1 ring-border/60 dark:bg-white/10 dark:ring-white/15"
                 : "text-muted-foreground hover:text-foreground"
@@ -1272,7 +1285,7 @@ export default function CRM() {
                             aria-pressed={filterQuoteParked}
                             onClick={() => setFilterQuoteParked((prev) => !prev)}
                             title={filterQuoteParked ? "Mostrar todas" : "Ver só os orçamentos sem resposta"}
-                            className={`inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-full px-2 -mx-0.5 font-semibold tabular-nums transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
+                            className={`inline-flex h-9 sm:h-6 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 sm:px-2 -mx-0.5 font-semibold tabular-nums transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
                               filterQuoteParked
                                 ? "bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200"
                                 : "text-amber-700 hover:bg-amber-50 dark:text-amber-300/90 dark:hover:bg-amber-500/10"
@@ -1496,6 +1509,7 @@ export default function CRM() {
                 value={sortBy}
                 onChange={(v) => setSortBy(v as typeof sortBy)}
                 options={[
+                  { value: "urgencia", label: "Mais urgente" },
                   { value: "position", label: "Ordem manual" },
                   { value: "created", label: "Criadas por último" },
                   { value: "updated", label: "Atualização recente" },
@@ -1505,7 +1519,7 @@ export default function CRM() {
                   { value: "za", label: "Nome (Z-A)" },
                 ]}
                 icon={ArrowDownUp}
-                neutralValue="position"
+                neutralValue="urgencia"
                 minWidth="150px"
               />
               </div>
@@ -1869,7 +1883,8 @@ export default function CRM() {
               </DragOverlay>
             </DndContext>
           ) : (
-            <div className="p-4 sm:p-6">
+            // pb-24 no celular: o botão "Perguntar à EVA" fica fixo embaixo e cobria a última linha
+            <div className="p-4 pb-24 sm:p-6">
               {sortedDealsForList.length > 0 && (
                 <div className="rounded-xl border border-border bg-white dark:bg-card overflow-hidden">
                   {/* Cabeçalho de colunas. Sem ele, "50%" e "24 de ago." eram

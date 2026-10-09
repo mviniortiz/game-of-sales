@@ -41,10 +41,9 @@ import {
     ShieldAlert,
     ShieldOff,
     Lightbulb,
-    Send,
+    ArrowUp,
     Paperclip,
     FileText,
-    Smile,
     CheckCircle2,
     Zap,
     Clock,
@@ -260,8 +259,15 @@ const getCallStatusBadge = (status?: string) => {
 const StageChips = ({ stages, currentId, onStageChange, disabled }: { stages: StageConfig[]; currentId: string | null; onStageChange: (stage: StageConfig) => void; disabled?: boolean }) => {
     const visible = stages.filter((st) => st.kind !== "lost");
     const idx = visible.findIndex((st) => st.id === currentId);
+    // No celular a barra rola: a etapa atual fica à vista, não cortada na borda.
+    const barRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const bar = barRef.current;
+        const el = bar?.querySelector<HTMLElement>('[aria-current="step"]');
+        if (bar && el) bar.scrollLeft += el.getBoundingClientRect().left - bar.getBoundingClientRect().left - (bar.clientWidth - el.offsetWidth) / 2;
+    }, [currentId]);
     return (
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar" role="group" aria-label="Etapa da oportunidade">
+        <div ref={barRef} className="flex items-center gap-1 overflow-x-auto no-scrollbar" role="group" aria-label="Etapa da oportunidade">
             {visible.map((stage, i) => {
                 const done = idx >= 0 && i < idx;
                 const active = i === idx;
@@ -273,7 +279,7 @@ const StageChips = ({ stages, currentId, onStageChange, disabled }: { stages: St
                         aria-current={active ? "step" : undefined}
                         onClick={() => onStageChange(stage)}
                         className={`
-                            flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium
+                            flex items-center gap-1.5 px-3 py-2.5 sm:px-2.5 sm:py-1 rounded-full text-[12px] sm:text-[11px] font-medium
                             transition-colors duration-150 whitespace-nowrap disabled:cursor-default
                             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]
                             ${active ? "bg-[var(--vyz-surface-2)] text-[var(--vyz-text-primary)] ring-1 ring-[var(--vyz-border-strong)]" : ""}
@@ -378,7 +384,7 @@ const FocusCard = ({ action, onComplete, onExecute }: {
 
     return (
         <div className={`rounded-2xl border shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors ${done ? "bg-[#10B981]/5 border-[#10B981]/30" : "bg-white border-[#E5E7EB]"}`}>
-            <div className="flex items-center gap-3 px-4 py-3.5">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 px-4 py-3.5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 bg-[var(--vyz-surface-2)]">
                     {isEva
                         ? <EvaBot size={25} />
@@ -392,7 +398,7 @@ const FocusCard = ({ action, onComplete, onExecute }: {
                         </span>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                        <p className={`text-[14px] font-semibold truncate ${done ? "line-through text-slate-400" : "text-[#0B1220]"}`}>
+                        <p className={`text-[14px] font-semibold leading-snug sm:truncate ${done ? "line-through text-slate-400" : "text-[#0B1220]"}`}>
                             {action.title}
                         </p>
                         {dueChip && !done && (
@@ -403,11 +409,11 @@ const FocusCard = ({ action, onComplete, onExecute }: {
                     </div>
                 </div>
                 {!done ? (
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2 w-full sm:w-auto sm:flex-shrink-0 [&>button]:flex-1 sm:[&>button]:flex-none [&>button]:justify-center">
                         {onExecute && action.canWhatsApp && !picking && (
                             <button
                                 onClick={onExecute}
-                                className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full text-[12px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                                className="inline-flex items-center gap-1.5 h-10 sm:h-8 px-3.5 rounded-full text-[13px] sm:text-[12px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                                 title={action.suggestedReply ? "Abre o WhatsApp com a resposta sugerida pela EVA" : "Abrir conversa no WhatsApp"}
                             >
                                 <WhatsAppIcon className="h-3.5 w-3.5" />
@@ -416,7 +422,7 @@ const FocusCard = ({ action, onComplete, onExecute }: {
                         )}
                         <button
                             onClick={() => setPicking((v) => !v)}
-                            className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold border transition-colors ${picking ? "bg-slate-100 border-[#E5E7EB] text-slate-600" : "bg-white border-[#E5E7EB] text-[#0B1220] hover:bg-slate-50"}`}
+                            className={`inline-flex items-center gap-1.5 h-10 sm:h-8 px-3.5 rounded-full text-[13px] sm:text-[12px] font-semibold border transition-colors ${picking ? "bg-slate-100 border-[#E5E7EB] text-slate-600" : "bg-white border-[#E5E7EB] text-[#0B1220] hover:bg-slate-50"}`}
                         >
                             <CheckCircle2 className="h-3.5 w-3.5" />
                             {picking ? "Cancelar" : "Concluir"}
@@ -1064,9 +1070,9 @@ export default function DealCommandCenter() {
                         <div className="flex items-center gap-1.5 pt-3 text-[11px] text-muted-foreground">
                             <button
                                 onClick={() => navigate("/pipeline")}
-                                className="flex items-center gap-1 hover:text-foreground transition-colors"
+                                className="flex items-center gap-1 -my-2.5 -ml-2 py-2.5 pl-2 pr-1.5 sm:m-0 sm:p-0 text-[13px] sm:text-[11px] hover:text-foreground transition-colors"
                             >
-                                <ArrowLeft className="h-3 w-3" />
+                                <ArrowLeft className="h-3.5 w-3.5 sm:h-3 sm:w-3" />
                                 Pipeline
                             </button>
                             <ChevronRight className="h-3 w-3" />
@@ -1083,11 +1089,12 @@ export default function DealCommandCenter() {
                                 </Avatar>
 
                                 <div className="min-w-0 flex-1">
-                                    <h1 className="text-base sm:text-lg font-semibold text-foreground truncate leading-tight tracking-tight">
+                                    <h1 className="text-base sm:text-lg font-semibold text-foreground line-clamp-2 sm:line-clamp-none sm:truncate leading-tight tracking-tight">
                                         {deal.title}
                                     </h1>
                                     <div className="flex items-center gap-2 mt-0.5">
                                         <span className="text-xs text-muted-foreground truncate">{deal.customer_name}</span>
+                                        {!!deal.value && <span className="sm:hidden text-xs font-semibold tabular-nums text-foreground whitespace-nowrap">· {formatCurrency(deal.value)}</span>}
                                         {deal.customer_email && (
                                             <>
                                                 <span className="text-muted-foreground/40 text-xs">·</span>
@@ -1112,7 +1119,7 @@ export default function DealCommandCenter() {
                                     <div className="flex gap-1.5">
                                         <Button size="sm"
                                             aria-label="Marcar como fechada"
-                                            className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 font-semibold h-8 px-3.5 gap-1.5"
+                                            className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 font-semibold h-10 w-10 p-0 sm:h-8 sm:w-auto sm:px-3.5 gap-1.5"
                                             onClick={() => { void handleWon(); }}
                                             disabled={updateDeal.isPending}
                                         >
@@ -1121,7 +1128,7 @@ export default function DealCommandCenter() {
                                         </Button>
                                         <Button size="sm" variant="outline"
                                             aria-label="Marcar como perdida"
-                                            className="rounded-full border-border text-muted-foreground hover:text-[var(--vyz-danger)] hover:border-[var(--vyz-danger)]/40 h-8 px-3.5 gap-1.5"
+                                            className="rounded-full border-border text-muted-foreground hover:text-[var(--vyz-danger)] hover:border-[var(--vyz-danger)]/40 h-10 w-10 p-0 sm:h-8 sm:w-auto sm:px-3.5 gap-1.5"
                                             onClick={() => setShowLostModal(true)}
                                             disabled={updateDeal.isPending}
                                         >
@@ -1162,9 +1169,10 @@ export default function DealCommandCenter() {
                     <div className="grid grid-cols-12 gap-4 sm:gap-6">
 
                         {/* â"€â"€ LEFT MAIN (activity) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-                        <div className="col-span-12 lg:col-span-8 space-y-4 min-w-0 order-2 lg:order-1">
+                        <div className="col-span-12 lg:col-span-8 space-y-4 min-w-0 order-1">
 
                             {/* Focus / next action */}
+                            {openQuote && <div className="lg:hidden"><QuoteCard q={openQuote} /></div>}
                             <FocusCard
                                 key={nextAction.title}
                                 action={nextAction}
@@ -1243,9 +1251,9 @@ export default function DealCommandCenter() {
                                         {/* â"€â"€ Histórico â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                                         {activeTab === "historico" && (
                                             <div className="flex flex-col">
-                                                <div className="px-5 py-5 min-h-[300px]">
+                                                <div className="px-5 py-5 sm:min-h-[300px]">
                                                     {timeline.length === 0 ? (
-                                                        <div className="flex flex-col items-center justify-center py-14 text-muted-foreground">
+                                                        <div className="flex flex-col items-center justify-center py-6 sm:py-14 text-muted-foreground">
                                                             <StickyNote className="h-8 w-8 mb-3 opacity-40" />
                                                             <p className="text-sm font-medium text-muted-foreground">Nenhuma atividade ainda</p>
                                                             <p className="text-xs mt-1">Adicione a primeira nota abaixo</p>
@@ -1266,18 +1274,16 @@ export default function DealCommandCenter() {
                                                             value={newNote}
                                                             onChange={(e) => setNewNote(e.target.value)}
                                                             placeholder="Adicionar nota ou @mencionar..."
-                                                            className="flex-1 bg-transparent border-0 text-base md:text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 h-8 p-0"
+                                                            className="flex-1 bg-transparent border-0 text-base md:text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 h-10 sm:h-8 p-0"
                                                             onKeyDown={(e) => { if (e.key === "Enter" && newNote.trim()) addNote.mutate(newNote.trim()); }}
                                                         />
-                                                        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground h-7 w-7 p-0">
-                                                            <Smile className="h-4 w-4" />
-                                                        </Button>
                                                         <Button size="sm"
                                                             onClick={() => newNote.trim() && addNote.mutate(newNote.trim())}
                                                             disabled={!newNote.trim() || addNote.isPending}
-                                                            className="bg-emerald-500 hover:bg-emerald-400 text-white h-7 w-7 p-0 rounded-lg"
+                                                            aria-label="Adicionar nota"
+                                                            className="bg-[var(--vyz-btn-solid)] hover:opacity-90 text-[var(--vyz-btn-on)] h-9 w-9 sm:h-7 sm:w-7 p-0 rounded-full"
                                                         >
-                                                            {addNote.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                                                            {addNote.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowUp className="h-4 w-4" strokeWidth={2.4} />}
                                                         </Button>
                                                     </div>
                                                 </div>
@@ -1705,18 +1711,18 @@ export default function DealCommandCenter() {
                         </div>
 
                         {/* â"€â"€ RIGHT SIDEBAR (properties) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-                        <div className="col-span-12 lg:col-span-4 order-1 lg:order-2 min-w-0">
+                        <div className="col-span-12 lg:col-span-4 order-2 min-w-0">
                             <div className="lg:sticky lg:top-[148px] space-y-4">
 
                                 {/* Quick actions */}
                                 <TooltipProvider delayDuration={80}>
-                                    <div className="grid grid-cols-4 gap-2">
+                                    <div className="flex gap-2 [&>*]:flex-1">
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <button
                                                     onClick={() => setShowCallModal(true)}
                                                     disabled={!canUseCalls}
-                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    className={`${canUseCalls ? "flex" : "hidden lg:flex"} flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed`}
                                                 >
                                                     <Phone className="h-4 w-4 text-emerald-400" />
                                                     <span className="text-[10px] font-medium text-muted-foreground">Ligar</span>
@@ -1744,7 +1750,7 @@ export default function DealCommandCenter() {
                                                 <button
                                                     onClick={() => deal.customer_email && window.open(`mailto:${deal.customer_email}`, "_blank")}
                                                     disabled={!deal.customer_email}
-                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-blue-500/40 hover:bg-blue-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    className={`${deal.customer_email ? "flex" : "hidden lg:flex"} flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-blue-500/40 hover:bg-blue-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed`}
                                                 >
                                                     <Mail className="h-4 w-4 text-blue-400" />
                                                     <span className="text-[10px] font-medium text-muted-foreground">Email</span>
@@ -1768,7 +1774,7 @@ export default function DealCommandCenter() {
                                 </TooltipProvider>
 
                                 {/* A) Orçamento aberto (o que importa no solar) ou, sem orçamento, status e saúde */}
-                                {openQuote ? <QuoteCard q={openQuote} /> : (
+                                {openQuote ? <div className="hidden lg:block"><QuoteCard q={openQuote} /></div> : (
                                 <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                                     <div className="flex items-center gap-2 mb-3">
                                         <TrendingUp className="h-4 w-4 text-slate-400" />
@@ -1822,12 +1828,12 @@ export default function DealCommandCenter() {
                                         <div className="space-y-2.5">
                                             <RealEstateInterestBlock sourceData={(deal as any).source_data} />
                                             <div className="pt-2.5 border-t border-[#F1F5F9]">
-                                                <SidebarRow label="Valor da proposta" value={formatCurrency(deal.value || 0)} strong />
+                                                <SidebarRow label="Valor da proposta" value={deal.value ? formatCurrency(deal.value) : "Sem valor"} strong />
                                             </div>
                                         </div>
                                     ) : (
                                         <div className="space-y-2.5">
-                                            <SidebarRow label="Valor da proposta" value={formatCurrency(deal.value || 0)} strong />
+                                            <SidebarRow label="Valor da proposta" value={deal.value ? formatCurrency(deal.value) : "Sem valor"} strong />
                                             <SidebarRow label="Fonte" value={(deal as any).source || "Manual"} />
                                             <SidebarRow label="Criado" value={safeFormatDate(deal.created_at, "dd MMM yyyy")} />
                                             <SidebarRow label="Atualizado" value={safeFormatDistance(deal.updated_at)} />
@@ -2067,7 +2073,7 @@ function DealConversationContextBlock({
     // Sem conversa vinculada → empty state mas ainda exibe estrutura
     if (!ctx.conversation) {
         return (
-            <div className="bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+            <div className="hidden lg:block bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                 <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2">
                     Contexto da conversa
                 </p>

@@ -106,7 +106,7 @@ export function EvaHelpDock() {
     if (/^\/(inicio|dashboard|inbox)/.test(location.pathname)) return null;
 
     return (
-        <div className="fixed z-[60] right-4 bottom-[88px] sm:right-6 sm:bottom-6 print:hidden">
+        <div className="fixed z-[60] right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-6 sm:bottom-6 print:hidden">
             <AnimatePresence mode="wait">
                 {open ? (
                     <motion.div
@@ -254,7 +254,7 @@ export function EvaHelpDock() {
                         exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
                         whileHover={reduce ? undefined : { scale: 1.03 }}
                         whileTap={reduce ? undefined : { scale: 0.96 }}
-                        className="inline-flex items-center gap-2.5 h-12 pl-2 pr-4 rounded-full transition-shadow hover:shadow-lg"
+                        className="inline-flex items-center gap-2.5 h-12 px-[6px] sm:pl-2 sm:pr-4 rounded-full transition-shadow hover:shadow-lg"
                         style={{
                             background: "#FFFFFF",
                             border: "1px solid #E2E8F0",
@@ -263,7 +263,7 @@ export function EvaHelpDock() {
                         aria-label="Perguntar à EVA"
                     >
                         <EvaBot size={34} />
-                        <span className="text-[14px] font-semibold" style={{ color: "#0B1220" }}>Perguntar à EVA</span>
+                        <span className="hidden sm:inline text-[14px] font-semibold" style={{ color: "#0B1220" }}>Perguntar à EVA</span>
                     </motion.button>
                 )}
             </AnimatePresence>
