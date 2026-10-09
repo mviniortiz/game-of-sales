@@ -134,7 +134,7 @@ export function EvaHelpDock() {
     if (temLugarProprio(location.pathname) && !open) return null;
 
     return (
-        <div className="fixed z-[60] right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-6 sm:bottom-6 print:hidden">
+        <div className="fixed z-40 right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-6 sm:bottom-6 print:hidden">
             <AnimatePresence mode="wait">
                 {open ? (
                     <motion.div

@@ -251,7 +251,7 @@ export function InboxPriorityList({
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <p className="vz-evlist-title">Conversas</p>
                         <p className="vz-evlist-subtitle">
-                            {order === "time" ? "Ordem cronológica" : "Quem espera você primeiro"}
+                            {order === "time" ? "Mais recentes primeiro" : "Quem espera primeiro"}
                         </p>
                     </div>
                     <button
