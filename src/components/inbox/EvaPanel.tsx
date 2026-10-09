@@ -657,7 +657,7 @@ function PanelContent({
         : insight.error
         ? "Análise indisponível"
         : !insight.hasAnalysis
-        ? "Aguardando análise manual"
+        ? "Ainda não leu esta conversa"
         : insight.isStaleByContext
         ? "O contexto da EVA mudou"
         : insight.isStaleByMessages
@@ -953,9 +953,9 @@ function DealLinkBanner({
                 <p
                     className="text-[11.5px] font-semibold flex-1 min-w-0 truncate"
                     style={{ color: "#0B1220" }}
-                    title="Encontramos uma oportunidade com este contato, mas ela ainda não está vinculada a esta conversa."
+                    title="Achamos um negócio no pipeline com este telefone, mas ele ainda não está ligado a esta conversa."
                 >
-                    Possível oportunidade existente
+                    Já tem um negócio
                 </p>
                 {canLinkExisting && (
                     <button
@@ -1056,7 +1056,7 @@ function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
                 className="text-[11.5px] mb-5"
                 style={{ color: "#64748B", lineHeight: 1.55, maxWidth: "280px" }}
             >
-                Analise a conversa para gerar resumo, temperatura, intenção e próxima ação.
+                Ela lê a conversa e te diz em que pé o cliente está e qual o próximo passo.
             </p>
             <button
                 type="button"
@@ -1064,7 +1064,7 @@ function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
                 className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-full whitespace-nowrap text-[13px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 active:scale-[0.98] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2"
             >
                 <EvaBot size={18} still />
-                Analisar conversa
+                Ler esta conversa
             </button>
             <p className="text-[10.5px] mt-3" style={{ color: "#94A3B8", lineHeight: 1.5, maxWidth: "260px" }}>
                 A EVA sugere; nada sai para o cliente sem o seu ok.
@@ -2121,7 +2121,7 @@ function CrmBlock({
     // Nota coerente com o banner (mesma fonte de verdade)
     const noteText = hasLinkedOpportunity
         ? "Esta conversa já está no pipeline."
-        : "Possível oportunidade existente — ainda não vinculada a esta conversa.";
+        : "Este contato já tem um negócio no pipeline, mas ele ainda não está ligado a esta conversa.";
     const noteColor = hasLinkedOpportunity ? "#047857" : "#B45309";
 
     // Só mostra detalhes do deal certo:

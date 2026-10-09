@@ -111,10 +111,10 @@ function formatTimeAgo(timeStr?: string): string {
 }
 
 function formatWaiting(minutes: number): string {
-    if (minutes < 60) return `esperando ${minutes}min`;
+    if (minutes < 60) return `esperando você há ${minutes}min`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `esperando ${hours}h`;
-    return `esperando ${Math.floor(hours / 24)}d`;
+    if (hours < 24) return `esperando você há ${hours}h`;
+    return `esperando você há ${Math.floor(hours / 24)}d`;
 }
 
 function lastTime(chat: Chat): number {
@@ -557,8 +557,11 @@ function LeadRow({
     const wait = signal?.waitingMinutes != null ? formatWaiting(signal.waitingMinutes) : null;
     const short = quote ? quoteShort(quote) : null;
     // Cliente esperando: o tempo de espera vai junto da proposta, uma vez só.
-    const q = short && short.tone === "turn" && wait ? { ...short, text: `${wait.replace("esperando", "esperando você há")}` } : short;
-    const showWait = !!wait && !(short && short.tone === "turn");
+    const q = short && short.tone === "turn" && wait ? { ...short, text: wait } : short;
+    // Sem proposta nem leitura da EVA, a espera vai para a esquerda, no mesmo
+    // lugar e cor da linha de proposta: assim toda linha lê igual.
+    const waitLeft = !!wait && !quote && !priority;
+    const showWait = !!wait && !waitLeft && !(short && short.tone === "turn");
 
     return (
         <li>
@@ -621,6 +624,11 @@ function LeadRow({
                                 <span className="vz-evlist-tag-text">
                                     {PRIORITY_LABEL[priority]}{signal?.reason ? ` · ${signal.reason}` : ""}
                                 </span>
+                            </span>
+                        ) : waitLeft ? (
+                            <span className="inline-flex min-w-0 items-center gap-1.5 truncate text-[10.5px] font-medium" style={{ color: QUOTE_TONE.turn }}>
+                                <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: QUOTE_TONE.turn }} aria-hidden />
+                                {wait}
                             </span>
                         ) : (
                             <span aria-hidden />

@@ -31,7 +31,7 @@ export function stateLine(q: QuoteItem): string {
     case "went_quiet":
       return `Respondeu e sumiu · última mensagem do cliente ${ago(q.days)}`;
     case "your_turn":
-      return `Esperando você · mandou mensagem ${ago(q.days)} e está sem resposta`;
+      return `Esperando você · o cliente escreveu ${ago(q.days)} e ainda não teve resposta`;
     case "talking":
       return `Em conversa · cliente falou ${ago(q.days)}`;
     case "won":
