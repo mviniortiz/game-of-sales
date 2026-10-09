@@ -22,6 +22,9 @@ const SOURCE = "orcamento_teste";
 // Raio-X automático: cadastro e, depois, /raio-x no app.
 const RAIO_X_AUTO = "/criar-conta?segmento=energia_solar";
 const FUNNEL_PAGE = "solar";
+// Markus viajando de 10 a 13/10/2026: quem pede a conversa sabe quando vai ser chamado.
+// O aviso some sozinho na quarta; apagar esta função e os dois usos depois disso.
+const markusFora = () => Date.now() < Date.parse("2026-10-14T08:00:00-03:00");
 
 // Um ângulo por anúncio: a página repete a dor que a pessoa acabou de ver.
 // "sumiu" é a home; os outros vivem em /raio-x/:angulo (noindex).
@@ -844,7 +847,9 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: (pla
                 <Eyebrow>Grátis, sem cartão</Eyebrow>
                 <SectionTitle>Prefere fazer o Raio-X comigo?</SectionTitle>
                 <p className="mt-3 text-[15px] leading-relaxed md:text-[16px]" style={{ color: "var(--lp-ink-70)" }}>
-                    O Markus te chama no WhatsApp pra marcar 20 minutos e montar o Raio-X com você. Se quiser na hora, sozinho,{" "}
+                    {markusFora()
+                        ? "O Markus está fora até quarta (14/10) e te chama no WhatsApp quando voltar, pra marcar 20 minutos e montar o Raio-X com você. Se quiser na hora, sozinho, "
+                        : "O Markus te chama no WhatsApp pra marcar 20 minutos e montar o Raio-X com você. Se quiser na hora, sozinho, "}
                     <Link to={RAIO_X_AUTO} className="underline underline-offset-4">faça o automático</Link>.
                 </p>
                 <ul className="mt-6 hidden space-y-2.5 text-[15px] md:block" style={{ color: "var(--lp-ink-70)" }}>
@@ -864,7 +869,9 @@ const SignupForm = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: (pla
                             Recebemos, {form.name.trim().split(" ")[0]}.
                         </p>
                         <p className="mt-1 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
-                            O Markus te chama no WhatsApp pra marcar os 20 minutos. Se não quiser esperar, dá pra ver o seu Raio-X agora mesmo, em 3 minutos.
+                            {markusFora()
+                                ? "O Markus volta na quarta (14/10) e te chama no WhatsApp pra marcar os 20 minutos. Se não quiser esperar, dá pra ver o seu Raio-X agora mesmo, em 3 minutos."
+                                : "O Markus te chama no WhatsApp pra marcar os 20 minutos. Se não quiser esperar, dá pra ver o seu Raio-X agora mesmo, em 3 minutos."}
                         </p>
                         <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
                             <Link
