@@ -1273,13 +1273,14 @@ export default function CRM() {
                       <span className="tabular-nums text-foreground">{filteredDeals.length}</span>
                       {isFiltering && <span>de <span className="tabular-nums">{deals.length}</span></span>}
                       <span>{(isFiltering ? deals.length : filteredDeals.length) === 1 ? "oportunidade" : "oportunidades"}</span>
-                      <span className="hidden sm:inline text-muted-foreground/40">·</span>
-                      <span className="hidden sm:inline text-foreground tabular-nums font-semibold">{formatCurrency(pipelineTotal)}</span>
+                      <span className="text-muted-foreground/40">·</span>
+                      <span className="text-foreground tabular-nums font-semibold">{formatCurrency(pipelineTotal)}</span>
                       {/* Integrador pensa em orçamento parado, não em card parado: com o
                           placar ativo, o dinheiro parado substitui o "N paradas" genérico. */}
                       {parkedCount > 0 && (
                         <>
-                          <span className="text-muted-foreground/40">·</span>
+                          {/* No celular o chip desce para a linha de baixo: o ponto ficaria solto. */}
+                          <span className="hidden sm:inline text-muted-foreground/40">·</span>
                           <button
                             type="button"
                             aria-pressed={filterQuoteParked}
@@ -1818,6 +1819,7 @@ export default function CRM() {
                     0,
                     ...STAGES.map((s) => stageTotals[s.id]?.value || 0),
                   );
+                  const showAssignee = new Set(filteredDeals.map((d) => d.user_id)).size > 1;
                   return STAGES.map((stage, idx) => (
                     <KanbanColumn
                       key={stage.id}
@@ -1839,6 +1841,7 @@ export default function CRM() {
                       onSwipeMove={handleSwipeMove}
                       contextByDeal={pipelineContext.contextByDeal}
                       tagsByDeal={dealsTags.tagsByDeal}
+                      showAssignee={showAssignee}
                     />
                   ));
                 })()}

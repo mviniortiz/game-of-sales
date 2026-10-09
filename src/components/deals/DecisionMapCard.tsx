@@ -377,7 +377,7 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
             )}
 
             <p className="text-[10.5px] text-slate-400 pt-3 mt-3 border-t border-[#F1F5F9] leading-relaxed">
-                Registre apenas pessoas informadas pelo lead ou pelo corretor durante a negociação.
+                Registre apenas pessoas informadas pelo cliente durante a negociação.
             </p>
 
             {/* Form adicionar/editar */}

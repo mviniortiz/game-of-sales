@@ -204,11 +204,17 @@ const ProbabilityGauge = ({ value, hex }: { value: number; hex: string }) => {
     );
 };
 
-const formatCurrency = (value: number) => {
-    if (value >= 1_000_000) return `R$ ${(value / 1_000_000).toFixed(1)}M`;
-    if (value >= 1_000) return `R$ ${(value / 1_000).toFixed(0)}k`;
-    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(value);
+// Valor exato nos dados do negócio: o "R$ 25k" arredondado brigava com o
+// "R$ 24.900" do card do orçamento logo acima.
+const formatBRL = (value: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(value);
+
+const ORIGEM_LABEL: Record<string, string> = {
+    whatsapp: "WhatsApp", manual: "Cadastro manual", webhook: "Integração",
+    instagram: "Instagram", site: "Site", indicacao: "Indicação", raio_x: "Raio-X",
 };
+const origemLabel = (v?: string | null) =>
+    !v ? "—" : ORIGEM_LABEL[v.toLowerCase()] ?? v.charAt(0).toUpperCase() + v.slice(1).replace(/_/g, " ");
 
 const safeFormatDate = (input: unknown, pattern: string): string => {
     if (!input) return "—";
@@ -455,7 +461,7 @@ const PropertiesSection = ({ title, defaultOpen = true, children }: { title: str
                 onClick={() => setOpen(!open)}
                 className="w-full flex items-center justify-between py-3 text-left group"
             >
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">
+                <span className="text-[13px] font-semibold text-[#0B1220] group-hover:text-foreground transition-colors">
                     {title}
                 </span>
                 <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${open ? "" : "-rotate-90"}`} />
@@ -1084,7 +1090,7 @@ export default function DealCommandCenter() {
                                     </h1>
                                     <div className="flex items-center gap-2 mt-0.5">
                                         <span className="text-xs text-muted-foreground truncate">{deal.customer_name}</span>
-                                        {!!deal.value && <span className="sm:hidden text-xs font-semibold tabular-nums text-foreground whitespace-nowrap">· {formatCurrency(deal.value)}</span>}
+                                        {!!deal.value && <span className="sm:hidden text-xs font-semibold tabular-nums text-foreground whitespace-nowrap">· {formatBRL(deal.value)}</span>}
                                         {deal.customer_email && (
                                             <>
                                                 <span className="text-muted-foreground/40 text-xs">·</span>
@@ -1100,7 +1106,7 @@ export default function DealCommandCenter() {
                                 <div className="text-right hidden sm:block">
                                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Valor</p>
                                     <p className="text-lg font-semibold text-[var(--vyz-text-primary)] tabular-nums leading-tight">
-                                        {formatCurrency(deal.value || 0)}
+                                        {formatBRL(deal.value || 0)}
                                     </p>
                                 </div>
 
@@ -1241,12 +1247,11 @@ export default function DealCommandCenter() {
                                         {/* â"€â"€ Histórico â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                                         {activeTab === "historico" && (
                                             <div className="flex flex-col">
-                                                <div className="px-5 py-5 sm:min-h-[300px]">
+                                                <div className="px-5 py-4 sm:py-5 sm:min-h-[300px]">
                                                     {timeline.length === 0 ? (
-                                                        <div className="flex flex-col items-center justify-center py-6 sm:py-14 text-muted-foreground">
-                                                            <StickyNote className="h-8 w-8 mb-3 opacity-40" />
-                                                            <p className="text-sm font-medium text-muted-foreground">Nenhuma atividade ainda</p>
-                                                            <p className="text-xs mt-1">Adicione a primeira nota abaixo</p>
+                                                        <div className="flex items-center gap-2.5 text-muted-foreground sm:flex-col sm:justify-center sm:gap-0 sm:py-14">
+                                                            <StickyNote className="h-4 w-4 shrink-0 opacity-50 sm:h-8 sm:w-8 sm:mb-3 sm:opacity-40" />
+                                                            <p className="text-[13px] sm:text-sm">Nenhuma nota ainda. Escreva a primeira abaixo.</p>
                                                         </div>
                                                     ) : (
                                                         <div className="space-y-0">
@@ -1798,7 +1803,7 @@ export default function DealCommandCenter() {
                                         <SidebarRow label="E-mail" value={deal.customer_email
                                             ? <a href={`mailto:${deal.customer_email}`} className="text-[#1556C0] hover:underline">{deal.customer_email}</a>
                                             : "—"} />
-                                        <SidebarRow label="Origem" value={(deal as any).lead_source || (deal as any).source || "—"} />
+                                        <SidebarRow label="Origem" value={origemLabel((deal as any).lead_source || (deal as any).source)} />
                                         <SidebarRow
                                             label="Última mensagem"
                                             value={dealCtx.conversation?.last_message_at
@@ -1818,13 +1823,12 @@ export default function DealCommandCenter() {
                                         <div className="space-y-2.5">
                                             <RealEstateInterestBlock sourceData={(deal as any).source_data} />
                                             <div className="pt-2.5 border-t border-[#F1F5F9]">
-                                                <SidebarRow label="Valor da proposta" value={deal.value ? formatCurrency(deal.value) : "Sem valor"} strong />
+                                                <SidebarRow label="Valor da proposta" value={deal.value ? formatBRL(deal.value) : "Sem valor"} strong />
                                             </div>
                                         </div>
                                     ) : (
                                         <div className="space-y-2.5">
-                                            <SidebarRow label="Valor da proposta" value={deal.value ? formatCurrency(deal.value) : "Sem valor"} strong />
-                                            <SidebarRow label="Fonte" value={(deal as any).source || "Manual"} />
+                                            <SidebarRow label="Valor da proposta" value={deal.value ? formatBRL(deal.value) : "Sem valor"} strong />
                                             <SidebarRow label="Criado" value={safeFormatDate(deal.created_at, "dd MMM yyyy")} />
                                             <SidebarRow label="Atualizado" value={safeFormatDistance(deal.updated_at)} />
                                         </div>
@@ -1845,7 +1849,7 @@ export default function DealCommandCenter() {
 
                                 {/* E) Campos customizados */}
                                 <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-                                    <PropertiesSection title="Campos customizados" defaultOpen={false}>
+                                    <PropertiesSection title="Campos personalizados" defaultOpen={false}>
                                         <CustomFieldsSection dealId={id!} compact />
                                     </PropertiesSection>
                                 </div>

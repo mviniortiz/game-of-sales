@@ -56,6 +56,8 @@ interface DealCardProps {
   context?: PipelineDealContext;
   /** F6T.2 — tags transversais (sistema F6T.1) carregadas batched no nível superior */
   tags?: Tag[];
+  /** Bolinha do responsável: só ajuda quando o funil tem mais de uma pessoa. */
+  showAssignee?: boolean;
 }
 
 // LP-PIPE.2 "Fio da Conversa" — a leitura da EVA é texto curto, NÃO o conteúdo
@@ -113,7 +115,7 @@ const parseBRL = (formatted: string) =>
 
 type EditableField = "title" | "customer_name" | "value";
 
-export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDelete, onMarkWon, quote = null, selectionMode = false, isSelected = false, onToggleSelect, stageNeighbors, onSwipeMove, context, tags = [] }: DealCardProps) => {
+export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDelete, onMarkWon, quote = null, selectionMode = false, isSelected = false, onToggleSelect, stageNeighbors, onSwipeMove, context, tags = [], showAssignee = true }: DealCardProps) => {
   const navigate = useNavigate();
   const isMobile = useBelowSm();
   const { user } = useAuth();
@@ -509,39 +511,6 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             )}
           </div>
 
-          {/* Direita: valor em mono/tabular (hero discreto, alinhado ao título) */}
-          <div className="flex-shrink-0">
-            {canInlineEdit && editingField === "value" ? (
-              <input
-                ref={inputRef}
-                value={editValue}
-                onChange={handleValueInputChange}
-                onKeyDown={handleEditKeyDown}
-                onBlur={saveField}
-                onClick={e => e.stopPropagation()}
-                onMouseDown={e => e.stopPropagation()}
-                onPointerDown={e => e.stopPropagation()}
-                disabled={isSaving}
-                className={`${inlineInputClass} text-[14px] font-bold tabular-nums w-28 text-right`}
-                autoFocus
-              />
-            ) : canInlineEdit ? (
-              <button
-                className="text-[14px] font-bold text-slate-900 dark:text-foreground tabular-nums tracking-tight leading-snug group/value inline-flex items-center gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5"
-                onClick={e => startEditing("value", e)}
-                onMouseDown={e => e.stopPropagation()}
-                onPointerDown={e => e.stopPropagation()}
-              >
-                {deal.value ? formatCurrency(deal.value) : <span className="text-[12px] font-medium text-[var(--vyz-text-soft)]">Sem valor</span>}
-                <Pencil className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0" />
-              </button>
-            ) : (
-              <span className="text-[14px] font-bold text-slate-900 dark:text-foreground tabular-nums tracking-tight leading-snug">
-                {deal.value ? formatCurrency(deal.value) : <span className="text-[12px] font-medium text-[var(--vyz-text-soft)]">Sem valor</span>}
-              </span>
-            )}
-          </div>
-
           {/* Ações do card: dentro dele, por teclado e toque, sem cobrir o vizinho. */}
           {!selectionMode && (
             <DropdownMenu>
@@ -642,16 +611,47 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             </span>
           )}
 
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="flex-shrink-0 leading-none">
+            {canInlineEdit && editingField === "value" ? (
+              <input
+                ref={inputRef}
+                value={editValue}
+                onChange={handleValueInputChange}
+                onKeyDown={handleEditKeyDown}
+                onBlur={saveField}
+                onClick={e => e.stopPropagation()}
+                onMouseDown={e => e.stopPropagation()}
+                onPointerDown={e => e.stopPropagation()}
+                disabled={isSaving}
+                className={`${inlineInputClass} text-[13.5px] font-bold tabular-nums w-28 text-right`}
+                autoFocus
+              />
+            ) : canInlineEdit ? (
+              <button
+                className="text-[13.5px] font-bold text-slate-900 dark:text-foreground tabular-nums tracking-tight leading-snug group/value inline-flex items-center gap-1 cursor-text rounded hover:bg-muted/40 transition-colors px-0.5 -mx-0.5"
+                onClick={e => startEditing("value", e)}
+                onMouseDown={e => e.stopPropagation()}
+                onPointerDown={e => e.stopPropagation()}
+              >
+                {deal.value ? formatCurrency(deal.value) : <span className="text-[11.5px] font-medium text-[var(--vyz-text-soft)]">Sem valor</span>}
+                <Pencil className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0" />
+              </button>
+            ) : (
+              <span className="text-[13.5px] font-bold text-slate-900 dark:text-foreground tabular-nums tracking-tight leading-snug">
+                {deal.value ? formatCurrency(deal.value) : <span className="text-[11.5px] font-medium text-[var(--vyz-text-soft)]">Sem valor</span>}
+              </span>
+            )}
+          </div>
             {deal.is_hot && (
               <Flame className="h-3.5 w-3.5 text-orange-500 dark:text-orange-400" />
             )}
-            <Avatar className={`h-5 w-5 ring-1 ${deal.assignee_outside_company ? "ring-rose-500/40" : "ring-border"}`}>
+            {(showAssignee || deal.assignee_outside_company) && <Avatar className={`h-5 w-5 ring-1 ${deal.assignee_outside_company ? "ring-rose-500/40" : "ring-border"}`}>
               <AvatarImage src={deal.profiles?.avatar_url || undefined} />
               <AvatarFallback className={`text-[9px] font-semibold ${deal.assignee_outside_company ? "bg-rose-500/10 text-rose-600 dark:text-rose-300" : "bg-muted text-muted-foreground"}`}>
                 {deal.assignee_outside_company ? "!" : getInitials(deal.profiles?.nome || "")}
               </AvatarFallback>
-            </Avatar>
+            </Avatar>}
           </div>
 
         </div>

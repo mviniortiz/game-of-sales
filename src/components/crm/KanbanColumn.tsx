@@ -33,6 +33,7 @@ interface KanbanColumnProps {
   tagsByDeal?: Map<string, Tag[]>;
   /** LP-PIPE.2 — maior valor de coluna do board (pra barra de proporção "onde está o dinheiro") */
   maxColumnValue?: number;
+  showAssignee?: boolean;
 }
 
 // Micro funnel arrow between columns — LP-PIPE.1: tons duais light-first
@@ -75,6 +76,7 @@ export const KanbanColumn = memo(({
   contextByDeal,
   tagsByDeal,
   maxColumnValue = 0,
+  showAssignee = true,
 }: KanbanColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const Icon = stage.icon;
@@ -145,7 +147,7 @@ export const KanbanColumn = memo(({
             <span className={`inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-md text-[10.5px] font-bold tabular-nums bg-muted/60 dark:bg-card/60 ${stage.color}`} style={{ boxShadow: "inset 0 0 0 1px currentColor" }}>
               {total.count}
             </span>
-            {total.count > 0 && (
+            {total.value > 0 && (
               <span className="ml-auto text-[13px] font-bold text-[var(--vyz-text-primary)] tabular-nums tracking-tight">
                 {formatCurrency(total.value)}
               </span>
@@ -205,6 +207,7 @@ export const KanbanColumn = memo(({
                       onSwipeMove={onSwipeMove}
                       context={contextByDeal?.get(deal.id)}
                       tags={tagsByDeal?.get(deal.id)}
+                      showAssignee={showAssignee}
                     />
                   ))
                 )}
