@@ -28,6 +28,7 @@ import {
   SignOut,
   Star,
   Receipt,
+  FlowArrow,
   type IconProps,
 } from "@phosphor-icons/react";
 import {
@@ -94,6 +95,7 @@ const mainNavItems: NavItem[] = [
 
 const accountNavItems: NavItem[] = [
   { title: "Gestão", url: "/admin", icon: ChartLineUp, requires: "admin" },
+  { title: "Automações", url: "/automacoes", icon: FlowArrow, requires: "super_admin" },
   { title: "Configurações", url: "/configuracoes", icon: GearSix },
   { title: "Suporte", url: "/admin/suporte", icon: LifeBuoyIcon, requires: "super_admin" },
 ];

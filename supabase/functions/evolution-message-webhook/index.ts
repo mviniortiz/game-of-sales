@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { handleOwnerCommand, isEvaOfficialNumber, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
 import { PROSPECT_PREFIX, brKey, handleProspectCommand, onProspectInbound } from "../_shared/prospecting.ts";
+import { adLeadKeys, detectAdOrigin, handleLeadCommand, leadAutomation, onAdLeadInbound, onOwnerMessageToLead } from "../_shared/adLeads.ts";
 import { trackOutboundQuote } from "../_shared/quoteTracking.ts";
 import { ensureConnection, importHistoryMessages } from "../_shared/whatsappHistory.ts";
 import { fillContactNames, isPlaceholderName, knownLidMap, linkLidToPhone } from "../_shared/whatsappContacts.ts";
@@ -983,6 +984,10 @@ serve(async (req) => {
     }
   }
 
+  // AUTO.1 — automação de leads do anúncio desta instância, lida uma vez por lote.
+  const leadAuto = await leadAutomation(admin, userId);
+  const adKeys = leadAuto ? await adLeadKeys(admin, userId) : new Set<string>();
+
   // APPROVAL.1 — número do dono desta instância, resolvido no máximo uma vez
   // por lote e só quando chega mensagem enviada por ele (fromMe).
   let ownerNumberCache: string | null | undefined;
@@ -1096,6 +1101,14 @@ serve(async (req) => {
             skipped.push("prospect_own_notice");
             continue;
           }
+          try {
+            if (await handleLeadCommand(admin, { userId, instanceName, ownerNumber, text: commandText })) {
+              skipped.push("lead_command");
+              continue;
+            }
+          } catch (leadErr: any) {
+            console.error("[ad-lead] comando do dono falhou:", leadErr?.message);
+          }
           if (prospectingActive) {
             try {
               if (await handleProspectCommand(admin, { userId, instanceName, ownerNumber, text: commandText })) {
@@ -1124,6 +1137,32 @@ serve(async (req) => {
       }
     }
 
+    // AUTO.1 — lead do anúncio de conversa: entra no Vyzon mesmo com a trava da
+    // prospecção ligada, e a EVA lê e pede aprovação ao dono.
+    let isAdLead = false;
+    if (leadAuto && companyId && !isGroup && chatPhone) {
+      const key = brKey(chatPhone);
+      const bodyText = parseTextFromMessage(msg) || "";
+      const ad = !fromMe && !adKeys.has(key) ? detectAdOrigin(msg, bodyText, leadAuto.config.prefill) : null;
+      if (adKeys.has(key) || ad) {
+        isAdLead = true;
+        adKeys.add(key);
+        try {
+          if (fromMe) {
+            await onOwnerMessageToLead(admin, userId, chatPhone, bodyText);
+          } else {
+            await onAdLeadInbound(admin, {
+              userId, companyId, instanceName, ownerNumber: await ownerNumberOnce(),
+              phone: chatPhone, name: isPlaceholderName(msg.pushName) ? null : (msg.pushName || null),
+              text: bodyText, mediaType: detectMessageType(msg).type, ad,
+            });
+          }
+        } catch (leadErr: any) {
+          console.error("[ad-lead] leitura falhou:", leadErr?.message);
+        }
+      }
+    }
+
     // PROSPECT.1 — trava: em modo prospecção, descarta grupos e qualquer
     // número fora da allowlist (não grava em whatsapp_messages nem channel_*).
     // Vale pros dois sentidos (inbound da agência e outbound enviado por nós).
@@ -1132,7 +1171,7 @@ serve(async (req) => {
         skipped.push("prospecting_group_blocked");
         continue;
       }
-      if (!allowlistByKey.has(brKey(chatPhone))) {
+      if (!isAdLead && !allowlistByKey.has(brKey(chatPhone))) {
         skipped.push("prospecting_not_allowlisted");
         continue;
       }

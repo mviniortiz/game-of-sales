@@ -29,6 +29,7 @@ const NovaVenda = lazy(() => import("./pages/NovaVenda"));
 const Calls = lazy(() => import("./pages/Calls"));
 const Metas = lazy(() => import("./pages/Metas"));
 const Admin = lazy(() => import("./pages/Admin"));
+const Automacoes = lazy(() => import("./pages/Automacoes"));
 const AdminCompaniesPage = lazy(() => import("./pages/AdminCompaniesPage"));
 const AdminCompanyDetail = lazy(() => import("./pages/AdminCompanyDetail"));
 const ConfiguracoesLayout = lazy(() => import("./components/configuracoes/ConfiguracoesLayout"));
@@ -213,6 +214,18 @@ const AppShell = () => (
                     <AdminRoute>
                       <AppLayout>
                         <Admin />
+                      </AppLayout>
+                    </AdminRoute>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/automacoes"
+                element={
+                  <ProtectedRoute>
+                    <AdminRoute>
+                      <AppLayout>
+                        <Automacoes />
                       </AppLayout>
                     </AdminRoute>
                   </ProtectedRoute>

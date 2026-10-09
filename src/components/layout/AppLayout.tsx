@@ -27,6 +27,7 @@ const getPageTitle = (pathname: string) => {
   if (pathname.startsWith("/integracoes")) return "Integrações";
   if (pathname.startsWith("/nova-venda")) return "Novo lead";
   if (pathname.startsWith("/deal")) return "Detalhes do Deal";
+  if (pathname.startsWith("/automacoes")) return "Automações";
   if (pathname.startsWith("/admin/suporte")) return "Suporte";
   if (pathname.startsWith("/admin")) return "Gestão";
   if (pathname.startsWith("/configuracoes")) return "Configurações";
