@@ -29,6 +29,16 @@ export type ProspectRow = {
   reply_code: string | null;
 };
 
+// Celular brasileiro chega de dois jeitos: com o 9 da frente (55 48 9 9190-0089,
+// como a lista guarda) e sem ele (55 48 9190-0089, como o WhatsApp manda o JID).
+// A chave é DDD + últimos 8 dígitos, igual nos dois.
+export function brKey(raw: string | null | undefined): string {
+  let d = String(raw || "").replace(/\D/g, "");
+  if (d.length >= 12 && d.startsWith("55")) d = d.slice(2);
+  if (d.length < 10) return d;
+  return d.slice(0, 2) + d.slice(-8);
+}
+
 export function prospectNumber(row: Pick<ProspectRow, "phone_e164" | "phone_tail">): string | null {
   return normalizeNumber(row.phone_e164 || row.phone_tail);
 }
@@ -173,6 +183,7 @@ export async function onProspectInbound(
 ): Promise<void> {
   const { data: row } = await admin.from("prospecting_allowlist")
     .select("*").eq("user_id", args.userId).eq("phone_tail", args.phoneTail).eq("is_active", true).maybeSingle();
+  // phoneTail aqui já vem da própria lista (o webhook casa pela brKey).
   if (!row || !["enviado", "respondeu", "conversa_marcada"].includes(row.status)) return;
   const nome = row.agency_name || "Uma integradora";
   const agora = new Date().toISOString();

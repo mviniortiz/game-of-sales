@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { handleOwnerCommand, isEvaOfficialNumber, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
-import { PROSPECT_PREFIX, handleProspectCommand, onProspectInbound } from "../_shared/prospecting.ts";
+import { PROSPECT_PREFIX, brKey, handleProspectCommand, onProspectInbound } from "../_shared/prospecting.ts";
 import { trackOutboundQuote } from "../_shared/quoteTracking.ts";
 import { ensureConnection, importHistoryMessages } from "../_shared/whatsappHistory.ts";
 import { fillContactNames, isPlaceholderName, knownLidMap, linkLidToPhone } from "../_shared/whatsappContacts.ts";
@@ -968,16 +968,18 @@ serve(async (req) => {
   // (inclusive contatos pessoais do dono do número) são descartados ANTES de
   // gravar. É a trava que mantém a vida pessoal fora do Vyzon.
   let prospectingActive = false;
-  const allowlistTails = new Set<string>();
+  // brKey (DDD + últimos 8) -> phone_tail da lista. Casar pelo phone_tail cru
+  // falhava: a lista guarda o celular com o 9 e o WhatsApp manda sem.
+  const allowlistByKey = new Map<string, string>();
   if (pInst) {
     prospectingActive = true;
     const { data: al } = await (admin as any)
       .from("prospecting_allowlist")
-      .select("phone_tail")
+      .select("phone_tail, phone_e164")
       .eq("user_id", userId)
       .eq("is_active", true);
     for (const r of (al || []) as any[]) {
-      if (r?.phone_tail) allowlistTails.add(r.phone_tail as string);
+      if (r?.phone_tail) allowlistByKey.set(brKey(r.phone_e164 || r.phone_tail), r.phone_tail as string);
     }
   }
 
@@ -1130,7 +1132,7 @@ serve(async (req) => {
         skipped.push("prospecting_group_blocked");
         continue;
       }
-      if (!allowlistTails.has(phoneTail)) {
+      if (!allowlistByKey.has(brKey(chatPhone))) {
         skipped.push("prospecting_not_allowlisted");
         continue;
       }
@@ -1146,7 +1148,7 @@ serve(async (req) => {
           userId,
           instanceName,
           ownerNumber: await ownerNumberOnce(),
-          phoneTail,
+          phoneTail: allowlistByKey.get(brKey(chatPhone)) || phoneTail,
           text: body || "",
           mediaType: meta.type,
         });
