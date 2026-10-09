@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { handleOwnerCommand, isEvaOfficialNumber, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
+import { PROSPECT_PREFIX, handleProspectCommand, onProspectInbound } from "../_shared/prospecting.ts";
 import { trackOutboundQuote } from "../_shared/quoteTracking.ts";
 import { ensureConnection, importHistoryMessages } from "../_shared/whatsappHistory.ts";
 import { fillContactNames, isPlaceholderName, knownLidMap, linkLidToPhone } from "../_shared/whatsappContacts.ts";
@@ -1087,6 +1088,22 @@ serve(async (req) => {
       if (ownerNumber && chatPhone === ownerNumber) {
         const commandText = parseTextFromMessage(msg);
         if (commandText) {
+          // PROSPECT.2 — o aviso que o próprio Vyzon mandou no chat do dono volta
+          // pelo webhook; ignorar antes que vire "texto corrigido" de outro rascunho.
+          if (commandText.trim().startsWith(PROSPECT_PREFIX)) {
+            skipped.push("prospect_own_notice");
+            continue;
+          }
+          if (prospectingActive) {
+            try {
+              if (await handleProspectCommand(admin, { userId, instanceName, ownerNumber, text: commandText })) {
+                skipped.push("prospect_command");
+                continue;
+              }
+            } catch (prospectErr: any) {
+              console.error("[prospect] comando do dono falhou:", prospectErr?.message);
+            }
+          }
           try {
             const outcome = await handleOwnerCommand(admin, {
               instanceName,
@@ -1121,6 +1138,22 @@ serve(async (req) => {
 
     const body = parseTextFromMessage(msg);
     const meta = detectMessageType(msg);
+
+    // PROSPECT.2 — integradora da lista respondeu: a EVA lê e pede aprovação ao dono.
+    if (prospectingActive && !fromMe) {
+      try {
+        await onProspectInbound(admin, {
+          userId,
+          instanceName,
+          ownerNumber: await ownerNumberOnce(),
+          phoneTail,
+          text: body || "",
+          mediaType: meta.type,
+        });
+      } catch (prospectErr: any) {
+        console.error("[prospect] leitura da resposta falhou:", prospectErr?.message);
+      }
+    }
 
     if ((meta.type === "reaction" || meta.type === "protocol") && !body) {
       skipped.push(meta.type);

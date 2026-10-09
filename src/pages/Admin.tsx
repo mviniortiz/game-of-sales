@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { motion, useReducedMotion } from "framer-motion";
-import { Buildings, ChartLineUp, Flag, Funnel, Pulse, UsersThree, type Icon } from "@phosphor-icons/react";
+import { Buildings, ChartLineUp, Flag, Funnel, PaperPlaneTilt, Pulse, UsersThree, type Icon } from "@phosphor-icons/react";
 import { useAuth } from "@/contexts/AuthContext";
 import { GestaoResultados } from "@/components/gestao/GestaoResultados";
 import { GestaoEquipe } from "@/components/gestao/GestaoEquipe";
@@ -10,6 +10,7 @@ import { GestaoFunil } from "@/components/gestao/GestaoFunil";
 import { GestaoMeta } from "@/components/gestao/GestaoMeta";
 import { AdminCompanies } from "@/components/admin/AdminCompanies";
 import { EvolutionMonitor } from "@/components/admin/EvolutionMonitor";
+import { AdminProspeccao } from "@/components/admin/AdminProspeccao";
 
 type Tab = { id: string; label: string; icon: Icon; render: () => JSX.Element; superAdminOnly?: boolean };
 
@@ -23,6 +24,7 @@ const TABS: Tab[] = [
   { id: "meta", label: "Meta do mês", icon: Flag, render: () => <GestaoMeta /> },
   { id: "empresas", label: "Empresas", icon: Buildings, render: () => <AdminCompanies />, superAdminOnly: true },
   { id: "monitor", label: "Monitor WhatsApp", icon: Pulse, render: () => <EvolutionMonitor />, superAdminOnly: true },
+  { id: "prospeccao", label: "Prospecção", icon: PaperPlaneTilt, render: () => <AdminProspeccao />, superAdminOnly: true },
 ];
 
 const Admin = () => {

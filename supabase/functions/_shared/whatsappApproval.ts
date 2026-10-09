@@ -51,7 +51,7 @@ export type ApprovalOutcome = {
 
 // ── Evolution ───────────────────────────────────────────────────────────────
 
-async function evolutionRequest(
+export async function evolutionRequest(
     path: string,
     init: RequestInit = {},
     timeoutMs = 15000,
