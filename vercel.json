@@ -25,6 +25,12 @@
     ],
     "redirects": [
         {
+            "source": "/:path*",
+            "has": [{ "type": "host", "value": "www.vyzon.com.br" }],
+            "destination": "https://vyzon.com.br/:path*",
+            "statusCode": 301
+        },
+        {
             "source": "/",
             "has": [{ "type": "host", "value": "gamesales.com.br" }],
             "destination": "https://vyzon.com.br/",
