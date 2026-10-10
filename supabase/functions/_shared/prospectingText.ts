@@ -12,8 +12,12 @@ export function randomCode(): string {
   return `P${l}${d}`;
 }
 
-export type ProspectVariant = "pergunta" | "numero" | "curta";
-export const VARIANTS: ProspectVariant[] = ["pergunta", "numero", "curta"];
+export type ProspectVariant = "pergunta" | "numero" | "curta" | "encaminha" | "raiox";
+/** Versões em teste agora. Na 1ª rodada (09/10/2026, 20 integradoras) só robô e
+ *  atendente responderam às longas; ficam a curta e duas feitas para passar por eles. */
+export const VARIANTS: ProspectVariant[] = ["curta", "encaminha", "raiox"];
+
+export const RAIO_X_LINK = "https://vyzon.com.br/criar-conta?segmento=energia_solar&utm_source=prospeccao&utm_content=raiox";
 
 type ProspectTarget = { agency_name: string | null; city: string | null; rating_count: number | null };
 
@@ -31,8 +35,17 @@ export function firstMessage(row: ProspectTarget, variant: ProspectVariant = "pe
       sender,
     ].join("\n\n");
   }
+  // Quem atende primeiro é robô ou atendente: pedir a pessoa certa, com o assunto
+  // em uma linha, é o que eles sabem encaminhar.
+  if (variant === "encaminha") {
+    return `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Consegue me passar pra quem cuida das propostas da ${nome}? É uma pergunta rápida sobre orçamento que o cliente visualiza e para de responder. Não é venda.`;
+  }
+  // Em vez de pedir 20 minutos, oferece ver o próprio número; o link só vai se ele quiser.
+  if (variant === "raiox") {
+    return `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Fiz uma ferramenta que lê o WhatsApp da integradora e acha as propostas que o cliente visualizou e não respondeu. Quer que eu te mande o link pra ver quanto está parado aí na ${nome}? É grátis.`;
+  }
   if (variant === "curta") {
-    return `Oi, tudo bem? Aqui é o ${sender}, de Floripa. Pergunta rápida pra quem cuida do comercial da ${nome}: quando o cliente visualiza a proposta e some, vocês chamam de novo ou deixam pra lá? Estou entendendo como as integradoras da região lidam com isso.`;
+    return `Oi, tudo bem? Aqui é o ${sender}, de Floripa. Pergunta rápida pra quem cuida do comercial da ${nome}: quando o cliente visualiza a proposta e some, vocês chamam de novo ou deixam pra lá? Estou entendendo como as integradoras de SC lidam com isso.`;
   }
   const aval = row.rating_count || 0;
   const pedestal = aval >= 20
@@ -47,7 +60,7 @@ export function firstMessage(row: ProspectTarget, variant: ProspectVariant = "pe
   ].join("\n\n");
 }
 
-/** A variante menos usada até agora, para as três crescerem por igual. */
+/** A variante em teste menos usada até agora, para elas crescerem por igual. */
 export function nextVariant(counts: Partial<Record<ProspectVariant, number>>): ProspectVariant {
   return [...VARIANTS].sort((a, b) => (counts[a] || 0) - (counts[b] || 0))[0];
 }

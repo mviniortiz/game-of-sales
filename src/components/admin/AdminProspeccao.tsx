@@ -37,7 +37,7 @@ const ETAPAS: { id: string; label: string }[] = [
   { id: "sem_interesse", label: "Sem interesse" },
 ];
 const ROTULO = Object.fromEntries([...ETAPAS.map((e) => [e.id, e.label]), ["descartado", "Descartado"]]);
-const VERSAO: Record<string, string> = { pergunta: "Pergunta + motivo", numero: "Número da Greener", curta: "Pergunta curta", pergunta_cafe: "Pergunta (com café)" };
+const VERSAO: Record<string, string> = { pergunta: "Pergunta + motivo", numero: "Número da Greener", curta: "Pergunta curta", pergunta_cafe: "Pergunta (com café)", encaminha: "Pede o responsável", raiox: "Oferece o Raio-X" };
 const LEITURA: Record<string, string> = { interesse: "quer conversar", sem_interesse: "não quer", automatico: "robô", duvida: "dúvida" };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tabelas da prospecção ainda fora dos tipos gerados
