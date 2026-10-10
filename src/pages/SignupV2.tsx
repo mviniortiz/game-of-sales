@@ -16,8 +16,10 @@ import { APP_HOME } from "@/config/routes";
 
 // Cadastro SIMPLES: 1 tela → conta criada sem plano (sem teste grátis) →
 // Raio-X automático no app. Trata 2 modos: (a) novo usuário
-// (nome+empresa+WhatsApp+email+senha ou Google); (b) usuário logado ainda sem
-// empresa (Google, ou quem confirmou o email depois): pede empresa+WhatsApp.
+// (WhatsApp+email+senha ou Google); (b) usuário logado ainda sem empresa
+// (Google, ou quem confirmou o email depois): pede só o WhatsApp.
+// Cada campo a mais derrubava quem chega do anúncio; nome da pessoa e da
+// empresa saem do email e podem ser trocados depois em Configurações.
 // A conta nasce ANTES da empresa: se a conta falha, não sobra empresa órfã
 // (companies não tem policy de DELETE). Rota /criar-conta.
 // Aceita com ou sem 55 e com máscara; grava sempre 55 + DDD + número.
@@ -26,7 +28,28 @@ function whatsDigitos(v: string): string {
     return d.length === 10 || d.length === 11 ? "55" + d : d;
 }
 const whatsValido = (v: string) => /^55\d{10,11}$/.test(whatsDigitos(v));
+
+const EMAIL_PESSOAL = /^(gmail|googlemail|hotmail|outlook|live|msn|yahoo|ymail|icloud|me|bol|uol|terra|ig|globo|r7|proton|protonmail)\./;
+const capitalizar = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// "joao.silva@solarsul.com.br" → "Joao silva"
+function nomeDoEmail(email: string): string {
+    const local = email.split("@")[0] ?? "";
+    return capitalizar(local.replace(/[._\-+\d]+/g, " ").trim()) || "Você";
+}
+
+// Email de empresa vira o nome da empresa ("solarsul.com.br" → "Solarsul");
+// Gmail e parecidos não dizem nada, então fica um nome genérico.
+function empresaDoEmail(email: string): string {
+    const dominio = (email.split("@")[1] ?? "").toLowerCase();
+    if (!dominio || EMAIL_PESSOAL.test(dominio)) return "Minha empresa";
+    return capitalizar(dominio.split(".")[0]);
+}
 const FUNNEL_PAGE = "signup";
+// Toda conta nova nasce sem assinatura, e o grátis é o Raio-X. Ir direto: o
+// desvio por Orçamentos depende de isAdmin, que só é lido no login e ainda
+// está falso logo depois de onboarding_assign_company.
+const RAIO_X = "/raio-x";
 
 const SignupV2 = () => {
     const navigate = useNavigate();
@@ -44,8 +67,8 @@ const SignupV2 = () => {
     // Veio do login (só e-mail) ou do formulário do Raio-X na home (todos os
     // campos): a pessoa não digita de novo o que acabou de digitar.
     const veio = (location.state as { email?: string; nome?: string; empresa?: string; whats?: string } | null) ?? {};
-    const [nome, setNome] = useState(veio.nome ?? "");
-    const [empresa, setEmpresa] = useState(veio.empresa ?? "");
+    const nome = (veio.nome ?? "").trim();
+    const empresa = (veio.empresa ?? "").trim();
     const [whats, setWhats] = useState(veio.whats ?? "");
     const [email, setEmail] = useState((veio.email ?? "").toLowerCase());
     const veioPreenchido = !!(veio.nome && veio.email);
@@ -54,7 +77,7 @@ const SignupV2 = () => {
     const navegadorDeApp = typeof navigator !== "undefined" && /Instagram|FBAN|FBAV|FB_IAB|Messenger/i.test(navigator.userAgent);
     const [senha, setSenha] = useState("");
     const [loading, setLoading] = useState(false);
-    const [erros, setErros] = useState<{ nome?: string; empresa?: string; whats?: string; email?: string; senha?: string; form?: string; formAction?: "login" }>({});
+    const [erros, setErros] = useState<{ whats?: string; email?: string; senha?: string; form?: string; formAction?: "login" }>({});
     const [erroKey, setErroKey] = useState(0);
     const [showSenha, setShowSenha] = useState(false);
     // email pra onde foi o link de confirmação; quando setado, troca o form
@@ -78,11 +101,12 @@ const SignupV2 = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // já logado e com empresa → vai pro app
+    // já logado e com empresa → vai pro app (quem está criando a conta agora
+    // segue para o Raio-X pelo próprio envio)
     useEffect(() => {
         const ok = !!profile && (profile.is_super_admin || isSuperAdmin || !!companyId);
-        if (!authLoading && user && ok) navigate(APP_HOME, { replace: true });
-    }, [authLoading, user, profile, isSuperAdmin, companyId, navigate]);
+        if (!authLoading && user && ok && !criandoConta) navigate(APP_HOME, { replace: true });
+    }, [authLoading, user, profile, isSuperAdmin, companyId, criandoConta, navigate]);
 
     // Tela de confirmação: se a pessoa confirmar em outra aba, esta aqui
     // detecta a sessão nova e entra no app sozinha (sem procurar o botão).
@@ -136,7 +160,7 @@ const SignupV2 = () => {
     // travou no meio e ele já vem preenchido no código de conexão.
     const createCompany = async () => {
         const attribution = getAttribution() || {};
-        const base = { name: empresa.trim(), phone: whatsDigitos(whats), plan: "free", subscription_status: "inactive", segment, ...attribution };
+        const base = { name: empresa || empresaDoEmail(email.trim() || user?.email || ""), phone: whatsDigitos(whats), plan: "free", subscription_status: "inactive", segment, ...attribution };
         // id gerado no cliente: dispensa o .select() pós-insert, que dependia de
         // policy de SELECT que o usuário ainda sem vínculo não tem.
         const id = globalThis.crypto.randomUUID();
@@ -168,10 +192,8 @@ const SignupV2 = () => {
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
         const next: typeof erros = {};
-        if (!empresa.trim()) next.empresa = "Informe o nome da sua empresa.";
         if (!whatsValido(whats)) next.whats = "Informe o WhatsApp com DDD.";
         if (!ssoMode) {
-            if (!nome.trim()) next.nome = "Informe seu nome.";
             if (!email.trim()) next.email = "Informe seu email.";
             else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) next.email = "Email inválido.";
             if (!senha) next.senha = "Escolha uma senha.";
@@ -188,14 +210,15 @@ const SignupV2 = () => {
         setLoading(true);
         try {
             if (ssoMode) {
+                setCriandoConta(true);
                 await createCompany();
                 marcarLead();
                 toast.success("Conta criada.");
-                navigate(APP_HOME, { replace: true });
+                navigate(RAIO_X, { replace: true });
                 return;
             }
             setCriandoConta(true);
-            const { error, needsConfirmation } = await signUp(email.trim(), senha, nome.trim());
+            const { error, needsConfirmation } = await signUp(email.trim(), senha, nome || nomeDoEmail(email.trim()));
             if (error) {
                 setCriandoConta(false);
                 const m = (error.message || "").toLowerCase();
@@ -233,7 +256,7 @@ const SignupV2 = () => {
             await createCompany();
             marcarLead();
             toast.success("Conta criada.");
-            navigate(APP_HOME, { replace: true });
+            navigate(RAIO_X, { replace: true });
         } catch (err) {
             setCriandoConta(false);
             logLandingEvent(FUNNEL_PAGE, "solar", "form_error", { reason: (err instanceof Error ? err.message : "erro").slice(0, 80) });
@@ -333,7 +356,7 @@ const SignupV2 = () => {
                                 {ssoMode ? "Quase lá" : "Criar conta"}
                             </h1>
                             <p className="mt-2.5 landing-fade-in-up landing-delay-150" style={{ color: "rgba(11,18,32,0.66)", fontSize: "1rem" }}>
-                                {ssoMode ? "Só falta a sua empresa e o seu WhatsApp." : veioPreenchido ? (veio.empresa ? "Já trouxemos o que você digitou. Só falta criar uma senha." : "Já trouxemos o que você digitou. Falta o nome da empresa e uma senha.") : "Passo 1 de 3. O Raio-X é grátis e não pede cartão."}
+                                {ssoMode ? "Só falta o seu WhatsApp." : veioPreenchido ? "Já trouxemos o que você digitou. Só falta criar uma senha." : "Grátis e sem cartão. São só 3 campos."}
                             </p>
 
                             {!ssoMode && !navegadorDeApp && (
@@ -360,28 +383,6 @@ const SignupV2 = () => {
                             )}
 
                             <form className={`flex flex-col gap-5 landing-fade-in-up landing-delay-300 ${ssoMode || navegadorDeApp ? "mt-9" : ""}`} onSubmit={onSubmit} noValidate>
-                                {!ssoMode && (
-                                    <AuthField
-                                        label="Seu nome"
-                                        placeholder="Como te chamamos?"
-                                        value={nome}
-                                        onChange={(v) => { setNome(v); if (erros.nome) setErros((p) => ({ ...p, nome: undefined })); }}
-                                        autoComplete="name"
-                                        autoFocus={!veioPreenchido}
-                                        error={erros.nome}
-                                        errorKey={erroKey}
-                                    />
-                                )}
-                                <AuthField
-                                    label="Nome da empresa"
-                                    placeholder="Sua empresa"
-                                    value={empresa}
-                                    onChange={(v) => { setEmpresa(v); if (erros.empresa) setErros((p) => ({ ...p, empresa: undefined })); }}
-                                    autoComplete="organization"
-                                    autoFocus={ssoMode || (veioPreenchido && !veio.empresa)}
-                                    error={erros.empresa}
-                                    errorKey={erroKey}
-                                />
                                 <AuthField
                                     label="Seu WhatsApp (com DDD)"
                                     type="tel"
@@ -389,6 +390,7 @@ const SignupV2 = () => {
                                     value={whats}
                                     onChange={(v) => { setWhats(v); if (erros.whats) setErros((p) => ({ ...p, whats: undefined })); }}
                                     autoComplete="tel-national"
+                                    autoFocus={ssoMode || !veioPreenchido}
                                     error={erros.whats}
                                     errorKey={erroKey}
                                 />
@@ -412,7 +414,7 @@ const SignupV2 = () => {
                                                 value={senha}
                                                 onChange={(v) => { setSenha(v); if (erros.senha) setErros((p) => ({ ...p, senha: undefined })); }}
                                                 autoComplete="new-password"
-                                                autoFocus={veioPreenchido && !!veio.empresa}
+                                                autoFocus={veioPreenchido}
                                                 error={erros.senha}
                                                 errorKey={erroKey}
                                                 rightSlot={
