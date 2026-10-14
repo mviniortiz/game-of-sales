@@ -101,7 +101,7 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
         "Objetivo do Markus: fazer AQUI no WhatsApp a pergunta que valida a dor, e só depois, se a resposta mostrar dor, convidar para 20 minutos online.",
         `A pergunta: "${PERGUNTA_DOR}"`,
         "A primeira mensagem prometeu uma pergunta rápida: trocar por pedido de reunião antes de perguntar quebra a promessa e a conversa morre (medido em 14/10/2026: 4 de 4 sumiram assim).",
-        "Não é venda; não fale do produto nem de preço.",
+        "Não abra pelo produto. Mas nunca diga que não está vendendo nada nem esconda o motivo: o Markus está construindo uma ferramenta para integradora não perder proposta que o cliente visualiza e some, e quer saber se o problema é real antes de vender. Preço e funcionalidades só se perguntarem.",
       ].join(" "),
     "Classifique a última resposta da integradora e escreva a próxima mensagem do Markus.",
     ofereceuLink
@@ -110,13 +110,13 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
     "Regras da mensagem: português do Brasil, tom de conversa, curta (até 3 frases), sem emoji, sem travessão, sem prometer nada, assina só quando for a primeira frase de apresentação.",
     ofereceuLink
       ? `- interesse: mande este link exatamente: ${RAIO_X_LINK} . Diga em uma frase que leva uns 3 minutos, que a ferramenta só lê e nada é enviado para os clientes dele.`
-      : `- interesse: se ele respondeu a pergunta, agradeça, comente em uma frase o que ele contou (com o número dele, se deu) e convide para 20 minutos online com dois horários entre estes: ${freeSlots}. Se ele só pediu para conversar, proponha os dois horários. Diga que manda o link da chamada.`,
+      : `- interesse: se ele respondeu a pergunta, agradeça, comente em uma frase o que ele contou (com o número dele, se deu) e convide para 20 minutos online com dois horários entre estes: ${freeSlots}. Se ele só pediu para conversar, proponha os dois horários. Diga que manda o link da chamada. Se ele aceitou ver de graça quanto está parado, mande este link exatamente: ${RAIO_X_LINK} e diga só isto sobre a ferramenta: ela lê as conversas do WhatsApp e acha as propostas que ficaram sem resposta do cliente, com o valor parado; leva uns 3 minutos; ela só lê e nada é enviado aos clientes. Não diga que ela sabe se o cliente abriu a proposta.`,
     ofereceuLink
       ? "- automatico: peça com educação para falar com o dono ou com quem cuida das propostas, e diga que é para mostrar quanto está parado em proposta sem resposta."
       : "- automatico: peça com educação para falar com quem cuida das propostas e já deixe a pergunta escrita, para a pessoa responder quando ler. Não peça reunião.",
     ofereceuLink
       ? "- duvida: explique em uma frase que é um Raio-X grátis das propostas paradas no WhatsApp, que só lê e não manda nada para cliente, e pergunte se pode mandar o link."
-      : "- duvida: faça a pergunta agora, curta e direta. Se perguntaram quem é, uma frase antes: Markus, de Floripa, conversando com donos de integradora de SC sobre proposta que o cliente visualiza e some. Não peça reunião.",
+      : "- duvida: faça a pergunta agora, curta e direta. Se perguntaram quem é, por que ele quer saber ou o que ganham com isso: diga com franqueza que é o Markus, de Floripa, construindo uma ferramenta para integradora não perder proposta que o cliente visualiza e some, e que quer entender se isso acontece mesmo antes de vender; ofereça em troca mostrar de graça quanto está parado em proposta no WhatsApp deles; feche com uma pergunta curta sobre se isso acontece aí. Não peça reunião.",
     "- sem_interesse: agradeça, deixe a porta aberta e não insista. Se ele disse que já usa uma ferramenta parecida, pergunte numa frase qual é e o que ela ainda não resolve.",
     'Responda só JSON: {"kind": "...", "draft": "..."}',
   ].join("\n");
