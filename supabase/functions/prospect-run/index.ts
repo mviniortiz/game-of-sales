@@ -140,12 +140,14 @@ Deno.serve(async (req) => {
       }
     } catch (e) {
       r.erro_envio = `${alvo.agency_name}: ${(e as Error).message}`;
-      // O mesmo contato volta no topo da fila a cada rodada; número sem WhatsApp
-      // travaria o lote do dia inteiro. Três falhas e ele sai.
+      // Número sem WhatsApp voltaria no topo a cada rodada e travaria o lote: na
+      // primeira falha vai para o fim da fila (approved_at ordena), na segunda sai.
       const falhas = (alvo.metadata?.falhas_envio || 0) + 1;
       await admin.from("prospecting_allowlist").update({
         metadata: { ...(alvo.metadata || {}), falhas_envio: falhas },
-        ...(falhas >= 3 ? { status: "descartado", notes: `envio falhou ${falhas} vezes: ${(e as Error).message}` } : {}),
+        ...(falhas >= 2
+          ? { status: "descartado", notes: `envio falhou ${falhas} vezes: ${(e as Error).message}` }
+          : seguimento ? {} : { approved_at: agora.toISOString() }),
       }).eq("id", alvo.id);
     }
     const pausaMin = 2 + Math.random() * 3;
