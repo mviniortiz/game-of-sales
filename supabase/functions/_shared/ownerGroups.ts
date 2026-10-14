@@ -28,9 +28,14 @@ export async function saveNotice(admin: any, userId: string, noticeId: string, c
 export async function commandFromNotice(
   admin: any, userId: string, noticeId: string, acao: { reacao?: string; texto?: string },
 ): Promise<string | null> {
-  const { data } = await admin.from("owner_notices").select("code")
+  const { data } = await admin.from("owner_notices").select("code, created_at")
     .eq("notice_id", noticeId).eq("user_id", userId).maybeSingle();
   if (!data?.code) return null;
+  // São só 184 códigos por fluxo e eles voltam a ser sorteados: um 👍 num aviso
+  // antigo não pode cair na conversa nova que herdou o mesmo código.
+  const { count: maisNovos } = await admin.from("owner_notices").select("notice_id", { count: "exact", head: true })
+    .eq("user_id", userId).eq("code", data.code).gt("created_at", data.created_at);
+  if (maisNovos) return null;
   if (acao.reacao !== undefined) {
     if (acao.reacao.startsWith("👍")) return `${data.code} 1`;
     if (acao.reacao.startsWith("👎")) return `${data.code} 2`;

@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
         await notifyDecision(admin, { instanceName, destino, userId: inst.user_id, code }, [
           `Bom dia. Tenho ${validos.length} abordagens prontas para hoje:`,
           lista,
-          `As mensagens alternam entre três versões para a gente ver qual tem mais resposta: curta (uma pergunta só), encaminha (pede quem cuida das propostas) e raiox (oferece o link do Raio-X grátis). Saem entre ${inst.window_start}h e ${inst.window_end}h, com 2 a 5 minutos entre elas.`,
+          `As mensagens alternam entre duas versões para a gente ver qual tem mais resposta: curta (uma pergunta só) e encaminha (pergunta se é a pessoa que cuida das propostas). Saem entre ${inst.window_start}h e ${inst.window_end}h, com 2 a 5 minutos entre elas.`,
         ].join("\n\n"), {
           grupo: "👍 envia hoje · 👎 não envia hoje",
           chat: `Responda ${code} 1 para enviar ou ${code} 2 para não enviar hoje.`,

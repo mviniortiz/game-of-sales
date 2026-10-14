@@ -8,7 +8,7 @@
 import { evolutionRequest, normalizeNumber } from "./whatsappApproval.ts";
 import { saveNotice } from "./ownerGroups.ts";
 import { llmChat } from "./llm.ts";
-import { firstMessage, nextSlots, parseProspectCommand, RAIO_X_LINK, randomCode } from "./prospectingText.ts";
+import { firstMessage, nextSlots, parseProspectCommand, PERGUNTA_DOR, RAIO_X_LINK, randomCode } from "./prospectingText.ts";
 export { firstMessage, followupMessage, nextSlots, parseProspectCommand, randomCode } from "./prospectingText.ts";
 
 export const PROSPECT_PREFIX = "PROSPECÇÃO";
@@ -97,22 +97,27 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
     "Você ajuda o Markus, fundador da Vyzon (Florianópolis), a conversar com donos de integradoras de energia solar.",
     ofereceuLink
       ? "A primeira mensagem do Markus ofereceu o link do Raio-X grátis: uma ferramenta que lê o WhatsApp da integradora e acha as propostas que o cliente visualizou e não respondeu. Objetivo: que o dono ou sócio abra o link. Não fale de preço nem de plano."
-      : "Objetivo do Markus: marcar uma conversa online de 20 minutos com o DONO ou sócio para entender como eles acompanham propostas que o cliente visualiza e não responde. Não é venda; não fale do produto nem de preço.",
+      : [
+        "Objetivo do Markus: fazer AQUI no WhatsApp a pergunta que valida a dor, e só depois, se a resposta mostrar dor, convidar para 20 minutos online.",
+        `A pergunta: "${PERGUNTA_DOR}"`,
+        "A primeira mensagem prometeu uma pergunta rápida: trocar por pedido de reunião antes de perguntar quebra a promessa e a conversa morre (medido em 14/10/2026: 4 de 4 sumiram assim).",
+        "Não é venda; não fale do produto nem de preço.",
+      ].join(" "),
     "Classifique a última resposta da integradora e escreva a próxima mensagem do Markus.",
     ofereceuLink
       ? "kind: 'interesse' (quer o link, diz sim, pede para mandar), 'sem_interesse' (recusou), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (pergunta quem é, como funciona, ou pede mais detalhe)."
-      : "kind: 'interesse' (topa conversar ou pergunta horário), 'sem_interesse' (recusou), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (pergunta quem é, do que se trata, ou pede mais detalhe).",
+      : "kind: 'interesse' (respondeu a pergunta com algo concreto, ou pediu para conversar/horário), 'sem_interesse' (recusou), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (pessoa abriu a porta sem responder ainda: 'pode perguntar', 'é comigo', 'o que precisa?', 'oi', ou perguntou quem é/do que se trata).",
     "Regras da mensagem: português do Brasil, tom de conversa, curta (até 3 frases), sem emoji, sem travessão, sem prometer nada, assina só quando for a primeira frase de apresentação.",
     ofereceuLink
       ? `- interesse: mande este link exatamente: ${RAIO_X_LINK} . Diga em uma frase que leva uns 3 minutos, que a ferramenta só lê e nada é enviado para os clientes dele.`
-      : `- interesse: agradeça e proponha dois horários entre estes: ${freeSlots}. Diga que manda o link da chamada.`,
+      : `- interesse: se ele respondeu a pergunta, agradeça, comente em uma frase o que ele contou (com o número dele, se deu) e convide para 20 minutos online com dois horários entre estes: ${freeSlots}. Se ele só pediu para conversar, proponha os dois horários. Diga que manda o link da chamada.`,
     ofereceuLink
       ? "- automatico: peça com educação para falar com o dono ou com quem cuida das propostas, e diga que é para mostrar quanto está parado em proposta sem resposta."
-      : "- automatico: peça com educação para falar com o dono ou com quem cuida do comercial, e diga que tem horário a partir das 15h.",
+      : "- automatico: peça com educação para falar com quem cuida das propostas e já deixe a pergunta escrita, para a pessoa responder quando ler. Não peça reunião.",
     ofereceuLink
       ? "- duvida: explique em uma frase que é um Raio-X grátis das propostas paradas no WhatsApp, que só lê e não manda nada para cliente, e pergunte se pode mandar o link."
-      : "- duvida: explique em uma frase que está conversando com donos de integradora de SC para entender como acompanham as propostas, e repita o convite de 20 minutos.",
-    "- sem_interesse: agradeça, deixe a porta aberta e não insista.",
+      : "- duvida: faça a pergunta agora, curta e direta. Se perguntaram quem é, uma frase antes: Markus, de Floripa, conversando com donos de integradora de SC sobre proposta que o cliente visualiza e some. Não peça reunião.",
+    "- sem_interesse: agradeça, deixe a porta aberta e não insista. Se ele disse que já usa uma ferramenta parecida, pergunte numa frase qual é e o que ela ainda não resolve.",
     'Responda só JSON: {"kind": "...", "draft": "..."}',
   ].join("\n");
   const user = [

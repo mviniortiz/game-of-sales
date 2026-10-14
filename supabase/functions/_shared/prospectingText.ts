@@ -13,9 +13,14 @@ export function randomCode(): string {
 }
 
 export type ProspectVariant = "pergunta" | "numero" | "curta" | "encaminha" | "raiox";
-/** Versões em teste agora. Na 1ª rodada (09/10/2026, 20 integradoras) só robô e
- *  atendente responderam às longas; ficam a curta e duas feitas para passar por eles. */
-export const VARIANTS: ProspectVariant[] = ["curta", "encaminha", "raiox"];
+/** Versões em teste agora. Em 14/10/2026 (cerca de 15 por versão) a encaminha trouxe 7
+ *  pessoas, a curta 1 e a raiox 1; oferecer a ferramenta de cara saiu do teste. A raiox
+ *  continua em firstMessage/readProspectReply para as conversas que já começaram com ela. */
+export const VARIANTS: ProspectVariant[] = ["curta", "encaminha"];
+
+/** A pergunta que valida ou mata o ICP. Vai no WhatsApp antes de qualquer convite de reunião. */
+export const PERGUNTA_DOR =
+  "Quando o cliente visualiza a proposta e some, vocês chamam de novo ou deixam pra lá? Quantas ficaram assim no último mês, mais ou menos?";
 
 export const RAIO_X_LINK = "https://vyzon.com.br/criar-conta?segmento=energia_solar&utm_source=prospeccao&utm_content=raiox";
 
