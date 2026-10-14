@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { firstMessage, nextVariant, primeiroNome, VARIANTS } from "./prospectingText.ts";
+import { firstMessage, followupMessage, nextVariant, primeiroNome, VARIANTS } from "./prospectingText.ts";
 
 const ALVO = { agency_name: "Sol do Vale", city: "Blumenau", rating_count: 42 };
 
@@ -25,6 +25,15 @@ Deno.test("com o sócio do CNPJ, todas as versões abrem pelo primeiro nome", ()
     assert(texto.includes("Sol do Vale"), v);
     assert(!/quem cuida do comercial|Consegue me passar/.test(texto), `${v} pede o dono para o próprio dono`);
   }
+});
+
+Deno.test("seguimento do dia 4 faz a pergunta da dor e não pede reunião", () => {
+  const semDono = followupMessage();
+  assert(semDono.startsWith("Oi, tudo bem?"));
+  assert(semDono.includes("quando o cliente visualiza a proposta e some"));
+  assert(!/20 minutos|reunião|chamada/.test(semDono));
+  assert(!/[—–]/.test(semDono));
+  assert(followupMessage({ metadata: { socio: "ANNA LUIZA SOUZA" } }).startsWith("Oi, Anna, tudo bem?"));
 });
 
 Deno.test("primeiro nome ignora sócio inválido", () => {

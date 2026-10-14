@@ -84,8 +84,10 @@ export function nextVariant(counts: Partial<Record<ProspectVariant, number>>): P
   return [...VARIANTS].sort((a, b) => (counts[a] || 0) - (counts[b] || 0))[0];
 }
 
-export function followupMessage(sender = "Markus"): string {
-  return `Oi, tudo bem? Passando só pra não deixar minha mensagem solta. Se em algum momento fizer sentido trocar 20 minutos sobre as propostas que ficam sem resposta, fico à disposição. Se não for o momento, tudo certo também. ${sender}`;
+/** Seguimento do dia 4 para quem não respondeu: a mesma pergunta da dor, sem pedir reunião. */
+export function followupMessage(row?: Pick<ProspectTarget, "metadata">, sender = "Markus"): string {
+  const dono = primeiroNome(row?.metadata?.socio);
+  return `Oi${dono ? `, ${dono}` : ""}, tudo bem? Passando só pra não deixar minha mensagem solta. É uma pergunta só: ${PERGUNTA_DOR.charAt(0).toLowerCase()}${PERGUNTA_DOR.slice(1)} ${sender}`;
 }
 
 /** Próximos horários livres do Markus: dias úteis, a partir das 15h, pulando hoje. */

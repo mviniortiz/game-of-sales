@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
             status: "aguardando_aprovacao",
             variant,
             first_message: jaTinha ? c.first_message : firstMessage(c, variant),
-            followup_message: followupMessage(),
+            followup_message: followupMessage(c),
           }).eq("id", c.id);
         }
         const code = randomCode();
@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
     try {
       if (seguimento) {
         if (inst.followup_audio_url) await sendVoiceNote(instanceName, numero, inst.followup_audio_url);
-        else await sendHumanText(instanceName, numero, alvo.followup_message || followupMessage());
+        else await sendHumanText(instanceName, numero, alvo.followup_message || followupMessage(alvo));
         await admin.from("prospecting_allowlist").update({ followup_sent_at: agora.toISOString() }).eq("id", alvo.id);
         r.seguimento = alvo.agency_name;
       } else {
