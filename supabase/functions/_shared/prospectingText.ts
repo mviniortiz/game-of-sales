@@ -84,6 +84,11 @@ export function nextVariant(counts: Partial<Record<ProspectVariant, number>>): P
   return [...VARIANTS].sort((a, b) => (counts[a] || 0) - (counts[b] || 0))[0];
 }
 
+/** Cada parágrafo (separado por linha em branco) sai como uma mensagem de WhatsApp. */
+export function dividirMensagens(texto: string): string[] {
+  return String(texto || "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+}
+
 /** Seguimento do dia 4 para quem não respondeu: a mesma pergunta da dor, sem pedir reunião. */
 export function followupMessage(row?: Pick<ProspectTarget, "metadata">, sender = "Markus"): string {
   const dono = primeiroNome(row?.metadata?.socio);

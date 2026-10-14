@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { firstMessage, followupMessage, nextVariant, primeiroNome, VARIANTS } from "./prospectingText.ts";
+import { dividirMensagens, firstMessage, followupMessage, nextVariant, primeiroNome, VARIANTS } from "./prospectingText.ts";
 
 const ALVO = { agency_name: "Sol do Vale", city: "Blumenau", rating_count: 42 };
 
@@ -34,6 +34,12 @@ Deno.test("seguimento do dia 4 faz a pergunta da dor e não pede reunião", () =
   assert(!/20 minutos|reunião|chamada/.test(semDono));
   assert(!/[—–]/.test(semDono));
   assert(followupMessage({ metadata: { socio: "ANNA LUIZA SOUZA" } }).startsWith("Oi, Anna, tudo bem?"));
+});
+
+Deno.test("rascunho com linha em branco vira duas mensagens", () => {
+  assertEquals(dividirMensagens("Que bom.\n\nComo vocês controlam isso?"), ["Que bom.", "Como vocês controlam isso?"]);
+  assertEquals(dividirMensagens("Uma linha só.\nContinua a mesma mensagem."), ["Uma linha só.\nContinua a mesma mensagem."]);
+  assertEquals(dividirMensagens("  \n\nTexto\n \n"), ["Texto"]);
 });
 
 Deno.test("primeiro nome ignora sócio inválido", () => {
