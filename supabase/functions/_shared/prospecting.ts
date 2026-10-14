@@ -139,11 +139,23 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
 ;
 
 /** Aviso do Vyzon no chat do dono. O prefixo faz o webhook ignorar a própria mensagem. */
-export async function notifyOwner(instanceName: string, ownerNumber: string, text: string): Promise<void> {
+/** destino: o grupo de avisos da prospecção (…@g.us) ou, sem grupo, o número do dono.
+ *  No chat do dono o aviso leva o prefixo para o webhook reconhecer e ignorar; no grupo
+ *  só comando é lido, então o prefixo seria ruído. */
+export async function notifyOwner(instanceName: string, destino: string, text: string): Promise<void> {
+  const noGrupo = destino.endsWith("@g.us");
   await evolutionRequest(`/message/sendText/${instanceName}`, {
     method: "POST",
-    body: JSON.stringify({ number: ownerNumber, text: `${PROSPECT_PREFIX}\n${text}`, delay: 600 }),
+    body: JSON.stringify({ number: destino, text: noGrupo ? text : `${PROSPECT_PREFIX}\n${text}`, delay: 600 }),
   }, 20000);
+}
+
+/** ✅ na mensagem do dono no lugar de uma confirmação em texto. */
+export async function reactOk(instanceName: string, key: { remoteJid: string; id: string }): Promise<void> {
+  await evolutionRequest(`/message/sendReaction/${instanceName}`, {
+    method: "POST",
+    body: JSON.stringify({ reaction: "✅", key: { remoteJid: key.remoteJid, id: key.id, fromMe: true } }),
+  }, 15000);
 }
 
 const KIND_LABEL: Record<string, string> = {
@@ -157,11 +169,13 @@ const KIND_LABEL: Record<string, string> = {
  *  de prospecção, para o fluxo normal seguir. */
 export async function handleProspectCommand(
   admin: any,
-  args: { userId: string; instanceName: string; ownerNumber: string; text: string },
+  args: { userId: string; instanceName: string; ownerNumber: string; text: string; confirmar?: () => Promise<void> },
 ): Promise<boolean> {
   const cmd = parseProspectCommand(args.text);
   if (!cmd) return false;
   const avisar = (t: string) => notifyOwner(args.instanceName, args.ownerNumber, t);
+  // Deu certo: no grupo vira ✅ na mensagem dele; sem grupo, segue o texto de antes.
+  const pronto = (t: string) => (args.confirmar ? args.confirmar() : avisar(t));
 
   const { data: batch } = await admin.from("prospecting_batches")
     .select("id, contact_ids").eq("user_id", args.userId).eq("code", cmd.code).eq("status", "pendente")
@@ -172,12 +186,12 @@ export async function handleProspectCommand(
         .update({ status: "aprovado", approved_at: new Date().toISOString() })
         .in("id", batch.contact_ids).eq("status", "aguardando_aprovacao").select("id");
       await admin.from("prospecting_batches").update({ status: "aprovado", decided_at: new Date().toISOString() }).eq("id", batch.id);
-      await avisar(`Lote ${cmd.code} aprovado: ${ok?.length || 0} abordagens saem hoje, com 2 a 5 minutos entre elas.`);
+      await pronto(`Lote ${cmd.code} aprovado: ${ok?.length || 0} abordagens saem hoje, com 2 a 5 minutos entre elas.`);
     } else if (cmd.intent === "reject") {
       await admin.from("prospecting_allowlist").update({ status: "mapeado" })
         .in("id", batch.contact_ids).eq("status", "aguardando_aprovacao");
       await admin.from("prospecting_batches").update({ status: "recusado", decided_at: new Date().toISOString() }).eq("id", batch.id);
-      await avisar(`Lote ${cmd.code} recusado. Nada foi enviado.`);
+      await pronto(`Lote ${cmd.code} recusado. Nada foi enviado.`);
     } else {
       await avisar(`Para o lote ${cmd.code}, responda ${cmd.code} 1 para enviar ou ${cmd.code} 2 para não enviar.`);
     }
@@ -191,14 +205,20 @@ export async function handleProspectCommand(
     await avisar(`Não achei nada pendente com o código ${cmd.code}.`);
     return true;
   }
+  // Quem limpa o código primeiro é quem envia: duas leituras do mesmo comando não
+  // mandam a resposta duas vezes para a integradora.
+  const { data: tomado } = await admin.from("prospecting_allowlist")
+    .update({ reply_code: null }).eq("id", row.id).eq("reply_code", cmd.code).select("id");
+  if (!tomado?.length) return true;
   if (cmd.intent === "reject") {
-    await admin.from("prospecting_allowlist").update({ reply_code: null, reply_draft: null }).eq("id", row.id);
-    await avisar(`Ok, não respondi ${row.agency_name}.`);
+    await admin.from("prospecting_allowlist").update({ reply_draft: null }).eq("id", row.id);
+    await pronto(`Ok, não respondi ${row.agency_name}.`);
     return true;
   }
   const texto = cmd.intent === "replace" ? cmd.text! : row.reply_draft;
   const numero = prospectNumber(row);
   if (!texto || !numero) {
+    await admin.from("prospecting_allowlist").update({ reply_code: cmd.code }).eq("id", row.id);
     await avisar(`Não consegui enviar para ${row.agency_name}: falta texto ou número.`);
     return true;
   }
@@ -209,7 +229,7 @@ export async function handleProspectCommand(
     status: row.reply_kind === "sem_interesse" ? "sem_interesse" : "respondeu",
     last_reply: `${row.last_reply ? row.last_reply + "\n" : ""}Markus: ${texto}`.slice(-3000),
   }).eq("id", row.id);
-  await avisar(`Enviado para ${row.agency_name}.`);
+  await pronto(`Enviado para ${row.agency_name}.`);
   return true;
 }
 

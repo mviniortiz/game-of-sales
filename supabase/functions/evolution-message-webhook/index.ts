@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { handleOwnerCommand, isEvaOfficialNumber, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
-import { PROSPECT_PREFIX, brKey, handleProspectCommand, onProspectInbound } from "../_shared/prospecting.ts";
+import { PROSPECT_PREFIX, brKey, handleProspectCommand, onProspectInbound, reactOk } from "../_shared/prospecting.ts";
 import { adLeadKeys, detectAdOrigin, handleLeadCommand, leadAutomation, onAdLeadInbound, onOwnerMessageToLead } from "../_shared/adLeads.ts";
 import { trackOutboundQuote } from "../_shared/quoteTracking.ts";
 import { ensureConnection, importHistoryMessages } from "../_shared/whatsappHistory.ts";
@@ -73,6 +73,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+/** O WhatsApp às vezes entrega a mesma mensagem duas vezes. Comando do dono vale uma
+ *  vez só: devolve true para quem grava o id primeiro. Falha no banco não trava o dono. */
+async function claimOwnerMessage(admin: any, instanceName: string, externalId: string): Promise<boolean> {
+  const { data, error } = await admin.from("owner_command_log")
+    .upsert({ instance_name: instanceName, external_id: externalId }, { onConflict: "instance_name,external_id", ignoreDuplicates: true })
+    .select("external_id");
+  if (error) return true;
+  return (data || []).length > 0;
+}
 
 function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), {
@@ -956,7 +966,7 @@ serve(async (req) => {
       .single(),
     (admin as any)
       .from("prospecting_instances")
-      .select("user_id")
+      .select("user_id, notify_jid")
       .eq("user_id", userId)
       .eq("is_active", true)
       .maybeSingle(),
@@ -1090,6 +1100,25 @@ serve(async (req) => {
     // trava de prospecção, porque o número dele nunca está na allowlist.
     // handleOwnerCommand devolve handled=false quando o texto não é comando,
     // e aí a mensagem segue o fluxo normal e vira registro como qualquer outra.
+    // Grupo de avisos da prospecção: só o dono está nele. O que ele escreve lá é
+    // comando ("PX9 1"), confirmado com ✅; o resto (inclusive os avisos que o
+    // próprio Vyzon manda, que também chegam como fromMe) não vira registro.
+    if (pInst?.notify_jid && remoteJid === pInst.notify_jid) {
+      const commandText = fromMe ? parseTextFromMessage(msg) : "";
+      if (commandText && (await claimOwnerMessage(admin, instanceName, externalId))) {
+        try {
+          await handleProspectCommand(admin, {
+            userId, instanceName, ownerNumber: pInst.notify_jid, text: commandText,
+            confirmar: () => reactOk(instanceName, { remoteJid, id: externalId }),
+          });
+        } catch (prospectErr: any) {
+          console.error("[prospect] comando no grupo falhou:", prospectErr?.message);
+        }
+      }
+      skipped.push("prospect_group");
+      continue;
+    }
+
     if (fromMe && !isGroup) {
       const ownerNumber = await ownerNumberOnce();
       if (ownerNumber && chatPhone === ownerNumber) {
@@ -1099,6 +1128,10 @@ serve(async (req) => {
           // pelo webhook; ignorar antes que vire "texto corrigido" de outro rascunho.
           if (commandText.trim().startsWith(PROSPECT_PREFIX)) {
             skipped.push("prospect_own_notice");
+            continue;
+          }
+          if (!(await claimOwnerMessage(admin, instanceName, externalId))) {
+            skipped.push("owner_command_duplicate");
             continue;
           }
           try {
@@ -1186,7 +1219,7 @@ serve(async (req) => {
         await onProspectInbound(admin, {
           userId,
           instanceName,
-          ownerNumber: await ownerNumberOnce(),
+          ownerNumber: pInst?.notify_jid || await ownerNumberOnce(),
           phoneTail: allowlistByKey.get(brKey(chatPhone)) || phoneTail,
           text: body || "",
           mediaType: meta.type,
