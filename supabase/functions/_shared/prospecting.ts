@@ -138,16 +138,45 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
 
 ;
 
-/** Aviso do Vyzon no chat do dono. O prefixo faz o webhook ignorar a própria mensagem. */
 /** destino: o grupo de avisos da prospecção (…@g.us) ou, sem grupo, o número do dono.
  *  No chat do dono o aviso leva o prefixo para o webhook reconhecer e ignorar; no grupo
- *  só comando é lido, então o prefixo seria ruído. */
-export async function notifyOwner(instanceName: string, destino: string, text: string): Promise<void> {
+ *  só comando é lido, então o prefixo seria ruído. Devolve o id da mensagem enviada. */
+export async function notifyOwner(instanceName: string, destino: string, text: string): Promise<string | null> {
   const noGrupo = destino.endsWith("@g.us");
-  await evolutionRequest(`/message/sendText/${instanceName}`, {
+  const resp = await evolutionRequest(`/message/sendText/${instanceName}`, {
     method: "POST",
     body: JSON.stringify({ number: destino, text: noGrupo ? text : `${PROSPECT_PREFIX}\n${text}`, delay: 600 }),
   }, 20000);
+  return resp?.key?.id || null;
+}
+
+/** Aviso que pede decisão. No grupo, o dono decide reagindo ou respondendo o próprio
+ *  aviso, sem digitar código; o vínculo aviso→código fica em prospect_notices. */
+export async function notifyDecision(
+  admin: any, args: { instanceName: string; destino: string; userId: string; code: string },
+  corpo: string, comoDecidir: { grupo: string; chat: string },
+): Promise<void> {
+  const noGrupo = args.destino.endsWith("@g.us");
+  const id = await notifyOwner(args.instanceName, args.destino, `${corpo}\n\n${noGrupo ? comoDecidir.grupo : comoDecidir.chat}`);
+  if (noGrupo && id) {
+    await admin.from("prospect_notices").insert({ notice_id: id, user_id: args.userId, code: args.code });
+  }
+}
+
+/** Reação ou resposta citando um aviso do grupo vira o comando de sempre ("PX9 1").
+ *  null: não é decisão sobre aviso conhecido. */
+export async function commandFromNotice(
+  admin: any, userId: string, noticeId: string, acao: { reacao?: string; texto?: string },
+): Promise<string | null> {
+  const { data } = await admin.from("prospect_notices").select("code")
+    .eq("notice_id", noticeId).eq("user_id", userId).maybeSingle();
+  if (!data?.code) return null;
+  if (acao.reacao !== undefined) {
+    if (acao.reacao.startsWith("👍")) return `${data.code} 1`;
+    if (acao.reacao.startsWith("👎")) return `${data.code} 2`;
+    return null;
+  }
+  return acao.texto ? `${data.code} ${acao.texto}` : null;
 }
 
 /** ✅ na mensagem do dono no lugar de uma confirmação em texto. */
@@ -202,7 +231,7 @@ export async function handleProspectCommand(
     .select("id, agency_name, phone_e164, phone_tail, reply_draft, reply_kind, last_reply")
     .eq("user_id", args.userId).eq("reply_code", cmd.code).maybeSingle();
   if (!row) {
-    await avisar(`Não achei nada pendente com o código ${cmd.code}.`);
+    await avisar(`Isso já foi resolvido ou expirou (${cmd.code}). Nada foi enviado agora.`);
     return true;
   }
   // Quem limpa o código primeiro é quem envia: duas leituras do mesmo comando não
@@ -273,12 +302,14 @@ export async function onProspectInbound(
     last_reply: `${row.last_reply ? row.last_reply + "\n" : ""}Eles: ${args.text}`.slice(-3000),
   }).eq("id", row.id);
   if (args.ownerNumber) {
-    await notifyOwner(args.instanceName, args.ownerNumber, [
-      `[${code}] ${nome} respondeu:`,
+    await notifyDecision(admin, { instanceName: args.instanceName, destino: args.ownerNumber, userId: args.userId, code }, [
+      `${nome} respondeu:`,
       `"${args.text.slice(0, 600)}"`,
       `Leitura: ${KIND_LABEL[lido.kind]}.`,
       `Sugestão:\n"${lido.draft}"`,
-      `Responda ${code} 1 para enviar, ${code} 2 para não responder, ou ${code} seguido do seu texto.`,
-    ].join("\n\n"));
+    ].join("\n\n"), {
+      grupo: "👍 envia a sugestão · 👎 não responde · ou responda esta mensagem com o seu texto",
+      chat: `Responda ${code} 1 para enviar, ${code} 2 para não responder, ou ${code} seguido do seu texto.`,
+    });
   }
 }

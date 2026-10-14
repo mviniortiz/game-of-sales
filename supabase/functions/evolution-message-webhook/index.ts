@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { handleOwnerCommand, isEvaOfficialNumber, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
-import { PROSPECT_PREFIX, brKey, handleProspectCommand, onProspectInbound, reactOk } from "../_shared/prospecting.ts";
+import { PROSPECT_PREFIX, brKey, commandFromNotice, handleProspectCommand, onProspectInbound, reactOk } from "../_shared/prospecting.ts";
 import { adLeadKeys, detectAdOrigin, handleLeadCommand, leadAutomation, onAdLeadInbound, onOwnerMessageToLead } from "../_shared/adLeads.ts";
 import { trackOutboundQuote } from "../_shared/quoteTracking.ts";
 import { ensureConnection, importHistoryMessages } from "../_shared/whatsappHistory.ts";
@@ -1103,14 +1103,28 @@ serve(async (req) => {
     // Grupo de avisos da prospecção: só o dono está nele. O que ele escreve lá é
     // comando ("PX9 1"), confirmado com ✅; o resto (inclusive os avisos que o
     // próprio Vyzon manda, que também chegam como fromMe) não vira registro.
+    // Ele decide reagindo 👍/👎 no aviso ou respondendo o aviso citado; o código
+    // digitado continua valendo. O ✅ da reação vai no próprio aviso e substitui o 👍.
     if (pInst?.notify_jid && remoteJid === pInst.notify_jid) {
-      const commandText = fromMe ? parseTextFromMessage(msg) : "";
-      if (commandText && (await claimOwnerMessage(admin, instanceName, externalId))) {
+      if (fromMe && (await claimOwnerMessage(admin, instanceName, externalId))) {
         try {
-          await handleProspectCommand(admin, {
-            userId, instanceName, ownerNumber: pInst.notify_jid, text: commandText,
-            confirmar: () => reactOk(instanceName, { remoteJid, id: externalId }),
-          });
+          const reacao = msg.message?.reactionMessage;
+          const citado = msg.contextInfo?.stanzaId || msg.message?.extendedTextMessage?.contextInfo?.stanzaId;
+          const texto = parseTextFromMessage(msg) || "";
+          let comando: string | null = texto;
+          let marcar = externalId;
+          if (reacao?.key?.id) {
+            comando = await commandFromNotice(admin, userId, reacao.key.id, { reacao: reacao.text || "" });
+            marcar = reacao.key.id;
+          } else if (citado) {
+            comando = (await commandFromNotice(admin, userId, citado, { texto })) || texto;
+          }
+          if (comando) {
+            await handleProspectCommand(admin, {
+              userId, instanceName, ownerNumber: pInst.notify_jid, text: comando,
+              confirmar: () => reactOk(instanceName, { remoteJid, id: marcar }),
+            });
+          }
         } catch (prospectErr: any) {
           console.error("[prospect] comando no grupo falhou:", prospectErr?.message);
         }
