@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
       .eq("user_id", inst.user_id).gte("created_at", inicioDia);
     if (!lotesHoje) {
       const { data: fila } = await admin.from("prospecting_allowlist")
-        .select("id, agency_name, city, rating_count, first_message, phone_e164, phone_tail, score, variant")
+        .select("id, agency_name, city, rating_count, first_message, phone_e164, phone_tail, score, variant, metadata")
         .eq("user_id", inst.user_id).eq("is_active", true).eq("status", "mapeado").gte("score", 2)
         .order("score", { ascending: false }).order("rating_count", { ascending: false, nullsFirst: false })
         .limit(inst.daily_cap);

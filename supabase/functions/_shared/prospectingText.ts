@@ -19,7 +19,18 @@ export const VARIANTS: ProspectVariant[] = ["curta", "encaminha", "raiox"];
 
 export const RAIO_X_LINK = "https://vyzon.com.br/criar-conta?segmento=energia_solar&utm_source=prospeccao&utm_content=raiox";
 
-type ProspectTarget = { agency_name: string | null; city: string | null; rating_count: number | null };
+type ProspectTarget = {
+  agency_name: string | null; city: string | null; rating_count: number | null;
+  /** socio: nome do sócio administrador, do cadastro do CNPJ na Receita. */
+  metadata?: { socio?: string | null } | null;
+};
+
+/** "PAULO HENRIQUE KEEN CHAVES" vira "Paulo". Nome curto demais ou com número não serve. */
+export function primeiroNome(nome?: string | null): string | null {
+  const p = String(nome || "").trim().split(/\s+/)[0] || "";
+  if (p.length < 3 || /[^A-Za-zÀ-ÿ]/.test(p)) return null;
+  return p[0].toUpperCase() + p.slice(1).toLowerCase();
+}
 
 /** Primeira mensagem em três versões, para descobrir qual faz o dono responder:
  *  - pergunta: o formato aprovado em 09/10/2026 (quem é, por que eles, pergunta, pedido de 20 min);
@@ -27,6 +38,7 @@ type ProspectTarget = { agency_name: string | null; city: string | null; rating_
  *  - curta: uma pergunta só, sem pedir reunião; o convite vem depois que ele responder. */
 export function firstMessage(row: ProspectTarget, variant: ProspectVariant = "pergunta", sender = "Markus"): string {
   const nome = row.agency_name || "sua empresa";
+  const dono = primeiroNome(row.metadata?.socio);
   if (variant === "numero") {
     return [
       `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis.`,
@@ -38,13 +50,15 @@ export function firstMessage(row: ProspectTarget, variant: ProspectVariant = "pe
   // Quem atende primeiro é robô ou atendente: pedir a pessoa certa, com o assunto
   // em uma linha, é o que eles sabem encaminhar.
   if (variant === "encaminha") {
+    if (dono) return `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. É você que cuida das propostas da ${nome}? É uma pergunta rápida sobre orçamento que o cliente visualiza e para de responder. Não é venda.`;
     return `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Consegue me passar pra quem cuida das propostas da ${nome}? É uma pergunta rápida sobre orçamento que o cliente visualiza e para de responder. Não é venda.`;
   }
   // Em vez de pedir 20 minutos, oferece ver o próprio número; o link só vai se ele quiser.
   if (variant === "raiox") {
-    return `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Fiz uma ferramenta que lê o WhatsApp da integradora e acha as propostas que o cliente visualizou e não respondeu. Quer que eu te mande o link pra ver quanto está parado aí na ${nome}? É grátis.`;
+    return `Oi, ${dono ? `${dono}, ` : ""}tudo bem? Aqui é o ${sender}, de Florianópolis. Fiz uma ferramenta que lê o WhatsApp da integradora e acha as propostas que o cliente visualizou e não respondeu. Quer que eu te mande o link pra ver quanto está parado aí na ${nome}? É grátis.`;
   }
   if (variant === "curta") {
+    if (dono) return `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Floripa. Pergunta rápida sobre a ${nome}: quando o cliente visualiza a proposta e some, vocês chamam de novo ou deixam pra lá? Estou entendendo como as integradoras de SC lidam com isso.`;
     return `Oi, tudo bem? Aqui é o ${sender}, de Floripa. Pergunta rápida pra quem cuida do comercial da ${nome}: quando o cliente visualiza a proposta e some, vocês chamam de novo ou deixam pra lá? Estou entendendo como as integradoras de SC lidam com isso.`;
   }
   const aval = row.rating_count || 0;
