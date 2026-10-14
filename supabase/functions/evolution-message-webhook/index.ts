@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { handleOwnerCommand, isEvaOfficialNumber, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
-import { PROSPECT_PREFIX, brKey, commandFromNotice, handleProspectCommand, onProspectInbound, reactOk } from "../_shared/prospecting.ts";
+import { PROSPECT_PREFIX, brKey, handleProspectCommand, notifyOwner, onProspectInbound } from "../_shared/prospecting.ts";
+import { commandFromNotice, groupTopics, reactOk } from "../_shared/ownerGroups.ts";
 import { adLeadKeys, detectAdOrigin, handleLeadCommand, leadAutomation, onAdLeadInbound, onOwnerMessageToLead } from "../_shared/adLeads.ts";
 import { trackOutboundQuote } from "../_shared/quoteTracking.ts";
 import { ensureConnection, importHistoryMessages } from "../_shared/whatsappHistory.ts";
@@ -958,7 +959,7 @@ serve(async (req) => {
   const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   // PERF: profile e gate de prospecção são independentes — 1 round-trip em vez de 2.
-  const [{ data: profile }, { data: pInst }] = await Promise.all([
+  const [{ data: profile }, { data: pInst }, gruposDono] = await Promise.all([
     (admin as any)
       .from("profiles")
       .select("id, company_id")
@@ -966,11 +967,13 @@ serve(async (req) => {
       .single(),
     (admin as any)
       .from("prospecting_instances")
-      .select("user_id, notify_jid")
+      .select("user_id")
       .eq("user_id", userId)
       .eq("is_active", true)
       .maybeSingle(),
+    groupTopics(admin, instanceName),
   ]);
+  const grupoDe = (topic: string) => [...gruposDono].find(([, t]) => t === topic)?.[0] || null;
 
   const companyId: string | null = profile?.company_id || null;
 
@@ -1100,12 +1103,12 @@ serve(async (req) => {
     // trava de prospecção, porque o número dele nunca está na allowlist.
     // handleOwnerCommand devolve handled=false quando o texto não é comando,
     // e aí a mensagem segue o fluxo normal e vira registro como qualquer outra.
-    // Grupo de avisos da prospecção: só o dono está nele. O que ele escreve lá é
-    // comando ("PX9 1"), confirmado com ✅; o resto (inclusive os avisos que o
-    // próprio Vyzon manda, que também chegam como fromMe) não vira registro.
-    // Ele decide reagindo 👍/👎 no aviso ou respondendo o aviso citado; o código
-    // digitado continua valendo. O ✅ da reação vai no próprio aviso e substitui o 👍.
-    if (pInst?.notify_jid && remoteJid === pInst.notify_jid) {
+    // Grupos de avisos do dono (prospecção, leads do anúncio, EVA): só ele está
+    // neles. Ele decide reagindo 👍/👎 no aviso, respondendo o aviso citado ou
+    // digitando o código; sucesso vira ✅ (no aviso, quando foi reação). O resto,
+    // inclusive os avisos que o Vyzon manda e que chegam como fromMe, não vira registro.
+    const topico = gruposDono.get(remoteJid);
+    if (topico) {
       if (fromMe && (await claimOwnerMessage(admin, instanceName, externalId))) {
         try {
           const reacao = msg.message?.reactionMessage;
@@ -1119,17 +1122,22 @@ serve(async (req) => {
           } else if (citado) {
             comando = (await commandFromNotice(admin, userId, citado, { texto })) || texto;
           }
-          if (comando) {
-            await handleProspectCommand(admin, {
-              userId, instanceName, ownerNumber: pInst.notify_jid, text: comando,
-              confirmar: () => reactOk(instanceName, { remoteJid, id: marcar }),
+          const confirmar = () => reactOk(instanceName, { remoteJid, id: marcar });
+          if (comando && topico === "prospeccao") {
+            await handleProspectCommand(admin, { userId, instanceName, ownerNumber: remoteJid, text: comando, confirmar });
+          } else if (comando && topico === "leads") {
+            await handleLeadCommand(admin, { userId, instanceName, ownerNumber: remoteJid, text: comando, confirmar });
+          } else if (comando && topico === "eva") {
+            await handleOwnerCommand(admin, {
+              instanceName, companyId, ownerNumber: remoteJid, text: comando, confirmar,
+              replyVia: async (t: string) => { await notifyOwner(instanceName, remoteJid, t); },
             });
           }
-        } catch (prospectErr: any) {
-          console.error("[prospect] comando no grupo falhou:", prospectErr?.message);
+        } catch (grupoErr: any) {
+          console.error(`[grupo ${topico}] comando falhou:`, grupoErr?.message);
         }
       }
-      skipped.push("prospect_group");
+      skipped.push(`grupo_${topico}`);
       continue;
     }
 
@@ -1199,7 +1207,7 @@ serve(async (req) => {
             await onOwnerMessageToLead(admin, userId, chatPhone, bodyText);
           } else {
             await onAdLeadInbound(admin, {
-              userId, companyId, instanceName, ownerNumber: await ownerNumberOnce(),
+              userId, companyId, instanceName, ownerNumber: grupoDe("leads") || await ownerNumberOnce(),
               phone: chatPhone, name: isPlaceholderName(msg.pushName) ? null : (msg.pushName || null),
               text: bodyText, mediaType: detectMessageType(msg).type, ad,
             });
@@ -1233,7 +1241,7 @@ serve(async (req) => {
         await onProspectInbound(admin, {
           userId,
           instanceName,
-          ownerNumber: pInst?.notify_jid || await ownerNumberOnce(),
+          ownerNumber: grupoDe("prospeccao") || await ownerNumberOnce(),
           phoneTail: allowlistByKey.get(brKey(chatPhone)) || phoneTail,
           text: body || "",
           mediaType: meta.type,

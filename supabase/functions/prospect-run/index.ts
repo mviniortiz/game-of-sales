@@ -15,6 +15,7 @@ import {
   whatsappKeys,
 } from "../_shared/prospecting.ts";
 import { nextVariant, primeiroNome, type ProspectVariant } from "../_shared/prospectingText.ts";
+import { groupJid } from "../_shared/ownerGroups.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -106,7 +107,8 @@ Deno.serve(async (req) => {
           const sinal = c.signal ? ` · ${String(c.signal).slice(0, 80)}` : "";
           return `${i + 1}. ${c.agency_name}${c.city ? ` (${c.city})` : ""}${c.rating_count ? `, ${c.rating_count} avaliações` : ""}${dono ? ` · fala com ${dono}` : ""}${sinal} · versão ${c.variant}`;
         }).join("\n");
-        await notifyDecision(admin, { instanceName, destino: inst.notify_jid || ownerNumber, userId: inst.user_id, code }, [
+        const destino = (await groupJid(admin, instanceName, "prospeccao")) || ownerNumber;
+        await notifyDecision(admin, { instanceName, destino, userId: inst.user_id, code }, [
           `Bom dia. Tenho ${validos.length} abordagens prontas para hoje:`,
           lista,
           `As mensagens alternam entre três versões para a gente ver qual tem mais resposta: curta (uma pergunta só), encaminha (pede quem cuida das propostas) e raiox (oferece o link do Raio-X grátis). Saem entre ${inst.window_start}h e ${inst.window_end}h, com 2 a 5 minutos entre elas.`,

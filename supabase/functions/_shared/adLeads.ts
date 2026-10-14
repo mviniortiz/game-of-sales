@@ -5,7 +5,7 @@
 // envia o texto dele. Se ele responder o lead direto pelo celular, o rascunho cai.
 
 import { llmChat } from "./llm.ts";
-import { brKey, notifyOwner, sendHumanText } from "./prospecting.ts";
+import { brKey, notifyDecision, notifyOwner, sendHumanText } from "./prospecting.ts";
 import { nextSlots } from "./prospectingText.ts";
 import { type AdOrigin, type LeadConfig, parseLeadCommand, randomLeadCode } from "./adLeadsText.ts";
 export { detectAdOrigin } from "./adLeadsText.ts";
@@ -139,13 +139,15 @@ export async function onAdLeadInbound(
     lido.propostas_mes ? `${lido.propostas_mes} propostas/mês` : null,
     lido.cidade,
   ].filter(Boolean).join(", ");
-  await notifyOwner(args.instanceName, args.ownerNumber, [
-    `[${code}] ${existente ? "" : "Novo lead do anúncio. "}${nome} escreveu:`,
+  await notifyDecision(admin, { instanceName: args.instanceName, destino: args.ownerNumber, userId: args.userId, code }, [
+    `${existente ? "" : "Novo lead do anúncio. "}${nome} escreveu:`,
     `"${args.text.slice(0, 600)}"`,
     `Leitura: ${STATUS_LABEL[lido.status]}${perfil ? ` (${perfil})` : ""}.`,
     `Sugestão:\n"${lido.draft}"`,
-    `Responda ${code} 1 para enviar, ${code} 2 para não responder, ou ${code} seguido do seu texto.`,
-  ].join("\n\n"));
+  ].join("\n\n"), {
+    grupo: "👍 envia a sugestão · 👎 não responde · ou responda esta mensagem com o seu texto",
+    chat: `Responda ${code} 1 para enviar, ${code} 2 para não responder, ou ${code} seguido do seu texto.`,
+  });
 }
 
 /** O dono respondeu o lead direto pelo celular: entra na conversa e o rascunho cai. */
@@ -163,34 +165,41 @@ export async function onOwnerMessageToLead(admin: any, userId: string, phone: st
 /** Resolve "LK4 1" etc. no chat do dono. false quando o texto não é desse fluxo. */
 export async function handleLeadCommand(
   admin: any,
-  args: { userId: string; instanceName: string; ownerNumber: string; text: string },
+  args: { userId: string; instanceName: string; ownerNumber: string; text: string; confirmar?: () => Promise<void> },
 ): Promise<boolean> {
   const cmd = parseLeadCommand(args.text);
   if (!cmd) return false;
   const avisar = (t: string) => notifyOwner(args.instanceName, args.ownerNumber, t);
+  // Deu certo: no grupo vira ✅; no chat do dono, o texto de sempre.
+  const pronto = (t: string) => (args.confirmar ? args.confirmar() : avisar(t));
   const { data: lead } = await admin.from("ad_leads").select("id, contact_name, phone_e164, reply_draft, conversa, status")
     .eq("user_id", args.userId).eq("reply_code", cmd.code).maybeSingle();
   if (!lead) {
-    await avisar(`Não achei nada pendente com o código ${cmd.code}.`);
+    await avisar(`Isso já foi resolvido ou expirou (${cmd.code}). Nada foi enviado agora.`);
     return true;
   }
+  // Quem limpa o código primeiro é quem envia: o lead nunca recebe a resposta duas vezes.
+  const { data: tomado } = await admin.from("ad_leads")
+    .update({ reply_code: null }).eq("id", lead.id).eq("reply_code", cmd.code).select("id");
+  if (!tomado?.length) return true;
   const nome = lead.contact_name || "o lead";
   if (cmd.intent === "reject") {
-    await admin.from("ad_leads").update({ reply_code: null, reply_draft: null }).eq("id", lead.id);
-    await avisar(`Ok, não respondi ${nome}.`);
+    await admin.from("ad_leads").update({ reply_draft: null }).eq("id", lead.id);
+    await pronto(`Ok, não respondi ${nome}.`);
     return true;
   }
   const texto = cmd.intent === "replace" ? cmd.text! : lead.reply_draft;
   if (!texto) {
+    await admin.from("ad_leads").update({ reply_code: cmd.code }).eq("id", lead.id);
     await avisar(`Não consegui enviar para ${nome}: falta o texto.`);
     return true;
   }
   await sendHumanText(args.instanceName, lead.phone_e164, texto);
   await admin.from("ad_leads").update({
-    reply_code: null, reply_draft: null,
+    reply_draft: null,
     status: lead.status === "novo" ? "qualificando" : lead.status,
     conversa: `${lead.conversa ? lead.conversa + "\n" : ""}Markus: ${texto}`.slice(-4000),
   }).eq("id", lead.id);
-  await avisar(`Enviado para ${nome}.`);
+  await pronto(`Enviado para ${nome}.`);
   return true;
 }

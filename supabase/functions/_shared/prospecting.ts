@@ -6,6 +6,7 @@
 // Códigos começam com P para não colidir com os da aprovação da EVA (letra+dígito).
 
 import { evolutionRequest, normalizeNumber } from "./whatsappApproval.ts";
+import { saveNotice } from "./ownerGroups.ts";
 import { llmChat } from "./llm.ts";
 import { firstMessage, nextSlots, parseProspectCommand, RAIO_X_LINK, randomCode } from "./prospectingText.ts";
 export { firstMessage, followupMessage, nextSlots, parseProspectCommand, randomCode } from "./prospectingText.ts";
@@ -151,40 +152,14 @@ export async function notifyOwner(instanceName: string, destino: string, text: s
 }
 
 /** Aviso que pede decisão. No grupo, o dono decide reagindo ou respondendo o próprio
- *  aviso, sem digitar código; o vínculo aviso→código fica em prospect_notices. */
+ *  aviso, sem digitar código; o vínculo aviso→código fica em owner_notices. */
 export async function notifyDecision(
   admin: any, args: { instanceName: string; destino: string; userId: string; code: string },
   corpo: string, comoDecidir: { grupo: string; chat: string },
 ): Promise<void> {
   const noGrupo = args.destino.endsWith("@g.us");
   const id = await notifyOwner(args.instanceName, args.destino, `${corpo}\n\n${noGrupo ? comoDecidir.grupo : comoDecidir.chat}`);
-  if (noGrupo && id) {
-    await admin.from("prospect_notices").insert({ notice_id: id, user_id: args.userId, code: args.code });
-  }
-}
-
-/** Reação ou resposta citando um aviso do grupo vira o comando de sempre ("PX9 1").
- *  null: não é decisão sobre aviso conhecido. */
-export async function commandFromNotice(
-  admin: any, userId: string, noticeId: string, acao: { reacao?: string; texto?: string },
-): Promise<string | null> {
-  const { data } = await admin.from("prospect_notices").select("code")
-    .eq("notice_id", noticeId).eq("user_id", userId).maybeSingle();
-  if (!data?.code) return null;
-  if (acao.reacao !== undefined) {
-    if (acao.reacao.startsWith("👍")) return `${data.code} 1`;
-    if (acao.reacao.startsWith("👎")) return `${data.code} 2`;
-    return null;
-  }
-  return acao.texto ? `${data.code} ${acao.texto}` : null;
-}
-
-/** ✅ na mensagem do dono no lugar de uma confirmação em texto. */
-export async function reactOk(instanceName: string, key: { remoteJid: string; id: string }): Promise<void> {
-  await evolutionRequest(`/message/sendReaction/${instanceName}`, {
-    method: "POST",
-    body: JSON.stringify({ reaction: "✅", key: { remoteJid: key.remoteJid, id: key.id, fromMe: true } }),
-  }, 15000);
+  if (noGrupo && id) await saveNotice(admin, args.userId, id, args.code);
 }
 
 const KIND_LABEL: Record<string, string> = {

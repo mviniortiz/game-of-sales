@@ -116,11 +116,20 @@ export function normalizeNumber(raw: string): string | null {
     return null;
 }
 
-async function sendText(instanceName: string, number: string, text: string): Promise<void> {
-    await evolutionRequest(`/message/sendText/${instanceName}`, {
+async function sendText(instanceName: string, number: string, text: string): Promise<string | null> {
+    const resp = await evolutionRequest(`/message/sendText/${instanceName}`, {
         method: "POST",
         body: JSON.stringify({ number, text, delay: 900, presence: "composing" }),
     }, 20000);
+    return resp?.key?.id || null;
+}
+
+/** Grupo de WhatsApp só do dono para os rascunhos da EVA (owner_notify_groups),
+ *  ou null quando ele aprova no chat com ele mesmo. */
+async function evaGroupJid(admin: any, instanceName: string): Promise<string | null> {
+    const { data } = await admin.from("owner_notify_groups").select("jid")
+        .eq("instance_name", instanceName).eq("topic", "eva").maybeSingle();
+    return data?.jid || null;
 }
 
 // ── Número oficial da EVA ───────────────────────────────────────────────────
@@ -326,13 +335,17 @@ function buildDraftMessage(params: {
     stage: string | null;
     why: string | null;
     text: string;
+    /** No grupo da EVA o dono decide reagindo no aviso; o código some do texto. */
+    noGrupo?: boolean;
 }): string {
-    const linhas = [`${EVA_PREFIX} [${params.code}] rascunho pronto`, ""];
+    const linhas = [params.noGrupo ? "Rascunho pronto" : `${EVA_PREFIX} [${params.code}] rascunho pronto`, ""];
     if (params.contactName) linhas.push(`Lead: ${params.contactName}`);
     if (params.stage) linhas.push(`Etapa: ${params.stage}`);
     if (params.why) linhas.push(`Por que agora: ${params.why}`);
     linhas.push("", params.text, "");
-    linhas.push(`Responda ${params.code} 1 para enviar, ${params.code} 2 para descartar, ou escreva o texto corrigido.`);
+    linhas.push(params.noGrupo
+        ? "👍 envia · 👎 descarta · ou responda esta mensagem com o texto corrigido"
+        : `Responda ${params.code} 1 para enviar, ${params.code} 2 para descartar, ou escreva o texto corrigido.`);
     return linhas.join("\n");
 }
 
@@ -468,8 +481,13 @@ export async function notifyPendingSuggestions(
             if (evaPhone) {
                 messageId = await sendDraftViaEva(evaPhone, ownerNumber, { code, contactName, why, text: draftText });
             } else {
-                const text = buildDraftMessage({ code, contactName, stage: deal.stage || null, why, text: draftText });
-                await sendText(instanceName, ownerNumber, text);
+                const grupo = await evaGroupJid(admin, instanceName);
+                const text = buildDraftMessage({ code, contactName, stage: deal.stage || null, why, text: draftText, noGrupo: !!grupo });
+                messageId = await sendText(instanceName, grupo || ownerNumber, text);
+                const donoId = userIdFromInstance(instanceName);
+                if (grupo && messageId && donoId) {
+                    await admin.from("owner_notices").insert({ notice_id: messageId, user_id: donoId, code });
+                }
             }
             await admin
                 .from("agent_suggestions")
@@ -573,6 +591,8 @@ export async function handleOwnerCommand(
         replyVia?: (text: string) => Promise<void>;
         /** Rascunho já identificado (resposta citando o aviso). */
         targetSuggestionId?: string | null;
+        /** No grupo da EVA o sucesso vira ✅ em vez de mensagem de confirmação. */
+        confirmar?: () => Promise<void>;
     },
 ): Promise<ApprovalOutcome> {
     const { instanceName, companyId, ownerNumber } = params;
@@ -648,7 +668,7 @@ export async function handleOwnerCommand(
                 approval_code: null,
             })
             .eq("id", target.id);
-        await reply("Descartado. Não enviei nada.");
+        await (params.confirmar ? params.confirmar() : reply("Descartado. Não enviei nada."));
         return { handled: true, action: "rejected", suggestionId: target.id };
     }
 
@@ -706,7 +726,7 @@ export async function handleOwnerCommand(
         .eq("id", target.id);
 
     const quem = deal?.customer_name || deal?.account_name || "o lead";
-    await reply(`Enviado para ${quem}.`);
+    await (params.confirmar ? params.confirmar() : reply(`Enviado para ${quem}.`));
     return {
         handled: true,
         action: parsed.intent === "replace" ? "adjusted" : "sent",
