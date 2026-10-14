@@ -5,7 +5,7 @@
 // envia o texto dele. Se ele responder o lead direto pelo celular, o rascunho cai.
 
 import { llmChat } from "./llm.ts";
-import { brKey, notifyDecision, notifyOwner, sendHumanText } from "./prospecting.ts";
+import { brKey, notifyDecision, notifyOwner, sendHumanMessages } from "./prospecting.ts";
 import { nextSlots } from "./prospectingText.ts";
 import { type AdOrigin, type LeadConfig, parseLeadCommand, randomLeadCode } from "./adLeadsText.ts";
 export { detectAdOrigin } from "./adLeadsText.ts";
@@ -194,7 +194,7 @@ export async function handleLeadCommand(
     await avisar(`Não consegui enviar para ${nome}: falta o texto.`);
     return true;
   }
-  await sendHumanText(args.instanceName, lead.phone_e164, texto);
+  await sendHumanMessages(args.instanceName, lead.phone_e164, texto);
   await admin.from("ad_leads").update({
     reply_draft: null,
     status: lead.status === "novo" ? "qualificando" : lead.status,

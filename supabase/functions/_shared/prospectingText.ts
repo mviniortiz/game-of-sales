@@ -84,6 +84,19 @@ export function nextVariant(counts: Partial<Record<ProspectVariant, number>>): P
   return [...VARIANTS].sort((a, b) => (counts[a] || 0) - (counts[b] || 0))[0];
 }
 
+/** Milissegundos de "digitando…" antes de mandar o texto. Gente no celular digita uns 3 a
+ *  4 caracteres por segundo; o teto de 15 s segura o envio (o servidor espera dentro da
+ *  requisição). A variação evita que toda mensagem tenha o mesmo ritmo. */
+export function tempoDigitando(texto: string, sorte = Math.random()): number {
+  const base = String(texto || "").length * 90;
+  return Math.round(Math.min(15000, Math.max(4000, base)) * (0.85 + sorte * 0.3));
+}
+
+/** Pausa entre a primeira e a segunda mensagem, como quem relê antes de continuar. */
+export function pausaEntreMensagens(sorte = Math.random()): number {
+  return Math.round(1500 + sorte * 2500);
+}
+
 /** Cada parágrafo (separado por linha em branco) sai como uma mensagem de WhatsApp. */
 export function dividirMensagens(texto: string): string[] {
   return String(texto || "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);

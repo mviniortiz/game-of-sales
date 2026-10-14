@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { dividirMensagens, firstMessage, followupMessage, nextVariant, primeiroNome, VARIANTS } from "./prospectingText.ts";
+import { dividirMensagens, firstMessage, followupMessage, nextVariant, pausaEntreMensagens, primeiroNome, tempoDigitando, VARIANTS } from "./prospectingText.ts";
 
 const ALVO = { agency_name: "Sol do Vale", city: "Blumenau", rating_count: 42 };
 
@@ -34,6 +34,14 @@ Deno.test("seguimento do dia 4 faz a pergunta da dor e não pede reunião", () =
   assert(!/20 minutos|reunião|chamada/.test(semDono));
   assert(!/[—–]/.test(semDono));
   assert(followupMessage({ metadata: { socio: "ANNA LUIZA SOUZA" } }).startsWith("Oi, Anna, tudo bem?"));
+});
+
+Deno.test("digitando dura como gente no celular, entre 3,4 e 17,25 segundos", () => {
+  assertEquals(tempoDigitando("Oi", 0.5), 4000);
+  assertEquals(tempoDigitando("x".repeat(100), 0.5), 9000);
+  assertEquals(tempoDigitando("x".repeat(500), 0.5), 15000);
+  assert(tempoDigitando("Oi", 0) >= 3400 && tempoDigitando("x".repeat(500), 1) <= 17250);
+  assert(pausaEntreMensagens(0) === 1500 && pausaEntreMensagens(1) === 4000);
 });
 
 Deno.test("rascunho com linha em branco vira duas mensagens", () => {

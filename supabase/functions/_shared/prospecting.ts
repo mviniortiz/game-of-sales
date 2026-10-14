@@ -8,7 +8,7 @@
 import { evolutionRequest, normalizeNumber } from "./whatsappApproval.ts";
 import { saveNotice } from "./ownerGroups.ts";
 import { llmChat } from "./llm.ts";
-import { dividirMensagens, firstMessage, nextSlots, parseProspectCommand, PERGUNTA_DOR, RAIO_X_LINK, randomCode } from "./prospectingText.ts";
+import { dividirMensagens, firstMessage, nextSlots, parseProspectCommand, pausaEntreMensagens, PERGUNTA_DOR, RAIO_X_LINK, randomCode, tempoDigitando } from "./prospectingText.ts";
 export { firstMessage, followupMessage, nextSlots, parseProspectCommand, randomCode } from "./prospectingText.ts";
 
 export const PROSPECT_PREFIX = "PROSPECÇÃO";
@@ -72,11 +72,19 @@ export function prospectNumber(row: Pick<ProspectRow, "phone_e164" | "phone_tail
 
 /** Texto com "digitando…" proporcional ao tamanho, como uma pessoa. */
 export async function sendHumanText(instanceName: string, number: string, text: string): Promise<void> {
-  const delay = Math.min(9000, Math.max(2500, text.length * 18));
   await evolutionRequest(`/message/sendText/${instanceName}`, {
     method: "POST",
-    body: JSON.stringify({ number, text, delay, presence: "composing" }),
-  }, 30000);
+    body: JSON.stringify({ number, text, delay: tempoDigitando(text), presence: "composing" }),
+  }, 40000);
+}
+
+/** Rascunho em parágrafos: uma mensagem por parágrafo, com pausa de quem relê entre elas. */
+export async function sendHumanMessages(instanceName: string, number: string, text: string): Promise<void> {
+  const partes = dividirMensagens(text);
+  for (let i = 0; i < partes.length; i++) {
+    if (i) await new Promise((ok) => setTimeout(ok, pausaEntreMensagens()));
+    await sendHumanText(instanceName, number, partes[i]);
+  }
 }
 
 /** Áudio de voz (PTT) a partir de uma URL pública, com "gravando áudio…". */
@@ -107,7 +115,8 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
     ofereceuLink
       ? "kind: 'interesse' (quer o link, diz sim, pede para mandar), 'sem_interesse' (recusou), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (pergunta quem é, como funciona, ou pede mais detalhe)."
       : "kind: 'interesse' (respondeu a pergunta com algo concreto, inclusive 'já fazemos follow-up' ou 'já temos ferramenta', ou pediu para conversar/horário), 'sem_interesse' (só recusa explícita: 'não tenho interesse', 'não quero'), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (pessoa abriu a porta sem responder ainda: 'pode perguntar', 'é comigo', 'o que precisa?', 'oi', ou perguntou quem é/do que se trata).",
-    "Regras da mensagem: português do Brasil, tom de conversa de WhatsApp, curta (até 3 frases no total), sem emoji, sem travessão, sem prometer nada, assina só quando for a primeira frase de apresentação.",
+    "Regras da mensagem: português do Brasil, curta (até 3 frases no total), sem emoji, sem travessão, sem prometer nada, assina só quando for a primeira frase de apresentação.",
+    "Tom: como o Markus digita no WhatsApp com alguém da região, não como atendente. Informal e direto ('pra', 'tá', 'beleza', 'show', 'valeu'), frases curtas, uma ideia por frase, ortografia e acentos certos. Proibido frase de atendimento ou de e-mail: 'Obrigado pelo retorno', 'agradeço o contato', 'fico à disposição', 'Que bom saber', 'perfeitamente', 'gostaria de', 'poderia'. Nada de elogio vazio nem de repetir o que a pessoa disse com outras palavras. No máximo um ponto de exclamação. Quando a pessoa conta um problema ou um número ruim, não reaja com 'show', 'que bom' ou 'beleza': reaja como quem leva a sério ('putz', 'pois é', 'entendi').",
     "Pode dividir em DUAS mensagens, como uma pessoa digitando: uma reação curta e depois a pergunta. Separe as duas com uma linha em branco; cada parágrafo sai como uma mensagem. Nunca mais de duas.",
     ofereceuLink
       ? `- interesse: mande este link exatamente: ${RAIO_X_LINK} . Diga em uma frase que leva uns 3 minutos, que a ferramenta só lê e nada é enviado para os clientes dele.`
@@ -237,8 +246,7 @@ export async function handleProspectCommand(
     await avisar(`Não consegui enviar para ${row.agency_name}: falta texto ou número.`);
     return true;
   }
-  // Rascunho em dois parágrafos sai como duas mensagens, com "digitando…" em cada uma.
-  for (const parte of dividirMensagens(texto)) await sendHumanText(args.instanceName, numero, parte);
+  await sendHumanMessages(args.instanceName, numero, texto);
   await admin.from("prospecting_allowlist").update({
     reply_code: null,
     reply_draft: null,
