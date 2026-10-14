@@ -40,6 +40,31 @@ export function brKey(raw: string | null | undefined): string {
   return d.slice(0, 2) + d.slice(-8);
 }
 
+/** brKey dos números que têm WhatsApp. Pergunta com e sem o 9 da frente, porque conta
+ *  antiga de celular BR ainda responde pelo formato de 8 dígitos. Devolve null quando a
+ *  checagem não é confiável (erro, ou nenhum de 5+ números existe), e aí ninguém é
+ *  descartado por ela. */
+export async function whatsappKeys(instanceName: string, numeros: string[]): Promise<Set<string> | null> {
+  const consulta = new Set<string>();
+  for (const n of numeros) {
+    const d = String(n).replace(/\D/g, "");
+    consulta.add(d);
+    if (d.length === 13 && d.startsWith("55") && d[4] === "9") consulta.add(d.slice(0, 4) + d.slice(5));
+  }
+  try {
+    const resp = await evolutionRequest(`/chat/whatsappNumbers/${instanceName}`, {
+      method: "POST",
+      body: JSON.stringify({ numbers: [...consulta] }),
+    }, 30000);
+    const lista: Array<{ exists?: boolean; number?: string; jid?: string }> = Array.isArray(resp) ? resp : [];
+    const existe = new Set(lista.filter((x) => x.exists).map((x) => brKey(x.number || x.jid)));
+    if (!lista.length || (numeros.length >= 5 && existe.size === 0)) return null;
+    return existe;
+  } catch {
+    return null;
+  }
+}
+
 export function prospectNumber(row: Pick<ProspectRow, "phone_e164" | "phone_tail">): string | null {
   return normalizeNumber(row.phone_e164 || row.phone_tail);
 }

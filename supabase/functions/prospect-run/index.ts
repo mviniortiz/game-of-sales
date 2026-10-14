@@ -11,9 +11,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { instanceNameFor, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
 import {
-  firstMessage, followupMessage, notifyOwner, prospectNumber, randomCode, sendHumanText, sendVoiceNote,
+  brKey, firstMessage, followupMessage, notifyOwner, prospectNumber, randomCode, sendHumanText, sendVoiceNote,
+  whatsappKeys,
 } from "../_shared/prospecting.ts";
-import { nextVariant, type ProspectVariant } from "../_shared/prospectingText.ts";
+import { nextVariant, primeiroNome, type ProspectVariant } from "../_shared/prospectingText.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -63,11 +64,19 @@ Deno.serve(async (req) => {
       .eq("user_id", inst.user_id).gte("created_at", inicioDia);
     if (!lotesHoje) {
       const { data: fila } = await admin.from("prospecting_allowlist")
-        .select("id, agency_name, city, rating_count, first_message, phone_e164, phone_tail, score, variant, metadata")
+        .select("id, agency_name, city, rating_count, first_message, phone_e164, phone_tail, score, variant, metadata, signal")
         .eq("user_id", inst.user_id).eq("is_active", true).eq("status", "mapeado").gte("score", 2)
         .order("score", { ascending: false }).order("rating_count", { ascending: false, nullsFirst: false })
-        .limit(inst.daily_cap);
-      const validos = (fila || []).filter((c: any) => prospectNumber(c));
+        .limit(inst.daily_cap * 2);
+      // Número sem WhatsApp falha no envio e gasta uma vaga do lote aprovado: sai antes.
+      const comNumero = (fila || []).filter((c: any) => prospectNumber(c));
+      const temZap = await whatsappKeys(instanceName, comNumero.map((c: any) => prospectNumber(c)!));
+      const semZap = temZap ? comNumero.filter((c: any) => !temZap.has(brKey(prospectNumber(c)))) : [];
+      if (semZap.length) {
+        await admin.from("prospecting_allowlist").update({ status: "descartado", notes: "sem WhatsApp na checagem do lote" })
+          .in("id", semZap.map((c: any) => c.id));
+      }
+      const validos = comNumero.filter((c: any) => !semZap.includes(c)).slice(0, inst.daily_cap);
       if (validos.length) {
         // Teste de abordagens: cada nova integradora recebe a variante menos usada.
         const { data: usadas } = await admin.from("prospecting_allowlist").select("variant")
@@ -92,7 +101,11 @@ Deno.serve(async (req) => {
         await admin.from("prospecting_batches").insert({
           company_id: inst.company_id, user_id: inst.user_id, code, contact_ids: validos.map((c: any) => c.id),
         });
-        const lista = validos.map((c: any, i: number) => `${i + 1}. ${c.agency_name}${c.city ? ` (${c.city})` : ""}${c.rating_count ? `, ${c.rating_count} avaliações` : ""} · versão ${c.variant}`).join("\n");
+        const lista = validos.map((c: any, i: number) => {
+          const dono = primeiroNome(c.metadata?.socio);
+          const sinal = c.signal ? ` · ${String(c.signal).slice(0, 80)}` : "";
+          return `${i + 1}. ${c.agency_name}${c.city ? ` (${c.city})` : ""}${c.rating_count ? `, ${c.rating_count} avaliações` : ""}${dono ? ` · fala com ${dono}` : ""}${sinal} · versão ${c.variant}`;
+        }).join("\n");
         await notifyOwner(instanceName, ownerNumber, [
           `Bom dia. Tenho ${validos.length} abordagens prontas para hoje:`,
           lista,
