@@ -75,13 +75,16 @@ Deno.serve(async (req) => {
         const contagem: Partial<Record<ProspectVariant, number>> = {};
         for (const u of usadas || []) contagem[u.variant as ProspectVariant] = (contagem[u.variant as ProspectVariant] || 0) + 1;
         for (const c of validos) {
-          const variant = nextVariant(contagem);
-          contagem[variant] = (contagem[variant] || 0) + 1;
+          // Contato que voltou de lote expirado mantém versão e texto juntos: a
+          // versão decide a resposta da IA (raiox oferece link) e o placar do teste.
+          const jaTinha = Boolean(c.variant && c.first_message);
+          const variant: ProspectVariant = jaTinha ? c.variant : nextVariant(contagem);
+          if (!jaTinha) contagem[variant] = (contagem[variant] || 0) + 1;
           c.variant = variant;
           await admin.from("prospecting_allowlist").update({
             status: "aguardando_aprovacao",
             variant,
-            first_message: c.first_message || firstMessage(c, variant),
+            first_message: jaTinha ? c.first_message : firstMessage(c, variant),
             followup_message: followupMessage(),
           }).eq("id", c.id);
         }
