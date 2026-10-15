@@ -8,7 +8,7 @@
 import { evolutionRequest, normalizeNumber } from "./whatsappApproval.ts";
 import { saveNotice } from "./ownerGroups.ts";
 import { llmChat } from "./llm.ts";
-import { dividirMensagens, firstMessage, nextSlots, parseProspectCommand, pausaEntreMensagens, PERGUNTA_DOR, RAIO_X_LINK, randomCode, tempoDigitando } from "./prospectingText.ts";
+import { dividirMensagens, firstMessage, IMAGEM_RETOMADA, MARCA_IMAGEM, nextSlots, parseProspectCommand, pausaEntreMensagens, RAIO_X_LINK, randomCode, tempoDigitando } from "./prospectingText.ts";
 export { firstMessage, followupMessage, nextSlots, parseProspectCommand, randomCode } from "./prospectingText.ts";
 
 export const PROSPECT_PREFIX = "PROSPECÇÃO";
@@ -78,12 +78,22 @@ export async function sendHumanText(instanceName: string, number: string, text: 
   }, 40000);
 }
 
-/** Rascunho em parágrafos: uma mensagem por parágrafo, com pausa de quem relê entre elas. */
+/** Imagem a partir de uma URL pública, com um "digitando…" curto antes. */
+export async function sendImage(instanceName: string, number: string, url: string): Promise<void> {
+  await evolutionRequest(`/message/sendMedia/${instanceName}`, {
+    method: "POST",
+    body: JSON.stringify({ number, mediatype: "image", mimetype: "image/png", media: url, delay: 1500, presence: "composing" }),
+  }, 40000);
+}
+
+/** Rascunho em parágrafos: uma mensagem por parágrafo, com pausa de quem relê entre elas.
+ *  O parágrafo [imagem] sai como o print da EVA. */
 export async function sendHumanMessages(instanceName: string, number: string, text: string): Promise<void> {
   const partes = dividirMensagens(text);
   for (let i = 0; i < partes.length; i++) {
     if (i) await new Promise((ok) => setTimeout(ok, pausaEntreMensagens()));
-    await sendHumanText(instanceName, number, partes[i]);
+    if (partes[i] === MARCA_IMAGEM) await sendImage(instanceName, number, IMAGEM_RETOMADA);
+    else await sendHumanText(instanceName, number, partes[i]);
   }
 }
 
@@ -106,10 +116,11 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
     ofereceuLink
       ? "A primeira mensagem do Markus ofereceu o link do Raio-X grátis: uma ferramenta que lê o WhatsApp da integradora e acha as propostas que o cliente visualizou e não respondeu. Objetivo: que o dono ou sócio abra o link. Não fale de preço nem de plano."
       : [
-        "Objetivo do Markus: fazer AQUI no WhatsApp a pergunta que valida a dor, e só depois, se a resposta mostrar dor, convidar para 20 minutos online.",
-        `A pergunta: "${PERGUNTA_DOR}"`,
-        "A primeira mensagem prometeu uma pergunta rápida: trocar por pedido de reunião antes de perguntar quebra a promessa e a conversa morre (medido em 14/10/2026: 4 de 4 sumiram assim).",
-        "Não abra pelo produto. Mas nunca diga que não está vendendo nada nem esconda o motivo: o Markus e o time estão montando uma estrutura para recuperar os orçamentos que se perdem no meio das conversas do WhatsApp, e querem saber se o problema é real antes de vender. Use essas palavras quando explicar o motivo. Preço e funcionalidades só se perguntarem.",
+        "Objetivo do Markus: quando a pessoa abrir a porta, mostrar em uma frase e num print o que ele está montando e ouvir se a integradora faz algo assim hoje. Só depois, se aparecer dor ou curiosidade, convidar para 20 minutos online ou oferecer o Raio-X.",
+        "Por que mostrar e não perguntar número: perguntar 'quantas propostas ficaram sem resposta' a um desconhecido soa como pedir para confessar que perde venda, e as conversas morreram ou travaram ('Porque eu te falaria isso?'). E quem diz que já resolve costuma ter só o aviso de que o cliente abriu; a diferença é a retomada já escrita (medido em 14/10/2026).",
+        "O que é, nestas palavras e sem prometer resultado: a EVA acompanha os orçamentos que a integradora manda no WhatsApp; quando um fica 2 dias sem resposta do cliente, ela avisa o dono no WhatsApp com a mensagem de retomada pronta, ele aprova e ela sai do número dele. Nada sai sem o dono aprovar.",
+        `Para mostrar, escreva a linha ${MARCA_IMAGEM} sozinha num parágrafo: ela vira o print de como o aviso chega. Só uma vez por conversa: se a conversa até aqui já tem ${MARCA_IMAGEM}, não mande de novo.`,
+        "A primeira mensagem prometeu uma pergunta rápida: não peça reunião antes de a pessoa responder sobre o print. Nunca diga que não está vendendo nada nem esconda o motivo: o Markus e o time estão montando isso e querem saber se o problema é real antes de vender. Preço só se perguntarem.",
       ].join(" "),
     "Classifique a última resposta da integradora e escreva a próxima mensagem do Markus.",
     ofereceuLink
@@ -117,21 +128,21 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
       : "kind: 'interesse' (respondeu a pergunta com algo concreto, inclusive 'já fazemos follow-up' ou 'já temos ferramenta', ou pediu para conversar/horário), 'sem_interesse' (só recusa explícita: 'não tenho interesse', 'não quero'), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (pessoa abriu a porta sem responder ainda: 'pode perguntar', 'é comigo', 'o que precisa?', 'oi', ou perguntou quem é/do que se trata).",
     "Regras da mensagem: português do Brasil, curta (até 3 frases no total), sem emoji, sem travessão, sem prometer nada, assina só quando for a primeira frase de apresentação.",
     "Tom: como o Markus digita no WhatsApp com alguém da região, não como atendente. Informal e direto ('pra', 'tá', 'beleza', 'show', 'valeu'), frases curtas, uma ideia por frase, ortografia e acentos certos. Proibido frase de atendimento ou de e-mail: 'Obrigado pelo retorno', 'agradeço o contato', 'fico à disposição', 'Que bom saber', 'perfeitamente', 'gostaria de', 'poderia'. Nada de elogio vazio nem de repetir o que a pessoa disse com outras palavras. No máximo um ponto de exclamação. Quando a pessoa conta um problema ou um número ruim, não reaja com 'show', 'que bom' ou 'beleza': reaja como quem leva a sério ('putz', 'pois é', 'entendi').",
-    "Pode dividir em DUAS mensagens, como uma pessoa digitando: uma reação curta e depois a pergunta. Separe as duas com uma linha em branco; cada parágrafo sai como uma mensagem. Nunca mais de duas.",
+    `Pode dividir em DUAS mensagens de texto, como uma pessoa digitando: uma reação curta e depois a pergunta. Separe com uma linha em branco; cada parágrafo sai como uma mensagem. Nunca mais de duas de texto, além do parágrafo ${MARCA_IMAGEM} quando a regra pedir.`,
     ofereceuLink
       ? `- interesse: mande este link exatamente: ${RAIO_X_LINK} . Diga em uma frase que leva uns 3 minutos, que a ferramenta só lê e nada é enviado para os clientes dele.`
       : [
-        "- interesse, quando ele diz que já resolve ('fazemos follow-up com todos', 'temos CRM', 'temos uma ferramenta'): não feche a conversa e não convide para reunião ainda. Primeira mensagem: uma reação curta ao que ele disse. Segunda: diga em meia frase que pergunta porque estão montando uma estrutura para recuperar orçamentos que se perdem no meio das conversas, e faça UMA pergunta de como: como controlam (planilha, CRM, alguém lembra de cabeça) e, desses follow-ups, quantos voltam a responder. Se ele já contou como e mesmo assim não mostrou dor, ofereça conferir de graça com o Raio-X se alguma proposta escapou, sem insistir.",
+        `- interesse, quando ele diz que já resolve ('fazemos follow-up com todos', 'temos CRM', 'temos uma ferramenta que avisa quando abre'): não feche a conversa e não convide para reunião ainda. Se o print ainda não foi: primeiro parágrafo, uma reação curta ao que ele disse e meia frase do que a EVA faz; segundo, ${MARCA_IMAGEM}; terceiro, UMA pergunta: o de vocês já deixa a mensagem pronta assim ou só avisa? Se o print já foi, pergunte isso sem imagem. Se ele já contou como e mesmo assim não mostrou dor, ofereça conferir de graça com o Raio-X se alguma proposta escapou, sem insistir.`,
         `- interesse, quando ele mostrou dor ou deu número: agradeça, comente em uma frase o que ele contou (com o número dele) e convide para 20 minutos online com dois horários entre estes: ${freeSlots}, ou ofereça mostrar de graça quanto está parado com o Raio-X.`,
         `- interesse, quando ele só pediu para conversar: proponha dois horários entre estes: ${freeSlots} e diga que manda o link da chamada.`,
         `- interesse, quando ele aceitou ver de graça quanto está parado: mande este link exatamente: ${RAIO_X_LINK} e diga só isto sobre a ferramenta: ela lê as conversas do WhatsApp e acha as propostas que ficaram sem resposta do cliente, com o valor parado; leva uns 3 minutos; ela só lê e nada é enviado aos clientes. Não diga que ela sabe se o cliente abriu a proposta.`,
       ].join("\n"),
     ofereceuLink
       ? "- automatico: peça com educação para falar com o dono ou com quem cuida das propostas, e diga que é para mostrar quanto está parado em proposta sem resposta."
-      : "- automatico: peça com educação para falar com quem cuida das propostas e já deixe a pergunta escrita, para a pessoa responder quando ler. Não peça reunião.",
+      : "- automatico: peça com educação para falar com o dono ou com quem cuida das propostas, dizendo em meia frase que é sobre orçamento que o cliente visualiza e para de responder. Não mande o print nem peça reunião: isso fica para quando uma pessoa responder.",
     ofereceuLink
       ? "- duvida: explique em uma frase que é um Raio-X grátis das propostas paradas no WhatsApp, que só lê e não manda nada para cliente, e pergunte se pode mandar o link."
-      : "- duvida: faça a pergunta agora, curta e direta. Se perguntaram quem é, por que ele quer saber ou o que ganham com isso: diga com franqueza que é o Markus, de Floripa, e que estão montando uma estrutura para recuperar os orçamentos que se perdem no meio das conversas do WhatsApp, e que quer entender se isso acontece mesmo antes de vender; ofereça em troca mostrar de graça quanto está parado em proposta no WhatsApp deles; feche com uma pergunta curta sobre se isso acontece aí. Não peça reunião.",
+      : `- duvida ('pode falar', 'é comigo', 'o que precisa?', 'oi', ou perguntou quem é): mostre agora, em três parágrafos. Primeiro: o que estão montando, com o aviso do 2º dia, a mensagem pronta e o envio pelo número dele, adaptando este modelo sem encurtar: 'Tô montando uma ferramenta pra integradora: quando um orçamento fica 2 dias sem resposta do cliente, ela avisa o dono no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.' (se perguntaram quem é, comece por 'Sou o Markus, de Floripa.'). Segundo: ${MARCA_IMAGEM}. Terceiro: só a pergunta 'Vocês fazem algo assim hoje ou fica no braço?' ou uma variação curta dela. Não peça número nem reunião. Se o print já foi e a pessoa ainda não respondeu sobre ele, só repita a pergunta curta.`,
     "- sem_interesse: agradeça, deixe a porta aberta e não insista. Se ele disse que já usa uma ferramenta parecida, pergunte numa frase qual é e o que ela ainda não resolve.",
     'Responda só JSON: {"kind": "...", "draft": "..."}',
   ].join("\n");

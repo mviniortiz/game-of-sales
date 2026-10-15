@@ -50,6 +50,10 @@ Deno.test("rascunho com linha em branco vira duas mensagens", () => {
   assertEquals(dividirMensagens("  \n\nTexto\n \n"), ["Texto"]);
 });
 
+Deno.test("parágrafo [imagem] vira uma parte sozinha", () => {
+  assertEquals(dividirMensagens("Estamos montando isso.\n\n[imagem]\n\nVocês fazem algo assim?"), ["Estamos montando isso.", "[imagem]", "Vocês fazem algo assim?"]);
+});
+
 Deno.test("primeiro nome ignora sócio inválido", () => {
   assertEquals(primeiroNome("ALISON NILDO DE JESUS"), "Alison");
   assertEquals(primeiroNome("12.345.678 JOAO"), null);

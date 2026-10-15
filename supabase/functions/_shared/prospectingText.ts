@@ -24,6 +24,12 @@ export const PERGUNTA_DOR =
 
 export const RAIO_X_LINK = "https://vyzon.com.br/criar-conta?segmento=energia_solar&utm_source=prospeccao&utm_content=raiox";
 
+/** Linha do rascunho que vira o print da EVA no envio. Fica visível no aviso do grupo,
+ *  para o dono saber que a imagem vai junto. A imagem segue o aviso real
+ *  (conteudo/prospeccao/eva-retomada.html). */
+export const MARCA_IMAGEM = "[imagem]";
+export const IMAGEM_RETOMADA = "https://omsdkjzkphflpwnbaeye.supabase.co/storage/v1/object/public/marketing/prospeccao/eva-retomada.png";
+
 type ProspectTarget = {
   agency_name: string | null; city: string | null; rating_count: number | null;
   /** socio: nome do sócio administrador, do cadastro do CNPJ na Receita. */
