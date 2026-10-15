@@ -13,10 +13,11 @@ export function randomCode(): string {
 }
 
 export type ProspectVariant = "pergunta" | "numero" | "curta" | "encaminha" | "raiox";
-/** Versões em teste agora. Em 14/10/2026 (cerca de 15 por versão) a encaminha trouxe 7
- *  pessoas, a curta 1 e a raiox 1; oferecer a ferramenta de cara saiu do teste. A raiox
- *  continua em firstMessage/readProspectReply para as conversas que já começaram com ela. */
-export const VARIANTS: ProspectVariant[] = ["curta", "encaminha"];
+/** Versões em uso. Até 15/10/2026 a encaminha trouxe pessoa de verdade em 10 de 17 envios,
+ *  a curta em 1 de 16 (9 robôs) e a raiox em 1 de 15; ficou só a encaminha. As outras
+ *  continuam em firstMessage/readProspectReply para as conversas que já começaram com elas.
+ *  Sem "Não é venda": a resposta seguinte mostra a ferramenta, e a frase viraria mentira. */
+export const VARIANTS: ProspectVariant[] = ["encaminha"];
 
 /** A pergunta que valida ou mata o ICP. Vai no WhatsApp antes de qualquer convite de reunião. */
 export const PERGUNTA_DOR =
@@ -61,8 +62,8 @@ export function firstMessage(row: ProspectTarget, variant: ProspectVariant = "pe
   // Quem atende primeiro é robô ou atendente: pedir a pessoa certa, com o assunto
   // em uma linha, é o que eles sabem encaminhar.
   if (variant === "encaminha") {
-    if (dono) return `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. É você que cuida das propostas da ${nome}? É uma pergunta rápida sobre orçamento que o cliente visualiza e para de responder. Não é venda.`;
-    return `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Consegue me passar pra quem cuida das propostas da ${nome}? É uma pergunta rápida sobre orçamento que o cliente visualiza e para de responder. Não é venda.`;
+    if (dono) return `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. É você que cuida das propostas da ${nome}? É uma pergunta rápida sobre orçamento que o cliente visualiza e para de responder.`;
+    return `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Consegue me passar pra quem cuida das propostas da ${nome}? É uma pergunta rápida sobre orçamento que o cliente visualiza e para de responder.`;
   }
   // Em vez de pedir 20 minutos, oferece ver o próprio número; o link só vai se ele quiser.
   if (variant === "raiox") {

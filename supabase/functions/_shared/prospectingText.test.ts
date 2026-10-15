@@ -14,7 +14,7 @@ Deno.test("versões em teste usam o nome da integradora, sem travessão e sem li
 
 Deno.test("a próxima versão é a em teste menos usada, ignorando as aposentadas", () => {
   assertEquals(nextVariant({ pergunta: 0, curta: 3, encaminha: 1, raiox: 2 }), "encaminha");
-  assertEquals(nextVariant({}), "curta");
+  assertEquals(nextVariant({}), "encaminha");
 });
 
 Deno.test("com o sócio do CNPJ, todas as versões abrem pelo primeiro nome", () => {
