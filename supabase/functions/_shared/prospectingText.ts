@@ -31,6 +31,18 @@ export const RAIO_X_LINK = "https://vyzon.com.br/criar-conta?segmento=energia_so
 export const MARCA_IMAGEM = "[imagem]";
 export const IMAGEM_RETOMADA = "https://omsdkjzkphflpwnbaeye.supabase.co/storage/v1/object/public/marketing/prospeccao/eva-retomada.png";
 
+/** Resposta a quem só abriu a porta ("pode falar", "é comigo"). Decisão do Markus em
+ *  15/10/2026: esta sai sozinha, sem o 👍, porque a conversa morria esperando a
+ *  aprovação (Elesan ficou mais de 24h sem resposta). Qualquer outra resposta espera.
+ *  Sai AUTO_ENVIO_MS depois da última mensagem deles: costumam mandar "Oi", "tudo bem?"
+ *  e "pode falar" em sequência, e só a última conta. */
+export const RESPOSTA_PORTA = [
+  "Tô montando uma ferramenta pra integradora: quando um orçamento fica 2 dias sem resposta do cliente, ela avisa o dono no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.",
+  MARCA_IMAGEM,
+  "Vocês fazem algo assim hoje ou fica no braço?",
+].join("\n\n");
+export const AUTO_ENVIO_MS = 90_000;
+
 type ProspectTarget = {
   agency_name: string | null; city: string | null; rating_count: number | null;
   /** socio: nome do sócio administrador, do cadastro do CNPJ na Receita. */

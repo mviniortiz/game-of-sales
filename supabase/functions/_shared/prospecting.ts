@@ -8,7 +8,7 @@
 import { evolutionRequest, normalizeNumber } from "./whatsappApproval.ts";
 import { saveNotice } from "./ownerGroups.ts";
 import { llmChat } from "./llm.ts";
-import { dividirMensagens, firstMessage, IMAGEM_RETOMADA, MARCA_IMAGEM, nextSlots, parseProspectCommand, pausaEntreMensagens, RAIO_X_LINK, randomCode, tempoDigitando } from "./prospectingText.ts";
+import { AUTO_ENVIO_MS, dividirMensagens, firstMessage, IMAGEM_RETOMADA, MARCA_IMAGEM, nextSlots, RESPOSTA_PORTA, parseProspectCommand, pausaEntreMensagens, RAIO_X_LINK, randomCode, tempoDigitando } from "./prospectingText.ts";
 export { firstMessage, followupMessage, nextSlots, parseProspectCommand, randomCode } from "./prospectingText.ts";
 
 export const PROSPECT_PREFIX = "PROSPECÇÃO";
@@ -105,7 +105,7 @@ export async function sendVoiceNote(instanceName: string, number: string, audioU
   }, 30000);
 }
 
-export type ReplyRead = { kind: "interesse" | "sem_interesse" | "automatico" | "duvida"; draft: string };
+export type ReplyRead = { kind: "interesse" | "sem_interesse" | "automatico" | "duvida"; draft: string; porta: boolean };
 
 /** A EVA lê a resposta da integradora e escreve a próxima mensagem do Markus. */
 export async function readProspectReply(row: ProspectRow, newText: string, freeSlots: string): Promise<ReplyRead> {
@@ -144,7 +144,8 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
       ? "- duvida: explique em uma frase que é um Raio-X grátis das propostas paradas no WhatsApp, que só lê e não manda nada para cliente, e pergunte se pode mandar o link."
       : `- duvida ('pode falar', 'é comigo', 'o que precisa?', 'oi', ou perguntou quem é): mostre agora, em três parágrafos. Primeiro: o que estão montando, com o aviso do 2º dia, a mensagem pronta e o envio pelo número dele, adaptando este modelo sem encurtar: 'Tô montando uma ferramenta pra integradora: quando um orçamento fica 2 dias sem resposta do cliente, ela avisa o dono no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.' (se perguntaram quem é, comece por 'Sou o Markus, de Floripa.'). Segundo: ${MARCA_IMAGEM}. Terceiro: só a pergunta 'Vocês fazem algo assim hoje ou fica no braço?' ou uma variação curta dela. Não peça número nem reunião. Se o print já foi e a pessoa ainda não respondeu sobre ele, só repita a pergunta curta.`,
     "- sem_interesse: agradeça, deixe a porta aberta e não insista. Se ele disse que já usa uma ferramenta parecida, pergunte numa frase qual é e o que ela ainda não resolve.",
-    'Responda só JSON: {"kind": "...", "draft": "..."}',
+    "porta: true só quando a nova resposta apenas confirma que é com ela ou manda falar ('pode falar', 'é comigo', 'pode perguntar', 'sou eu', 'o que precisa?'), sem pergunta sobre quem é, sem objeção e sem contar nada. Saudação sozinha ('oi', 'boa tarde') é false.",
+    'Responda só JSON: {"kind": "...", "porta": false, "draft": "..."}',
   ].join("\n");
   const user = [
     `Empresa: ${row.agency_name || "(sem nome)"}${row.city ? `, ${row.city}` : ""}.`,
@@ -165,7 +166,7 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
   const kind = kinds.includes(parsed.kind) ? parsed.kind : "duvida";
   const draft = String(parsed.draft || "").replace(/\s*[—–]\s*/g, ", ").trim();
   if (!draft) throw new Error("IA sem rascunho");
-  return { kind, draft };
+  return { kind, draft, porta: parsed.porta === true };
 }
 
 ;
@@ -257,15 +258,23 @@ export async function handleProspectCommand(
     await avisar(`Não consegui enviar para ${row.agency_name}: falta texto ou número.`);
     return true;
   }
-  await sendHumanMessages(args.instanceName, numero, texto);
+  await enviarRascunho(admin, args.instanceName, numero, row, texto);
+  await pronto(`Enviado para ${row.agency_name}.`);
+  return true;
+}
+
+/** Manda o texto (já reivindicado pelo código) e registra na conversa. */
+export async function enviarRascunho(
+  admin: any, instanceName: string, numero: string,
+  row: { id: string; reply_kind: string | null; last_reply: string | null }, texto: string,
+): Promise<void> {
+  await sendHumanMessages(instanceName, numero, texto);
   await admin.from("prospecting_allowlist").update({
     reply_code: null,
     reply_draft: null,
     status: row.reply_kind === "sem_interesse" ? "sem_interesse" : "respondeu",
     last_reply: `${row.last_reply ? row.last_reply + "\n" : ""}Markus: ${texto}`.slice(-3000),
   }).eq("id", row.id);
-  await pronto(`Enviado para ${row.agency_name}.`);
-  return true;
 }
 
 /** Integradora da lista respondeu: a EVA lê, escreve a próxima mensagem e pede
@@ -298,24 +307,55 @@ export async function onProspectInbound(
     if (!count) break;
     code = randomCode();
   }
+  // Só abriu a porta e ainda não viu o print: a resposta padrão sai sozinha pelo
+  // prospect-run (RESPOSTA_PORTA). Mensagem nova antes disso reescreve ou cancela.
+  const porta = lido.kind === "duvida" && lido.porta && args.text.length <= 80 &&
+    !String(row.last_reply || "").includes(MARCA_IMAGEM);
+  const { auto_envio_em: _antigo, ...metadata } = row.metadata || {};
   await admin.from("prospecting_allowlist").update({
     status: lido.kind === "sem_interesse" ? "sem_interesse" : "respondeu",
     replied_at: agora,
     followup_due_at: null,
     reply_kind: lido.kind,
-    reply_draft: lido.draft,
+    reply_draft: porta ? RESPOSTA_PORTA : lido.draft,
     reply_code: code,
+    metadata: porta ? { ...metadata, auto_envio_em: new Date(Date.now() + AUTO_ENVIO_MS).toISOString() } : metadata,
     last_reply: `${row.last_reply ? row.last_reply + "\n" : ""}Eles: ${args.text}`.slice(-3000),
   }).eq("id", row.id);
   if (args.ownerNumber) {
     await notifyDecision(admin, { instanceName: args.instanceName, destino: args.ownerNumber, userId: args.userId, code }, [
       `${nome} respondeu:`,
       `"${args.text.slice(0, 600)}"`,
-      `Leitura: ${KIND_LABEL[lido.kind]}.`,
-      `Sugestão:\n"${lido.draft}"`,
+      porta ? "Abriu a porta. A resposta padrão sai sozinha em uns 2 minutos:" : `Leitura: ${KIND_LABEL[lido.kind]}.`,
+      porta ? `"${RESPOSTA_PORTA}"` : `Sugestão:\n"${lido.draft}"`,
     ].join("\n\n"), {
-      grupo: "👍 envia a sugestão · 👎 não responde · ou responda esta mensagem com o seu texto",
+      grupo: porta
+        ? "👎 não envia · 👍 envia agora · ou responda esta mensagem com o seu texto"
+        : "👍 envia a sugestão · 👎 não responde · ou responda esta mensagem com o seu texto",
       chat: `Responda ${code} 1 para enviar, ${code} 2 para não responder, ou ${code} seguido do seu texto.`,
     });
   }
+}
+
+/** Respostas padrão vencidas (RESPOSTA_PORTA): o prospect-run chama a cada rodada.
+ *  Quem limpa o código primeiro envia, como no 👍, então nunca sai duas vezes. */
+export async function enviarRespostasPorta(admin: any, userId: string, instanceName: string, destino: string): Promise<string[]> {
+  const { data: vencidas } = await admin.from("prospecting_allowlist")
+    .select("id, agency_name, phone_e164, phone_tail, reply_code, reply_draft, reply_kind, last_reply, metadata")
+    .eq("user_id", userId).not("reply_code", "is", null)
+    .lte("metadata->>auto_envio_em", new Date().toISOString()).limit(5);
+  const enviadas: string[] = [];
+  for (const row of vencidas || []) {
+    const { data: tomado } = await admin.from("prospecting_allowlist")
+      .update({ reply_code: null }).eq("id", row.id).eq("reply_code", row.reply_code).select("id");
+    if (!tomado?.length) continue;
+    const { auto_envio_em: _feito, ...metadata } = row.metadata || {};
+    await admin.from("prospecting_allowlist").update({ metadata }).eq("id", row.id);
+    const numero = prospectNumber(row);
+    if (!numero || !row.reply_draft) continue;
+    await enviarRascunho(admin, instanceName, numero, row, row.reply_draft);
+    await notifyOwner(instanceName, destino, `Saiu para ${row.agency_name}: a resposta padrão com o print.`);
+    enviadas.push(row.agency_name);
+  }
+  return enviadas;
 }

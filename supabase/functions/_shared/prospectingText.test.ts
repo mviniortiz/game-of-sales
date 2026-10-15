@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { dividirMensagens, firstMessage, followupMessage, nextVariant, pausaEntreMensagens, primeiroNome, tempoDigitando, VARIANTS } from "./prospectingText.ts";
+import { dividirMensagens, firstMessage, MARCA_IMAGEM, RESPOSTA_PORTA, followupMessage, nextVariant, pausaEntreMensagens, primeiroNome, tempoDigitando, VARIANTS } from "./prospectingText.ts";
 
 const ALVO = { agency_name: "Sol do Vale", city: "Blumenau", rating_count: 42 };
 
@@ -52,6 +52,13 @@ Deno.test("rascunho com linha em branco vira duas mensagens", () => {
 
 Deno.test("parágrafo [imagem] vira uma parte sozinha", () => {
   assertEquals(dividirMensagens("Estamos montando isso.\n\n[imagem]\n\nVocês fazem algo assim?"), ["Estamos montando isso.", "[imagem]", "Vocês fazem algo assim?"]);
+});
+
+Deno.test("resposta padrão sai em três partes, com o print no meio e sem travessão", () => {
+  const partes = dividirMensagens(RESPOSTA_PORTA);
+  assertEquals(partes.length, 3);
+  assertEquals(partes[1], MARCA_IMAGEM);
+  assert(!/[—–]/.test(RESPOSTA_PORTA));
 });
 
 Deno.test("primeiro nome ignora sócio inválido", () => {

@@ -6,12 +6,14 @@
 //  3. envia UMA mensagem por vez (seguimento do dia 4 primeiro, depois as
 //     aprovadas), respeitando o teto diário e 2 a 5 minutos entre contatos.
 // Nada sai para uma integradora sem aprovação: só status "aprovado" é enviado,
-// e o seguimento só existe para quem foi aprovado e não respondeu.
+// e o seguimento só existe para quem foi aprovado e não respondeu. Exceção decidida
+// pelo Markus em 15/10/2026: a resposta padrão a quem só disse "pode falar"
+// (RESPOSTA_PORTA) sai sozinha uns 2 minutos depois, das 8h às 21h.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { instanceNameFor, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
 import {
-  brKey, firstMessage, followupMessage, notifyDecision, prospectNumber, randomCode, sendHumanText, sendVoiceNote,
+  brKey, enviarRespostasPorta, firstMessage, followupMessage, notifyDecision, prospectNumber, randomCode, sendHumanText, sendVoiceNote,
   whatsappKeys,
 } from "../_shared/prospecting.ts";
 import { nextVariant, primeiroNome, type ProspectVariant } from "../_shared/prospectingText.ts";
@@ -44,9 +46,22 @@ Deno.serve(async (req) => {
   for (const inst of instancias || []) {
     const r: any = { user: inst.user_id };
     relatorio.push(r);
+    const instanceName = instanceNameFor(inst.user_id);
+    // Resposta padrão a quem disse "pode falar" sai até as 21h: quem respondeu está
+    // no celular agora, e a janela de primeiro contato não vale para ela.
+    if (hora >= 8 && hora < 21) {
+      const destino = (await groupJid(admin, instanceName, "prospeccao")) || (await resolveOwnerNumber(admin, instanceName));
+      if (destino) {
+        try {
+          const portas = await enviarRespostasPorta(admin, inst.user_id, instanceName, destino);
+          if (portas.length) r.respostas_padrao = portas;
+        } catch (e) {
+          r.erro_resposta_padrao = (e as Error).message;
+        }
+      }
+    }
     const dentro = payload?.force === true || (diaUtil && hora >= inst.window_start && hora < inst.window_end);
     if (!dentro) { r.fora_da_janela = true; continue; }
-    const instanceName = instanceNameFor(inst.user_id);
     const ownerNumber = await resolveOwnerNumber(admin, instanceName);
     if (!ownerNumber) { r.erro = "número do dono não encontrado"; continue; }
     const inicioDia = new Date(`${dia}T03:00:00.000Z`).toISOString(); // 00h de Brasília
