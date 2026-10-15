@@ -122,6 +122,7 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
         `Para mostrar, escreva a linha ${MARCA_IMAGEM} sozinha num parágrafo: ela vira o print de como o aviso chega. Só uma vez por conversa: se a conversa até aqui já tem ${MARCA_IMAGEM}, não mande de novo.`,
         "A primeira mensagem prometeu uma pergunta rápida: não peça reunião antes de a pessoa responder sobre o print. Nunca diga que não está vendendo nada nem esconda o motivo: o Markus e o time estão montando isso e querem saber se o problema é real antes de vender. Preço só se perguntarem.",
       ].join(" "),
+    `Mal-entendido vem antes de tudo: se a resposta trata o Markus como cliente (pede dados para orçamento, pede desculpa pela demora, diz que vai ver o orçamento dele, acha que ele reclama de outra empresa que sumiu, manda ele para fornecedores), classifique como 'duvida' e desfaça com leveza no primeiro parágrafo: 'Opa, acho que me expliquei mal: não sou cliente.' e diga em uma frase que ele está montando uma ferramenta pra integradora e a pergunta é sobre as propostas que ELES mandam e o cliente visualiza e não responde. Depois siga a regra de 'duvida'. Nunca porta=true nesse caso.`,
     "Classifique a última resposta da integradora e escreva a próxima mensagem do Markus.",
     ofereceuLink
       ? "kind: 'interesse' (quer o link, diz sim, pede para mandar), 'sem_interesse' (recusou), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (pergunta quem é, como funciona, ou pede mais detalhe)."

@@ -72,10 +72,12 @@ export function firstMessage(row: ProspectTarget, variant: ProspectVariant = "pe
     ].join("\n\n");
   }
   // Quem atende primeiro é robô ou atendente: pedir a pessoa certa, com o assunto
-  // em uma linha, é o que eles sabem encaminhar.
+  // em uma linha, é o que eles sabem encaminhar. O assunto diz de que lado o Markus está
+  // ("propostas que vocês mandam", "ferramenta pra integradora"): sem isso, PG Energy e
+  // Envolty leram como cliente reclamando de orçamento sem resposta (15/10/2026).
   if (variant === "encaminha") {
-    if (dono) return `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. É você que cuida das propostas da ${nome}? É uma pergunta rápida sobre orçamento que o cliente visualiza e para de responder.`;
-    return `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Consegue me passar pra quem cuida das propostas da ${nome}? É uma pergunta rápida sobre orçamento que o cliente visualiza e para de responder.`;
+    if (dono) return `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar e queria te fazer uma pergunta rápida sobre as propostas que vocês mandam e o cliente visualiza e não responde. É você que cuida disso na ${nome}?`;
+    return `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar e queria fazer uma pergunta rápida sobre as propostas que vocês mandam e o cliente visualiza e não responde. Consegue me passar pra quem cuida disso na ${nome}?`;
   }
   // Em vez de pedir 20 minutos, oferece ver o próprio número; o link só vai se ele quiser.
   if (variant === "raiox") {
