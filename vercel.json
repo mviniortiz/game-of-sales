@@ -153,6 +153,11 @@
             "source": "/agencias",
             "destination": "/",
             "statusCode": 301
+        },
+        {
+            "source": "/eva-voz",
+            "destination": "/",
+            "statusCode": 301
         }
     ],
     "rewrites": [
