@@ -106,7 +106,7 @@ export async function sendVoiceNote(instanceName: string, number: string, audioU
   }, 30000);
 }
 
-export type ReplyRead = { kind: "interesse" | "sem_interesse" | "automatico" | "duvida"; draft: string; porta: boolean };
+export type ReplyRead = { kind: "interesse" | "sem_interesse" | "automatico" | "duvida"; draft: string; porta: boolean; quer: boolean };
 
 /** A EVA lê a resposta da integradora e escreve a próxima mensagem do Markus. */
 export async function readProspectReply(row: ProspectRow, newText: string, freeSlots: string): Promise<ReplyRead> {
@@ -148,7 +148,8 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
       : `- duvida ('pode falar', 'é comigo', 'o que precisa?', 'oi', ou perguntou quem é): mostre agora, em três parágrafos. Primeiro: o que estão montando, com o aviso do 2º dia, a mensagem pronta e o envio pelo número dele, adaptando este modelo sem encurtar: 'Tô montando uma ferramenta pra integradora: quando um orçamento fica 2 dias sem resposta do cliente, ela avisa o dono no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.' (se perguntaram quem é, comece por 'Sou o Markus, de Floripa.'). Segundo: ${MARCA_IMAGEM}. Terceiro: só a pergunta 'Vocês fazem algo assim hoje ou fica no braço?' ou uma variação curta dela. Não peça número nem reunião. Se o print já foi e a pessoa ainda não respondeu sobre ele, só repita a pergunta curta.`,
     "- sem_interesse: agradeça, deixe a porta aberta e não insista. Se ele disse que já usa uma ferramenta parecida, pergunte numa frase qual é e o que ela ainda não resolve.",
     "porta: true só quando a nova resposta apenas confirma que é com ela ou manda falar ('pode falar', 'é comigo', 'pode perguntar', 'sou eu', 'o que precisa?'), sem pergunta sobre quem é, sem objeção e sem contar nada. Saudação sozinha ('oi', 'boa tarde') é false.",
-    'Responda só JSON: {"kind": "...", "porta": false, "draft": "..."}',
+    "quer: true só quando a pessoa mostra intenção de usar: pergunta preço, pede pra testar ou ver funcionando, pede o link, ou aceita conversar/marcar horário. Curiosidade ('como funciona?') sozinha é false.",
+    'Responda só JSON: {"kind": "...", "porta": false, "quer": false, "draft": "..."}',
   ].join("\n");
   const user = [
     `Empresa: ${row.agency_name || "(sem nome)"}${row.city ? `, ${row.city}` : ""}.`,
@@ -169,7 +170,7 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
   const kind = kinds.includes(parsed.kind) ? parsed.kind : "duvida";
   const draft = String(parsed.draft || "").replace(/\s*[—–]\s*/g, ", ").trim();
   if (!draft) throw new Error("IA sem rascunho");
-  return { kind, draft, porta: parsed.porta === true };
+  return { kind, draft, porta: parsed.porta === true, quer: parsed.quer === true };
 }
 
 ;
@@ -316,6 +317,12 @@ export async function onProspectInbound(
   const porta = lido.kind === "duvida" && lido.porta && args.text.length <= 80 && !args.text.startsWith(PREFIXO_AUDIO) &&
     !String(row.last_reply || "").includes(MARCA_IMAGEM);
   const { auto_envio_em: _antigo, ...metadata } = row.metadata || {};
+  // Sinal de compra (preço, teste, link, conversa): é o que o painel conta para o
+  // critério do nicho de 30/10/2026. Fica a primeira vez, com a frase da pessoa.
+  if (lido.quer && !metadata.sinal_compra_em) {
+    metadata.sinal_compra_em = agora;
+    metadata.sinal_compra_texto = args.text.slice(0, 300);
+  }
   await admin.from("prospecting_allowlist").update({
     status: lido.kind === "sem_interesse" ? "sem_interesse" : "respondeu",
     replied_at: agora,
