@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { handleOwnerCommand, isEvaOfficialNumber, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
 import { PROSPECT_PREFIX, brKey, handleProspectCommand, notifyOwner, onProspectInbound } from "../_shared/prospecting.ts";
 import { commandFromNotice, groupTopics, reactOk } from "../_shared/ownerGroups.ts";
+import { textoDoAudio } from "../_shared/transcribe.ts";
 import { adLeadKeys, detectAdOrigin, handleLeadCommand, leadAutomation, onAdLeadInbound, onOwnerMessageToLead } from "../_shared/adLeads.ts";
 import { trackOutboundQuote } from "../_shared/quoteTracking.ts";
 import { ensureConnection, importHistoryMessages } from "../_shared/whatsappHistory.ts";
@@ -1084,6 +1085,13 @@ serve(async (req) => {
       mediaBase64 = msg.message.base64;
       delete msg.message.base64;
     }
+    // Só transcreve quando um fluxo do dono pede (prospecção e lead do anúncio), e
+    // uma vez por mensagem: áudio de cliente da Inbox não passa por aqui.
+    let transcricao: Promise<string | null> | null = null;
+    const ouvirAudio = (): Promise<string | null> =>
+      (transcricao ??= msg.message?.audioMessage && mediaBase64
+        ? textoDoAudio(mediaBase64, msg.message.audioMessage.mimetype)
+        : Promise.resolve(null));
 
     const fromMe: boolean = msg.key.fromMe === true;
     const isGroup = remoteJid.includes("@g.us");
@@ -1209,7 +1217,7 @@ serve(async (req) => {
             await onAdLeadInbound(admin, {
               userId, companyId, instanceName, ownerNumber: grupoDe("leads") || await ownerNumberOnce(),
               phone: chatPhone, name: isPlaceholderName(msg.pushName) ? null : (msg.pushName || null),
-              text: bodyText, mediaType: detectMessageType(msg).type, ad,
+              text: bodyText || (await ouvirAudio()) || "", mediaType: detectMessageType(msg).type, ad,
             });
           }
         } catch (leadErr: any) {
@@ -1243,7 +1251,7 @@ serve(async (req) => {
           instanceName,
           ownerNumber: grupoDe("prospeccao") || await ownerNumberOnce(),
           phoneTail: allowlistByKey.get(brKey(chatPhone)) || phoneTail,
-          text: body || "",
+          text: body || (allowlistByKey.has(brKey(chatPhone)) ? await ouvirAudio() : null) || "",
           mediaType: meta.type,
         });
       } catch (prospectErr: any) {

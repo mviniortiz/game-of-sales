@@ -8,6 +8,7 @@
 import { evolutionRequest, normalizeNumber } from "./whatsappApproval.ts";
 import { saveNotice } from "./ownerGroups.ts";
 import { llmChat } from "./llm.ts";
+import { PREFIXO_AUDIO } from "./transcribe.ts";
 import { AUTO_ENVIO_MS, dividirMensagens, firstMessage, IMAGEM_RETOMADA, MARCA_IMAGEM, nextSlots, RESPOSTA_PORTA, parseProspectCommand, pausaEntreMensagens, RAIO_X_LINK, randomCode, tempoDigitando } from "./prospectingText.ts";
 export { firstMessage, followupMessage, nextSlots, parseProspectCommand, randomCode } from "./prospectingText.ts";
 
@@ -123,6 +124,7 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
         "A primeira mensagem prometeu uma pergunta rápida: não peça reunião antes de a pessoa responder sobre o print. Nunca diga que não está vendendo nada nem esconda o motivo: o Markus e o time estão montando isso e querem saber se o problema é real antes de vender. Preço só se perguntarem.",
       ].join(" "),
     `Mal-entendido vem antes de tudo: se a resposta trata o Markus como cliente (pede dados para orçamento, pede desculpa pela demora, diz que vai ver o orçamento dele, acha que ele reclama de outra empresa que sumiu, manda ele para fornecedores), classifique como 'duvida' e desfaça com leveza no primeiro parágrafo: 'Opa, acho que me expliquei mal: não sou cliente.' e diga em uma frase que ele está montando uma ferramenta pra integradora e a pergunta é sobre as propostas que ELES mandam e o cliente visualiza e não responde. Depois siga a regra de 'duvida'. Nunca porta=true nesse caso.`,
+    `Texto que começa com ${PREFIXO_AUDIO} veio de áudio e pode ter palavra errada: entenda pelo sentido, não cite a frase dele ao pé da letra e, se algo ficou ambíguo, pergunte em vez de supor.`,
     "Classifique a última resposta da integradora e escreva a próxima mensagem do Markus.",
     ofereceuLink
       ? "kind: 'interesse' (quer o link, diz sim, pede para mandar), 'sem_interesse' (recusou), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (pergunta quem é, como funciona, ou pede mais detalhe)."
@@ -308,9 +310,10 @@ export async function onProspectInbound(
     if (!count) break;
     code = randomCode();
   }
+  // Áudio transcrito nunca dispara envio sozinho: a transcrição pode ter errado.
   // Só abriu a porta e ainda não viu o print: a resposta padrão sai sozinha pelo
   // prospect-run (RESPOSTA_PORTA). Mensagem nova antes disso reescreve ou cancela.
-  const porta = lido.kind === "duvida" && lido.porta && args.text.length <= 80 &&
+  const porta = lido.kind === "duvida" && lido.porta && args.text.length <= 80 && !args.text.startsWith(PREFIXO_AUDIO) &&
     !String(row.last_reply || "").includes(MARCA_IMAGEM);
   const { auto_envio_em: _antigo, ...metadata } = row.metadata || {};
   await admin.from("prospecting_allowlist").update({

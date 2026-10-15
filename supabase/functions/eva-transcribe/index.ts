@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { base64ToBytes, transcrever } from "../_shared/transcribe.ts";
 
 // eva-transcribe — transcrição de voz PRÓPRIA do Vyzon (substitui a Web Speech
 // API do navegador, que só funciona bem no Chrome e depende do servidor do
@@ -11,7 +12,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -26,29 +26,9 @@ function json(status: number, body: unknown) {
     });
 }
 
-// Whisper precisa de um nome de arquivo com extensão válida pra detectar o
-// container. Deriva a extensão do mime do MediaRecorder.
-function extFromMime(mime: string): string {
-    const m = mime.toLowerCase();
-    if (m.includes("mp4") || m.includes("m4a") || m.includes("aac")) return "mp4";
-    if (m.includes("ogg")) return "ogg";
-    if (m.includes("mpeg") || m.includes("mp3")) return "mp3";
-    if (m.includes("wav")) return "wav";
-    return "webm";
-}
-
-function base64ToBytes(b64: string): Uint8Array {
-    const bin = atob(b64);
-    const out = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-    return out;
-}
-
 serve(async (req) => {
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
     if (req.method !== "POST") return json(405, { ok: false, reason: "method", message: "Method not allowed" });
-    if (!OPENAI_API_KEY) return json(200, { ok: false, reason: "no_key", message: "Transcrição indisponível agora." });
-
     try {
         const body = await req.json().catch(() => ({}));
         const { audioBase64, mime, language } = body as { audioBase64?: string; mime?: string; language?: string };
@@ -75,7 +55,7 @@ serve(async (req) => {
             /* fail-open */
         }
 
-        let bytes: Uint8Array;
+        let bytes: Uint8Array<ArrayBuffer>;
         try {
             bytes = base64ToBytes(audioBase64);
         } catch {
@@ -83,29 +63,14 @@ serve(async (req) => {
         }
 
         const mimeType = typeof mime === "string" && mime ? mime : "audio/webm";
-        const ext = extFromMime(mimeType);
         const lang = typeof language === "string" && language ? language.slice(0, 5) : "pt";
-
-        const audioBlob = new Blob([bytes], { type: mimeType });
-        const formData = new FormData();
-        formData.append("file", audioBlob, `audio.${ext}`);
-        formData.append("model", "whisper-1");
-        formData.append("language", lang);
-        formData.append("response_format", "text");
-
-        const whisper = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
-            body: formData,
-        });
-
-        if (!whisper.ok) {
-            const detail = await whisper.text().catch(() => "");
-            console.error("[eva-transcribe] whisper error:", whisper.status, detail.slice(0, 300));
+        const r = await transcrever(bytes, mimeType, lang);
+        if (!r.ok) {
+            if (r.reason === "no_key") return json(200, { ok: false, reason: "no_key", message: "Transcrição indisponível agora." });
+            console.error("[eva-transcribe] whisper error:", r.detail);
             return json(200, { ok: false, reason: "stt_failed", message: "Não consegui transcrever agora. Pode digitar que funciona igual." });
         }
-
-        const text = (await whisper.text()).trim();
+        const text = r.text;
         return json(200, { ok: true, text });
     } catch (error) {
         console.error("[eva-transcribe] error:", error);
