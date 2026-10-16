@@ -239,6 +239,18 @@ Deno.serve(async (req) => {
       }
     } catch (e) {
       r.erro_envio = `${alvo.agency_name}: ${(e as Error).message}`;
+      // "failed to send" com a sessão aberta é a restrição do WhatsApp para contato
+      // novo em aparelho conectado (chip novo, 16/10/2026: "your account is restricted
+      // right now", 4 horas). A culpa é do chip, não do número: pausa 24h sem marcar
+      // a integradora. Insistir durante a restrição tende a alongar a próxima.
+      if (/failed to send/i.test((e as Error).message) || (await connectionState(instanceName)) !== "open") {
+        await admin.from("prospecting_instances").update({
+          pausa_ate: new Date(agora.getTime() + 24 * 3600 * 1000).toISOString(),
+          falhas_envio: { dia, total: 0, restricao: agora.toISOString() },
+        }).eq("id", inst.id);
+        r.restricao_do_chip = true;
+        continue;
+      }
       // Número sem WhatsApp voltaria no topo a cada rodada e travaria o lote: na
       // primeira falha vai para o fim da fila (approved_at ordena), na segunda sai.
       const falhas = (alvo.metadata?.falhas_envio || 0) + 1;
