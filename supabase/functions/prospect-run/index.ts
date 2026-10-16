@@ -56,10 +56,11 @@ Deno.serve(async (req) => {
     const numero = await connectedNumber(instanceName);
     if (numero && numero !== inst.numero_chip) {
       inst.chip_desde = agora.toISOString();
+      inst.rampa_desde = null;
       inst.pausa_ate = null;
       inst.falhas_envio = {};
       await admin.from("prospecting_instances").update({
-        numero_chip: numero, chip_desde: inst.chip_desde, pausa_ate: null, falhas_envio: {},
+        numero_chip: numero, chip_desde: inst.chip_desde, rampa_desde: null, pausa_ate: null, falhas_envio: {},
       }).eq("id", inst.id);
       // O dono continua no pessoal; o número salvo como dono era o chip antigo.
       // numero_desde faz o Inbox mostrar só as conversas do número novo.
@@ -82,7 +83,10 @@ Deno.serve(async (req) => {
       r.chip_novo = numero;
     }
     r.numero = numero;
-    const tetoHoje = tetoDoChip(inst.chip_desde, agora, inst.daily_cap);
+    // A rampa pode começar antes da troca quando o dono adianta o aquecimento;
+    // chip_desde continua separando as conversas do número antigo.
+    const rampa = inst.rampa_desde ?? inst.chip_desde;
+    const tetoHoje = tetoDoChip(rampa, agora, inst.daily_cap);
     // Resposta padrão a quem disse "pode falar" sai até as 21h: quem respondeu está
     // no celular agora, e a janela de primeiro contato não vale para ela.
     if (hora >= 8 && hora < 21) {
@@ -170,7 +174,7 @@ Deno.serve(async (req) => {
         await notifyDecision(admin, { instanceName, destino, userId: inst.user_id, code }, [
           `Bom dia. Tenho ${validos.length} abordagens prontas para hoje:`,
           lista,
-          `Saem entre ${inst.window_start}h e ${inst.window_end}h, uma de cada vez, com ${chipAquecendo(inst.chip_desde, agora) ? "5 a 10" : "2 a 5"} minutos entre elas.${tetoHoje < inst.daily_cap ? ` O chip ainda está aquecendo: hoje o teto é ${tetoHoje}, contando os seguimentos.` : ""}`,
+          `Saem entre ${inst.window_start}h e ${inst.window_end}h, uma de cada vez, com ${chipAquecendo(rampa, agora) ? "5 a 10" : "2 a 5"} minutos entre elas.${tetoHoje < inst.daily_cap ? ` O chip ainda está aquecendo: hoje o teto é ${tetoHoje}, contando os seguimentos.` : ""}`,
         ].join("\n\n"), {
           grupo: "👍 envia hoje · 👎 não envia hoje",
           chat: `Responda ${code} 1 para enviar ou ${code} 2 para não enviar hoje.`,
@@ -182,9 +186,11 @@ Deno.serve(async (req) => {
     // 3. Um envio por rodada, no ritmo.
     if (inst.pausa_ate && new Date(inst.pausa_ate) > agora) { r.pausado_ate = inst.pausa_ate; continue; }
     if (inst.next_send_at && new Date(inst.next_send_at) > agora && payload?.force !== true) { r.aguardando_ritmo = inst.next_send_at; continue; }
+    // No dia da troca, o que saiu pelo número antigo não gasta o teto do chip novo.
+    const contarDesde = inst.chip_desde && new Date(inst.chip_desde) > new Date(inicioDia) ? inst.chip_desde : inicioDia;
     const [{ count: enviadosHoje }, { count: seguimentosHoje }] = await Promise.all([
-      admin.from("prospecting_allowlist").select("id", { count: "exact", head: true }).eq("user_id", inst.user_id).gte("sent_at", inicioDia),
-      admin.from("prospecting_allowlist").select("id", { count: "exact", head: true }).eq("user_id", inst.user_id).gte("followup_sent_at", inicioDia),
+      admin.from("prospecting_allowlist").select("id", { count: "exact", head: true }).eq("user_id", inst.user_id).gte("sent_at", contarDesde),
+      admin.from("prospecting_allowlist").select("id", { count: "exact", head: true }).eq("user_id", inst.user_id).gte("followup_sent_at", contarDesde),
     ]);
     if ((enviadosHoje || 0) + (seguimentosHoje || 0) >= tetoHoje) { r.teto_do_dia = tetoHoje; continue; }
 
@@ -242,7 +248,7 @@ Deno.serve(async (req) => {
           `Parei a prospecção até amanhã: ${falhasHoje} envios falharam hoje. O último erro foi: ${(e as Error).message.slice(0, 160)}. Confira se o número ainda está conectado no Vyzon.`);
       }
     }
-    const pausaMin = chipAquecendo(inst.chip_desde, agora) ? 5 + Math.random() * 5 : 2 + Math.random() * 3;
+    const pausaMin = chipAquecendo(rampa, agora) ? 5 + Math.random() * 5 : 2 + Math.random() * 3;
     await admin.from("prospecting_instances").update({
       next_send_at: new Date(agora.getTime() + pausaMin * 60000).toISOString(),
     }).eq("id", inst.id);
