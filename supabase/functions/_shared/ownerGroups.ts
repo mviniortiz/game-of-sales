@@ -45,10 +45,12 @@ export async function commandFromNotice(
 }
 
 /** ✅ na mensagem do dono (ou no aviso que ele aprovou) no lugar de uma confirmação em texto. */
-export async function reactOk(instanceName: string, key: { remoteJid: string; id: string }): Promise<void> {
+export async function reactOk(
+  instanceName: string, key: { remoteJid: string; id: string; fromMe?: boolean; participant?: string },
+): Promise<void> {
   await evolutionRequest(`/message/sendReaction/${instanceName}`, {
     method: "POST",
-    body: JSON.stringify({ reaction: "✅", key: { remoteJid: key.remoteJid, id: key.id, fromMe: true } }),
+    body: JSON.stringify({ reaction: "✅", key: { fromMe: true, ...key } }),
   }, 15000);
 }
 

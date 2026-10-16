@@ -1115,22 +1115,25 @@ serve(async (req) => {
     // neles. Ele decide reagindo 👍/👎 no aviso, respondendo o aviso citado ou
     // digitando o código; sucesso vira ✅ (no aviso, quando foi reação). O resto,
     // inclusive os avisos que o Vyzon manda e que chegam como fromMe, não vira registro.
+    // Quando o número conectado é o da prospecção e o dono fica no pessoal, os dois
+    // estão no grupo e a decisão dele chega sem fromMe; por isso vale de quem vier.
     const topico = gruposDono.get(remoteJid);
     if (topico) {
-      if (fromMe && (await claimOwnerMessage(admin, instanceName, externalId))) {
+      if (await claimOwnerMessage(admin, instanceName, externalId)) {
         try {
           const reacao = msg.message?.reactionMessage;
           const citado = msg.contextInfo?.stanzaId || msg.message?.extendedTextMessage?.contextInfo?.stanzaId;
           const texto = parseTextFromMessage(msg) || "";
           let comando: string | null = texto;
-          let marcar = externalId;
+          let marcar: { remoteJid: string; id: string; fromMe: boolean; participant?: string } =
+            { remoteJid, id: externalId, fromMe, participant: msg.key.participant };
           if (reacao?.key?.id) {
             comando = await commandFromNotice(admin, userId, reacao.key.id, { reacao: reacao.text || "" });
-            marcar = reacao.key.id;
+            marcar = { remoteJid, id: reacao.key.id, fromMe: true };
           } else if (citado) {
             comando = (await commandFromNotice(admin, userId, citado, { texto })) || texto;
           }
-          const confirmar = () => reactOk(instanceName, { remoteJid, id: marcar });
+          const confirmar = () => reactOk(instanceName, marcar);
           if (comando && topico === "prospeccao") {
             await handleProspectCommand(admin, { userId, instanceName, ownerNumber: remoteJid, text: comando, confirmar });
           } else if (comando && topico === "leads") {
