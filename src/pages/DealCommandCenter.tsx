@@ -17,11 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EvaStudioRules } from "@/components/eva/EvaStudioRules";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
     Dialog,
     DialogContent,
@@ -37,20 +33,15 @@ import {
     Mail,
     Trophy,
     XCircle,
-    Shield,
-    ShieldAlert,
-    ShieldOff,
     Lightbulb,
     ArrowUp,
     Paperclip,
     FileText,
     CheckCircle2,
-    Zap,
+    Check,
+    CircleDashed,
     Clock,
     Calendar,
-    DollarSign,
-    Target,
-    TrendingUp,
     PhoneCall,
     StickyNote,
     Rocket,
@@ -61,9 +52,6 @@ import {
     Loader2,
     Plus,
     Lock,
-    User,
-    Building2,
-    Tag as TagIcon,
     Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -97,26 +85,28 @@ import type { Tag } from "@/types/tags";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { DealDetailSkeleton } from "@/components/ui/skeletons";
 import { DecisionMapCard, getDecisionMap } from "@/components/deals/DecisionMapCard";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { EvaBot } from "@/components/eva/EvaBot";
 import { formatPhone } from "@/lib/formatPhone";
 
 // â"€â"€â"€ Constants â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 
-const EVENT_ICONS: Record<string, { icon: typeof StickyNote; color: string; bg: string; title: string }> = {
-    note:           { icon: StickyNote,    color: "text-[#7C3AED]", bg: "bg-[#7C3AED]/10", title: "Nota adicionada" },
-    call:           { icon: PhoneCall,     color: "text-[#10B981]", bg: "bg-[#10B981]/10", title: "Ligação realizada" },
-    message:        { icon: MessageSquare, color: "text-[#10B981]", bg: "bg-[#10B981]/10", title: "Mensagem no WhatsApp" },
-    stage_change:   { icon: Rocket,        color: "text-[#1556C0]", bg: "bg-[#1556C0]/10", title: "Mudança de etapa" },
-    email:          { icon: Mail,          color: "text-[#1556C0]", bg: "bg-[#1556C0]/10", title: "E-mail enviado" },
-    task_completed: { icon: CheckCircle2,  color: "text-[#10B981]", bg: "bg-[#10B981]/10", title: "Ação concluída" },
+// Ícone numa cor só: o tipo já está no título, cor por tipo virava confete.
+const EVENT_ICONS: Record<string, { icon: typeof StickyNote; title: string }> = {
+    note:           { icon: StickyNote,    title: "Nota adicionada" },
+    call:           { icon: PhoneCall,     title: "Ligação realizada" },
+    message:        { icon: MessageSquare, title: "Mensagem no WhatsApp" },
+    stage_change:   { icon: Rocket,        title: "Mudança de etapa" },
+    email:          { icon: Mail,          title: "E-mail enviado" },
+    task_completed: { icon: CheckCircle2,  title: "Ação concluída" },
 };
+
+// Superfícies da tela: a mesma paleta quente do Inbox (--ibx-*).
+const CARD = "bg-[var(--ibx-card)] rounded-[14px] border border-[var(--ibx-line)] shadow-[0_1px_2px_rgba(28,25,23,0.04),0_10px_28px_-18px_rgba(28,25,23,0.18)]";
+const CARD_TITLE = "text-[13px] font-semibold text-[var(--vyz-text-primary)]";
+const EYEBROW = "text-[11px] font-medium text-[var(--vyz-text-muted)]";
+const QUICK = "flex flex-col items-center justify-center gap-1 h-[58px] rounded-xl border border-[var(--ibx-line)] bg-[var(--ibx-card)] text-[11.5px] font-medium text-[var(--vyz-text-strong)] [&>svg]:text-[var(--vyz-text-primary)] hover:bg-[var(--ibx-paper)] hover:border-[var(--ibx-line-strong)] transition-[background-color,border-color,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]";
+const PRESS = "transition-[opacity,background-color,border-color,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2";
 
 // Deriva o tipo de uma nota (deal_notes é só texto) pelo conteúdo, pra a
 // timeline ganhar ícones/cores por tipo como no design.
@@ -131,12 +121,27 @@ const inferNoteType = (content: string): string => {
 
 // â"€â"€â"€ Helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
-// Dias desde a última mensagem da conversa; sem conversa, desde a última edição do card.
-const getHealthStatus = (days: number, fromConversation: boolean) => {
-    const quiet = fromConversation ? `${days}d sem conversa` : `${days}d sem movimento no card`;
-    if (days > 7) return { icon: ShieldOff, color: "text-rose-600", bg: "bg-rose-500/10", border: "border-rose-500/20", hex: "#F43F5E", label: "Crítico", subtitle: quiet };
-    if (days > 3) return { icon: ShieldAlert, color: "text-amber-700", bg: "bg-amber-500/10", border: "border-amber-500/20", hex: "#F59E0B", label: "Atenção", subtitle: quiet };
-    return { icon: Shield, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", hex: "#10B981", label: "Saudável", subtitle: "Engajamento ativo" };
+// Quem falou por último e há quanto tempo. É o que diz se o card anda: um
+// selo "Saudável" contado só em dias chamava de saudável cliente esperando resposta.
+type ConvStatus = { text: string; tone: "wait" | "quiet" | "idle" };
+const conversationStatus = (
+    conv: { last_message_at?: string | null; last_inbound_at?: string | null; last_outbound_at?: string | null } | null | undefined,
+    updatedAt: string | null | undefined,
+): ConvStatus => {
+    if (!conv?.last_message_at) {
+        return { text: `Sem conversa ligada a este card. Atualizado ${safeFormatDistance(updatedAt)}.`, tone: "idle" };
+    }
+    const quando = safeFormatDistance(conv.last_message_at);
+    const doCliente = (conv.last_inbound_at ?? "") > (conv.last_outbound_at ?? "");
+    if (doCliente) return { text: `O cliente falou por último ${quando}. A vez de responder é sua.`, tone: "wait" };
+    const dias = Math.floor((Date.now() - new Date(conv.last_message_at).getTime()) / 86_400_000);
+    return { text: `Você falou por último ${quando}. Esperando o cliente.`, tone: dias >= 2 ? "quiet" : "idle" };
+};
+
+const STATUS_DOT: Record<ConvStatus["tone"], string> = {
+    wait: "bg-[var(--vyz-accent)]",
+    quiet: "bg-[var(--vyz-warning)]",
+    idle: "bg-[var(--ibx-line-strong)]",
 };
 
 // O orçamento aberto deste card no placar: valor, situação e o que a EVA já
@@ -153,54 +158,25 @@ const QuoteCard = ({ q }: { q: QuoteItem }) => {
     const tom = QUOTE_TOM[q.state] ?? QUOTE_TOM.talking!;
     const eva = evaLine(q);
     return (
-        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-            <div className="flex items-center justify-between gap-2 mb-3">
-                <div className="flex items-center gap-2">
-                    <FileTextIcon className="h-4 w-4 text-slate-400" />
-                    <p className="text-[13px] font-semibold text-[#0B1220]">Orçamento</p>
-                </div>
-                <span className="text-[11px] text-slate-500">enviado {safeFormatDate(q.sent_at, "dd MMM")}{q.detected_by === "pdf" ? " · PDF" : ""}</span>
+        <section className={`${CARD} p-4`} aria-label="Orçamento">
+            <div className="flex items-center justify-between gap-2">
+                <p className={EYEBROW}>Orçamento</p>
+                <span className="text-[11px] text-[var(--vyz-text-muted)]">enviado {safeFormatDate(q.sent_at, "dd MMM")}{q.detected_by === "pdf" ? " · PDF" : ""}</span>
             </div>
-            <p className="text-[24px] font-semibold tabular-nums leading-none tracking-[-0.02em] text-[#0B1220]">
-                {q.amount ? brlQuote(q.amount) : <span className="text-[15px] font-medium text-slate-400">Valor não lido no arquivo</span>}
+            <p className="mt-1.5 text-[26px] font-semibold tabular-nums leading-none tracking-[-0.025em] text-[var(--vyz-text-primary)]">
+                {q.amount ? brlQuote(q.amount) : <span className="text-[15px] font-medium text-[var(--vyz-text-muted)]">Valor não lido no arquivo</span>}
             </p>
-            <div className="mt-3 flex items-start gap-2 rounded-xl border px-3 py-2.5" style={{ background: tom.bg, borderColor: tom.border }}>
+            <div className="mt-3 flex items-start gap-2 rounded-[10px] border px-3 py-2.5" style={{ background: tom.bg, borderColor: tom.border }}>
                 <span className="mt-[5px] h-2 w-2 shrink-0 rounded-full" style={{ background: tom.dot }} aria-hidden />
                 <p className="text-[13px] font-medium leading-snug" style={{ color: tom.text }}>{stateLine(q)}</p>
             </div>
             {eva && (
-                <p className="mt-2.5 flex items-center gap-2 text-[12.5px] text-slate-600">
+                <p className="mt-2.5 flex items-center gap-2 text-[12.5px] text-[var(--vyz-text-muted)]">
                     <EvaBot size={18} still />
                     {eva}
                 </p>
             )}
-        </div>
-    );
-};
-
-// DEAL.UI.1 — gauge tipo velocímetro (arco semicircular 180°). SVG inline.
-const ProbabilityGauge = ({ value, hex }: { value: number; hex: string }) => {
-    const v = Math.max(0, Math.min(100, Math.round(value)));
-    const r = 30;
-    const cx = 40;
-    const cy = 38;
-    const arcLen = Math.PI * r; // semicírculo
-    const offset = arcLen * (1 - v / 100);
-    const d = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
-    return (
-        <div className="relative w-[80px] h-[46px] flex items-end justify-center shrink-0">
-            <svg viewBox="0 0 80 44" className="w-[80px] h-[44px] absolute top-0 left-0">
-                <path d={d} fill="none" stroke="#E5E7EB" strokeWidth="6" strokeLinecap="round" />
-                <motion.path
-                    d={d} fill="none" stroke={hex} strokeWidth="6" strokeLinecap="round"
-                    strokeDasharray={arcLen}
-                    initial={{ strokeDashoffset: arcLen }}
-                    animate={{ strokeDashoffset: offset }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                />
-            </svg>
-            <span className="relative z-10 text-[13px] font-bold text-[#0B1220] tabular-nums leading-none">{v}%</span>
-        </div>
+        </section>
     );
 };
 
@@ -209,9 +185,15 @@ const ProbabilityGauge = ({ value, hex }: { value: number; hex: string }) => {
 const formatBRL = (value: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(value);
 
+const iniciais = (nome: string) => {
+    const partes = nome.replace(/[^\p{L}\p{N} ]/gu, " ").trim().split(/\s+/).filter(Boolean);
+    if (partes.length === 0) return "?";
+    return (partes[0][0] + (partes[1]?.[0] ?? "")).toUpperCase();
+};
+
 const ORIGEM_LABEL: Record<string, string> = {
     whatsapp: "WhatsApp", manual: "Cadastro manual", webhook: "Integração",
-    instagram: "Instagram", site: "Site", indicacao: "Indicação", raio_x: "Raio-X",
+    instagram: "Instagram", site: "Site", indicacao: "Indicação", raio_x: "Raio-X", prospeccao: "Prospecção",
 };
 const origemLabel = (v?: string | null) =>
     !v ? "—" : ORIGEM_LABEL[v.toLowerCase()] ?? v.charAt(0).toUpperCase() + v.slice(1).replace(/_/g, " ");
@@ -250,12 +232,13 @@ const getCallStatusBadge = (status?: string) => {
 
 // â"€â"€â"€ Sub-components â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
-/** Etapas do funil do próprio card (pipeline_stages). Perdido fica de fora:
- *  tem botão próprio, que pede o motivo. */
+/** Etapas do funil do próprio card (pipeline_stages), como uma trilha: o que já
+ *  passou fica escuro, a etapa atual em azul. Perdido fica de fora: tem botão
+ *  próprio, que pede o motivo. */
 const StageChips = ({ stages, currentId, onStageChange, disabled }: { stages: StageConfig[]; currentId: string | null; onStageChange: (stage: StageConfig) => void; disabled?: boolean }) => {
     const visible = stages.filter((st) => st.kind !== "lost");
     const idx = visible.findIndex((st) => st.id === currentId);
-    // No celular a barra rola: a etapa atual fica à vista, não cortada na borda.
+    // No celular a trilha rola: a etapa atual fica à vista, não cortada na borda.
     const barRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         const bar = barRef.current;
@@ -263,7 +246,7 @@ const StageChips = ({ stages, currentId, onStageChange, disabled }: { stages: St
         if (bar && el) bar.scrollLeft += el.getBoundingClientRect().left - bar.getBoundingClientRect().left - (bar.clientWidth - el.offsetWidth) / 2;
     }, [currentId]);
     return (
-        <div ref={barRef} className="flex items-center gap-1 overflow-x-auto no-scrollbar" role="group" aria-label="Etapa da oportunidade">
+        <div ref={barRef} className="flex gap-1.5 overflow-x-auto no-scrollbar" role="group" aria-label="Etapa da oportunidade">
             {visible.map((stage, i) => {
                 const done = idx >= 0 && i < idx;
                 const active = i === idx;
@@ -274,20 +257,25 @@ const StageChips = ({ stages, currentId, onStageChange, disabled }: { stages: St
                         disabled={disabled || active}
                         aria-current={active ? "step" : undefined}
                         onClick={() => onStageChange(stage)}
-                        className={`
-                            flex items-center gap-1.5 px-3 py-2.5 sm:px-2.5 sm:py-1 rounded-full text-[12px] sm:text-[11px] font-medium
-                            transition-colors duration-150 whitespace-nowrap disabled:cursor-default
-                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]
-                            ${active ? "bg-[var(--vyz-surface-2)] text-[var(--vyz-text-primary)] ring-1 ring-[var(--vyz-border-strong)]" : ""}
-                            ${done ? "text-[var(--vyz-success)] hover:bg-[var(--vyz-surface-2)]" : ""}
-                            ${!done && !active ? "text-[var(--vyz-text-muted)] hover:text-[var(--vyz-text-primary)] hover:bg-[var(--vyz-surface-2)]" : ""}
-                        `}
+                        title={active ? undefined : `Mover para ${stage.title}`}
+                        className="group flex-1 min-w-[92px] pt-1 pb-2 text-left rounded-md disabled:cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ibx-paper)]"
                     >
-                        {done
-                            ? <CheckCircle2 className="h-3 w-3" aria-hidden />
-                            : <span className={`w-1.5 h-1.5 rounded-full ${active ? "bg-[var(--vyz-accent)]" : "bg-[var(--vyz-border-strong)]"}`} aria-hidden />
-                        }
-                        <span>{stage.title}</span>
+                        <span
+                            aria-hidden
+                            className={`block h-[3px] rounded-full transition-colors duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                                active ? "bg-[var(--vyz-accent)]"
+                                : done ? "bg-[var(--vyz-text-primary)]/75"
+                                : "bg-[var(--ibx-line)] group-hover:bg-[var(--ibx-line-strong)]"
+                            }`}
+                        />
+                        <span className={`mt-2 flex items-center gap-1 text-[12px] whitespace-nowrap transition-colors duration-150 ${
+                            active ? "font-semibold text-[var(--vyz-text-primary)]"
+                            : done ? "font-medium text-[var(--vyz-text-strong)]"
+                            : "font-medium text-[var(--vyz-text-muted)] group-hover:text-[var(--vyz-text-primary)]"
+                        }`}>
+                            {done && <Check className="h-3 w-3" strokeWidth={2.5} aria-hidden />}
+                            {stage.title}
+                        </span>
                     </button>
                 );
             })}
@@ -295,38 +283,92 @@ const StageChips = ({ stages, currentId, onStageChange, disabled }: { stages: St
     );
 };
 
-/** Clean timeline entry — vertical rail with small dot, no card wrapper */
-const TimelineEntry = ({ event, isLast }: { event: any; isLast: boolean }) => {
+type TimelineEvent = { id: string; type: string; title?: string; content?: string; created_at: string; direction?: string; user_name?: string };
+
+const Rail = ({ isLast, children }: { isLast: boolean; children: React.ReactNode }) => (
+    <div className="flex flex-col items-center pt-0.5">
+        <div className="w-7 h-7 rounded-full bg-[var(--ibx-sunken)] flex items-center justify-center flex-shrink-0 text-[var(--vyz-text-muted)]">
+            {children}
+        </div>
+        {!isLast && <div className="w-px flex-1 bg-[var(--ibx-line)] mt-1.5 min-h-[20px]" />}
+    </div>
+);
+
+/** Nota ou evento do card: trilho vertical com o ícone do tipo, sem caixa. */
+const TimelineEntry = ({ event, isLast }: { event: TimelineEvent; isLast: boolean }) => {
     const cfg = EVENT_ICONS[event.type] || EVENT_ICONS.note;
     const Icon = cfg.icon;
-    const isMessage = event.type === "message";
-    const title = event.title || cfg.title;
     return (
-        <div className="flex gap-3 group">
-            <div className="flex flex-col items-center pt-0.5">
-                <div className={`w-7 h-7 rounded-full ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
-                    {isMessage
-                        ? <WhatsAppIcon className={`h-3.5 w-3.5 ${cfg.color}`} />
-                        : <Icon className={`h-3.5 w-3.5 ${cfg.color}`} />}
-                </div>
-                {!isLast && <div className="w-px flex-1 bg-[#E5E7EB] mt-1.5 min-h-[20px]" />}
-            </div>
+        <div className="flex gap-3">
+            <Rail isLast={isLast}><Icon className="h-3.5 w-3.5" aria-hidden /></Rail>
             <div className={`flex-1 min-w-0 ${isLast ? "pb-0" : "pb-5"}`}>
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                        <p className="text-[13px] font-semibold text-[#0B1220] leading-tight">{title}</p>
+                        <p className="text-[13px] font-semibold text-[var(--vyz-text-primary)] leading-tight">{event.title || cfg.title}</p>
                         {event.content && (
-                            <p className="text-[12.5px] text-slate-500 leading-relaxed break-words mt-0.5">{event.content}</p>
+                            <p className="text-[12.5px] text-[var(--vyz-text-muted)] leading-relaxed break-words whitespace-pre-line mt-0.5">{event.content}</p>
                         )}
                     </div>
                     <div className="text-right shrink-0">
-                        <p className="text-[11px] text-slate-500 tabular-nums whitespace-nowrap">{safeFormatDate(event.created_at, "dd MMM, HH:mm")}</p>
-                        {event.user_name && <p className="text-[11px] text-slate-400 whitespace-nowrap">{event.user_name}</p>}
+                        <p className="text-[11px] text-[var(--vyz-text-muted)] tabular-nums whitespace-nowrap">{safeFormatDate(event.created_at, "dd MMM, HH:mm")}</p>
+                        {event.user_name && <p className="text-[11px] text-[var(--vyz-text-muted)]/80 whitespace-nowrap">{event.user_name}</p>}
                     </div>
                 </div>
             </div>
         </div>
     );
+};
+
+/** Mensagens seguidas do WhatsApp viram uma linha só. O texto delas fica no
+ *  Inbox (conversa crua não aparece fora dele), então aqui vai a contagem. */
+const MessageRunEntry = ({ items, isLast, href, onOpen }: { items: TimelineEvent[]; isLast: boolean; href: string | null; onOpen: (href: string) => void }) => {
+    const deles = items.filter((m) => m.direction !== "outbound").length;
+    const suas = items.length - deles;
+    const fim = items[0]?.created_at;
+    const inicio = items[items.length - 1]?.created_at;
+    const mesmoDia = safeFormatDate(inicio, "dd MMM") === safeFormatDate(fim, "dd MMM");
+    const quando = items.length === 1
+        ? safeFormatDate(fim, "dd MMM, HH:mm")
+        : mesmoDia
+        ? `${safeFormatDate(inicio, "dd MMM, HH:mm")} a ${safeFormatDate(fim, "HH:mm")}`
+        : `${safeFormatDate(inicio, "dd MMM")} a ${safeFormatDate(fim, "dd MMM")}`;
+    const partes = [deles && `${deles} do cliente`, suas && `${suas} ${suas === 1 ? "sua" : "suas"}`].filter(Boolean).join(", ");
+    return (
+        <div className="flex gap-3">
+            <Rail isLast={isLast}><WhatsAppIcon className="h-3.5 w-3.5" /></Rail>
+            <div className={`flex-1 min-w-0 ${isLast ? "pb-0" : "pb-5"}`}>
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <p className="text-[13px] font-semibold text-[var(--vyz-text-primary)] leading-tight">
+                            {items.length === 1 ? (deles ? "Mensagem do cliente no WhatsApp" : "Sua mensagem no WhatsApp") : `${items.length} mensagens no WhatsApp`}
+                        </p>
+                        <p className="text-[12.5px] text-[var(--vyz-text-muted)] leading-relaxed mt-0.5">
+                            {items.length > 1 && <>{partes}. </>}
+                            {href && (
+                                <button type="button" onClick={() => onOpen(href)} className="font-medium text-[var(--vyz-accent)] hover:underline focus-visible:outline-none focus-visible:underline">
+                                    Ler no Inbox
+                                </button>
+                            )}
+                        </p>
+                    </div>
+                    <p className="text-[11px] text-[var(--vyz-text-muted)] tabular-nums whitespace-nowrap shrink-0">{quando}</p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+/** Junta as mensagens seguidas (a lista vem da mais nova para a mais velha). */
+type TimelineLine = { kind: "event"; ev: TimelineEvent } | { kind: "msgs"; items: TimelineEvent[] };
+const groupTimeline = (events: TimelineEvent[]): TimelineLine[] => {
+    const out: TimelineLine[] = [];
+    for (const ev of events) {
+        const last = out[out.length - 1];
+        if (ev.type === "message" && last?.kind === "msgs") last.items.push(ev);
+        else if (ev.type === "message") out.push({ kind: "msgs", items: [ev] });
+        else out.push({ kind: "event", ev });
+    }
+    return out;
 };
 
 // Ações recomendadas: a EVA sugere (proxima_acao da análise); o time executa,
@@ -351,10 +393,14 @@ const ACTION_RESULTS: ReadonlyArray<{ key: string; label: string; next: string }
     { key: "sem_fit",        label: "Sem fit agora",              next: "Nutrir ou arquivar o lead" },
 ];
 
-/** Focus card — próxima ação recomendada pela EVA; o time executa e, ao
-    concluir, registra o RESULTADO, que define o próximo passo sugerido. */
-const FocusCard = ({ action, onComplete, onExecute }: {
+/** Focus card: a próxima ação (da EVA, do cadastro ou do time) e, embaixo, quem
+ *  falou por último. Ao concluir, o time registra o RESULTADO, que define o
+ *  próximo passo sugerido. */
+const FocusCard = ({ action, status, conversationHref, onOpenConversation, onComplete, onExecute }: {
     action: NextAction;
+    status: ConvStatus;
+    conversationHref: string | null;
+    onOpenConversation: (href: string) => void;
     onComplete: (resultKey: string) => void;
     onExecute?: () => void;
 }) => {
@@ -372,33 +418,34 @@ const FocusCard = ({ action, onComplete, onExecute }: {
         const today = new Date(); today.setHours(0, 0, 0, 0);
         const dd = new Date(due); dd.setHours(0, 0, 0, 0);
         const diff = Math.round((dd.getTime() - today.getTime()) / 86400000);
-        if (diff < 0) return { label: "Atrasado", cls: "bg-rose-50 text-rose-600 border-rose-200" };
-        if (diff === 0) return { label: "Hoje", cls: "bg-[#1556C0]/10 text-[#1556C0] border-[#1556C0]/20" };
-        if (diff === 1) return { label: "Amanhã", cls: "bg-amber-50 text-amber-700 border-amber-200" };
-        return { label: safeFormatDate(action.dueDate, "dd MMM"), cls: "bg-slate-100 text-slate-600 border-slate-200" };
+        if (diff < 0) return { label: "Atrasado", cls: "bg-[var(--vyz-danger-bg)] text-[var(--vyz-danger)]" };
+        if (diff === 0) return { label: "Hoje", cls: "bg-[var(--ibx-sel)] text-[var(--vyz-accent)]" };
+        if (diff === 1) return { label: "Amanhã", cls: "bg-[var(--vyz-warning-bg)] text-[var(--vyz-warning)]" };
+        return { label: safeFormatDate(action.dueDate, "dd MMM"), cls: "bg-[var(--ibx-sunken)] text-[var(--vyz-text-muted)]" };
     })();
 
     return (
-        <div className={`rounded-2xl border shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors ${done ? "bg-[#10B981]/5 border-[#10B981]/30" : "bg-white border-[#E5E7EB]"}`}>
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 px-4 py-3.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 bg-[var(--vyz-surface-2)]">
+        <section className={`${CARD} overflow-hidden`} aria-label="Próxima ação">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3.5 px-4 sm:px-5 py-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl flex-shrink-0 bg-[var(--ibx-sunken)]">
                     {isEva
-                        ? <EvaBot size={25} />
+                        ? <EvaBot size={27} />
                         : <Calendar className="h-5 w-5 text-[var(--vyz-text-muted)]" aria-hidden />}
                 </div>
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                        <p className="text-[11px] font-semibold text-slate-500">Próxima ação</p>
-                        <span className={`inline-flex items-center px-1.5 py-px rounded text-[10px] font-semibold bg-[var(--vyz-surface-2)] ${isEva ? "text-[var(--vyz-eva)]" : "text-[var(--vyz-text-muted)]"}`}>
-                            {isEva ? "Sugerida pela EVA" : action.source === "deal" ? "Do cadastro" : "Passo do time"}
+                    <p className={EYEBROW}>
+                        Próxima ação
+                        <span className="mx-1.5 text-[var(--ibx-line-strong)]" aria-hidden>·</span>
+                        <span className={isEva ? "text-[var(--vyz-eva)]" : undefined}>
+                            {isEva ? "sugerida pela EVA" : action.source === "deal" ? "do cadastro" : "passo do time"}
                         </span>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <p className={`text-[14px] font-semibold leading-snug sm:truncate ${done ? "line-through text-slate-400" : "text-[#0B1220]"}`}>
+                    </p>
+                    <div className="mt-0.5 flex items-center gap-2 flex-wrap">
+                        <p className={`text-[16px] font-semibold leading-snug tracking-[-0.01em] sm:truncate ${done ? "line-through text-[var(--vyz-text-muted)]" : "text-[var(--vyz-text-primary)]"}`}>
                             {action.title}
                         </p>
                         {dueChip && !done && (
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border ${dueChip.cls}`}>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${dueChip.cls}`}>
                                 {dueChip.label}
                             </span>
                         )}
@@ -409,8 +456,8 @@ const FocusCard = ({ action, onComplete, onExecute }: {
                         {onExecute && action.canWhatsApp && !picking && (
                             <button
                                 onClick={onExecute}
-                                className="inline-flex items-center gap-1.5 h-10 sm:h-8 px-3.5 rounded-full text-[13px] sm:text-[12px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
-                                title={action.suggestedReply ? "Abre o WhatsApp com a resposta sugerida pela EVA" : "Abrir conversa no WhatsApp"}
+                                className={`inline-flex items-center gap-1.5 h-10 sm:h-9 px-4 rounded-full text-[13px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 ${PRESS}`}
+                                title={action.suggestedReply ? "Abre a conversa com a resposta sugerida pela EVA" : "Abrir a conversa"}
                             >
                                 <WhatsAppIcon className="h-3.5 w-3.5" />
                                 Responder
@@ -418,29 +465,30 @@ const FocusCard = ({ action, onComplete, onExecute }: {
                         )}
                         <button
                             onClick={() => setPicking((v) => !v)}
-                            className={`inline-flex items-center gap-1.5 h-10 sm:h-8 px-3.5 rounded-full text-[13px] sm:text-[12px] font-semibold border transition-colors ${picking ? "bg-slate-100 border-[#E5E7EB] text-slate-600" : "bg-white border-[#E5E7EB] text-[#0B1220] hover:bg-slate-50"}`}
+                            aria-expanded={picking}
+                            className={`inline-flex items-center gap-1.5 h-10 sm:h-9 px-4 rounded-full text-[13px] font-semibold border border-[var(--ibx-line)] ${picking ? "bg-[var(--ibx-sunken)] text-[var(--vyz-text-muted)]" : "bg-[var(--ibx-card)] text-[var(--vyz-text-primary)] hover:bg-[var(--ibx-paper)]"} ${PRESS}`}
                         >
-                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
                             {picking ? "Cancelar" : "Concluir"}
                         </button>
                     </div>
                 ) : (
-                    <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-semibold bg-[#10B981] text-white flex-shrink-0">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Concluída
+                    <span className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[12px] font-semibold bg-[var(--vyz-success-bg)] text-[var(--vyz-success)] flex-shrink-0">
+                        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> Concluída
                     </span>
                 )}
             </div>
 
             {/* Seletor de resultado: define o próximo passo sugerido */}
             {picking && !done && (
-                <div className="px-4 pb-3.5 border-t border-[#F1F5F9]">
-                    <p className="text-[11px] font-semibold text-slate-500 mb-2 mt-2.5">O que rolou? Isso define o próximo passo.</p>
+                <div className="px-4 sm:px-5 pb-4">
+                    <p className="text-[12px] font-medium text-[var(--vyz-text-muted)] mb-2">O que rolou? Isso define o próximo passo.</p>
                     <div className="flex flex-wrap gap-1.5">
                         {ACTION_RESULTS.map((r) => (
                             <button
                                 key={r.key}
                                 onClick={() => pick(r.key)}
-                                className="inline-flex items-center px-2.5 py-1 rounded-lg text-[12px] font-medium border border-[#E5E7EB] bg-white text-[#0B1220] hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                                className={`inline-flex items-center h-8 px-3 rounded-full text-[12px] font-medium border border-[var(--ibx-line)] bg-[var(--ibx-card)] text-[var(--vyz-text-primary)] hover:border-[var(--ibx-line-strong)] hover:bg-[var(--ibx-paper)] ${PRESS}`}
                             >
                                 {r.label}
                             </button>
@@ -448,7 +496,21 @@ const FocusCard = ({ action, onComplete, onExecute }: {
                     </div>
                 </div>
             )}
-        </div>
+
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-[var(--ibx-line-soft)] bg-[var(--ibx-paper)]/60 px-4 sm:px-5 py-2.5">
+                <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_DOT[status.tone]}`} aria-hidden />
+                <p className="flex-1 min-w-0 text-[12.5px] text-[var(--vyz-text-strong)]">{status.text}</p>
+                {conversationHref && (
+                    <button
+                        type="button"
+                        onClick={() => onOpenConversation(conversationHref)}
+                        className="inline-flex items-center gap-0.5 text-[12.5px] font-medium text-[var(--vyz-accent)] hover:underline focus-visible:outline-none focus-visible:underline"
+                    >
+                        Abrir conversa <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+                    </button>
+                )}
+            </div>
+        </section>
     );
 };
 
@@ -456,37 +518,27 @@ const FocusCard = ({ action, onComplete, onExecute }: {
 const PropertiesSection = ({ title, defaultOpen = true, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) => {
     const [open, setOpen] = useState(defaultOpen);
     return (
-        <div className="border-b border-border last:border-0">
+        <div>
             <button
                 onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between py-3 text-left group"
+                aria-expanded={open}
+                className="w-full flex items-center justify-between pt-3.5 pb-0.5 text-left group focus-visible:outline-none focus-visible:underline"
             >
-                <span className="text-[13px] font-semibold text-[#0B1220] group-hover:text-foreground transition-colors">
+                <span className="text-[12.5px] font-medium text-[var(--vyz-text-strong)] group-hover:text-[var(--vyz-text-primary)] transition-colors">
                     {title}
                 </span>
-                <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${open ? "" : "-rotate-90"}`} />
+                <ChevronDown className={`h-3.5 w-3.5 text-[var(--vyz-text-muted)] transition-transform duration-200 ${open ? "" : "-rotate-90"}`} aria-hidden />
             </button>
             {open && <div className="pb-4 space-y-2.5">{children}</div>}
         </div>
     );
 };
 
-/** Property row: label on left, value on right */
-const PropertyRow = ({ label, icon: Icon, children }: { label: string; icon?: typeof Phone; children: React.ReactNode }) => (
-    <div className="flex items-center justify-between gap-3 text-sm min-h-[24px]">
-        <span className="text-muted-foreground flex items-center gap-1.5 flex-shrink-0">
-            {Icon && <Icon className="h-3.5 w-3.5" />}
-            <span className="text-xs">{label}</span>
-        </span>
-        <div className="text-foreground text-right min-w-0 truncate text-[13px]">{children}</div>
-    </div>
-);
-
-// DEAL.UI.1 — linha label/valor premium light para os cards da sidebar.
+/** Linha rótulo/valor do card de detalhes. */
 const SidebarRow = ({ label, value, strong = false }: { label: string; value: React.ReactNode; strong?: boolean }) => (
-    <div className="flex items-start justify-between gap-3">
-        <span className="text-[12px] text-slate-500 shrink-0">{label}</span>
-        <span className={`text-[12.5px] text-right min-w-0 truncate ${strong ? "font-semibold text-[#0B1220]" : "font-medium text-[#0B1220]"}`}>{value}</span>
+    <div className="flex items-start justify-between gap-3 py-[3px]">
+        <span className="text-[12.5px] text-[var(--vyz-text-muted)] shrink-0">{label}</span>
+        <span className={`text-[12.5px] text-right min-w-0 truncate text-[var(--vyz-text-primary)] ${strong ? "font-semibold" : "font-medium"}`}>{value}</span>
     </div>
 );
 
@@ -701,11 +753,11 @@ export default function DealCommandCenter() {
                 if (conv?.id) {
                     const { data: msgs } = await supabase
                         .from("channel_messages").select("id, direction, body, media_ref, message_timestamp")
-                        .eq("conversation_id", conv.id).order("message_timestamp", { ascending: false }).limit(6);
+                        .eq("conversation_id", conv.id).order("message_timestamp", { ascending: false }).limit(40);
                     msgEvents = (msgs || []).map((m: any) => ({
                         id: "msg-" + m.id,
                         type: "message",
-                        title: m.direction === "outbound" ? "Resposta enviada no WhatsApp" : "Mensagem recebida no WhatsApp",
+                        direction: m.direction,
                         content: "",
                         created_at: m.message_timestamp,
                     }));
@@ -955,10 +1007,16 @@ export default function DealCommandCenter() {
     // Fallback: ação registrada no deal (imobiliário) e depois genérica.
     // useDealContextData compartilha cache com o bloco de contexto (sem fetch duplo).
     const dealCtx = useDealContextData(id, (deal as any)?.company_id);
-    const lastTouchAt = dealCtx.conversation?.last_message_at ?? deal?.updated_at ?? null;
-    const daysSince = lastTouchAt ? Math.floor((Date.now() - new Date(lastTouchAt).getTime()) / 86_400_000) : 0;
-    const health = getHealthStatus(daysSince, !!dealCtx.conversation?.last_message_at);
-    const HealthIcon = health.icon;
+    const convStatus = conversationStatus(dealCtx.conversation, deal?.updated_at);
+    // Linha embaixo do título: o que o título ainda não diz. O valor só entra no
+    // celular, onde o bloco Valor do topo não cabe; a origem sai dele (está nos detalhes).
+    const origemCard = origemLabel((deal as any)?.lead_source || (deal as any)?.source);
+    const subtitulo: Array<{ texto: string; soCelular?: boolean; soComputador?: boolean }> = [
+        ...(deal?.customer_name && !(deal.title || "").startsWith(deal.customer_name) ? [{ texto: deal.customer_name }] : []),
+        ...(deal?.customer_phone ? [{ texto: formatPhone(deal.customer_phone) }] : []),
+        ...(origemCard !== "—" ? [{ texto: origemCard, soComputador: true }] : []),
+        ...(deal?.value ? [{ texto: formatBRL(deal.value), soCelular: true }] : []),
+    ];
     const evaProxAcao = dealCtx.qualification?.proxima_acao;
     const evaSuggestedReply = dealCtx.qualification?.resposta_sugerida ?? null;
     const realEstateNextAction = getRealEstateInterest((deal as any)?.source_data)?.proxima_acao;
@@ -1051,71 +1109,65 @@ export default function DealCommandCenter() {
 
     return (
         <>
-            <div className="min-h-[calc(100vh-64px)] bg-[#F6F4EF]">
+            <div className="min-h-[calc(100vh-64px)] bg-[var(--ibx-paper)]">
                 {showConfetti && (
                     <Suspense fallback={null}>
                         <Confetti show={showConfetti} />
                     </Suspense>
                 )}
 
-                {/* â"€â"€ HEADER â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-                <div className="sticky top-0 z-40 bg-[#F6F4EF]/90 backdrop-blur-xl border-b border-[#E7E3DA]">
+                <header className="sticky top-0 z-40 bg-[var(--ibx-paper)]/90 backdrop-blur-xl border-b border-[var(--ibx-line)]">
                     <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
-
-                        {/* Breadcrumb row */}
-                        <div className="flex items-center gap-1.5 pt-3 text-[11px] text-muted-foreground">
+                        <nav aria-label="Caminho" className="pt-3">
                             <button
                                 onClick={() => navigate("/pipeline")}
-                                className="flex items-center gap-1 -my-2.5 -ml-2 py-2.5 pl-2 pr-1.5 sm:m-0 sm:p-0 text-[13px] sm:text-[11px] hover:text-foreground transition-colors"
+                                className="inline-flex items-center gap-1 -ml-1 px-1 py-1 rounded-md text-[12px] font-medium text-[var(--vyz-text-muted)] hover:text-[var(--vyz-text-primary)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                             >
-                                <ArrowLeft className="h-3.5 w-3.5 sm:h-3 sm:w-3" />
+                                <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
                                 Pipeline
                             </button>
-                            <ChevronRight className="h-3 w-3" />
-                            <span className="text-foreground/70 truncate">{deal.customer_name}</span>
-                        </div>
+                        </nav>
 
-                        {/* Main header row */}
-                        <div className="flex items-start justify-between gap-4 py-3">
-                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                                <Avatar className="h-10 w-10 ring-1 ring-border flex-shrink-0">
-                                    <AvatarFallback className="bg-gradient-to-br from-[#1556C0] to-[#2E78E0] text-white font-bold text-xs">
-                                        {deal.customer_name?.substring(0, 2).toUpperCase() || "?"}
-                                    </AvatarFallback>
-                                </Avatar>
-
+                        <div className="flex items-start justify-between gap-4 pt-2 pb-4">
+                            <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                                <div
+                                    aria-hidden
+                                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--ibx-card)] border border-[var(--ibx-line)] text-[13px] font-semibold tracking-[-0.01em] text-[var(--vyz-text-primary)]"
+                                >
+                                    {iniciais(deal.customer_name || deal.title)}
+                                </div>
                                 <div className="min-w-0 flex-1">
-                                    <h1 className="text-base sm:text-lg font-semibold text-foreground line-clamp-2 sm:line-clamp-none sm:truncate leading-tight tracking-tight">
+                                    <h1 className="text-[18px] sm:text-[21px] font-semibold text-[var(--vyz-text-primary)] line-clamp-2 sm:line-clamp-none sm:truncate leading-tight tracking-[-0.02em]">
                                         {deal.title}
                                     </h1>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <span className="text-xs text-muted-foreground truncate">{deal.customer_name}</span>
-                                        {!!deal.value && <span className="sm:hidden text-xs font-semibold tabular-nums text-foreground whitespace-nowrap">· {formatBRL(deal.value)}</span>}
-                                        {deal.customer_email && (
-                                            <>
-                                                <span className="text-muted-foreground/40 text-xs">·</span>
-                                                <span className="text-xs text-muted-foreground truncate hidden sm:inline">{deal.customer_email}</span>
-                                            </>
-                                        )}
-                                    </div>
+                                    <p className="mt-1 flex items-center gap-x-2 gap-y-0.5 flex-wrap text-[12.5px] text-[var(--vyz-text-muted)]">
+                                        {subtitulo.map((parte, i) => (
+                                            <span key={i} className={`items-center gap-2 min-w-0 ${parte.soCelular ? "inline-flex sm:hidden font-semibold text-[var(--vyz-text-primary)] tabular-nums" : parte.soComputador ? "hidden sm:inline-flex" : "inline-flex"}`}>
+                                                {i > 0 && <span className="text-[var(--ibx-line-strong)] font-normal" aria-hidden>·</span>}
+                                                <span className="truncate">{parte.texto}</span>
+                                            </span>
+                                        ))}
+                                    </p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 flex-shrink-0">
-                                {/* Value */}
+                            <div className="flex items-center gap-4 flex-shrink-0">
                                 <div className="text-right hidden sm:block">
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Valor</p>
-                                    <p className="text-lg font-semibold text-[var(--vyz-text-primary)] tabular-nums leading-tight">
-                                        {formatBRL(deal.value || 0)}
-                                    </p>
+                                    <p className={EYEBROW}>Valor</p>
+                                    {deal.value ? (
+                                        <p className="text-[20px] font-semibold text-[var(--vyz-text-primary)] tabular-nums leading-tight tracking-[-0.02em]">
+                                            {formatBRL(deal.value)}
+                                        </p>
+                                    ) : (
+                                        <p className="text-[14px] font-medium text-[var(--vyz-text-muted)] leading-tight mt-0.5">Sem valor</p>
+                                    )}
                                 </div>
 
-                                {/* CTA buttons */}
                                 {!isWon && !isLost && (
-                                    <div className="flex gap-1.5">
+                                    <div className="flex gap-2">
                                         <Button size="sm"
                                             aria-label="Marcar como fechada"
-                                            className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 font-semibold h-10 w-10 p-0 sm:h-8 sm:w-auto sm:px-3.5 gap-1.5"
+                                            className={`rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 font-semibold h-10 w-10 p-0 sm:h-9 sm:w-auto sm:px-4 gap-1.5 ${PRESS}`}
                                             onClick={() => { void handleWon(); }}
                                             disabled={updateDeal.isPending}
                                         >
@@ -1124,7 +1176,7 @@ export default function DealCommandCenter() {
                                         </Button>
                                         <Button size="sm" variant="outline"
                                             aria-label="Marcar como perdida"
-                                            className="rounded-full border-border text-muted-foreground hover:text-[var(--vyz-danger)] hover:border-[var(--vyz-danger)]/40 h-10 w-10 p-0 sm:h-8 sm:w-auto sm:px-3.5 gap-1.5"
+                                            className={`rounded-full border-[var(--ibx-line)] bg-[var(--ibx-card)] text-[var(--vyz-text-strong)] hover:bg-[var(--ibx-card)] hover:text-[var(--vyz-danger)] hover:border-[var(--vyz-danger)]/40 h-10 w-10 p-0 sm:h-9 sm:w-auto sm:px-4 gap-1.5 ${PRESS}`}
                                             onClick={() => setShowLostModal(true)}
                                             disabled={updateDeal.isPending}
                                         >
@@ -1134,31 +1186,27 @@ export default function DealCommandCenter() {
                                     </div>
                                 )}
 
-                                {/* Closed badges */}
                                 {isWon && (
-                                    <div className="flex items-center gap-1.5 bg-[var(--vyz-success-bg)] text-[var(--vyz-success)] px-3 py-1.5 rounded-full text-xs font-semibold">
+                                    <div className="flex items-center gap-1.5 bg-[var(--vyz-success-bg)] text-[var(--vyz-success)] px-3.5 h-9 rounded-full text-[12.5px] font-semibold">
                                         <Trophy className="h-3.5 w-3.5" aria-hidden /> Fechou
                                     </div>
                                 )}
                                 {isLost && (
-                                    <div className="flex items-center gap-1.5 bg-[var(--vyz-danger-bg)] text-[var(--vyz-danger)] px-3 py-1.5 rounded-full text-xs font-semibold">
+                                    <div className="flex items-center gap-1.5 bg-[var(--vyz-danger-bg)] text-[var(--vyz-danger)] px-3.5 h-9 rounded-full text-[12.5px] font-semibold">
                                         <XCircle className="h-3.5 w-3.5" aria-hidden /> Perdeu
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Stage chips row */}
-                        <div className="pb-3">
-                            <StageChips
-                                stages={stageList}
-                                currentId={currentStage?.id ?? null}
-                                disabled={updateDeal.isPending}
-                                onStageChange={(st) => { void handleStageChange(st); }}
-                            />
-                        </div>
+                        <StageChips
+                            stages={stageList}
+                            currentId={currentStage?.id ?? null}
+                            disabled={updateDeal.isPending}
+                            onStageChange={(st) => { void handleStageChange(st); }}
+                        />
                     </div>
-                </div>
+                </header>
 
                 {/* â"€â"€ MAIN GRID â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-5">
@@ -1172,6 +1220,9 @@ export default function DealCommandCenter() {
                             <FocusCard
                                 key={nextAction.title}
                                 action={nextAction}
+                                status={convStatus}
+                                conversationHref={dealCtx.openConversationHref ?? null}
+                                onOpenConversation={(href) => navigate(href)}
                                 onComplete={async (resultKey) => {
                                     const r = ACTION_RESULTS.find((x) => x.key === resultKey);
                                     const resultLabel = r?.label ?? resultKey;
@@ -1207,31 +1258,37 @@ export default function DealCommandCenter() {
                                 }}
                             />
 
+                            <EvaReadingCard
+                                ctx={dealCtx}
+                                probability={deal.probability ?? null}
+                                decisionHint={getDecisionMap((deal as any).source_data).some((p) => p.papel === "Decisor financeiro" && (p.origem || "").toLowerCase().includes("mencionad"))
+                                    ? "A EVA identificou possível decisor financeiro mencionado na conversa. Revise antes de adicionar ao mapa de decisão."
+                                    : null}
+                            />
+
                             {/* EVA.STUDIO.7.1 — regras do EVA Studio orientando a recomendação (só leitura) */}
                             <EvaStudioRules />
 
-                            {/* Activity panel */}
-                            <div className="bg-card/50 rounded-2xl border border-border overflow-hidden">
-
-                                {/* Tab bar - text-only, underline on active */}
-                                <div className="flex items-center gap-0 border-b border-border px-3 overflow-x-auto no-scrollbar">
+                            {/* Atividade */}
+                            <section className={`${CARD} overflow-hidden`} aria-label="Atividade">
+                                <div role="tablist" className="flex items-center gap-1 border-b border-[var(--ibx-line-soft)] px-3 overflow-x-auto no-scrollbar">
                                     {TABS.map((tab) => {
                                         const active = activeTab === tab.id;
                                         return (
                                             <button
                                                 key={tab.id}
+                                                role="tab"
+                                                aria-selected={active}
                                                 onClick={() => setActiveTab(tab.id)}
-                                                className={`
-                                                    relative flex items-center gap-1.5 px-3 py-3 text-[13px] font-medium transition-colors whitespace-nowrap shrink-0
-                                                    ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
-                                                `}
+                                                className={`relative flex items-center gap-1.5 px-2.5 py-3 text-[13px] whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:text-[var(--vyz-text-primary)] ${active ? "font-semibold text-[var(--vyz-text-primary)]" : "font-medium text-[var(--vyz-text-muted)] hover:text-[var(--vyz-text-primary)]"}`}
                                             >
                                                 <span>{tab.label}</span>
-                                                {tab.locked && <Lock className="h-3 w-3 text-amber-400" />}
+                                                {tab.locked && <Lock className="h-3 w-3 text-[var(--vyz-text-muted)]" aria-label="Recurso do plano" />}
                                                 {active && (
                                                     <motion.div
                                                         layoutId="tab-underline"
-                                                        className="absolute left-0 right-0 -bottom-px h-[2px] bg-emerald-500"
+                                                        transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                                                        className="absolute left-2.5 right-2.5 -bottom-px h-[2px] rounded-full bg-[var(--vyz-text-primary)]"
                                                     />
                                                 )}
                                             </button>
@@ -1249,22 +1306,25 @@ export default function DealCommandCenter() {
                                             <div className="flex flex-col">
                                                 <div className="px-5 py-4 sm:py-5">
                                                     {timeline.length === 0 ? (
-                                                        <div className="flex items-center gap-2.5 text-muted-foreground sm:flex-col sm:justify-center sm:gap-0 sm:py-8">
-                                                            <StickyNote className="h-4 w-4 shrink-0 opacity-50 sm:h-8 sm:w-8 sm:mb-3 sm:opacity-40" />
-                                                            <p className="text-[13px] sm:text-sm">Nenhuma nota ainda. Escreva a primeira abaixo.</p>
+                                                        <div className="flex items-center gap-2.5 text-[var(--vyz-text-muted)] sm:flex-col sm:justify-center sm:gap-0 sm:py-8">
+                                                            <StickyNote className="h-4 w-4 shrink-0 opacity-60 sm:h-7 sm:w-7 sm:mb-3" aria-hidden />
+                                                            <p className="text-[13px]">Nenhuma nota ainda. Escreva a primeira abaixo.</p>
                                                         </div>
-                                                    ) : (
-                                                        <div className="space-y-0">
-                                                            {timeline.map((ev: any, i: number) => (
-                                                                <TimelineEntry key={ev.id} event={ev} isLast={i === timeline.length - 1} />
-                                                            ))}
-                                                        </div>
-                                                    )}
+                                                    ) : (() => {
+                                                        const linhas = groupTimeline(timeline);
+                                                        return (
+                                                            <div>
+                                                                {linhas.map((l, i) => l.kind === "msgs"
+                                                                    ? <MessageRunEntry key={l.items[0].id} items={l.items} isLast={i === linhas.length - 1} href={dealCtx.openConversationHref ?? null} onOpen={(h) => navigate(h)} />
+                                                                    : <TimelineEntry key={l.ev.id} event={l.ev} isLast={i === linhas.length - 1} />)}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </div>
 
                                                 {/* Composer - sticky to bottom of panel */}
-                                                <div className="sticky bottom-0 p-3 border-t border-border bg-card/95 backdrop-blur-sm">
-                                                    <div className="flex items-center gap-2 bg-background/60 rounded-xl px-3 py-2 ring-1 ring-border focus-within:ring-emerald-500/40 transition-all">
+                                                <div className="sticky bottom-0 p-3 border-t border-[var(--ibx-line-soft)] bg-[var(--ibx-card)]/95 backdrop-blur-sm">
+                                                    <div className="flex items-center gap-2 bg-[var(--ibx-sunken)] rounded-full pl-4 pr-1.5 py-1.5 ring-1 ring-transparent focus-within:ring-[var(--vyz-accent)]/35 focus-within:bg-[var(--ibx-card)] transition-[background-color,box-shadow] duration-150">
                                                         <Input
                                                             value={newNote}
                                                             onChange={(e) => setNewNote(e.target.value)}
@@ -1276,7 +1336,7 @@ export default function DealCommandCenter() {
                                                             onClick={() => newNote.trim() && addNote.mutate(newNote.trim())}
                                                             disabled={!newNote.trim() || addNote.isPending}
                                                             aria-label="Adicionar nota"
-                                                            className="bg-[var(--vyz-btn-solid)] hover:opacity-90 text-[var(--vyz-btn-on)] h-9 w-9 sm:h-7 sm:w-7 p-0 rounded-full"
+                                                            className={`bg-[var(--vyz-btn-solid)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 text-[var(--vyz-btn-on)] h-9 w-9 sm:h-8 sm:w-8 p-0 rounded-full shrink-0 ${PRESS}`}
                                                         >
                                                             {addNote.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowUp className="h-4 w-4" strokeWidth={2.4} />}
                                                         </Button>
@@ -1556,7 +1616,7 @@ export default function DealCommandCenter() {
                                                 <p className="text-xs mt-1 mb-4">Tarefas criadas aparecerão aqui</p>
                                                 <Button variant="outline" size="sm" className="gap-2 border-border text-muted-foreground hover:text-foreground"
                                                     onClick={() => setShowTaskModal(true)}>
-                                                    <Zap className="h-4 w-4" /> Nova Tarefa
+                                                    <Plus className="h-4 w-4" aria-hidden /> Nova tarefa
                                                 </Button>
                                             </div>
                                         )}
@@ -1616,7 +1676,7 @@ export default function DealCommandCenter() {
                                                 <div className="space-y-3">
                                                     <div className="flex items-center justify-between">
                                                         <p className="text-sm font-semibold text-foreground">Propostas</p>
-                                                        <Button onClick={() => setShowProposta(true)} size="sm" className="gap-1.5 bg-blue-600 hover:bg-blue-500 text-white">
+                                                        <Button onClick={() => setShowProposta(true)} size="sm" className={`gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 text-[var(--vyz-btn-on)] ${PRESS}`}>
                                                             <FileTextIcon className="h-4 w-4" /> Nova proposta
                                                         </Button>
                                                     </div>
@@ -1683,178 +1743,95 @@ export default function DealCommandCenter() {
                                         )}
                                     </motion.div>
                                 </AnimatePresence>
-                            </div>
-
-                            {/* Deal observations */}
-                            {deal.notes && (
-                                <div className="bg-card/40 rounded-2xl p-4 border border-border">
-                                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">Observações</p>
-                                    <p className="text-sm text-foreground leading-relaxed">{deal.notes}</p>
-                                </div>
-                            )}
-
-                            {/* F5P.1 — Contexto da conversa + Leitura EVA persistida */}
-                            <DealConversationContextBlock
-                                dealId={deal.id}
-                                companyId={deal.company_id}
-                                probability={deal.probability ?? null}
-                                decisionHint={getDecisionMap((deal as any).source_data).some((p) => p.papel === "Decisor financeiro" && (p.origem || "").toLowerCase().includes("mencionad"))
-                                    ? "A EVA identificou possível decisor financeiro mencionado na conversa. Revise antes de adicionar ao mapa de decisão."
-                                    : null}
-                                onOpenConversation={(href) => navigate(href)}
-                            />
+                            </section>
                         </div>
 
-                        {/* â"€â"€ RIGHT SIDEBAR (properties) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-                        <div className="col-span-12 lg:col-span-4 order-2 min-w-0">
-                            <div className="lg:sticky lg:top-[148px] space-y-4">
+                        {/* Coluna da direita: orçamento e os dados do card */}
+                        <aside className="col-span-12 lg:col-span-4 order-2 min-w-0" aria-label="Detalhes">
+                            <div className="lg:sticky lg:top-[168px] space-y-4">
+                                {openQuote && <div className="hidden lg:block"><QuoteCard q={openQuote} /></div>}
 
-                                {/* Quick actions */}
-                                <TooltipProvider delayDuration={80}>
-                                    <div className="flex gap-2 [&>*]:flex-1">
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <button
-                                                    onClick={() => setShowCallModal(true)}
-                                                    disabled={!canUseCalls}
-                                                    className={`${canUseCalls ? "flex" : "hidden"} flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed`}
-                                                >
-                                                    <Phone className="h-4 w-4 text-emerald-400" />
-                                                    <span className="text-[10px] font-medium text-muted-foreground">Ligar</span>
-                                                </button>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="bottom" className="bg-card text-foreground text-xs border border-border">
-                                                {canUseCalls ? "Iniciar chamada" : (hasCallsPlanAccess ? "Ativar add-on" : "Assinar o Vyzon")}
-                                            </TooltipContent>
-                                        </Tooltip>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <button
-                                                    onClick={() => deal.customer_phone && window.open(`https://wa.me/${deal.customer_phone.replace(/\D/g, "")}`, "_blank")}
-                                                    disabled={!deal.customer_phone}
-                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-green-500/40 hover:bg-green-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                                                >
-                                                    <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
-                                                    <span className="text-[10px] font-medium text-muted-foreground">WhatsApp</span>
-                                                </button>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="bottom" className="bg-card text-foreground text-xs border border-border">WhatsApp</TooltipContent>
-                                        </Tooltip>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <button
-                                                    onClick={() => deal.customer_email && window.open(`mailto:${deal.customer_email}`, "_blank")}
-                                                    disabled={!deal.customer_email}
-                                                    className={`${deal.customer_email ? "flex" : "hidden"} flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-blue-500/40 hover:bg-blue-500/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed`}
-                                                >
-                                                    <Mail className="h-4 w-4 text-blue-400" />
-                                                    <span className="text-[10px] font-medium text-muted-foreground">Email</span>
-                                                </button>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="bottom" className="bg-card text-foreground text-xs border border-border">Enviar email</TooltipContent>
-                                        </Tooltip>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <button
-                                                    onClick={() => setShowTaskModal(true)}
-                                                    className="flex flex-col items-center justify-center gap-1 h-14 rounded-xl bg-white border border-[#E5E7EB] hover:border-violet-500/40 hover:bg-violet-500/5 transition-colors"
-                                                >
-                                                    <Plus className="h-4 w-4 text-violet-400" />
-                                                    <span className="text-[10px] font-medium text-muted-foreground">Tarefa</span>
-                                                </button>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="bottom" className="bg-card text-foreground text-xs border border-border">Nova tarefa</TooltipContent>
-                                        </Tooltip>
-                                    </div>
-                                </TooltipProvider>
+                                <section className={`${CARD} p-4 sm:p-5`} aria-label="Contato e negócio">
+                                    <p className={EYEBROW}>Contato</p>
+                                    <p className="mt-1 text-[15px] font-semibold leading-snug tracking-[-0.01em] text-[var(--vyz-text-primary)] break-words">
+                                        {deal.customer_name || "Sem nome"}
+                                    </p>
+                                    {deal.customer_phone && (
+                                        <p className="mt-0.5 text-[12.5px] text-[var(--vyz-text-muted)] tabular-nums">{formatPhone(deal.customer_phone)}</p>
+                                    )}
+                                    {deal.customer_email && (
+                                        <a href={`mailto:${deal.customer_email}`} className="mt-0.5 block truncate text-[12.5px] text-[var(--vyz-accent)] hover:underline">
+                                            {deal.customer_email}
+                                        </a>
+                                    )}
 
-                                {/* A) Orçamento aberto (o que importa no solar) ou, sem orçamento, status e saúde */}
-                                {openQuote ? <div className="hidden lg:block"><QuoteCard q={openQuote} /></div> : (
-                                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <TrendingUp className="h-4 w-4 text-slate-400" />
-                                        <p className="text-[13px] font-semibold text-[#0B1220]">Status e saúde</p>
+                                    <div className="mt-4 flex gap-2 [&>*]:flex-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => deal.customer_phone && window.open(`https://wa.me/${deal.customer_phone.replace(/\D/g, "")}`, "_blank", "noopener,noreferrer")}
+                                            disabled={!deal.customer_phone}
+                                            className={`${QUICK} disabled:opacity-40 disabled:cursor-not-allowed`}
+                                        >
+                                            <WhatsAppIcon className="h-4 w-4" />
+                                            WhatsApp
+                                        </button>
+                                        {canUseCalls && (
+                                            <button type="button" onClick={() => setShowCallModal(true)} className={QUICK}>
+                                                <Phone className="h-4 w-4" aria-hidden />
+                                                Ligar
+                                            </button>
+                                        )}
+                                        {deal.customer_email && (
+                                            <button type="button" onClick={() => window.open(`mailto:${deal.customer_email}`, "_blank")} className={QUICK}>
+                                                <Mail className="h-4 w-4" aria-hidden />
+                                                E-mail
+                                            </button>
+                                        )}
+                                        <button type="button" onClick={() => setShowTaskModal(true)} className={QUICK}>
+                                            <Plus className="h-4 w-4" aria-hidden />
+                                            Tarefa
+                                        </button>
                                     </div>
-                                    <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border ${health.bg} ${health.border}`}>
-                                        <HealthIcon className={`h-4 w-4 ${health.color} flex-shrink-0`} />
-                                        <div className="flex-1 min-w-0">
-                                            <p className={`text-[13px] font-semibold ${health.color} leading-tight`}>{health.label}</p>
-                                            <p className="text-[11px] text-slate-500 leading-tight">{health.subtitle}</p>
-                                        </div>
-                                        <div className="flex flex-col items-center shrink-0">
-                                            <ProbabilityGauge value={deal.probability ?? 0} hex={health.hex} />
-                                            <p className="text-[10px] text-slate-500 mt-1">Probabilidade</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                )}
 
-                                {/* B) Contato */}
-                                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <User className="h-4 w-4 text-slate-400" />
-                                        <p className="text-[13px] font-semibold text-[#0B1220]">Contato</p>
-                                    </div>
-                                    <div className="space-y-2.5">
-                                        <SidebarRow label="Nome" value={deal.customer_name || "—"} />
-                                        <SidebarRow label="Telefone" value={deal.customer_phone
-                                            ? <span className="inline-flex items-center gap-1.5 justify-end">{formatPhone(deal.customer_phone)}<WhatsAppIcon className="h-3.5 w-3.5 text-[#25D366] shrink-0" /></span>
-                                            : "—"} />
-                                        <SidebarRow label="E-mail" value={deal.customer_email
-                                            ? <a href={`mailto:${deal.customer_email}`} className="text-[#1556C0] hover:underline">{deal.customer_email}</a>
-                                            : "—"} />
-                                        <SidebarRow label="Origem" value={origemLabel((deal as any).lead_source || (deal as any).source)} />
-                                        <SidebarRow
-                                            label="Última mensagem"
-                                            value={dealCtx.conversation?.last_message_at
-                                                ? `${safeFormatDistance(dealCtx.conversation.last_message_at)}${(dealCtx.conversation.last_inbound_at ?? "") >= (dealCtx.conversation.last_outbound_at ?? "") ? " · do cliente" : " · sua"}`
-                                                : "—"}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* C) Dados do negócio */}
-                                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Building2 className="h-4 w-4 text-slate-400" />
-                                        <p className="text-[13px] font-semibold text-[#0B1220]">Dados do negócio</p>
-                                    </div>
-                                    {getRealEstateInterest((deal as any).source_data) ? (
-                                        <div className="space-y-2.5">
-                                            <RealEstateInterestBlock sourceData={(deal as any).source_data} />
-                                            <div className="pt-2.5 border-t border-[#F1F5F9]">
+                                    <div className="mt-4 pt-3.5 border-t border-[var(--ibx-line-soft)]">
+                                        <p className={`${EYEBROW} mb-1`}>Negócio</p>
+                                        {getRealEstateInterest((deal as any).source_data) ? (
+                                            <div className="space-y-2.5">
+                                                <RealEstateInterestBlock sourceData={(deal as any).source_data} />
                                                 <SidebarRow label="Valor da proposta" value={deal.value ? formatBRL(deal.value) : "Sem valor"} strong />
                                             </div>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-2.5">
-                                            {/* O valor já está no topo da página e no card do orçamento. */}
-                                            <SidebarRow label="Criado" value={safeFormatDate(deal.created_at, "dd MMM yyyy")} />
-                                            <SidebarRow label="Atualizado" value={safeFormatDistance(deal.updated_at)} />
+                                        ) : (
+                                            <div>
+                                                <SidebarRow label="Origem" value={origemCard} />
+                                                <SidebarRow label="Criado" value={safeFormatDate(deal.created_at, "dd MMM yyyy")} />
+                                                <SidebarRow label="Atualizado" value={safeFormatDistance(deal.updated_at)} />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {deal.notes && (
+                                        <div className="mt-4 pt-3.5 border-t border-[var(--ibx-line-soft)]">
+                                            <p className={EYEBROW}>Observações</p>
+                                            <p className="mt-1 text-[12.5px] leading-relaxed whitespace-pre-line break-words text-[var(--vyz-text-strong)]">{deal.notes}</p>
                                         </div>
                                     )}
-                                </div>
 
-                                {/* C.2) Mapa de decisão — editável em qualquer deal; EVA sugere da conversa */}
-                                <DecisionMapCard dealId={id!} companyId={(deal as any).company_id ?? null} sourceData={(deal as any).source_data} />
-
-                                {/* D) Tags */}
-                                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <TagIcon className="h-4 w-4 text-slate-400" />
-                                        <p className="text-[13px] font-semibold text-[#0B1220]">Tags</p>
+                                    <div className="mt-4 pt-3.5 border-t border-[var(--ibx-line-soft)]">
+                                        <p className={`${EYEBROW} mb-2`}>Tags</p>
+                                        <DealTagsBlock dealId={id!} />
                                     </div>
-                                    <DealTagsBlock dealId={id!} />
-                                </div>
 
-                                {/* E) Campos customizados */}
-                                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-                                    <PropertiesSection title="Campos personalizados" defaultOpen={false}>
-                                        <CustomFieldsSection dealId={id!} compact />
-                                    </PropertiesSection>
-                                </div>
+                                    <div className="mt-4 border-t border-[var(--ibx-line-soft)]">
+                                        <PropertiesSection title="Campos personalizados" defaultOpen={false}>
+                                            <CustomFieldsSection dealId={id!} compact />
+                                        </PropertiesSection>
+                                    </div>
+                                </section>
+
+                                {/* Mapa de decisão: editável em qualquer deal; a EVA sugere da conversa */}
+                                <DecisionMapCard dealId={id!} companyId={(deal as any).company_id ?? null} sourceData={(deal as any).source_data} />
                             </div>
-                        </div>
+                        </aside>
                     </div>
                 </div>
 
@@ -2036,211 +2013,128 @@ export default function DealCommandCenter() {
     );
 }
 
-// ─── F5P.1 — Contexto da conversa + Leitura EVA persistida ──────────────────
+// ─── Leitura da EVA: chance de fechar, o que ela já sabe e o que falta saber ───
 
-function DealConversationContextBlock({
-    dealId,
-    companyId,
+function EvaReadingCard({
+    ctx,
     probability,
     decisionHint,
-    onOpenConversation,
 }: {
-    dealId: string;
-    companyId: string | null;
+    ctx: ReturnType<typeof useDealContextData>;
     probability: number | null;
     decisionHint?: string | null;
-    onOpenConversation: (href: string) => void;
 }) {
-    const ctx = useDealContextData(dealId, companyId);
-
-    // Loading inicial — skeleton compacto
     if (ctx.loading) {
         return (
-            <div className="bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-2">
-                <div className="h-3 w-32 rounded bg-slate-200/70" />
-                <div className="h-4 w-full rounded bg-slate-100" />
-                <div className="h-4 w-3/4 rounded bg-slate-100" />
+            <div className={`${CARD} p-5 space-y-2.5`} aria-busy="true">
+                <div className="h-3 w-28 rounded bg-[var(--ibx-sunken)]" />
+                <div className="h-4 w-full rounded bg-[var(--ibx-paper)]" />
+                <div className="h-4 w-2/3 rounded bg-[var(--ibx-paper)]" />
             </div>
         );
     }
-
-    // Sem conversa vinculada não há o que mostrar; o card do orçamento e o
-    // botão Responder já levam para o WhatsApp do cliente.
+    // Sem conversa ligada não há o que ler; a próxima ação já leva ao WhatsApp.
     if (!ctx.conversation) return null;
 
-    const { conversation, contact, lastMessages, summary, qualification, isStaleByMessages, relatedGaps, openConversationHref } = ctx;
-
-    const lastInteractionLabel = conversation.last_message_at
-        ? formatDistanceToNow(new Date(conversation.last_message_at), { locale: ptBR, addSuffix: true })
-        : "—";
-
-    const temperature = getQualificationTemperature(qualification);
-    const objection   = getQualificationObjection(qualification);
-
+    const { summary, qualification, isStaleByMessages } = ctx;
     const hasAnalysis = !!summary && !!summary.analyzed_at;
     const analyzedAtLabel = summary?.analyzed_at
         ? formatDistanceToNow(new Date(summary.analyzed_at), { locale: ptBR, addSuffix: true })
         : null;
-
-    // Probabilidade de ganho: usa a do deal; cai pro score da EVA se ausente.
+    const temperature = getQualificationTemperature(qualification);
+    const objection = getQualificationObjection(qualification);
+    // Chance de fechar: a do card; sem ela, o score da EVA.
     const score = getQualificationScore(qualification);
-    const probScore = Math.max(0, Math.min(100,
+    const chance = Math.max(0, Math.min(100,
         Math.round(typeof probability === "number" ? probability : (typeof score === "number" ? score : 0))));
-    // Tendência derivada da temperatura da EVA (sem inventar campo novo).
-    const trend = temperature === "quente" ? "Subindo"
-        : temperature === "frio" ? "Em queda"
-        : temperature ? "Estável" : null;
-    // Motivos = o que a EVA já coletou; Atenções = o que falta + objeção.
-    const motivos = qualification?.info_coletada ?? [];
-    const atencoes = [
+    const trend = temperature === "quente" ? "subindo" : temperature === "frio" ? "caindo" : temperature ? "estável" : null;
+    const sabe = qualification?.info_coletada ?? [];
+    const falta = [
         ...(qualification?.info_faltante ?? []),
         ...(objection ? [`Objeção: ${objection}`] : []),
     ];
+    const proxima = qualification?.proxima_acao ? proximaAcaoLabel(qualification.proxima_acao) : null;
 
     return (
-        <div className="space-y-4">
-            {/* ── Contexto da conversa (mini-chat) ─────────────────────── */}
-            <div className="bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-                <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                        <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
-                        <p className="text-[13px] font-semibold text-[#0B1220]">Contexto da conversa</p>
-                    </div>
-                    {openConversationHref && (
-                        <button
-                            type="button"
-                            onClick={() => onOpenConversation(openConversationHref)}
-                            className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[var(--vyz-accent)] hover:underline"
-                        >
-                            Abrir conversa
-                        </button>
-                    )}
+        <section className={`${CARD} p-4 sm:p-5`} aria-label="Leitura da EVA">
+            <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2">
+                    <EvaBot size={20} still />
+                    <p className={CARD_TITLE}>Leitura da EVA</p>
                 </div>
-
-                {/* aba canal */}
-                <div className="mb-3 border-b border-[#F1F5F9]">
-                    <span className="inline-flex items-center gap-1.5 pb-2 -mb-px text-[12px] font-medium text-[#0F8A63] border-b-2 border-[#10B981]">
-                        <WhatsAppIcon className="h-3.5 w-3.5 text-[#25D366]" /> WhatsApp
+                {hasAnalysis && (
+                    <span className={`text-[11px] ${isStaleByMessages ? "text-[var(--vyz-warning)]" : "text-[var(--vyz-text-muted)]"}`}>
+                        {isStaleByMessages ? "Pode estar desatualizada" : `Lida ${analyzedAtLabel}`}
                     </span>
-                </div>
-
-                {/* Sem texto das mensagens aqui (regra de 20/06: conversa crua só no
-                    Inbox). O resumo diz quem falou por último e quando. */}
-                {lastMessages.length > 0 ? (() => {
-                    const latest = lastMessages.reduce((a, b) => (a.message_timestamp > b.message_timestamp ? a : b));
-                    const fromClient = latest.direction !== "outbound";
-                    return (
-                        <p className="text-[12.5px] leading-relaxed text-[var(--vyz-text-strong)]">
-                            {fromClient ? "O cliente falou por último" : "Você falou por último"}{" "}
-                            <span className="text-[var(--vyz-text-muted)]">{safeFormatDistance(latest.message_timestamp)}</span>.
-                            {fromClient && " A vez de responder é sua."}
-                        </p>
-                    );
-                })() : (
-                    <p className="text-sm text-slate-500">Sem mensagens recentes nesta conversa.</p>
-                )}
-
-                {openConversationHref && (
-                    <button
-                        type="button"
-                        onClick={() => onOpenConversation(openConversationHref)}
-                        className="w-full text-center text-[12px] font-medium text-[#1556C0] hover:underline mt-3 pt-3 border-t border-[#F1F5F9]"
-                    >
-                        Ver a conversa no Inbox
-                    </button>
                 )}
             </div>
 
-            {/* ── Leitura da EVA (3 colunas) ──────────────────────────── */}
-            <div className="bg-white rounded-2xl p-4 border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <EvaBot size={20} />
-                        <p className="text-[13px] font-semibold text-[#0B1220]">Leitura da EVA</p>
+            {!hasAnalysis ? (
+                <p className="text-[13px] text-[var(--vyz-text-muted)] leading-relaxed">
+                    A EVA ainda não leu conversa suficiente para esta oportunidade.
+                </p>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-[minmax(150px,0.8fr)_1fr_1fr] gap-5 sm:gap-6">
+                    <div>
+                        <p className={EYEBROW}>Chance de fechar</p>
+                        <p className="mt-1 text-[30px] font-semibold leading-none tabular-nums tracking-[-0.03em] text-[var(--vyz-text-primary)]">{chance}%</p>
+                        <div
+                            className="mt-2.5 h-1 rounded-full bg-[var(--ibx-sunken)] overflow-hidden"
+                            role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={chance} aria-label="Chance de fechar"
+                        >
+                            <motion.div
+                                className="h-full rounded-full bg-[var(--vyz-text-primary)]"
+                                initial={{ scaleX: 0 }}
+                                animate={{ scaleX: chance / 100 }}
+                                style={{ transformOrigin: "left" }}
+                                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                            />
+                        </div>
+                        {trend && <p className="mt-2 text-[12px] text-[var(--vyz-text-muted)]">Tendência {trend}</p>}
                     </div>
-                    {hasAnalysis && (
-                        <span className="text-[11px] text-slate-400">
-                            {isStaleByMessages ? "Pode estar desatualizada" : `Análise atualizada ${analyzedAtLabel}`}
-                        </span>
+
+                    <div>
+                        <p className={`${EYEBROW} mb-2`}>O que a EVA já sabe</p>
+                        <ul className="space-y-1.5">
+                            {sabe.length > 0 ? sabe.slice(0, 3).map((m, i) => (
+                                <li key={i} className="flex gap-2 text-[12.5px] text-[var(--vyz-text-strong)] leading-snug">
+                                    <Check className="h-3.5 w-3.5 mt-px shrink-0 text-[var(--vyz-success)]" strokeWidth={2.5} aria-hidden />
+                                    <span>{m}</span>
+                                </li>
+                            )) : <li className="text-[12.5px] text-[var(--vyz-text-muted)]">Nada ainda.</li>}
+                        </ul>
+                    </div>
+
+                    <div>
+                        <p className={`${EYEBROW} mb-2`}>O que falta saber</p>
+                        <ul className="space-y-1.5">
+                            {falta.length > 0 ? falta.slice(0, 3).map((a, i) => (
+                                <li key={i} className="flex gap-2 text-[12.5px] text-[var(--vyz-text-strong)] leading-snug">
+                                    <CircleDashed className="h-3.5 w-3.5 mt-px shrink-0 text-[var(--vyz-warning)]" aria-hidden />
+                                    <span>{a}</span>
+                                </li>
+                            )) : <li className="text-[12.5px] text-[var(--vyz-text-muted)]">Nada pendente.</li>}
+                        </ul>
+                    </div>
+                </div>
+            )}
+
+            {(proxima || decisionHint) && (
+                <div className="mt-4 pt-3.5 border-t border-[var(--ibx-line-soft)] space-y-2">
+                    {proxima && (
+                        <p className="text-[12.5px] text-[var(--vyz-text-muted)]">
+                            Próxima sugestão da EVA: <span className="font-medium text-[var(--vyz-text-primary)]">{proxima}</span>
+                        </p>
+                    )}
+                    {decisionHint && (
+                        <p className="flex items-start gap-1.5 text-[12.5px] text-[var(--vyz-text-strong)] leading-snug">
+                            <Users className="h-3.5 w-3.5 mt-px shrink-0 text-[var(--vyz-eva)]" aria-hidden />
+                            {decisionHint}
+                        </p>
                     )}
                 </div>
-
-                {!hasAnalysis ? (
-                    <p className="text-sm text-slate-500 leading-relaxed">
-                        A EVA ainda não analisou conversas suficientes para esta oportunidade.
-                    </p>
-                ) : (
-                    <>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            {/* Probabilidade */}
-                            <div>
-                                <div className="flex items-baseline gap-1.5">
-                                    <span className="text-[28px] font-bold text-[#0B1220] leading-none tabular-nums">{probScore}%</span>
-                                </div>
-                                <p className="text-[11px] text-slate-500 mt-1">Probabilidade de ganho</p>
-                                <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden mt-2">
-                                    <motion.div
-                                        className="h-full rounded-full bg-gradient-to-r from-[#7C3AED] to-[#A78BFA]"
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${probScore}%` }}
-                                        transition={{ duration: 0.8, ease: "easeOut" }}
-                                    />
-                                </div>
-                                {trend && (
-                                    <p className="text-[11px] text-slate-500 mt-2">
-                                        Tendência: <span className="font-medium text-[#0B1220]">{trend}</span>
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* Principais motivos */}
-                            <div>
-                                <p className="text-[12px] font-semibold text-[#0B1220] mb-1.5">Principais motivos</p>
-                                <ul className="space-y-1">
-                                    {motivos.length > 0 ? motivos.slice(0, 3).map((m, i) => (
-                                        <li key={i} className="flex gap-1.5 text-[12px] text-slate-600 leading-snug">
-                                            <span className="text-[#10B981] mt-px">•</span>
-                                            <span>{m}</span>
-                                        </li>
-                                    )) : <li className="text-[12px] text-slate-400">—</li>}
-                                </ul>
-                            </div>
-
-                            {/* Atenções */}
-                            <div>
-                                <p className="text-[12px] font-semibold text-[#0B1220] mb-1.5 flex items-center gap-1">
-                                    <AlertTriangle className="h-3 w-3 text-amber-500" /> Atenções
-                                </p>
-                                <ul className="space-y-1">
-                                    {atencoes.length > 0 ? atencoes.slice(0, 3).map((a, i) => (
-                                        <li key={i} className="flex gap-1.5 text-[12px] text-slate-600 leading-snug">
-                                            <span className="text-amber-500 mt-px">•</span>
-                                            <span>{a}</span>
-                                        </li>
-                                    )) : <li className="text-[12px] text-slate-400">—</li>}
-                                </ul>
-                            </div>
-                        </div>
-
-                        {qualification?.proxima_acao && (
-                            <div className="mt-3 pt-3 border-t border-[#E9D5FF]">
-                                <p className="text-[11px] text-slate-500">
-                                    Próxima sugestão da EVA: <span className="text-[#0B1220] font-medium">{qualification.proxima_acao}</span>
-                                </p>
-                            </div>
-                        )}
-                    </>
-                )}
-                {decisionHint && (
-                    <div className="mt-3 pt-3 border-t border-[#E9D5FF] flex items-start gap-1.5">
-                        <Users className="h-3.5 w-3.5 text-[#7C3AED] mt-px shrink-0" />
-                        <p className="text-[11.5px] text-[#0B1220] leading-snug">{decisionHint}</p>
-                    </div>
-                )}
-                <p className="text-[10px] text-[#7C3AED]/70 mt-3 pt-3 border-t border-[#E9D5FF] leading-relaxed">
-                    A EVA é assistida: ela sugere e prioriza. Seu time decide e aprova.
-                </p>
-            </div>
-        </div>
+            )}
+            <p className="mt-3.5 text-[11px] text-[var(--vyz-text-muted)]">A EVA sugere e prioriza. Quem decide e aprova é o seu time.</p>
+        </section>
     );
 }

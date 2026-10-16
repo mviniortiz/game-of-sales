@@ -318,11 +318,11 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
     };
 
     return (
-        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <section aria-label="Mapa de decisão" className="bg-[var(--ibx-card)] rounded-[14px] border border-[var(--ibx-line)] p-4 sm:p-5 shadow-[0_1px_2px_rgba(28,25,23,0.04),0_10px_28px_-18px_rgba(28,25,23,0.18)]">
             <div className="flex items-center justify-between mb-0.5">
                 <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-slate-400" />
-                    <p className="text-[13px] font-semibold text-[#0B1220]">Mapa de decisão</p>
+                    <Users className="h-4 w-4 text-[var(--vyz-text-muted)]" aria-hidden />
+                    <p className="text-[13px] font-semibold text-[var(--vyz-text-primary)]">Mapa de decisão</p>
                 </div>
                 {people.length > 0 && (
                     <button
@@ -335,7 +335,7 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
                     </button>
                 )}
             </div>
-            <p className="text-[11px] text-slate-500 mb-3">Pessoas mencionadas ou envolvidas na compra.</p>
+            <p className="text-[12px] text-[var(--vyz-text-muted)] mb-3">Quem o cliente disse que participa da compra.</p>
 
             {/* Sugestões da EVA — assistida, time aprova */}
             {suggestions.length > 0 && (
@@ -370,15 +370,11 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
                 <button
                     type="button"
                     onClick={() => openAdd()}
-                    className="w-full flex items-center justify-center gap-2 py-5 rounded-xl border border-dashed border-[#E5E7EB] text-slate-400 hover:border-[#1556C0]/40 hover:text-[#1556C0] transition-colors text-[12px] font-medium"
+                    className="w-full flex items-center justify-center gap-1.5 h-9 rounded-full border border-dashed border-[var(--ibx-line-strong)] text-[var(--vyz-text-muted)] hover:border-[var(--vyz-accent)]/50 hover:text-[var(--vyz-accent)] transition-colors duration-150 text-[12.5px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                 >
-                    <Plus className="h-4 w-4" /> Adicionar pessoa ao mapa
+                    <Plus className="h-3.5 w-3.5" aria-hidden /> Adicionar pessoa
                 </button>
             )}
-
-            <p className="text-[10.5px] text-slate-400 pt-3 mt-3 border-t border-[#F1F5F9] leading-relaxed">
-                Registre apenas pessoas informadas pelo cliente durante a negociação.
-            </p>
 
             {/* Form adicionar/editar */}
             <Dialog open={formOpen} onOpenChange={setFormOpen}>
@@ -604,6 +600,6 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
                     })()}
                 </DialogContent>
             </Dialog>
-        </div>
+        </section>
     );
 }
