@@ -13,7 +13,8 @@ export type FunnelEvent =
     | "whatsapp_click"
     | "form_start"
     | "form_submit"
-    | "form_error";
+    | "form_error"
+    | "section_view";
 
 const SID_KEY = "vyz_lp_sid";
 let memorySid: string | null = null;

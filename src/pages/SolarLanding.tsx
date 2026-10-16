@@ -60,7 +60,9 @@ const DESCRIPTION =
     "Mandou o orçamento de energia solar e o cliente sumiu? O Vyzon mostra quais clientes pararam de responder no seu WhatsApp e deixa a mensagem pronta para chamar de novo. Raio-X grátis.";
 
 
-const WHATSAPP_MESSAGE = "Oi, Markus. Quero o Raio-X das minhas propostas de energia solar.";
+// Tem que conter o prefill da automação de leads (automations, 20261009_automations_ad_leads):
+// é essa frase que faz a conversa virar lead do anúncio, lida pela EVA e avisada no grupo.
+const WHATSAPP_MESSAGE = "Oi, Markus. Quero ver quanto está parado nos meus orçamentos de energia solar.";
 
 // Tokens do mockup escuro (referência: dashboard denso, Geist 14px, cantos retos).
 const DARK = {
@@ -140,7 +142,21 @@ const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
             }
         };
         window.addEventListener("scroll", onScroll, { passive: true });
-        return () => window.removeEventListener("scroll", onScroll);
+        // Uma vez por seção: mostra em que ponto da página quem chega desiste.
+        const vistas = new Set<Element>();
+        const io = new IntersectionObserver((entries) => {
+            for (const e of entries) {
+                if (!e.isIntersecting || vistas.has(e.target)) continue;
+                vistas.add(e.target);
+                const nome = e.target.getAttribute("aria-label") || e.target.id || e.target.querySelector("h2")?.textContent || "";
+                logLandingEvent(FUNNEL_PAGE, angle, "section_view", { secao: nome.trim().slice(0, 60) });
+            }
+        }, { threshold: 0.35 });
+        document.querySelectorAll("main > section").forEach((s) => io.observe(s));
+        return () => {
+            window.removeEventListener("scroll", onScroll);
+            io.disconnect();
+        };
     }, [angle]);
 
     return (
@@ -148,12 +164,14 @@ const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
             <Header onCta={() => trackFormCta("header")} />
             <main>
                 <Hero copy={copy} onCta={() => trackFormCta("hero")} onWhatsapp={() => trackWhatsappClick("hero")} />
-                <ProductMock />
-                <HowItWorks />
-                <Pain text={copy.pain} />
+                {/* O resultado do Raio-X vem logo depois da promessa: 9 em 10 visitantes do
+                    anúncio saíam antes da metade da página sem ter visto o que recebem. */}
                 <WhatYouGet />
-                <NoDiaADia />
+                <HowItWorks />
+                <ProductMock />
+                <Pain text={copy.pain} />
                 <NotABot />
+                <NoDiaADia />
                 <Faq />
                 <SignupForm angle={angle} onWhatsapp={trackWhatsappClick} />
             </main>
@@ -179,13 +197,13 @@ const Header = ({ onCta }: { onCta: () => void }) => (
 );
 
 const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void; onWhatsapp: () => void }) => (
-    <section className="mx-auto w-full max-w-[1120px] px-5 pb-10 pt-10 text-center md:px-8 md:pb-14 md:pt-20">
+    <section className="mx-auto w-full max-w-[1120px] px-5 pb-8 pt-4 text-center md:px-8 md:pb-14 md:pt-20" aria-label="Topo">
         <p className="mx-auto max-w-[620px] text-[15px] font-semibold landing-fade-in-up-lg" style={{ color: "#050505", textWrap: "balance" }}>
             {copy.kicker}
         </p>
         <h1
-            className="lp-display mx-auto mt-4 max-w-4xl landing-fade-in-up-lg landing-delay-100"
-            style={{ fontSize: "clamp(2rem, 5.2vw, 4rem)", lineHeight: 1.05, letterSpacing: "-0.04em", color: "#050505", textWrap: "balance" }}
+            className="lp-display mx-auto mt-3 max-w-4xl landing-fade-in-up-lg landing-delay-100 md:mt-4"
+            style={{ fontSize: "clamp(1.85rem, 5.2vw, 4rem)", lineHeight: 1.05, letterSpacing: "-0.04em", color: "#050505", textWrap: "balance" }}
         >
             {copy.h1}{" "}
             <span className="lp-serif" style={{ color: "#050505" }}>
@@ -193,33 +211,34 @@ const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void;
             </span>
         </h1>
         <p
-            className="mx-auto mt-7 max-w-[580px] landing-fade-in-up-lg landing-delay-200"
+            className="mx-auto mt-5 max-w-[580px] landing-fade-in-up-lg landing-delay-200 md:mt-7"
             style={{ fontSize: "clamp(1rem, 1.3vw, 1.0625rem)", lineHeight: 1.55, color: "rgba(5,5,5,0.8)" }}
         >
             {copy.sub}
         </p>
-        <div className="mt-8 flex flex-col items-center gap-3 landing-fade-in-up-lg landing-delay-300">
-            <Link to={RAIO_X_AUTO} className="vz-btn vz-btn--primary" onClick={onCta}>
+        {/* Dois caminhos do mesmo Raio-X. Conectar o WhatsApp num site que a pessoa
+            acabou de conhecer é pedir muito: no anúncio de out/2026, o clique no WhatsApp
+            (4) superou o cadastro (0), então falar com o Markus fica à vista, não num link. */}
+        <div className="mx-auto mt-7 flex max-w-[360px] flex-col items-stretch gap-2.5 landing-fade-in-up-lg landing-delay-300 sm:max-w-none sm:flex-row sm:justify-center md:mt-8">
+            <Link to={RAIO_X_AUTO} className="vz-btn vz-btn--primary justify-center" onClick={onCta}>
                 <span>Ver quanto está parado</span>
                 <span className="vz-btn__arrow" aria-hidden="true">
                     →
                 </span>
             </Link>
-            <span className="text-[15px] font-medium" style={{ color: "rgba(5,5,5,0.78)" }}>
-                Grátis · 3 minutos · nada é enviado aos seus clientes
-            </span>
-            <span className="text-sm" style={{ color: "rgba(5,5,5,0.62)" }}>
-                Prefere fazer comigo?{" "}
-                <a href="#raio-x" className="underline underline-offset-4">
-                    Peça o Raio-X
-                </a>{" "}
-                ou{" "}
-                <a href={whatsappUrl(WHATSAPP_MESSAGE)} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4" onClick={onWhatsapp}>
-                    chame no WhatsApp
-                </a>
-                .
-            </span>
+            <a
+                href={whatsappUrl(WHATSAPP_MESSAGE)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="vz-btn vz-btn--secondary justify-center"
+                onClick={onWhatsapp}
+            >
+                <span>Fazer comigo no WhatsApp</span>
+            </a>
         </div>
+        <p className="mx-auto mt-4 max-w-[420px] text-[14px] font-medium" style={{ color: "rgba(5,5,5,0.7)", textWrap: "balance" }}>
+            Grátis e sem cartão. O Raio-X só lê: nada é enviado aos seus clientes, e você desconecta quando quiser.
+        </p>
     </section>
 );
 
@@ -545,7 +564,10 @@ const WhatYouGet = () => (
                     Fonte: Greener, Estudo Estratégico de Geração Distribuída, pesquisa de julho e agosto de 2025.
                 </p>
             </div>
-            <ReportPreview />
+            {/* No celular o exemplo vem antes do texto: é o que a pessoa vê ao rolar a primeira vez. */}
+            <div className="order-first md:order-none">
+                <ReportPreview />
+            </div>
         </div>
     </section>
 );
