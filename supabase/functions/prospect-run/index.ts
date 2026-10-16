@@ -10,7 +10,11 @@
 // Chip novo: quando o número conectado muda, começa o aquecimento (tetoDoChip):
 // zero mensagens frias no dia da troca, teto que sobe por dia e pausa dobrada nas
 // duas primeiras semanas. Seguimento e lembrete só para quem conversou com o número
-// atual. Três falhas de envio no mesmo dia pausam a prospecção até o dia seguinte.
+// atual. Número que já passou por aqui fica em numeros_conhecidos: o aquecido (o
+// pessoal do Markus) volta no ritmo dele, o resto recomeça a rampa. O teto só sobe
+// com resposta de pessoa nas últimas frias (tetoComSinal). Falha com cara de
+// restrição do WhatsApp pausa 24h e recomeça a rampa; três falhas comuns no mesmo
+// dia pausam até o dia seguinte.
 // Nada sai para uma integradora sem aprovação: só status "aprovado" é enviado,
 // e o seguimento só existe para quem foi aprovado e não respondeu. Exceção decidida
 // pelo Markus em 15/10/2026: a resposta padrão a quem só disse "pode falar"
@@ -22,7 +26,7 @@ import {
   brKey, enviarRespostasPorta, firstMessage, lembretesDeConversa, followupMessage, notifyDecision, notifyOwner, prospectNumber, randomCode,
   sendHumanText, sendVoiceNote, whatsappKeys,
 } from "../_shared/prospecting.ts";
-import { chipAquecendo, ehDistribuidora, NICHO_DISTRIBUIDORA, nextVariant, tetoDoChip, type ProspectVariant } from "../_shared/prospectingText.ts";
+import { chipAquecendo, ehDistribuidora, NICHO_DISTRIBUIDORA, nextVariant, tetoComSinal, tetoDoChip, type ProspectVariant } from "../_shared/prospectingText.ts";
 import { groupJid } from "../_shared/ownerGroups.ts";
 import { CORTE_ENCAIXE } from "../_shared/prospectFit.ts";
 
@@ -56,12 +60,17 @@ Deno.serve(async (req) => {
     const instanceName = instanceNameFor(inst.user_id);
     const numero = await connectedNumber(instanceName);
     if (numero && numero !== inst.numero_chip) {
-      inst.chip_desde = agora.toISOString();
-      inst.rampa_desde = null;
-      inst.pausa_ate = null;
+      // O número que sai fica lembrado: se voltar, as conversas dele seguem valendo.
+      const conhecidos = { ...(inst.numeros_conhecidos || {}) };
+      if (inst.numero_chip) conhecidos[inst.numero_chip] = { ...(conhecidos[inst.numero_chip] || {}), chip_desde: inst.chip_desde };
+      const volta = conhecidos[numero];
+      inst.chip_desde = volta?.chip_desde ?? agora.toISOString();
+      // Número com histórico volta no ritmo dele; chip que já passou por aqui
+      // recomeça a rampa no dia da volta. A pausa vigente continua valendo.
+      inst.rampa_desde = volta ? (volta.aquecido ? volta.rampa_desde ?? null : agora.toISOString()) : null;
       inst.falhas_envio = {};
       await admin.from("prospecting_instances").update({
-        numero_chip: numero, chip_desde: inst.chip_desde, rampa_desde: null, pausa_ate: null, falhas_envio: {},
+        numero_chip: numero, chip_desde: inst.chip_desde, rampa_desde: inst.rampa_desde, falhas_envio: {}, numeros_conhecidos: conhecidos,
       }).eq("id", inst.id);
       // O dono continua no pessoal; o número salvo como dono era o chip antigo.
       // numero_desde faz o Inbox mostrar só as conversas do número novo.
@@ -74,12 +83,15 @@ Deno.serve(async (req) => {
       }
       const grupo = await groupJid(admin, instanceName, "prospeccao");
       if (grupo) {
-        const amanha = tetoDoChip(inst.chip_desde, new Date(agora.getTime() + 86400000), inst.daily_cap);
-        await notifyOwner(instanceName, grupo, [
-          `Número novo conectado (${numero}). Comecei o aquecimento do chip.`,
-          `Hoje não sai nenhuma mensagem fria. Amanhã saem até ${amanha}, e o teto sobe um pouco por dia até ${inst.daily_cap}.`,
-          "Conversa que começou no número antigo não recebe seguimento nem lembrete por aqui. Essas você continua pelo antigo.",
-        ].join("\n\n"));
+        const rampaNova = inst.rampa_desde ?? inst.chip_desde;
+        const amanha = tetoDoChip(rampaNova, new Date(agora.getTime() + 86400000), inst.daily_cap);
+        await notifyOwner(instanceName, grupo, volta?.aquecido
+          ? `Voltei para o número ${numero}. Ele já tem histórico, então segue sem aquecimento: amanhã saem até ${amanha}, se o lote for aprovado.`
+          : [
+            volta ? `O número ${numero} voltou. Recomecei o aquecimento dele.` : `Número novo conectado (${numero}). Comecei o aquecimento do chip.`,
+            `Hoje não sai nenhuma mensagem fria. Amanhã saem até ${amanha}, e o teto sobe um pouco por dia até ${inst.daily_cap}.`,
+            "Conversa que começou no outro número não recebe seguimento nem lembrete por aqui. Essas você continua por lá.",
+          ].join("\n\n"));
       }
       r.chip_novo = numero;
     }
@@ -87,7 +99,12 @@ Deno.serve(async (req) => {
     // A rampa pode começar antes da troca quando o dono adianta o aquecimento;
     // chip_desde continua separando as conversas do número antigo.
     const rampa = inst.rampa_desde ?? inst.chip_desde;
-    const tetoHoje = tetoDoChip(rampa, agora, inst.daily_cap);
+    const { data: ultimasFrias } = await admin.from("prospecting_allowlist").select("sent_at, replied_at, reply_kind")
+      .eq("user_id", inst.user_id).gte("sent_at", inst.chip_desde ?? "1970-01-01").order("sent_at", { ascending: false }).limit(10);
+    const tetoHoje = tetoComSinal(tetoDoChip(rampa, agora, inst.daily_cap), (ultimasFrias || []).map((u: any) => ({
+      dia: brasilia(new Date(u.sent_at)).dia,
+      pessoa: Boolean(u.replied_at) && u.reply_kind !== "automatico",
+    })), dia);
     // Resposta padrão a quem disse "pode falar" sai até as 21h: quem respondeu está
     // no celular agora, e a janela de primeiro contato não vale para ela.
     if (hora >= 8 && hora < 21) {
@@ -246,6 +263,7 @@ Deno.serve(async (req) => {
       if (/failed to send/i.test((e as Error).message) || (await connectionState(instanceName)) !== "open") {
         await admin.from("prospecting_instances").update({
           pausa_ate: new Date(agora.getTime() + 24 * 3600 * 1000).toISOString(),
+          rampa_desde: agora.toISOString(), // depois da restrição, a rampa recomeça
           falhas_envio: { dia, total: 0, restricao: agora.toISOString() },
         }).eq("id", inst.id);
         r.restricao_do_chip = true;

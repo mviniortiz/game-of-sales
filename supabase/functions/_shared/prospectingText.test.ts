@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { dividirMensagens, firstMessage, MARCA_IMAGEM, RESPOSTA_PORTA, respostaPorta, followupMessage, nextVariant, pausaEntreMensagens, primeiroNome, tempoDigitando, chipAquecendo, tetoDoChip, VARIANTS } from "./prospectingText.ts";
+import { dividirMensagens, firstMessage, MARCA_IMAGEM, RESPOSTA_PORTA, respostaPorta, followupMessage, nextVariant, pausaEntreMensagens, primeiroNome, tempoDigitando, chipAquecendo, tetoDoChip, tetoComSinal, VARIANTS } from "./prospectingText.ts";
 
 const ALVO = { agency_name: "Sol do Vale", city: "Blumenau", rating_count: 42 };
 
@@ -21,9 +21,9 @@ Deno.test("com o sócio do CNPJ, todas as versões abrem pelo primeiro nome", ()
   const comDono = { ...ALVO, metadata: { socio: "PAULO HENRIQUE KEEN CHAVES" } };
   for (const v of VARIANTS) {
     const texto = firstMessage(comDono, v);
-    assert(texto.startsWith("Oi, Paulo, tudo bem?"), v);
+    assert(texto.startsWith("Oi, Paulo"), v);
     assert(texto.includes("Sol do Vale"), v);
-    assert(!/quem cuida do comercial|Consegue me passar/.test(texto), `${v} pede o dono para o próprio dono`);
+    assert(!/quem cuida do comercial|Consegue me passar|Pode me passar/.test(texto), `${v} pede o dono para o próprio dono`);
   }
 });
 
@@ -89,8 +89,8 @@ Deno.test("chip novo: zero frias no dia da troca e sobe por dia útil até o tet
 Deno.test("distribuidora recebe abordagem de cotação e integrador, nos três textos fixos", () => {
   const dist = { ...ALVO, agency_name: "Sul Solar Distribuidora", niche: "distribuidora solar", metadata: { socio: "ANA PAULA SOUZA" } };
   const primeira = firstMessage(dist, "encaminha");
-  assert(primeira.startsWith("Oi, Ana,"), primeira);
-  assert(primeira.includes("distribuidora de equipamento solar") && primeira.includes("integrador"), primeira);
+  assert(primeira.startsWith("Oi, Ana"), primeira);
+  assert(primeira.includes("distribuidora") && primeira.includes("integrador"), primeira);
   assert(!primeira.includes("integradora solar"), primeira);
   assert(followupMessage(dist).includes("o integrador visualiza a cotação"));
   const porta = respostaPorta("distribuidora solar");
@@ -98,4 +98,25 @@ Deno.test("distribuidora recebe abordagem de cotação e integrador, nos três t
   assertEquals(respostaPorta(null), RESPOSTA_PORTA);
   assertEquals(respostaPorta("integradorasolar"), RESPOSTA_PORTA);
   for (const t of [primeira, followupMessage(dist), porta]) assert(!/[—–]/.test(t), "travessão");
+});
+
+Deno.test("primeira mensagem varia entre empresas, mas é fixa para a mesma empresa", () => {
+  const nomes = ["Sol do Vale", "Ross Energia Solar", "Teg Solar", "Ponto Solar", "Marsol", "Ecosolar", "Solarbox", "Reserva Solar"];
+  for (const niche of [null, "distribuidora solar"]) {
+    for (const socio of [null, "ANA PAULA SOUZA"]) {
+      const textos = nomes.map((n) => firstMessage({ ...ALVO, agency_name: n, niche, metadata: { socio } }, "encaminha"));
+      assert(new Set(textos.map((t, i) => t.replace(nomes[i], "X"))).size >= 2, `sem variação ${niche} ${socio}`);
+      textos.forEach((t, i) => {
+        assert(t.includes(nomes[i]) && /voc(ê|e)s|integrador/.test(t) && !/[—–]/.test(t) && !t.includes("http"), t);
+        assertEquals(t, firstMessage({ ...ALVO, agency_name: nomes[i], niche, metadata: { socio } }, "encaminha"));
+      });
+    }
+  }
+});
+
+Deno.test("teto só sobe com resposta de pessoa nas últimas frias", () => {
+  const seco = Array.from({ length: 8 }, (_, i) => ({ dia: i < 3 ? "2026-10-20" : "2026-10-19", pessoa: false }));
+  assertEquals(tetoComSinal(10, seco, "2026-10-21"), 3); // segura no que saiu no último dia
+  assertEquals(tetoComSinal(10, [...seco.slice(1), { dia: "2026-10-19", pessoa: true }], "2026-10-21"), 10);
+  assertEquals(tetoComSinal(10, seco.slice(0, 5), "2026-10-21"), 10); // amostra pequena não trava
 });

@@ -66,6 +66,13 @@ type ProspectTarget = {
   metadata?: { socio?: string | null } | null;
 };
 
+/** 0, 1 ou 2, fixo para o mesmo texto. */
+function redacao(chave: string): number {
+  let h = 0;
+  for (const c of chave) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return h % 3;
+}
+
 /** "PAULO HENRIQUE KEEN CHAVES" vira "Paulo". Nome curto demais ou com número não serve. */
 export function primeiroNome(nome?: string | null): string | null {
   const p = String(nome || "").trim().split(/\s+/)[0] || "";
@@ -92,13 +99,33 @@ export function firstMessage(row: ProspectTarget, variant: ProspectVariant = "pe
   // em uma linha, é o que eles sabem encaminhar. O assunto diz de que lado o Markus está
   // ("propostas que vocês mandam", "ferramenta pra integradora"): sem isso, PG Energy e
   // Envolty leram como cliente reclamando de orçamento sem resposta (15/10/2026).
+  // Três redações do mesmo pedido: texto idêntico para todo mundo é marca de disparo
+  // em massa, e o chip novo tomou restrição do WhatsApp em 16/10/2026. A redação sai
+  // do nome da empresa, então a mesma empresa sempre recebe o mesmo texto.
   if (variant === "encaminha") {
+    const i = redacao(nome);
     if (ehDistribuidora(row.niche)) {
-      if (dono) return `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra distribuidora de equipamento solar e queria te fazer uma pergunta rápida sobre as cotações que vocês mandam e o integrador visualiza e não responde. É você que cuida disso na ${nome}?`;
-      return `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra distribuidora de equipamento solar e queria fazer uma pergunta rápida sobre as cotações que vocês mandam e o integrador visualiza e não responde. Consegue me passar pra quem cuida do comercial na ${nome}?`;
+      if (dono) return [
+        `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra distribuidora de equipamento solar e queria te fazer uma pergunta rápida sobre as cotações que vocês mandam e o integrador visualiza e não responde. É você que cuida disso na ${nome}?`,
+        `Oi, ${dono}, tudo bem? Sou o ${sender}, de Florianópolis. Estou desenvolvendo uma ferramenta para distribuidoras de equipamento solar e tenho uma pergunta rápida sobre as cotações que vocês enviam e o integrador visualiza mas não responde. Quem cuida disso na ${nome} é você?`,
+        `Oi, ${dono}! Aqui é o ${sender}, de Floripa. Tô montando uma ferramenta pra distribuidora solar e queria te fazer uma pergunta rápida sobre cotação que o integrador visualiza e deixa sem resposta. Você que cuida disso na ${nome}?`,
+      ][i];
+      return [
+        `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra distribuidora de equipamento solar e queria fazer uma pergunta rápida sobre as cotações que vocês mandam e o integrador visualiza e não responde. Consegue me passar pra quem cuida do comercial na ${nome}?`,
+        `Oi, tudo bem? Sou o ${sender}, de Florianópolis. Estou desenvolvendo uma ferramenta para distribuidoras de equipamento solar e tenho uma pergunta rápida sobre as cotações que vocês enviam e o integrador visualiza mas não responde. Pode me passar para quem cuida do comercial na ${nome}?`,
+        `Olá, tudo certo? Aqui é o ${sender}, de Floripa. Tô montando uma ferramenta pra distribuidora solar e queria fazer uma pergunta rápida sobre cotação que o integrador visualiza e deixa sem resposta. Quem cuida do comercial aí na ${nome}?`,
+      ][i];
     }
-    if (dono) return `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar e queria te fazer uma pergunta rápida sobre as propostas que vocês mandam e o cliente visualiza e não responde. É você que cuida disso na ${nome}?`;
-    return `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar e queria fazer uma pergunta rápida sobre as propostas que vocês mandam e o cliente visualiza e não responde. Consegue me passar pra quem cuida disso na ${nome}?`;
+    if (dono) return [
+      `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar e queria te fazer uma pergunta rápida sobre as propostas que vocês mandam e o cliente visualiza e não responde. É você que cuida disso na ${nome}?`,
+      `Oi, ${dono}, tudo bem? Sou o ${sender}, de Florianópolis. Estou desenvolvendo uma ferramenta para integradoras de energia solar e tenho uma pergunta rápida sobre os orçamentos que vocês enviam e o cliente visualiza mas não responde. Quem cuida disso na ${nome} é você?`,
+      `Oi, ${dono}! Aqui é o ${sender}, de Floripa. Tô montando uma ferramenta pra integradora solar e queria te fazer uma pergunta rápida sobre proposta que o cliente visualiza e deixa sem resposta. Você que cuida disso na ${nome}?`,
+    ][i];
+    return [
+      `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar e queria fazer uma pergunta rápida sobre as propostas que vocês mandam e o cliente visualiza e não responde. Consegue me passar pra quem cuida disso na ${nome}?`,
+      `Oi, tudo bem? Sou o ${sender}, de Florianópolis. Estou desenvolvendo uma ferramenta para integradoras de energia solar e tenho uma pergunta rápida sobre os orçamentos que vocês enviam e o cliente visualiza mas não responde. Pode me passar para quem cuida disso na ${nome}?`,
+      `Olá, tudo certo? Aqui é o ${sender}, de Floripa. Tô montando uma ferramenta pra integradora solar e queria fazer uma pergunta rápida sobre proposta que o cliente visualiza e deixa sem resposta. Quem cuida disso aí na ${nome}?`,
+    ][i];
   }
   // Em vez de pedir 20 minutos, oferece ver o próprio número; o link só vai se ele quiser.
   if (variant === "raiox") {
@@ -211,6 +238,18 @@ export function tetoDoChip(chipDesde: string | null, agora: Date, teto: number):
     ? RAMPA_CHIP[dias]
     : RAMPA_CHIP[RAMPA_CHIP.length - 1] + 3 * (dias - RAMPA_CHIP.length + 1);
   return Math.min(teto, rampa);
+}
+
+/** O calendário sobe o teto; o sinal decide se ele pode subir. Se as últimas frias
+ *  (6 ou mais) não tiveram nenhuma resposta de pessoa, o teto de hoje não passa do que
+ *  saiu no último dia com envio: mais volume sem resposta é o padrão que o WhatsApp
+ *  restringe. `ultimas` são as últimas frias deste número, com o dia (aaaa-mm-dd). */
+export function tetoComSinal(teto: number, ultimas: Array<{ dia: string; pessoa: boolean }>, hoje: string): number {
+  if (ultimas.length < 6 || ultimas.some((u) => u.pessoa)) return teto;
+  const antes = ultimas.filter((u) => u.dia < hoje);
+  if (!antes.length) return teto;
+  const ultimoDia = antes.map((u) => u.dia).sort().pop()!;
+  return Math.min(teto, antes.filter((u) => u.dia === ultimoDia).length);
 }
 
 /** Nas duas primeiras semanas o intervalo entre contatos dobra. */
