@@ -389,7 +389,8 @@ async function escreverLembrete(row: ProspectRow): Promise<string> {
         content: [
           "Você escreve pelo Markus, fundador da Vyzon (Florianópolis), no WhatsApp de uma integradora de energia solar.",
           "A integradora parou de responder há um dia, depois da última mensagem do Markus. Escreva UM lembrete de uma frase só, fácil de responder com sim, não ou um número, que retome a última pergunta dele.",
-          "Sem cobrar, sem repetir o que a ferramenta faz, sem pedir desculpa, sem emoji, sem travessão. Tom de quem digita no WhatsApp com alguém da região ('pra', 'tá'). Se a última mensagem propôs horário, pergunte se algum dos horários serve.",
+          "No máximo 20 palavras, uma pergunta só. Sem cobrar, sem repetir o que a ferramenta faz, sem oferecer nada novo, sem pedir desculpa, sem emoji, sem travessão. Tom de quem digita no WhatsApp com alguém da região ('pra', 'tá'). Se a última mensagem propôs horário, pergunte se algum dos horários serve.",
+          "Nunca pergunte quantas propostas, quanto vale ou números do mês: a pergunta de quantidade travou conversas em 14/10/2026. Se a última pergunta do Markus foi de quantidade, troque por uma de sim ou não ('Isso acontece aí ou é raro?').",
           "Responda só o texto do lembrete.",
         ].join("\n"),
       },
