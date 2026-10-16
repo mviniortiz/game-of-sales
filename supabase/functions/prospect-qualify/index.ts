@@ -99,6 +99,7 @@ async function julgar(e: Evidencia, extras: { avaliacoes: string[]; site: string
           "Não existe código de atividade (CNAE) próprio de energia solar: integradoras registram instalação elétrica (4321500), loja de material elétrico (4742300) ou engenharia (7112000). Um desses códigos com nome de empresa solar ou fotovoltaica é sinal forte de integradora: responda 'sim'.",
           "Não é cliente, responda 'nao': aquecedor solar ou aquecimento de água (é térmico, não fotovoltaico), quem só faz instalação elétrica sem nada de solar, usina ou geração de energia, distribuidora ou atacado, loja que só revende peças, imobiliária, financeira, empresa de outro ramo com 'sol' no nome, ou empresa fechada.",
           "Fora do ramo no CNAE (comunicação, publicidade, hidráulica, por exemplo) com nome solar: responda 'duvida'.",
+          "Nome com 'energia' sem 'solar' (Vext Energia, Donato Energia) e atividade de instalação elétrica, material elétrico ou engenharia: muita integradora se chama assim. Responda 'duvida', nunca 'nao'; 'só instalação elétrica' acima é o eletricista sem energia nem solar no nome.",
         ]).concat([
           "Use só os fatos dados. Google Maps não consultado não é sinal contra.",
           'Responda só JSON: {"veredito": "sim" | "nao" | "duvida", "motivo": "até 12 palavras, em português, sem travessão"}',
