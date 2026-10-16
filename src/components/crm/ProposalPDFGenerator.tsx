@@ -336,9 +336,9 @@ export const ProposalPDFButton = ({ deal, products, companyName, logoUrl, brandC
         } finally { setIsGenerating(false); }
     };
     return (
-        <Button onClick={handleGenerate} disabled={disabled || isGenerating || products.length === 0} className="gap-2 bg-emerald-600 hover:bg-emerald-500">
-            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
-            Gerar Proposta PDF
+        <Button onClick={handleGenerate} disabled={disabled || isGenerating || products.length === 0} variant="outline" className="gap-1.5 h-9 px-4 rounded-full border-[var(--ibx-line)] bg-[var(--ibx-card)] text-[var(--vyz-text-primary)] font-semibold hover:bg-[var(--ibx-paper)]">
+            {isGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5" aria-hidden />}
+            Gerar PDF
         </Button>
     );
 };

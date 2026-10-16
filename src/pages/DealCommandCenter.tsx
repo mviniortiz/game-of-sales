@@ -1,5 +1,4 @@
 ﻿import { lazy, Suspense, useEffect, useState, useRef, useCallback } from "react";
-import { logger } from "@/utils/logger";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDealContextData } from "@/hooks/useDealContextData";
@@ -15,25 +14,13 @@ import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { EvaStudioRules } from "@/components/eva/EvaStudioRules";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
-import {
     ArrowLeft,
-    Phone,
     MessageSquare,
     Mail,
     Trophy,
     XCircle,
-    Lightbulb,
     ArrowUp,
     Paperclip,
     FileText,
@@ -51,7 +38,6 @@ import {
     ChevronDown,
     Loader2,
     Plus,
-    Lock,
     Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,7 +53,6 @@ import { OPEN_QUOTE_STATES, brl as brlQuote, evaLine, stateLine } from "@/lib/qu
 import type { QuoteItem } from "@/hooks/useQuoteBoard";
 
 // Lazy: modais e widgets que só renderizam quando o user clica em algo específico
-const InBrowserDialer = lazy(() => import("@/components/crm/InBrowserDialer"));
 const LostDealModal = lazy(() => import("@/components/crm/LostDealModal").then((m) => ({ default: m.LostDealModal })));
 const Confetti = lazy(() => import("@/components/crm/Confetti").then((m) => ({ default: m.Confetti })));
 const NovaTarefaModal = lazy(() => import("@/components/crm/NovaTarefaModal").then((m) => ({ default: m.NovaTarefaModal })));
@@ -77,7 +62,6 @@ import { generateProposalPDF } from "@/components/crm/ProposalPDFGenerator";
 import { useProposals } from "@/hooks/useProposals";
 import { FileText as FileTextIcon, Download as DownloadIcon, Trash2 as Trash2Icon } from "lucide-react";
 import { CustomFieldsSection } from "@/components/crm/CustomFieldsSection";
-import { usePlan } from "@/hooks/usePlan";
 // F6T.2 — tags transversais (sistema F6T.1)
 import { useDealTagsSingle } from "@/hooks/useDealsTags";
 import { getTagColorClass, isHexColor } from "@/lib/tags";
@@ -85,6 +69,7 @@ import type { Tag } from "@/types/tags";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { DealDetailSkeleton } from "@/components/ui/skeletons";
 import { DecisionMapCard, getDecisionMap } from "@/components/deals/DecisionMapCard";
+import { DealFilesTab, DealTasksTab } from "@/components/deals/DealTabs";
 import { EvaBot } from "@/components/eva/EvaBot";
 import { formatPhone } from "@/lib/formatPhone";
 
@@ -212,23 +197,6 @@ const safeFormatDistance = (input: unknown): string => {
     try { return formatDistanceToNow(d, { locale: ptBR, addSuffix: true }); } catch { return "—"; }
 };
 
-
-const getCallStatusBadge = (status?: string) => {
-    switch (status) {
-        case "completed":
-        case "demo":
-            return <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-500/25">Concluída</Badge>;
-        case "in_progress":
-            return <Badge className="bg-blue-500/15 text-blue-300 border-blue-500/25">Em andamento</Badge>;
-        case "queued":
-        case "dialing":
-            return <Badge className="bg-amber-500/15 text-amber-300 border-amber-500/25">Na fila</Badge>;
-        case "failed":
-            return <Badge className="bg-rose-500/15 text-rose-300 border-rose-500/25">Falhou</Badge>;
-        default:
-            return <Badge variant="outline" className="border-border text-muted-foreground">{status || "Desconhecido"}</Badge>;
-    }
-};
 
 // â"€â"€â"€ Sub-components â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
@@ -646,26 +614,12 @@ export default function DealCommandCenter() {
     const queryClient = useQueryClient();
     const { user } = useAuth();
     const { activeCompanyId } = useTenant();
-    const { hasFeature, currentPlan, isSuperAdmin } = usePlan();
-    const hasCallsPlanAccess = hasFeature("calls");
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [showLostModal, setShowLostModal] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
     const [newNote, setNewNote] = useState("");
     const [activeTab, setActiveTab] = useState("historico");
     const [showTaskModal, setShowTaskModal] = useState(false);
-    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-    const [showCallModal, setShowCallModal] = useState(false);
-    const [sellerPhone, setSellerPhone] = useState("");
-    const [callMode, setCallMode] = useState<"demo" | "twilio" | "webrtc">("demo");
-    const [webrtcCallId, setWebrtcCallId] = useState<string | null>(null);
-    const [showWebrtcDialer, setShowWebrtcDialer] = useState(false);
-
-    useEffect(() => {
-        const saved = localStorage.getItem("deal_call_seller_phone");
-        if (saved) setSellerPhone(saved);
-    }, []);
 
     // â"€â"€ Queries â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
@@ -705,31 +659,6 @@ export default function DealCommandCenter() {
         },
     });
 
-    const { data: companyCallsAddon } = useQuery({
-        queryKey: ["company-calls-addon", activeCompanyId],
-        queryFn: async () => {
-            if (!activeCompanyId) return { calls_enabled: false };
-            const { data, error } = await (supabase as any)
-                .from("company_addons")
-                .select("calls_enabled")
-                .eq("company_id", activeCompanyId)
-                .maybeSingle();
-
-            if (error) {
-                if (String(error.message || "").toLowerCase().includes("relation")) {
-                    return { calls_enabled: false };
-                }
-                throw error;
-            }
-
-            return { calls_enabled: data?.calls_enabled === true };
-        },
-        enabled: !!activeCompanyId,
-    });
-
-    const hasCallsAddonEnabled = isSuperAdmin || companyCallsAddon?.calls_enabled === true;
-    const canUseCalls = hasCallsPlanAccess && hasCallsAddonEnabled;
-
     const { data: timeline = [] } = useQuery({
         queryKey: ["deal-timeline", id],
         queryFn: async () => {
@@ -766,39 +695,6 @@ export default function DealCommandCenter() {
             return [...noteEvents, ...msgEvents].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
         },
         enabled: !!id,
-    });
-
-    const { data: dealCalls = [], isLoading: loadingCalls } = useQuery({
-        queryKey: ["deal-calls", id],
-        queryFn: async () => {
-            const { data: calls, error: callsError } = await (supabase as any)
-                .from("deal_calls")
-                .select("*")
-                .eq("deal_id", id)
-                .order("created_at", { ascending: false });
-
-            if (callsError) {
-                // Graceful fallback before migration is applied
-                if (String(callsError.message || "").toLowerCase().includes("relation")) return [];
-                throw callsError;
-            }
-
-            if (!calls || calls.length === 0) return [];
-
-            const callIds = calls.map((c: any) => c.id);
-            const { data: insights } = await (supabase as any)
-                .from("deal_call_insights")
-                .select("*")
-                .in("call_id", callIds);
-
-            const insightsMap = new Map((insights || []).map((i: any) => [i.call_id, i]));
-
-            return calls.map((call: any) => ({
-                ...call,
-                insight: insightsMap.get(call.id) || null,
-            }));
-        },
-        enabled: !!id && canUseCalls,
     });
 
     // â"€â"€ Mutations â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
@@ -866,140 +762,6 @@ export default function DealCommandCenter() {
         },
         onError: () => toast.error("Erro ao adicionar nota"),
     });
-
-    const initiateDealCall = useMutation({
-        mutationFn: async (payload: { mode: "demo" | "twilio" | "webrtc"; sellerPhone?: string | null }) => {
-            if (!canUseCalls) {
-                throw new Error("Ligações exigem assinatura e o add-on ativo");
-            }
-            const response = await supabase.functions.invoke("deal-call-initiate", {
-                body: {
-                    dealId: id,
-                    mode: payload.mode,
-                    sellerPhone: payload.sellerPhone || null,
-                    customerPhone: deal?.customer_phone || null,
-                },
-            });
-
-            if (response.error) throw response.error;
-            return response.data;
-        },
-        onSuccess: (data) => {
-            logger.log("[initiateDealCall] response data:", JSON.stringify(data, null, 2));
-            queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
-            queryClient.invalidateQueries({ queryKey: ["deal-timeline", id] });
-            if (sellerPhone.trim()) {
-                localStorage.setItem("deal_call_seller_phone", sellerPhone.trim());
-            }
-            setShowCallModal(false);
-
-            if (data?.requiresSetup) {
-                toast.warning(data?.message || "Telefonia ainda não configurada");
-                setActiveTab("ligacoes");
-                return;
-            }
-
-            // WebRTC mode: open the in-browser dialer
-            if (data?.mode === "webrtc" && data?.call?.id) {
-                setWebrtcCallId(data.call.id);
-                setShowWebrtcDialer(true);
-                setActiveTab("ligacoes");
-                return;
-            }
-
-            toast.success(data?.message || "Chamada registrada");
-            setActiveTab("ligacoes");
-        },
-        onError: (error: any) => {
-            logger.error("Erro ao iniciar chamada:", error);
-            toast.error(error?.message || "Erro ao iniciar chamada");
-        },
-    });
-
-    const generateCallInsights = useMutation({
-        mutationFn: async (callId: string) => {
-            if (!canUseCalls) {
-                throw new Error("Ligações exigem assinatura e o add-on ativo");
-            }
-            const response = await supabase.functions.invoke("deal-call-generate-insights", {
-                body: { callId },
-            });
-            if (response.error) throw response.error;
-            return response.data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
-            queryClient.invalidateQueries({ queryKey: ["deal-timeline", id] });
-            toast.success("Insights gerados com sucesso");
-        },
-        onError: (error: any) => {
-            logger.error("Erro ao gerar insights:", error);
-            toast.error(error?.message || "Erro ao gerar insights");
-        },
-    });
-
-    // -- Realtime: subscribe to deal_calls changes for live status updates --
-    const [liveCallStatus, setLiveCallStatus] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (!id || !canUseCalls) return;
-
-        const channel = (supabase as any)
-            .channel(`deal-calls-realtime-${id}`)
-            .on(
-                "postgres_changes",
-                {
-                    event: "*",
-                    schema: "public",
-                    table: "deal_calls",
-                    filter: `deal_id=eq.${id}`,
-                },
-                (payload: any) => {
-                    const newRecord = payload.new;
-                    const oldRecord = payload.old;
-
-                    if (!newRecord) return;
-
-                    logger.log(
-                        `[DealCommandCenter] Realtime deal_call update: ${oldRecord?.status || "?"} -> ${newRecord.status}`,
-                    );
-
-                    // Update live call status indicator
-                    if (["dialing", "queued", "in_progress", "ringing"].includes(newRecord.status)) {
-                        setLiveCallStatus(newRecord.status);
-                    } else {
-                        setLiveCallStatus(null);
-                    }
-
-                    // Refresh call list on any status change
-                    if (oldRecord?.status !== newRecord.status) {
-                        queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
-                    }
-
-                    // Auto-refresh insights when transcript completes
-                    if (
-                        newRecord.transcript_status === "completed" &&
-                        oldRecord?.transcript_status !== "completed"
-                    ) {
-                        queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
-                        toast.success("Transcrição concluída!");
-                    }
-
-                    // Notify on transcription failure
-                    if (
-                        newRecord.transcript_status === "failed" &&
-                        oldRecord?.transcript_status !== "failed"
-                    ) {
-                        toast.error("Falha na transcrição da ligação");
-                    }
-                },
-            )
-            .subscribe();
-
-        return () => {
-            (supabase as any).removeChannel(channel);
-        };
-    }, [id, canUseCalls, queryClient]);
 
     // â"€â"€ Derived â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
@@ -1072,10 +834,9 @@ export default function DealCommandCenter() {
 
     const TABS = [
         { id: "historico", label: "Histórico", icon: Clock },
-        { id: "ligacoes", label: "Ligações", icon: PhoneCall, locked: !canUseCalls },
         { id: "tarefas", label: "Tarefas", icon: CheckCircle2 },
         { id: "arquivos", label: "Arquivos", icon: Paperclip },
-        { id: "propostas", label: "Produtos/Proposta", icon: FileText },
+        { id: "propostas", label: "Proposta", icon: FileText },
     ];
 
     // â"€â"€ Loading / Not found â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
@@ -1283,7 +1044,6 @@ export default function DealCommandCenter() {
                                                 className={`relative flex items-center gap-1.5 px-2.5 py-3 text-[13px] whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:text-[var(--vyz-text-primary)] ${active ? "font-semibold text-[var(--vyz-text-primary)]" : "font-medium text-[var(--vyz-text-muted)] hover:text-[var(--vyz-text-primary)]"}`}
                                             >
                                                 <span>{tab.label}</span>
-                                                {tab.locked && <Lock className="h-3 w-3 text-[var(--vyz-text-muted)]" aria-label="Recurso do plano" />}
                                                 {active && (
                                                     <motion.div
                                                         layoutId="tab-underline"
@@ -1345,371 +1105,64 @@ export default function DealCommandCenter() {
                                             </div>
                                         )}
 
-                                        {/* â"€â"€ LigaçÃµes â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-                                        {activeTab === "ligacoes" && (
-                                            <div className="p-4 sm:p-5 space-y-4">
-                                                {/* Live call indicator */}
-                                                {liveCallStatus && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, y: -8 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 mb-3"
-                                                    >
-                                                        <span className="relative flex h-2.5 w-2.5">
-                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-                                                        </span>
-                                                        <span className="text-sm font-medium text-emerald-300">
-                                                            {liveCallStatus === "in_progress"
-                                                                ? "Ligação em andamento..."
-                                                                : liveCallStatus === "dialing"
-                                                                    ? "Discando..."
-                                                                    : liveCallStatus === "ringing"
-                                                                        ? "Chamando..."
-                                                                        : "Na fila..."}
-                                                        </span>
-                                                    </motion.div>
-                                                )}
-
-                                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                                    <div>
-                                                        <p className="text-sm font-semibold text-foreground">Ligações</p>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            Registre chamadas, transcreva e gere insights com IA
-                                                        </p>
-                                                    </div>
-                                                    <Button
-                                                        size="sm"
-                                                        className="bg-emerald-500 hover:bg-emerald-400 text-white gap-2"
-                                                        disabled={!canUseCalls}
-                                                        onClick={() => setShowCallModal(true)}
-                                                    >
-                                                        <PhoneCall className="h-4 w-4" />
-                                                        {canUseCalls ? "Nova ligação" : (hasCallsPlanAccess ? "Ativar add-on" : "Assinar")}
-                                                    </Button>
-                                                </div>
-
-                                                {!canUseCalls ? (
-                                                    <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5">
-                                                        <div className="flex items-start gap-3">
-                                                            <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                                                                <Lock className="h-4 w-4 text-amber-300" />
-                                                            </div>
-                                                            <div className="min-w-0">
-                                                                <p className="text-sm font-semibold text-foreground">
-                                                                    {hasCallsPlanAccess ? "Ative o add-on Ligações" : "Ligações disponível para assinantes"}
-                                                                </p>
-                                                                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                                                                    {hasCallsPlanAccess ? (
-                                                                        <>
-                                                                            Seu plano atual é <span className="text-amber-300 font-medium capitalize">{currentPlan}</span> e já é elegível.
-                                                                            Falta ativar o add-on de Ligações para liberar chamadas, gravação e transcrição dentro do deal.
-                                                                        </>
-                                                                    ) : (
-                                                                        <>
-                                                                            Seu plano atual é <span className="text-amber-300 font-medium capitalize">{currentPlan}</span>.
-                                                                            Assine o Vyzon e depois ative o add-on de Ligações.
-                                                                        </>
-                                                                    )}
-                                                                </p>
-                                                                <div className="mt-3">
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline"
-                                                                        className="border-amber-500/30 text-amber-200 hover:text-white hover:bg-amber-500/10"
-                                                                        onClick={() => navigate("/upgrade")}
-                                                                    >
-                                                                        {hasCallsPlanAccess ? "Ver add-on / planos" : "Ver planos"}
-                                                                    </Button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ) : loadingCalls ? (
-                                                    <div className="flex items-center justify-center py-10 text-muted-foreground">
-                                                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                                                        Carregando chamadas...
-                                                    </div>
-                                                ) : dealCalls.length === 0 ? (
-                                                    <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-8 text-center">
-                                                        <PhoneCall className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
-                                                        <p className="text-sm font-medium text-muted-foreground">Nenhuma ligação registrada</p>
-                                                        <p className="text-xs text-muted-foreground/60 mt-1 mb-4">
-                                                            Use "Nova ligação" para testar o fluxo em modo demo e validar a experiência no deal
-                                                        </p>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="border-border text-muted-foreground hover:text-foreground"
-                                                            onClick={() => setShowCallModal(true)}
-                                                        >
-                                                            Criar chamada demo
-                                                        </Button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="space-y-3">
-                                                        {dealCalls.map((call: any) => (
-                                                            <div key={call.id} className="rounded-2xl border border-border bg-muted/30 p-4 space-y-4">
-                                                                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
-                                                                    <div className="space-y-2">
-                                                                        <div className="flex items-center gap-2 flex-wrap">
-                                                                            {getCallStatusBadge(call.status)}
-                                                                            <Badge variant="outline" className="border-border text-muted-foreground">
-                                                                                {call.provider === "demo" ? "Demo" : (call.provider || "Telefone")}
-                                                                            </Badge>
-                                                                            {call.transcript_status && (
-                                                                                <Badge
-                                                                                    variant="outline"
-                                                                                    className={
-                                                                                        call.transcript_status === "completed"
-                                                                                            ? "border-emerald-500/25 text-emerald-300"
-                                                                                            : call.transcript_status === "transcribing"
-                                                                                                ? "border-blue-500/25 text-blue-300"
-                                                                                                : call.transcript_status === "failed"
-                                                                                                    ? "border-rose-500/25 text-rose-300"
-                                                                                                    : "border-border text-muted-foreground"
-                                                                                    }
-                                                                                >
-                                                                                    {call.transcript_status === "transcribing" && (
-                                                                                        <Loader2 className="h-3 w-3 animate-spin mr-1 inline" />
-                                                                                    )}
-                                                                                    Transcrição: {call.transcript_status === "completed" ? "Pronta" : call.transcript_status === "transcribing" ? "Em andamento" : call.transcript_status === "failed" ? "Falhou" : call.transcript_status}
-                                                                                </Badge>
-                                                                            )}
-                                                                        </div>
-                                                                        <div className="text-sm text-foreground">
-                                                                            <span className="text-muted-foreground">Cliente:</span> {formatPhone(call.customer_phone)}
-                                                                        </div>
-                                                                        <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
-                                                                            <span>{safeFormatDate(call.created_at, "dd/MM/yyyy 'às' HH:mm")}</span>
-                                                                            {typeof call.duration_seconds === "number" && <span>Duração: {call.duration_seconds}s</span>}
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                                                                        <Button
-                                                                            size="sm"
-                                                                            variant="outline"
-                                                                            className="border-border text-muted-foreground hover:text-foreground w-full sm:w-auto"
-                                                                            disabled={!call.transcript_text || generateCallInsights.isPending}
-                                                                            onClick={() => generateCallInsights.mutate(call.id)}
-                                                                        >
-                                                                            {generateCallInsights.isPending && (generateCallInsights.variables === call.id)
-                                                                                ? <Loader2 className="h-4 w-4 animate-spin" />
-                                                                                : <Lightbulb className="h-4 w-4" />}
-                                                                            <span className="ml-1">Gerar insights</span>
-                                                                        </Button>
-                                                                    </div>
-                                                                </div>
-
-                                                                {call.transcript_preview && (
-                                                                    <div className="rounded-xl border border-border bg-muted/40 p-3">
-                                                                        <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Preview da transcrição</p>
-                                                                        <p className="text-sm text-foreground leading-relaxed">{call.transcript_preview}</p>
-                                                                    </div>
-                                                                )}
-
-                                                                {call.transcript_text && (
-                                                                    <details className="rounded-xl border border-border bg-muted/40">
-                                                                        <summary className="cursor-pointer list-none px-3 py-2.5 flex items-center justify-between">
-                                                                            <span className="text-sm font-medium text-foreground">Transcrição completa</span>
-                                                                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                                                        </summary>
-                                                                        <div className="px-3 pb-3">
-                                                                            <Textarea
-                                                                                readOnly
-                                                                                value={call.transcript_text}
-                                                                                className="min-h-[180px] bg-background border-border text-foreground text-sm leading-relaxed"
-                                                                            />
-                                                                        </div>
-                                                                    </details>
-                                                                )}
-
-                                                                {call.insight && (
-                                                                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 space-y-3">
-                                                                        <div className="flex items-center gap-2 flex-wrap">
-                                                                            <Lightbulb className="h-4 w-4 text-emerald-400" />
-                                                                            <p className="text-sm font-semibold text-emerald-300">Insights da ligação</p>
-                                                                            <Badge variant="outline" className="border-emerald-500/20 text-emerald-300">
-                                                                                {call.insight.model || "mvp"}
-                                                                            </Badge>
-                                                                            {call.insight.raw_output?.sentiment && (
-                                                                                <Badge
-                                                                                    variant="outline"
-                                                                                    className={
-                                                                                        call.insight.raw_output.sentiment === "positive"
-                                                                                            ? "border-emerald-500/20 text-emerald-300"
-                                                                                            : call.insight.raw_output.sentiment === "negative"
-                                                                                                ? "border-rose-500/20 text-rose-300"
-                                                                                                : call.insight.raw_output.sentiment === "mixed"
-                                                                                                    ? "border-amber-500/20 text-amber-300"
-                                                                                                    : "border-border text-muted-foreground"
-                                                                                    }
-                                                                                >
-                                                                                    {call.insight.raw_output.sentiment === "positive" ? "Positivo"
-                                                                                        : call.insight.raw_output.sentiment === "negative" ? "Negativo"
-                                                                                            : call.insight.raw_output.sentiment === "mixed" ? "Misto"
-                                                                                                : "Neutro"}
-                                                                                </Badge>
-                                                                            )}
-                                                                        </div>
-
-                                                                        {call.insight.summary && (
-                                                                            <div>
-                                                                                <p className="text-[11px] uppercase tracking-wider text-emerald-300/70 mb-1">Resumo</p>
-                                                                                <p className="text-sm text-foreground leading-relaxed">{call.insight.summary}</p>
-                                                                            </div>
-                                                                        )}
-
-                                                                        <div className="grid md:grid-cols-2 gap-3">
-                                                                            <div>
-                                                                                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Objeções</p>
-                                                                                <div className="flex flex-wrap gap-1.5">
-                                                                                    {(call.insight.objections || []).length > 0 ? (
-                                                                                        (call.insight.objections || []).map((obj: string, idx: number) => (
-                                                                                            <Badge key={`${call.id}-obj-${idx}`} variant="outline" className="border-amber-500/20 text-amber-300">
-                                                                                                {obj}
-                                                                                            </Badge>
-                                                                                        ))
-                                                                                    ) : (
-                                                                                        <span className="text-xs text-muted-foreground">Nenhuma objeção detectada</span>
-                                                                                    )}
-                                                                                </div>
-                                                                            </div>
-                                                                            <div>
-                                                                                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Próximos passos</p>
-                                                                                <ul className="space-y-1">
-                                                                                    {(call.insight.next_steps || []).map((step: string, idx: number) => (
-                                                                                        <li key={`${call.id}-step-${idx}`} className="text-sm text-foreground flex items-start gap-2">
-                                                                                            <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-emerald-400 flex-shrink-0" />
-                                                                                            <span>{step}</span>
-                                                                                        </li>
-                                                                                    ))}
-                                                                                </ul>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        {call.insight.suggested_message && (
-                                                                            <div>
-                                                                                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Mensagem sugerida</p>
-                                                                                <Textarea
-                                                                                    readOnly
-                                                                                    value={call.insight.suggested_message}
-                                                                                    className="min-h-[88px] bg-background border-border text-foreground text-sm"
-                                                                                />
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* â"€â"€ Tarefas â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                                         {activeTab === "tarefas" && (
-                                            <div className="flex flex-col items-center justify-center py-14 text-muted-foreground">
-                                                <CheckCircle2 className="h-10 w-10 mb-3 opacity-40" />
-                                                <p className="text-sm font-medium text-muted-foreground">Nenhuma tarefa pendente</p>
-                                                <p className="text-xs mt-1 mb-4">Tarefas criadas aparecerão aqui</p>
-                                                <Button variant="outline" size="sm" className="gap-2 border-border text-muted-foreground hover:text-foreground"
-                                                    onClick={() => setShowTaskModal(true)}>
-                                                    <Plus className="h-4 w-4" aria-hidden /> Nova tarefa
-                                                </Button>
-                                            </div>
+                                            <DealTasksTab dealId={id!} onNew={() => setShowTaskModal(true)} />
                                         )}
 
-                                        {/* â"€â"€ Arquivos â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                                         {activeTab === "arquivos" && (
-                                            <div className="p-5">
-                                                <input ref={fileInputRef} type="file" multiple
-                                                    accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-                                                    className="hidden"
-                                                    onChange={(e) => {
-                                                        const files = Array.from(e.target.files || []);
-                                                        if (files.length) { setUploadedFiles(p => [...p, ...files]); toast.success(`${files.length} arquivo(s) selecionado(s)`); }
-                                                    }}
-                                                />
-                                                {uploadedFiles.length === 0 ? (
-                                                    <div
-                                                        className="flex flex-col items-center justify-center py-14 border-2 border-dashed border-border rounded-2xl cursor-pointer hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all"
-                                                        onClick={() => fileInputRef.current?.click()}
-                                                    >
-                                                        <Paperclip className="h-9 w-9 mb-3 text-muted-foreground/50" />
-                                                        <p className="text-sm font-medium text-muted-foreground">Nenhum arquivo anexado</p>
-                                                        <p className="text-xs text-muted-foreground/60 mt-1">Arraste ou clique para anexar</p>
-                                                    </div>
-                                                ) : (
-                                                    <div className="space-y-2">
-                                                        {uploadedFiles.map((file, i) => (
-                                                            <div key={i} className="flex items-center gap-3 p-3 bg-muted/60 rounded-xl border border-border">
-                                                                <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                                                                    {file.type.startsWith("image/")
-                                                                        ? <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover rounded-lg" />
-                                                                        : <FileText className="h-4 w-4 text-muted-foreground" />}
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
-                                                                    <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                                                                </div>
-                                                                <Button variant="ghost" size="sm" onClick={() => setUploadedFiles(p => p.filter((_, j) => j !== i))}
-                                                                    className="text-muted-foreground hover:text-rose-400 h-7 w-7 p-0">
-                                                                    <X className="h-3.5 w-3.5" />
-                                                                </Button>
-                                                            </div>
-                                                        ))}
-                                                        <Button variant="outline" size="sm" className="w-full gap-2 border-border text-muted-foreground hover:text-foreground mt-2"
-                                                            onClick={() => fileInputRef.current?.click()}>
-                                                            <Paperclip className="h-4 w-4" /> Anexar Mais
-                                                        </Button>
-                                                    </div>
-                                                )}
-                                            </div>
+                                            <DealFilesTab
+                                                dealId={id!}
+                                                companyId={(deal as any).company_id ?? null}
+                                                conversationHref={dealCtx.openConversationHref ?? null}
+                                                onOpenConversation={(href) => navigate(href)}
+                                            />
                                         )}
 
                                         {/* â"€â"€ Produtos/Proposta â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
                                         {activeTab === "propostas" && (
-                                            <div className="p-5 space-y-5">
+                                            <div className="p-4 sm:p-5 space-y-6">
                                                 {/* Propostas (editor + lista) */}
                                                 <div className="space-y-3">
-                                                    <div className="flex items-center justify-between">
-                                                        <p className="text-sm font-semibold text-foreground">Propostas</p>
-                                                        <Button onClick={() => setShowProposta(true)} size="sm" className={`gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 text-[var(--vyz-btn-on)] ${PRESS}`}>
-                                                            <FileTextIcon className="h-4 w-4" /> Nova proposta
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <div>
+                                                            <p className={CARD_TITLE}>Propostas</p>
+                                                            <p className="text-[12px] text-[var(--vyz-text-muted)]">Monte, personalize com a sua marca e gere o PDF.</p>
+                                                        </div>
+                                                        <Button onClick={() => setShowProposta(true)} size="sm" className={`h-9 px-4 gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 text-[var(--vyz-btn-on)] font-semibold ${PRESS}`}>
+                                                            <Plus className="h-3.5 w-3.5" aria-hidden /> Nova proposta
                                                         </Button>
                                                     </div>
                                                     {proposals.length === 0 ? (
-                                                        <div className="text-center py-8 text-muted-foreground rounded-xl border border-dashed border-border">
-                                                            <FileTextIcon className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                                                            <p className="text-sm font-medium">Nenhuma proposta ainda</p>
-                                                            <p className="text-xs text-muted-foreground/60 mt-1">Monte os itens, personalize (logo/cor/seções) e gere o PDF</p>
+                                                        <div className="flex flex-col items-center rounded-[12px] border border-dashed border-[var(--ibx-line-strong)] px-6 py-8 text-center">
+                                                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--ibx-sunken)] text-[var(--vyz-text-muted)]"><FileTextIcon className="h-4 w-4" aria-hidden /></span>
+                                                            <p className="mt-3 text-[13.5px] font-semibold text-[var(--vyz-text-primary)]">Nenhuma proposta ainda</p>
+                                                            <p className="mt-1 text-[12.5px] text-[var(--vyz-text-muted)]">A proposta em PDF que você mandou pelo WhatsApp aparece na aba Arquivos.</p>
                                                         </div>
                                                     ) : (
                                                         <div className="space-y-2">
                                                             {proposals.map((p) => {
                                                                 const statusMeta: Record<string, { label: string; cls: string }> = {
-                                                                    rascunho: { label: "Rascunho", cls: "bg-slate-500/10 text-slate-600" },
-                                                                    enviada: { label: "Enviada", cls: "bg-blue-500/10 text-blue-600" },
-                                                                    aceita: { label: "Aceita", cls: "bg-emerald-500/10 text-emerald-600" },
-                                                                    recusada: { label: "Recusada", cls: "bg-rose-500/10 text-rose-600" },
+                                                                    rascunho: { label: "Rascunho", cls: "bg-[var(--ibx-sunken)] text-[var(--vyz-text-muted)]" },
+                                                                    enviada: { label: "Enviada", cls: "bg-[var(--ibx-sel)] text-[var(--vyz-accent)]" },
+                                                                    aceita: { label: "Aceita", cls: "bg-[var(--vyz-success-bg)] text-[var(--vyz-success)]" },
+                                                                    recusada: { label: "Recusada", cls: "bg-[var(--vyz-danger-bg)] text-[var(--vyz-danger)]" },
                                                                 };
                                                                 const sm = statusMeta[p.status] || statusMeta.rascunho;
                                                                 return (
-                                                                    <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card">
-                                                                        <div className="p-2 rounded-lg bg-blue-500/10"><FileTextIcon className="h-4 w-4 text-blue-600" /></div>
-                                                                        <div className="min-w-0 flex-1">
-                                                                            <p className="text-sm font-semibold text-foreground truncate">{p.title}</p>
-                                                                            <p className="text-[11px] text-muted-foreground">
+                                                                    <div key={p.id} className="group flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-1.5 px-3.5 py-3 rounded-[12px] border border-[var(--ibx-line)] bg-[var(--ibx-card)] hover:border-[var(--ibx-line-strong)] transition-colors">
+                                                                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--ibx-sunken)] text-[var(--vyz-text-muted)]"><FileTextIcon className="h-3.5 w-3.5" aria-hidden /></span>
+                                                                        <div className="min-w-0 flex-1 basis-[calc(100%-44px)] sm:basis-auto">
+                                                                            <p className="text-[13.5px] font-medium text-[var(--vyz-text-primary)] truncate">{p.title}</p>
+                                                                            <p className="text-[12px] text-[var(--vyz-text-muted)]">
                                                                                 {(p.items?.length ?? 0)} {(p.items?.length ?? 0) === 1 ? "item" : "itens"} · {format(new Date(p.created_at), "dd MMM yyyy", { locale: ptBR })}
                                                                             </p>
                                                                         </div>
-                                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${sm.cls}`}>{sm.label}</span>
-                                                                        <span className="text-sm font-bold text-blue-600 tabular-nums">
+                                                                        <div className="flex w-full sm:w-auto items-center gap-2 pl-11 sm:pl-0">
+                                                                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${sm.cls}`}>{sm.label}</span>
+                                                                        <span className="mr-auto sm:mr-0 text-[13.5px] font-semibold text-[var(--vyz-text-primary)] tabular-nums">
                                                                             {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(p.total || 0)}
                                                                         </span>
-                                                                        <Button size="icon" variant="ghost" title="Baixar PDF" className="text-muted-foreground hover:text-blue-600"
+                                                                        <Button size="icon" variant="ghost" title="Baixar PDF" aria-label="Baixar PDF" className="h-8 w-8 rounded-full text-[var(--vyz-text-muted)] hover:text-[var(--vyz-text-primary)] hover:bg-[var(--ibx-paper)]"
                                                                             onClick={() => { void generateProposalPDF({
                                                                                 companyName: companyBrand?.name, logoUrl: companyBrand?.logoUrl, brandColor: p.brand_color || undefined,
                                                                                 dealTitle: deal.title, customerName: p.customer_name || deal.customer_name || "Cliente",
@@ -1717,11 +1170,12 @@ export default function DealCommandCenter() {
                                                                                 items: p.items || [], discountPercent: p.discount_percent, conditions: p.conditions || undefined,
                                                                                 validityDays: p.validity_days, intro: p.intro || undefined, about: p.about || undefined, sections: p.sections || undefined,
                                                                             }); }}>
-                                                                            <DownloadIcon className="h-4 w-4" />
+                                                                            <DownloadIcon className="h-3.5 w-3.5" />
                                                                         </Button>
-                                                                        <Button size="icon" variant="ghost" title="Excluir" className="text-muted-foreground hover:text-rose-500" onClick={() => deleteProposal.mutate(p.id)}>
-                                                                            <Trash2Icon className="h-4 w-4" />
+                                                                        <Button size="icon" variant="ghost" title="Excluir" aria-label="Excluir proposta" className="h-8 w-8 rounded-full text-[var(--vyz-text-muted)] hover:text-[var(--vyz-danger)] hover:bg-[var(--vyz-danger-bg)]" onClick={() => deleteProposal.mutate(p.id)}>
+                                                                            <Trash2Icon className="h-3.5 w-3.5" />
                                                                         </Button>
+                                                                        </div>
                                                                     </div>
                                                                 );
                                                             })}
@@ -1731,7 +1185,7 @@ export default function DealCommandCenter() {
 
                                                 {/* Produtos do deal */}
                                                 {deal?.company_id && (
-                                                    <div className="pt-4 border-t border-border">
+                                                    <div className="pt-5 border-t border-[var(--ibx-line-soft)]">
                                                         <DealProducts
                                                             dealId={id!}
                                                             companyId={deal.company_id}
@@ -1775,12 +1229,6 @@ export default function DealCommandCenter() {
                                             <WhatsAppIcon className="h-4 w-4" />
                                             WhatsApp
                                         </button>
-                                        {canUseCalls && (
-                                            <button type="button" onClick={() => setShowCallModal(true)} className={QUICK}>
-                                                <Phone className="h-4 w-4" aria-hidden />
-                                                Ligar
-                                            </button>
-                                        )}
                                         {deal.customer_email && (
                                             <button type="button" onClick={() => window.open(`mailto:${deal.customer_email}`, "_blank")} className={QUICK}>
                                                 <Mail className="h-4 w-4" aria-hidden />
@@ -1836,137 +1284,6 @@ export default function DealCommandCenter() {
                 </div>
 
                 {/* â"€â"€ MODALS â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-                <Dialog open={showCallModal} onOpenChange={setShowCallModal}>
-                    <DialogContent className="bg-card border-border text-foreground w-[calc(100vw-1rem)] max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                                <PhoneCall className="h-5 w-5 text-emerald-400" />
-                                Iniciar ligação no Deal
-                            </DialogTitle>
-                            <DialogDescription className="text-muted-foreground">
-                                MVP: registre a chamada e salve a transcrição no deal. Para validação imediata, use o modo demo.
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        <div className="space-y-4">
-                            <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-2">
-                                <p className="text-xs uppercase tracking-wider text-muted-foreground">Contato do deal</p>
-                                <p className="text-sm text-foreground">{deal.customer_name}</p>
-                                <p className="text-sm text-muted-foreground">{formatPhone(deal.customer_phone)}</p>
-                            </div>
-
-                            {callMode !== "webrtc" && (
-                                <div className="space-y-2">
-                                    <label className="text-xs uppercase tracking-wider text-muted-foreground">Seu telefone (necessario no modo Twilio)</label>
-                                    <Input
-                                        value={sellerPhone}
-                                        onChange={(e) => setSellerPhone(e.target.value)}
-                                        placeholder="(11) 99999-9999"
-                                        className="bg-background border-border text-foreground"
-                                    />
-                                </div>
-                            )}
-
-                            <div className="space-y-2">
-                                <label className="text-xs uppercase tracking-wider text-muted-foreground">Modo</label>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setCallMode("webrtc")}
-                                        className={`rounded-xl border px-3 py-2 text-left transition-colors ${callMode === "webrtc"
-                                            ? "border-emerald-500/40 bg-emerald-500/10"
-                                            : "border-border bg-background"
-                                            }`}
-                                    >
-                                        <p className="text-sm font-medium text-foreground">Ligar pelo browser</p>
-                                        <p className="text-xs text-muted-foreground">Liga direto do navegador para o cliente</p>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setCallMode("twilio")}
-                                        className={`rounded-xl border px-3 py-2 text-left transition-colors ${callMode === "twilio"
-                                            ? "border-blue-500/40 bg-blue-500/10"
-                                            : "border-border bg-background"
-                                            }`}
-                                    >
-                                        <p className="text-sm font-medium text-foreground">Click-to-call</p>
-                                        <p className="text-xs text-muted-foreground">Liga pro seu telefone e conecta ao cliente</p>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setCallMode("demo")}
-                                        className={`rounded-xl border px-3 py-2 text-left transition-colors ${callMode === "demo"
-                                            ? "border-amber-500/40 bg-amber-500/10"
-                                            : "border-border bg-background"
-                                            }`}
-                                    >
-                                        <p className="text-sm font-medium text-foreground">Demo</p>
-                                        <p className="text-xs text-muted-foreground">Chamada simulada para testar o fluxo</p>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <DialogFooter className="gap-2 sm:gap-0">
-                            <Button
-                                variant="outline"
-                                onClick={() => setShowCallModal(false)}
-                            >
-                                Cancelar
-                            </Button>
-                            <Button
-                                className="bg-emerald-500 hover:bg-emerald-400 text-white gap-2"
-                                disabled={initiateDealCall.isPending}
-                                onClick={() => initiateDealCall.mutate({ mode: callMode, sellerPhone: sellerPhone.trim() || null })}
-                            >
-                                {initiateDealCall.isPending ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                    <PhoneCall className="h-4 w-4" />
-                                )}
-                                {callMode === "webrtc" ? "Ligar agora" : callMode === "demo" ? "Criar chamada demo" : "Iniciar chamada"}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-
-                {/* WebRTC In-Browser Dialer */}
-                <Dialog open={showWebrtcDialer} onOpenChange={(open) => {
-                    if (!open) {
-                        setShowWebrtcDialer(false);
-                        setWebrtcCallId(null);
-                        queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
-                    }
-                }}>
-                    <DialogContent className="bg-card border-border text-foreground w-[calc(100vw-1rem)] max-w-md p-4 sm:p-6">
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                                <PhoneCall className="h-5 w-5 text-emerald-400" />
-                                Chamada em andamento
-                            </DialogTitle>
-                        </DialogHeader>
-                        <Suspense fallback={null}>
-                            <InBrowserDialer
-                                dealId={id!}
-                                customerPhone={deal?.customer_phone || ""}
-                                customerName={deal?.customer_name || "Cliente"}
-                                callId={webrtcCallId}
-                                onCallStarted={(newCallId) => {
-                                    setWebrtcCallId(newCallId);
-                                    queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
-                                }}
-                                onCallEnded={() => {
-                                    queryClient.invalidateQueries({ queryKey: ["deal-calls", id] });
-                                    toast.success("Chamada encerrada. Transcrição será processada automaticamente.");
-                                }}
-                                onError={(err) => {
-                                    toast.error(err);
-                                }}
-                            />
-                        </Suspense>
-                    </DialogContent>
-                </Dialog>
-
                 {showLostModal && (
                     <Suspense fallback={null}>
                         <LostDealModal

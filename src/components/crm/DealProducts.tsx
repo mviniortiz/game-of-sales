@@ -240,11 +240,9 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
         <div className="space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                    <Package className="h-5 w-5 text-emerald-400" />
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                        Produtos da Proposta
-                    </h3>
+                <div>
+                    <h3 className="text-[13px] font-semibold text-[var(--vyz-text-primary)]">Produtos</h3>
+                    <p className="text-[12px] text-[var(--vyz-text-muted)]">Os itens que entram no valor da proposta.</p>
                 </div>
                 <div className="flex items-center gap-2">
                     {deal && dealProducts.length > 0 && (
@@ -253,50 +251,52 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
                     <Button
                         size="sm"
                         onClick={() => setShowAddModal(true)}
-                        className="gap-2 bg-emerald-600 hover:bg-emerald-500"
+                        className="gap-1.5 h-9 px-4 rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 font-semibold active:scale-[0.98] transition-[opacity,transform]"
                     >
-                        <Plus className="h-4 w-4" />
-                        Adicionar Produto
+                        <Plus className="h-3.5 w-3.5" aria-hidden />
+                        Adicionar produto
                     </Button>
                 </div>
             </div>
 
             {/* Products Table */}
             {dealProducts.length === 0 ? (
-                <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed border-border">
-                    <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-                    <p className="text-muted-foreground">Nenhum produto adicionado</p>
-                    <p className="text-sm text-muted-foreground/70 mt-1">
-                        Clique em "Adicionar Produto" para criar sua proposta
-                    </p>
+                <div className="flex flex-col items-center rounded-[12px] border border-dashed border-[var(--ibx-line-strong)] px-6 py-8 text-center">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--ibx-sunken)] text-[var(--vyz-text-muted)]"><Package className="h-4 w-4" aria-hidden /></span>
+                    <p className="mt-3 text-[13.5px] font-semibold text-[var(--vyz-text-primary)]">Nenhum produto neste card</p>
+                    <p className="mt-1 text-[12.5px] text-[var(--vyz-text-muted)]">Adicione os itens do sistema, como placas, inversor e instalação.</p>
                 </div>
             ) : (
-                <div className="border rounded-lg overflow-hidden">
+                <div className="overflow-x-auto rounded-[12px] border border-[var(--ibx-line)]">
                     <Table>
                         <TableHeader>
-                            <TableRow className="bg-muted/50">
+                            <TableRow className="bg-[var(--ibx-paper)] hover:bg-[var(--ibx-paper)] [&>th]:h-9 [&>th]:text-[11.5px] [&>th]:font-medium [&>th]:text-[var(--vyz-text-muted)]">
                                 <TableHead>Produto</TableHead>
-                                <TableHead className="text-center w-24">Qtd</TableHead>
-                                <TableHead className="text-right">Preço Unit.</TableHead>
-                                <TableHead className="text-center w-24">Desc. %</TableHead>
+                                <TableHead className="hidden sm:table-cell text-center w-24">Qtd</TableHead>
+                                <TableHead className="hidden sm:table-cell text-right">Preço</TableHead>
+                                <TableHead className="hidden sm:table-cell text-center w-24">Desconto %</TableHead>
                                 <TableHead className="text-right">Subtotal</TableHead>
                                 <TableHead className="w-12"></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {dealProducts.map((item) => (
-                                <TableRow key={item.id}>
+                                <TableRow key={item.id} className="border-[var(--ibx-line-soft)] hover:bg-[var(--ibx-paper)]/60">
                                     <TableCell>
                                         <div>
-                                            <p className="font-medium">{item.produto?.nome}</p>
+                                            <p className="text-[13.5px] font-medium text-[var(--vyz-text-primary)]">{item.produto?.nome}</p>
                                             {item.produto?.descricao && (
-                                                <p className="text-xs text-muted-foreground truncate max-w-xs">
+                                                <p className="text-xs text-muted-foreground line-clamp-2 sm:line-clamp-none sm:truncate max-w-xs">
                                                     {item.produto.descricao}
                                                 </p>
                                             )}
+                                            <p className="sm:hidden mt-0.5 text-xs tabular-nums text-[var(--vyz-text-muted)]">
+                                                {item.quantidade} × {formatCurrency(item.preco_unitario)}
+                                                {item.desconto_percentual ? ` · ${item.desconto_percentual}% de desconto` : ""}
+                                            </p>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-center">
+                                    <TableCell className="hidden sm:table-cell text-center">
                                         <Input
                                             type="number"
                                             min="1"
@@ -308,13 +308,13 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
                                                     desconto: item.desconto_percentual,
                                                 })
                                             }
-                                            className="w-16 h-8 text-center mx-auto"
+                                            className="w-16 h-8 text-center mx-auto rounded-full border-[var(--ibx-line)] tabular-nums"
                                         />
                                     </TableCell>
-                                    <TableCell className="text-right font-medium">
+                                    <TableCell className="hidden sm:table-cell text-right font-medium tabular-nums">
                                         {formatCurrency(item.preco_unitario)}
                                     </TableCell>
-                                    <TableCell className="text-center">
+                                    <TableCell className="hidden sm:table-cell text-center">
                                         <Input
                                             type="number"
                                             min="0"
@@ -327,10 +327,10 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
                                                     desconto: parseFloat(e.target.value) || 0,
                                                 })
                                             }
-                                            className="w-16 h-8 text-center mx-auto"
+                                            className="w-16 h-8 text-center mx-auto rounded-full border-[var(--ibx-line)] tabular-nums"
                                         />
                                     </TableCell>
-                                    <TableCell className="text-right font-bold text-emerald-600 dark:text-emerald-400">
+                                    <TableCell className="text-right font-semibold tabular-nums whitespace-nowrap text-[var(--vyz-text-primary)]">
                                         {formatCurrency(calculateSubtotal(item))}
                                     </TableCell>
                                     <TableCell>
@@ -338,9 +338,10 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => removeProductMutation.mutate(item.id)}
-                                            className="h-8 w-8 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                                            aria-label={`Remover ${item.produto?.nome ?? "produto"}`}
+                                            className="h-8 w-8 p-0 rounded-full text-[var(--vyz-text-muted)] hover:text-[var(--vyz-danger)] hover:bg-[var(--vyz-danger-bg)]"
                                         >
-                                            <Trash2 className="h-4 w-4" />
+                                            <Trash2 className="h-3.5 w-3.5" />
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -349,11 +350,11 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
                     </Table>
 
                     {/* Total */}
-                    <div className="flex items-center justify-between px-4 py-3 bg-muted/50 border-t">
-                        <span className="text-sm font-semibold text-muted-foreground">
-                            TOTAL DA PROPOSTA
+                    <div className="flex items-center justify-between px-4 py-3 bg-[var(--ibx-paper)] border-t border-[var(--ibx-line)]">
+                        <span className="text-[12.5px] font-medium text-[var(--vyz-text-muted)]">
+                            Total
                         </span>
-                        <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                        <span className="text-[20px] font-semibold tabular-nums tracking-[-0.02em] text-[var(--vyz-text-primary)]">
                             {formatCurrency(totalValue)}
                         </span>
                     </div>
@@ -362,9 +363,9 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
 
             {/* Add Product Modal */}
             <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-                <DialogContent className="max-w-[95vw] sm:max-w-[500px]">
+                <DialogContent className="max-w-[95vw] sm:max-w-[500px] rounded-[18px] border border-[var(--ibx-line)] bg-[var(--ibx-card)]">
                     <DialogHeader>
-                        <DialogTitle>Adicionar Produto</DialogTitle>
+                        <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em]">Adicionar produto</DialogTitle>
                     </DialogHeader>
 
                     <div className="space-y-4 py-4">
@@ -403,7 +404,7 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
                                                     </p>
                                                 )}
                                             </div>
-                                            <span className="text-sm font-semibold text-emerald-600">
+                                            <span className="text-sm font-semibold tabular-nums text-[var(--vyz-text-primary)]">
                                                 {formatCurrency(produto.preco_base)}
                                             </span>
                                         </button>
@@ -413,13 +414,13 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
                         ) : (
                             <>
                                 {/* Selected Product */}
-                                <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg border border-emerald-200 dark:border-emerald-500/30">
+                                <div className="p-3 bg-[var(--ibx-sel)] rounded-[10px] border border-[var(--vyz-accent)]/20">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="font-semibold text-emerald-700 dark:text-emerald-300">
+                                            <p className="font-semibold text-[var(--vyz-text-primary)]">
                                                 {selectedProduct.nome}
                                             </p>
-                                            <p className="text-sm text-emerald-600/70 dark:text-emerald-400/70">
+                                            <p className="text-sm text-[var(--vyz-text-muted)]">
                                                 Preço base: {formatCurrency(selectedProduct.preco_base)}
                                             </p>
                                         </div>
@@ -427,7 +428,7 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => setSelectedProduct(null)}
-                                            className="text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
+                                            className="rounded-full text-[var(--vyz-accent)] hover:bg-[var(--vyz-accent)]/10"
                                         >
                                             Trocar
                                         </Button>
@@ -476,9 +477,9 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
                                 </div>
 
                                 {/* Subtotal Preview */}
-                                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                                    <span className="text-sm text-muted-foreground">Subtotal:</span>
-                                    <span className="text-lg font-bold text-emerald-600">
+                                <div className="flex items-center justify-between p-3 bg-[var(--ibx-paper)] rounded-[10px]">
+                                    <span className="text-sm text-[var(--vyz-text-muted)]">Subtotal</span>
+                                    <span className="text-lg font-semibold tabular-nums text-[var(--vyz-text-primary)]">
                                         {formatCurrency(
                                             quantidade * precoUnitario * (1 - desconto / 100)
                                         )}
@@ -492,6 +493,7 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
                     <div className="flex justify-end gap-2">
                         <Button
                             variant="outline"
+                            className="rounded-full"
                             onClick={() => {
                                 resetForm();
                                 setShowAddModal(false);
@@ -502,7 +504,7 @@ export const DealProducts = ({ dealId, companyId, deal }: DealProductsProps) => 
                         <Button
                             onClick={() => addProductMutation.mutate()}
                             disabled={!selectedProduct || addProductMutation.isPending}
-                            className="bg-emerald-600 hover:bg-emerald-500"
+                            className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 font-semibold active:scale-[0.98] transition-[opacity,transform]"
                         >
                             {addProductMutation.isPending ? (
                                 <Loader2 className="h-4 w-4 animate-spin mr-2" />

@@ -1,47 +1,38 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import {
-    CalendarIcon,
-    Clock,
-    CheckCircle2,
-    Phone,
-    Mail,
-    MessageSquare,
-    FileText,
-    Loader2,
-    User,
-    Zap,
-} from "lucide-react";
-import { format } from "date-fns";
+import { CalendarIcon, CheckCircle2, Phone, Mail, MessageSquare, FileText, Loader2 } from "lucide-react";
+import { addDays, format, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
 
-const TASK_TYPES = [
+export const TASK_TYPES = [
     { id: "tarefa", label: "Tarefa", icon: CheckCircle2 },
-    { id: "ligacao", label: "Ligação", icon: Phone },
-    { id: "email", label: "E-mail", icon: Mail },
+    { id: "ligacao", label: "Ligar", icon: Phone },
     { id: "reuniao", label: "Reunião", icon: MessageSquare },
     { id: "proposta", label: "Proposta", icon: FileText },
+    { id: "email", label: "E-mail", icon: Mail },
+] as const;
+
+const PRAZOS = [
+    { label: "Hoje", dias: 0 },
+    { label: "Amanhã", dias: 1 },
+    { label: "Em 2 dias", dias: 2 },
 ];
+
+const CAMPO = "h-10 rounded-[10px] border-[var(--ibx-line)] bg-[var(--ibx-card)] text-base md:text-sm focus-visible:ring-[var(--vyz-accent)]/30";
+const PILL = "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12.5px] font-medium border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]";
+const PILL_ON = "border-[var(--vyz-text-primary)] bg-[var(--vyz-text-primary)] text-[var(--vyz-btn-on)]";
+const PILL_OFF = "border-[var(--ibx-line)] bg-[var(--ibx-card)] text-[var(--vyz-text-strong)] hover:border-[var(--ibx-line-strong)]";
 
 interface NovaTarefaModalProps {
     open: boolean;
@@ -51,289 +42,164 @@ interface NovaTarefaModalProps {
     onSuccess?: () => void;
 }
 
+/** Tarefa do card. Grava em follow_up_reminders, a mesma fila que o sino de
+ *  lembretes lê: a tarefa avisa o responsável na hora marcada. */
 export const NovaTarefaModal = ({ open, onClose, dealId, dealTitle, onSuccess }: NovaTarefaModalProps) => {
     const { user, companyId } = useAuth();
     const { activeCompanyId } = useTenant();
     const queryClient = useQueryClient();
+    const effectiveCompanyId = activeCompanyId || companyId;
 
     const [assunto, setAssunto] = useState("");
     const [descricao, setDescricao] = useState("");
-    const [tipoTarefa, setTipoTarefa] = useState("tarefa");
+    const [tipo, setTipo] = useState<string>("tarefa");
     const [responsavelId, setResponsavelId] = useState("");
-    const [dataAgendamento, setDataAgendamento] = useState<Date>(new Date());
-    const [horario, setHorario] = useState(format(new Date(), "HH:mm"));
-    const [marcarConcluida, setMarcarConcluida] = useState(false);
+    const [dia, setDia] = useState<Date>(new Date());
+    const [horario, setHorario] = useState("09:00");
 
-    const effectiveCompanyId = activeCompanyId || companyId;
+    useEffect(() => {
+        if (open && !responsavelId && user?.id) setResponsavelId(user.id);
+    }, [open, responsavelId, user?.id]);
 
-    // Fetch team members for responsável
-    const { data: teamMembers } = useQuery({
+    const { data: equipe } = useQuery({
         queryKey: ["team-members", effectiveCompanyId],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from("profiles")
-                .select("id, nome, email")
-                .eq("company_id", effectiveCompanyId)
-                .order("nome");
-
+            const { data, error } = await supabase.from("profiles").select("id, nome, email").eq("company_id", effectiveCompanyId).order("nome");
             if (error) throw error;
             return data;
         },
         enabled: !!effectiveCompanyId && open,
     });
 
-    // Create task mutation
-    const createTaskMutation = useMutation({
-        mutationFn: async (taskData: any) => {
-            const { error } = await supabase.from("deal_tasks" as any).insert(taskData);
+    const reset = () => {
+        setAssunto("");
+        setDescricao("");
+        setTipo("tarefa");
+        setResponsavelId(user?.id ?? "");
+        setDia(new Date());
+        setHorario("09:00");
+    };
+
+    const criar = useMutation({
+        mutationFn: async () => {
+            const [h, m] = horario.split(":").map(Number);
+            const quando = new Date(dia);
+            quando.setHours(h || 0, m || 0, 0, 0);
+            const { error } = await (supabase as any).from("follow_up_reminders").insert({
+                deal_id: dealId,
+                company_id: effectiveCompanyId,
+                user_id: responsavelId,
+                created_by: user?.id ?? null,
+                title: assunto.trim(),
+                description: descricao.trim() || null,
+                task_type: tipo,
+                remind_at: quando.toISOString(),
+            });
             if (error) throw error;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["deal-tasks", dealId] });
-            toast.success("✅ Tarefa criada com sucesso!");
-            resetForm();
+            queryClient.invalidateQueries({ queryKey: ["reminders"] });
+            queryClient.invalidateQueries({ queryKey: ["reminders-upcoming"] });
+            toast.success("Tarefa criada");
+            reset();
             onSuccess?.();
             onClose();
         },
-        onError: (error: any) => {
-            toast.error(`Erro ao criar tarefa: ${error.message}`);
-        },
+        onError: (error: Error) => toast.error(`Não deu para criar a tarefa: ${error.message}`),
     });
 
-    const resetForm = () => {
-        setAssunto("");
-        setDescricao("");
-        setTipoTarefa("tarefa");
-        setResponsavelId("");
-        setDataAgendamento(new Date());
-        setHorario(format(new Date(), "HH:mm"));
-        setMarcarConcluida(false);
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
+    const enviar = (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (!assunto.trim()) {
-            toast.error("Preencha o assunto da tarefa");
-            return;
-        }
-
-        if (!responsavelId) {
-            toast.error("Selecione um responsável");
-            return;
-        }
-
-        // Combine date and time
-        const [hours, minutes] = horario.split(":").map(Number);
-        const dueDate = new Date(dataAgendamento);
-        dueDate.setHours(hours, minutes, 0, 0);
-
-        createTaskMutation.mutate({
-            deal_id: dealId,
-            title: assunto,
-            description: descricao || null,
-            task_type: tipoTarefa,
-            assigned_to: responsavelId,
-            due_date: dueDate.toISOString(),
-            completed: marcarConcluida,
-            created_by: user?.id,
-            company_id: effectiveCompanyId,
-        });
+        if (!assunto.trim()) { toast.error("Escreva o que precisa ser feito"); return; }
+        if (!responsavelId || !effectiveCompanyId) { toast.error("Escolha o responsável"); return; }
+        criar.mutate();
     };
 
-    const SelectedTypeIcon = TASK_TYPES.find(t => t.id === tipoTarefa)?.icon || CheckCircle2;
+    const hoje = new Date();
+    const prazoAtivo = PRAZOS.find((p) => isSameDay(addDays(hoje, p.dias), dia));
 
     return (
-        <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-[95vw] sm:max-w-[500px] bg-card border border-border">
-                <DialogHeader className="pb-4 border-b border-border">
-                    <DialogTitle className="flex items-center gap-3 text-foreground">
-                        <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-100 dark:ring-emerald-500/20">
-                            <Zap className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                        </div>
-                        <div>
-                            <span className="text-lg font-semibold">Criar Tarefa</span>
-                            <p className="text-[12px] text-muted-foreground font-normal mt-0.5">
-                                Agende uma atividade para esta negociação
-                            </p>
-                        </div>
-                    </DialogTitle>
-                    <DialogDescription className="sr-only">
-                        Formulário para criar uma nova tarefa
+        <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+            <DialogContent className="max-w-[95vw] sm:max-w-[480px] rounded-[18px] border border-[var(--ibx-line)] bg-[var(--ibx-card)] p-0 gap-0 overflow-hidden">
+                <DialogHeader className="px-5 pt-5 pb-1 text-left">
+                    <DialogTitle className="text-[17px] font-semibold tracking-[-0.01em] text-[var(--vyz-text-primary)]">Nova tarefa</DialogTitle>
+                    <DialogDescription className="text-[12.5px] text-[var(--vyz-text-muted)]">
+                        {dealTitle ? `Para ${dealTitle}` : "Para esta oportunidade"}
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-4 py-4">
-                    {/* Negociação (read-only) */}
-                    {dealTitle && (
-                        <div className="space-y-2">
-                            <Label className="text-xs font-medium text-muted-foreground">Negociação</Label>
-                            <div className="h-9 px-3 rounded-md border border-border bg-muted/50 flex items-center text-sm">
-                                {dealTitle}
-                            </div>
+                <form onSubmit={enviar} className="px-5 pb-5 pt-3 space-y-4">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="tarefa-assunto" className="text-[12.5px] font-medium text-[var(--vyz-text-strong)]">O que precisa ser feito</Label>
+                        <Input id="tarefa-assunto" autoFocus value={assunto} onChange={(e) => setAssunto(e.target.value)} placeholder="Ex.: mandar a simulação do financiamento" className={CAMPO} />
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <p className="text-[12.5px] font-medium text-[var(--vyz-text-strong)]">Tipo</p>
+                        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Tipo da tarefa">
+                            {TASK_TYPES.map((t) => {
+                                const Icon = t.icon;
+                                const on = tipo === t.id;
+                                return (
+                                    <button key={t.id} type="button" role="radio" aria-checked={on} onClick={() => setTipo(t.id)} className={`${PILL} ${on ? PILL_ON : PILL_OFF}`}>
+                                        <Icon className="h-3.5 w-3.5" aria-hidden /> {t.label}
+                                    </button>
+                                );
+                            })}
                         </div>
-                    )}
-
-                    {/* Assunto */}
-                    <div className="space-y-2">
-                        <Label className="text-xs font-medium">
-                            Assunto da tarefa <span className="text-rose-500">*</span>
-                        </Label>
-                        <Input
-                            value={assunto}
-                            onChange={(e) => setAssunto(e.target.value)}
-                            placeholder="Ex: Ligar para o cliente"
-                            className="h-9"
-                            required
-                        />
                     </div>
 
-                    {/* Descrição */}
-                    <div className="space-y-2">
-                        <Label className="text-xs font-medium">Descrição da tarefa</Label>
-                        <Textarea
-                            value={descricao}
-                            onChange={(e) => setDescricao(e.target.value)}
-                            placeholder="Detalhes adicionais..."
-                            rows={2}
-                            className="resize-none"
-                        />
+                    <div className="space-y-1.5">
+                        <p className="text-[12.5px] font-medium text-[var(--vyz-text-strong)]">Prazo</p>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            {PRAZOS.map((p) => (
+                                <button key={p.label} type="button" onClick={() => setDia(addDays(hoje, p.dias))} className={`${PILL} ${prazoAtivo?.dias === p.dias ? PILL_ON : PILL_OFF}`}>
+                                    {p.label}
+                                </button>
+                            ))}
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <button type="button" className={`${PILL} ${!prazoAtivo ? PILL_ON : PILL_OFF}`}>
+                                        <CalendarIcon className="h-3.5 w-3.5" aria-hidden />
+                                        {prazoAtivo ? "Outra data" : format(dia, "dd 'de' MMM", { locale: ptBR })}
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar mode="single" selected={dia} onSelect={(d) => d && setDia(d)} initialFocus />
+                                </PopoverContent>
+                            </Popover>
+                            <Input type="time" aria-label="Horário" value={horario} onChange={(e) => setHorario(e.target.value)} className={`${CAMPO} h-8 w-[104px] rounded-full px-3`} />
+                        </div>
                     </div>
 
-                    {/* Responsável */}
-                    <div className="space-y-2">
-                        <Label className="text-xs font-medium flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            Responsável <span className="text-rose-500">*</span>
-                        </Label>
-                        <Select value={responsavelId} onValueChange={setResponsavelId} required>
-                            <SelectTrigger className="h-9">
-                                <SelectValue placeholder="Selecione o responsável" />
-                            </SelectTrigger>
+                    <div className="space-y-1.5">
+                        <Label className="text-[12.5px] font-medium text-[var(--vyz-text-strong)]">Responsável</Label>
+                        <Select value={responsavelId} onValueChange={setResponsavelId}>
+                            <SelectTrigger className={CAMPO}><SelectValue placeholder="Escolha quem faz" /></SelectTrigger>
                             <SelectContent>
-                                {teamMembers?.map((member) => (
-                                    <SelectItem key={member.id} value={member.id}>
-                                        {member.nome}
-                                    </SelectItem>
+                                {equipe?.map((m) => (
+                                    <SelectItem key={m.id} value={m.id}>{m.id === user?.id ? `${m.nome || m.email} (você)` : m.nome || m.email}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
 
-                    {/* Tipo de Tarefa */}
-                    <div className="space-y-2">
-                        <Label className="text-xs font-medium">
-                            Tipo de tarefa <span className="text-rose-500">*</span>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="tarefa-detalhes" className="text-[12.5px] font-medium text-[var(--vyz-text-strong)]">
+                            Detalhes <span className="font-normal text-[var(--vyz-text-muted)]">(opcional)</span>
                         </Label>
-                        <Select value={tipoTarefa} onValueChange={setTipoTarefa}>
-                            <SelectTrigger className="h-9">
-                                <SelectValue>
-                                    <div className="flex items-center gap-2">
-                                        <SelectedTypeIcon className="h-4 w-4" />
-                                        {TASK_TYPES.find(t => t.id === tipoTarefa)?.label}
-                                    </div>
-                                </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                                {TASK_TYPES.map((type) => {
-                                    const TypeIcon = type.icon;
-                                    return (
-                                        <SelectItem key={type.id} value={type.id}>
-                                            <div className="flex items-center gap-2">
-                                                <TypeIcon className="h-4 w-4" />
-                                                {type.label}
-                                            </div>
-                                        </SelectItem>
-                                    );
-                                })}
-                            </SelectContent>
-                        </Select>
+                        <Textarea id="tarefa-detalhes" value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={2} className={`${CAMPO} h-auto resize-none py-2`} />
                     </div>
 
-                    {/* Data e Horário em uma linha */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {/* Data */}
-                        <div className="space-y-2">
-                            <Label className="text-xs font-medium flex items-center gap-1">
-                                <CalendarIcon className="h-3 w-3" />
-                                Data do agendamento <span className="text-rose-500">*</span>
-                            </Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        className={cn(
-                                            "w-full justify-start text-left font-normal h-9",
-                                            !dataAgendamento && "text-muted-foreground"
-                                        )}
-                                    >
-                                        <CalendarIcon className="mr-2 h-3 w-3" />
-                                        {dataAgendamento
-                                            ? format(dataAgendamento, "dd/MM/yyyy", { locale: ptBR })
-                                            : "Selecione"}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={dataAgendamento}
-                                        onSelect={(date) => date && setDataAgendamento(date)}
-                                        initialFocus
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-
-                        {/* Horário */}
-                        <div className="space-y-2">
-                            <Label className="text-xs font-medium flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                Horário da tarefa <span className="text-rose-500">*</span>
-                            </Label>
-                            <Input
-                                type="time"
-                                value={horario}
-                                onChange={(e) => setHorario(e.target.value)}
-                                className="h-9"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    {/* Marcar como concluída */}
-                    <div className="flex items-center gap-2 pt-2">
-                        <Checkbox
-                            id="marcar-concluida"
-                            checked={marcarConcluida}
-                            onCheckedChange={(checked) => setMarcarConcluida(checked as boolean)}
-                        />
-                        <Label
-                            htmlFor="marcar-concluida"
-                            className="text-sm text-muted-foreground cursor-pointer"
-                        >
-                            Marcar como concluída ao criar
-                        </Label>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                        <Button type="button" variant="outline" onClick={onClose}>
+                    <div className="flex justify-end gap-2 pt-1">
+                        <button type="button" onClick={onClose} className="h-10 px-4 rounded-full text-[13px] font-semibold border border-[var(--ibx-line)] text-[var(--vyz-text-primary)] hover:bg-[var(--ibx-paper)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]">
                             Cancelar
-                        </Button>
-                        <Button
-                            type="submit"
-                            disabled={createTaskMutation.isPending}
-                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold"
-                        >
-                            {createTaskMutation.isPending ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Criando...
-                                </>
-                            ) : (
-                                "Criar Tarefa"
-                            )}
-                        </Button>
+                        </button>
+                        <button type="submit" disabled={criar.isPending} className="inline-flex items-center gap-1.5 h-10 px-5 rounded-full text-[13px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 disabled:opacity-60 transition-[opacity,transform] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2">
+                            {criar.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />}
+                            Criar tarefa
+                        </button>
                     </div>
                 </form>
             </DialogContent>
