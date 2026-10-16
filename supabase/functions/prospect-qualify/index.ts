@@ -2,8 +2,9 @@
 // (Places API), home do site da empresa, juiz de IA e nota de encaixe
 // (_shared/prospectFit.ts). Grava fit_score e metadata.qualif. Quem leva veto
 // vai para descartado; quem estava aprovado e ficou abaixo do corte volta para
-// a fila (mapeado) e só sai se a nota subir. Cron a cada 10 minutos em dia útil;
-// sem fila, a rodada só consulta o banco.
+// a fila (mapeado) e só sai se a nota subir. Cron a cada 10 minutos; sem fila, a
+// rodada só consulta o banco. Sem GOOGLE_PLACES_API_KEY a nota sai só do cadastro
+// e do juiz (googleBuscado false); quando a chave chega, essas são refeitas.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import { llmChat } from "../_shared/llm.ts";
 import { CNAE_RAMO, CORTE_ENCAIXE, escolherLugar, notaDeEncaixe, type Evidencia, type Juiz, type LugarGoogle } from "../_shared/prospectFit.ts";
@@ -13,7 +14,8 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const EVA_CRON_SECRET = Deno.env.get("EVA_CRON_SECRET");
 const PLACES_KEY = Deno.env.get("GOOGLE_PLACES_API_KEY");
 const POR_RODADA = 12;
-const VERSAO = 1;
+const AO_MESMO_TEMPO = 4;
+const VERSAO = 2;
 
 const CAMPOS = [
   "places.id", "places.displayName", "places.formattedAddress", "places.nationalPhoneNumber",
@@ -76,7 +78,7 @@ async function julgar(e: Evidencia, extras: { avaliacoes: string[]; site: string
     e.porte ? `Porte: ${e.porte}` : null,
     e.google?.achou
       ? `Google Maps: "${e.google.nome}", categoria "${e.google.categoria ?? "?"}", ${e.google.avaliacoes} avaliações`
-      : "Não encontrada no Google Maps.",
+      : e.googleBuscado === false ? "Google Maps não consultado." : "Não encontrada no Google Maps.",
     extras.avaliacoes.length ? `Avaliações recentes de clientes:\n- ${extras.avaliacoes.join("\n- ")}` : null,
     extras.site ? `Texto do site da empresa:\n${extras.site}` : null,
   ].filter(Boolean).join("\n");
@@ -87,8 +89,10 @@ async function julgar(e: Evidencia, extras: { avaliacoes: string[]; site: string
         content: [
           "Você avalia se uma empresa de Santa Catarina é cliente para uma ferramenta que acompanha propostas de energia solar enviadas pelo WhatsApp.",
           "O cliente certo é uma INTEGRADORA: vende e instala sistemas fotovoltaicos para o cliente final (casa, comércio, agro), manda orçamento e negocia.",
-          "Não é cliente: quem só faz instalação elétrica geral sem vender solar, usina ou geração de energia, distribuidora ou atacado, loja que só revende peças, imobiliária, empresa de outro ramo com 'sol' no nome, ou empresa sem sinal nenhum de atividade.",
-          "Use só os fatos dados. Sem fato suficiente, responda 'duvida'.",
+          "Não existe código de atividade (CNAE) próprio de energia solar: integradoras registram instalação elétrica (4321500), loja de material elétrico (4742300) ou engenharia (7112000). Um desses códigos com nome de empresa solar ou fotovoltaica é sinal forte de integradora: responda 'sim'.",
+          "Não é cliente, responda 'nao': aquecedor solar ou aquecimento de água (é térmico, não fotovoltaico), quem só faz instalação elétrica sem nada de solar, usina ou geração de energia, distribuidora ou atacado, loja que só revende peças, imobiliária, financeira, empresa de outro ramo com 'sol' no nome, ou empresa fechada.",
+          "Fora do ramo no CNAE (comunicação, publicidade, hidráulica, por exemplo) com nome solar: responda 'duvida'.",
+          "Use só os fatos dados. Google Maps não consultado não é sinal contra.",
           'Responda só JSON: {"veredito": "sim" | "nao" | "duvida", "motivo": "até 12 palavras, em português, sem travessão"}',
         ].join("\n"),
       },
@@ -112,22 +116,26 @@ async function julgar(e: Evidencia, extras: { avaliacoes: string[]; site: string
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("method not allowed", { status: 405 });
   if (!EVA_CRON_SECRET || req.headers.get("x-cron-secret") !== EVA_CRON_SECRET) return new Response("unauthorized", { status: 401 });
-  if (!PLACES_KEY) return Response.json({ ok: false, motivo: "GOOGLE_PLACES_API_KEY não configurada" });
   const payload = await req.json().catch(() => ({}));
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
   // Aprovadas primeiro: são as próximas a sair e podem ter entrado pela nota antiga.
   const limite = Math.min(Number(payload?.limite) || POR_RODADA, 40);
-  const { data: fila, error } = await admin.from("prospecting_allowlist")
+  let consulta = admin.from("prospecting_allowlist")
     .select("id, agency_name, city, phone_e164, status, metadata")
-    .eq("is_active", true).in("status", ["aprovado", "mapeado"]).is("sent_at", null).is("fit_score", null)
+    .eq("is_active", true).in("status", ["aprovado", "mapeado"]).is("sent_at", null);
+  // Com a chave, também refaz quem foi qualificado sem o Google.
+  consulta = PLACES_KEY
+    ? consulta.or("fit_score.is.null,metadata->qualif->>google_buscado.eq.false")
+    : consulta.is("fit_score", null);
+  const { data: fila, error } = await consulta
     .order("status", { ascending: true }) // "aprovado" < "mapeado"
     .limit(limite);
   if (error) return Response.json({ ok: false, erro: error.message }, { status: 500 });
 
   const hoje = new Date();
   const resultado: any[] = [];
-  for (const row of fila ?? []) {
+  const qualificar = async (row: any) => {
     const md = row.metadata ?? {};
     const evid: Evidencia = {
       nome: row.agency_name || md.fantasia || md.razao || "",
@@ -141,13 +149,15 @@ Deno.serve(async (req) => {
       celular: row.phone_e164 ?? null,
     };
     try {
-      const g = await buscarNoGoogle(evid);
-      const { avaliacoesTexto, ...lugar } = g;
+      evid.googleBuscado = !!PLACES_KEY;
+      const g = PLACES_KEY ? await buscarNoGoogle(evid) : null;
+      const avaliacoesTexto = g?.avaliacoesTexto ?? [];
+      const lugar = g ? (({ avaliacoesTexto: _t, ...l }) => l)(g) : null;
       evid.google = lugar;
-      const site = await textoDoSite(lugar.site ?? md.site ?? null);
+      const site = await textoDoSite(lugar?.site ?? md.site ?? null);
       evid.juiz = await julgar(evid, { avaliacoes: avaliacoesTexto, site });
       const n = notaDeEncaixe(evid, hoje);
-      const qualif = { nota: n.nota, motivos: n.motivos.slice(0, 6), veto: n.veto, google: lugar, juiz: evid.juiz, site_lido: !!site, versao: VERSAO, em: hoje.toISOString() };
+      const qualif = { nota: n.nota, motivos: n.motivos.slice(0, 6), veto: n.veto, google: lugar, google_buscado: !!PLACES_KEY, juiz: evid.juiz, site_lido: !!site, versao: VERSAO, em: hoje.toISOString() };
       const patch: Record<string, unknown> = { fit_score: n.nota, metadata: { ...md, qualif } };
       if (n.veto) { patch.status = "descartado"; patch.notes = `qualificação: ${n.veto}`; }
       else if (row.status === "aprovado" && n.nota < CORTE_ENCAIXE) patch.status = "mapeado";
@@ -155,8 +165,13 @@ Deno.serve(async (req) => {
       resultado.push({ nome: evid.nome, nota: n.nota, veto: n.veto, status: patch.status ?? row.status });
     } catch (err) {
       resultado.push({ nome: evid.nome, erro: (err as Error).message });
-      if (/places 4\d\d/.test((err as Error).message)) break; // chave inválida ou cota: para a rodada
     }
+  };
+  // Em grupos pequenos: a IA e o Google respondem em paralelo sem estourar o tempo da edge.
+  const lista = fila ?? [];
+  for (let i = 0; i < lista.length; i += AO_MESMO_TEMPO) {
+    await Promise.all(lista.slice(i, i + AO_MESMO_TEMPO).map(qualificar));
+    if (resultado.some((r) => /places 4\d\d/.test(r.erro ?? ""))) break; // chave inválida ou cota
   }
   return Response.json({ ok: true, qualificadas: resultado.filter((r) => r.nota !== undefined).length, resultado });
 });

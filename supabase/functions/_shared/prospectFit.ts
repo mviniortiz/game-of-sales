@@ -9,6 +9,10 @@
 // nota 2 teve 9 em 32.
 
 export const CORTE_ENCAIXE = 50;
+// Sem a busca no Google a nota vai até 55. Escala: 40 pontos (perfil completo,
+// celular do sócio, sem veto) vira 50, o corte. Decisão de 16/10/2026 enquanto a
+// chave da Places API não sai; com a chave, a empresa é requalificada.
+const ESCALA_SEM_GOOGLE = 50 / 40;
 
 export type LugarGoogle = {
   achou: boolean;
@@ -34,6 +38,7 @@ export type Evidencia = {
   emailDominio?: string | null;
   socio?: string | null;
   celular?: string | null;
+  googleBuscado?: boolean; // false: ainda sem chave da Places API
   google?: LugarGoogle | null;
   juiz?: Juiz | null;
 };
@@ -89,10 +94,12 @@ export function notaDeEncaixe(e: Evidencia, hoje: Date = new Date()): Nota {
   if (e.juiz?.veredito === "sim") add(15, `IA: ${e.juiz.motivo}`);
   if (e.juiz?.veredito === "duvida") add(5, `IA em dúvida: ${e.juiz.motivo}`);
 
-  const nota = Math.max(0, Math.min(100, itens.reduce((s, i) => s + i.pontos, 0)));
+  const bruta = itens.reduce((s, i) => s + i.pontos, 0);
+  const semGoogle = e.googleBuscado === false;
+  const nota = Math.max(0, Math.min(100, Math.round(semGoogle ? bruta * ESCALA_SEM_GOOGLE : bruta)));
   const motivos = itens.filter((i) => i.pontos > 0).sort((a, b) => b.pontos - a.pontos).map((i) => i.motivo);
   const contra = itens.filter((i) => i.pontos < 0).map((i) => i.motivo);
-  return { nota, motivos: [...contra, ...motivos], veto: null };
+  return { nota, motivos: [...contra, ...motivos, ...(semGoogle ? ["sem dados do Google ainda"] : [])], veto: null };
 }
 
 // ── Casar a empresa da Receita com o lugar certo no Google ─────────────────

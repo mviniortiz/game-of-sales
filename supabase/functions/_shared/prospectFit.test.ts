@@ -48,3 +48,12 @@ Deno.test("casa o lugar pelo telefone, ou pelo nome forte na mesma cidade", () =
   // "Solar" sozinho não casa: palavra fraca, e a cidade é outra.
   assertEquals(escolherLugar([cands[0]], { nome: "JLG Solar", cidade: "Campos Novos" }), -1);
 });
+
+Deno.test("sem a busca do Google, perfil completo chega no corte e perfil fraco não", () => {
+  const completo = notaDeEncaixe({ ...base, googleBuscado: false }, hoje);
+  assertEquals(completo.nota, CORTE_ENCAIXE);
+  assert(completo.motivos.includes("sem dados do Google ainda"));
+  const fraco = notaDeEncaixe({ nome: "Fulano Eletrica", cidade: "Lages", porte: "demais", celular: "5549999990000", googleBuscado: false }, hoje);
+  assert(fraco.nota < CORTE_ENCAIXE, `nota ${fraco.nota}`);
+  assertEquals(notaDeEncaixe({ ...base, googleBuscado: false, juiz: { veredito: "nao", motivo: "imobiliária" } }, hoje).nota, 0);
+});
