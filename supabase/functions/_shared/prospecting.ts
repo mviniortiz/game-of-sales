@@ -30,6 +30,7 @@ export type ProspectRow = {
   reply_draft: string | null;
   reply_code: string | null;
   variant?: string | null;
+  metadata?: Record<string, unknown> | null;
 };
 
 // Celular brasileiro chega de dois jeitos: com o 9 da frente (55 48 9 9190-0089,
@@ -292,6 +293,48 @@ export async function enviarRascunho(
   }).eq("id", row.id);
 }
 
+/** Integradora que mostrou intenção vira card em Qualificação no funil do dono,
+ *  ligado à conversa para o Inbox mostrar o card. Ação interna: não fala com
+ *  ninguém, por isso não pede aprovação. */
+export async function cardDoProspect(
+  admin: any,
+  row: ProspectRow,
+  instanceName: string,
+  texto: string,
+): Promise<string | null> {
+  const nome = row.agency_name || (row.phone_e164 ? `+${row.phone_e164}` : "Integradora");
+  const socio = (row.metadata?.socio as string | undefined)?.trim();
+  const { data: deal, error } = await admin.from("deals").insert({
+    title: `${nome} · prospecção`,
+    customer_name: socio || nome,
+    customer_phone: row.phone_e164,
+    account_name: nome,
+    stage: "qualification",
+    user_id: row.user_id,
+    company_id: row.company_id,
+    additional_contacts: row.phone_e164 ? [{ phone: row.phone_e164 }] : [],
+    lead_source: "prospeccao",
+    source: "prospeccao",
+    notes: [row.city ? `Cidade: ${row.city}.` : "", `Disse: "${texto.slice(0, 300)}"`].filter(Boolean).join("\n"),
+  }).select("id").single();
+  if (error || !deal?.id) {
+    console.warn(`[prospect] card de ${nome} falhou:`, error?.message);
+    return null;
+  }
+  const { data: conn } = await admin.from("channel_connections").select("id")
+    .eq("provider", "evolution").eq("external_id", instanceName).maybeSingle();
+  if (conn?.id) {
+    const { data: contatos } = await admin.from("channel_contacts").select("id")
+      .eq("connection_id", conn.id).eq("phone_tail", brKey(row.phone_e164 || row.phone_tail));
+    const ids = (contatos || []).map((c: any) => c.id);
+    if (ids.length) {
+      await admin.from("channel_conversations").update({ deal_id: deal.id })
+        .in("contact_id", ids).is("deal_id", null);
+    }
+  }
+  return deal.id as string;
+}
+
 /** Integradora da lista respondeu: a EVA lê, escreve a próxima mensagem e pede
  *  a aprovação do dono. O seguimento do dia 4 é cancelado. */
 export async function onProspectInbound(
@@ -328,6 +371,14 @@ export async function onProspectInbound(
     metadata.sinal_compra_em = agora;
     metadata.sinal_compra_texto = args.text.slice(0, 300);
   }
+  let cardNovo = false;
+  if ((lido.quer || lido.kind === "interesse") && !metadata.deal_id) {
+    const dealId = await cardDoProspect(admin, row as ProspectRow, args.instanceName, args.text);
+    if (dealId) {
+      metadata.deal_id = dealId;
+      cardNovo = true;
+    }
+  }
   await admin.from("prospecting_allowlist").update({
     status: lido.kind === "sem_interesse" ? "sem_interesse" : lido.kind === "fora_do_perfil" ? "descartado" : "respondeu",
     replied_at: agora,
@@ -344,6 +395,7 @@ export async function onProspectInbound(
       `"${args.text.slice(0, 600)}"`,
       porta ? "Abriu a porta. A resposta padrão sai sozinha em uns 2 minutos:" : `Leitura: ${KIND_LABEL[lido.kind]}.`,
       porta ? `"${RESPOSTA_PORTA}"` : `Sugestão:\n"${lido.draft}"`,
+      ...(cardNovo ? ["Coloquei no pipeline, em Qualificação."] : []),
     ].join("\n\n"), {
       grupo: porta
         ? "👎 não envia · 👍 envia agora · ou responda esta mensagem com o seu texto"
