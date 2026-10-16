@@ -68,15 +68,18 @@ Deno.test("primeiro nome ignora sócio inválido", () => {
   assertEquals(primeiroNome(null), null);
 });
 
-Deno.test("chip novo: zero frias no dia da troca e sobe aos poucos até o teto", () => {
-  const troca = "2026-10-16T13:00:00.000Z"; // 10h de Brasília
+Deno.test("chip novo: zero frias no dia da troca e sobe por dia útil até o teto", () => {
+  const troca = "2026-10-16T13:00:00.000Z"; // sexta, 10h de Brasília
   const em = (dias: number, hora = "15:00") => new Date(new Date(`2026-10-16T${hora}:00.000Z`).getTime() + dias * 86400000);
   assertEquals(tetoDoChip(troca, em(0), 50), 0);
   assertEquals(tetoDoChip(troca, em(0, "23:30"), 50), 0); // 20h30 de Brasília, ainda o mesmo dia
-  assertEquals(tetoDoChip(troca, em(1), 50), 3);
-  assertEquals(tetoDoChip(troca, em(4), 50), 10);
-  assertEquals(tetoDoChip(troca, em(9), 50), 23);
-  assertEquals(tetoDoChip(troca, em(40), 50), 50);
+  assertEquals(tetoDoChip(troca, em(1), 50), 0); // sábado não conta
+  assertEquals(tetoDoChip(troca, em(3), 50), 3); // segunda, 1º dia útil
+  assertEquals(tetoDoChip(troca, em(4), 50), 5);
+  assertEquals(tetoDoChip(troca, em(6), 50), 10); // quinta, 4º dia útil
+  assertEquals(tetoDoChip(troca, em(7), 50), 12); // sexta seguinte, 5º dia útil
+  assertEquals(tetoDoChip(troca, em(10), 50), 15); // segunda seguinte
+  assertEquals(tetoDoChip(troca, em(60), 50), 50);
   assertEquals(tetoDoChip(null, em(0), 50), 50);
   assert(chipAquecendo(troca, em(13)));
   assert(!chipAquecendo(troca, em(14)));

@@ -168,9 +168,17 @@ export function parseProspectCommand(raw: string): ProspectCommand | null {
 const RAMPA_CHIP = [0, 3, 5, 8, 10, 12, 15, 18, 20];
 const DIAS_AQUECENDO = 14;
 
+const diaBr = (d: Date) => Math.floor((d.getTime() - 3 * 3600 * 1000) / 86400000);
+
+/** Dias úteis desde a troca: o robô não manda no fim de semana, e contar sábado e
+ *  domingo pulava a rampa (troca na sexta chegava na segunda já no 3º degrau). */
 function diasDoChip(chipDesde: string, agora: Date): number {
-  const diaBr = (d: Date) => Math.floor((d.getTime() - 3 * 3600 * 1000) / 86400000);
-  return diaBr(agora) - diaBr(new Date(chipDesde));
+  let uteis = 0;
+  for (let d = diaBr(new Date(chipDesde)) + 1; d <= diaBr(agora); d++) {
+    const semana = (d + 4) % 7; // dia 0 da época foi uma quinta; 0 = domingo
+    if (semana !== 0 && semana !== 6) uteis++;
+  }
+  return uteis;
 }
 
 /** Teto de envios frios de hoje (primeiro contato + seguimento). */
@@ -185,5 +193,5 @@ export function tetoDoChip(chipDesde: string | null, agora: Date, teto: number):
 
 /** Nas duas primeiras semanas o intervalo entre contatos dobra. */
 export function chipAquecendo(chipDesde: string | null, agora: Date): boolean {
-  return Boolean(chipDesde) && diasDoChip(chipDesde!, agora) < DIAS_AQUECENDO;
+  return Boolean(chipDesde) && diaBr(agora) - diaBr(new Date(chipDesde!)) < DIAS_AQUECENDO;
 }
