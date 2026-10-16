@@ -752,7 +752,7 @@ const FAQ = [
     },
     {
         q: "Quanto custa?",
-        a: "O Raio-X é grátis. Se depois você quiser que a EVA acompanhe as suas propostas todo mês, o Vyzon custa R$ 497 por mês, com tudo liberado para até 10 pessoas da equipe. Não tem teste: o Raio-X já mostra o que o Vyzon acha no seu WhatsApp.",
+        a: "O Raio-X é grátis. Se depois você quiser que a EVA acompanhe as suas propostas todo mês, o Vyzon custa R$ 197 por mês, com tudo liberado para até 10 pessoas da equipe. As 10 primeiras integradoras pagam R$ 97 por mês nos 3 primeiros meses. Não tem teste: o Raio-X já mostra o que o Vyzon acha no seu WhatsApp.",
     },
     {
         q: "O que vocês fazem com as minhas conversas?",

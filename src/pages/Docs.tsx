@@ -333,7 +333,7 @@ const ARTICLES: DocArticle[] = [
         body: "O Vyzon tem um plano só, com tudo liberado.",
       },
       {
-        heading: "Vyzon, R$ 497/mês",
+        heading: "Vyzon, R$ 197/mês",
         body: "Tudo liberado, até 10 usuários.\n- WhatsApp conectado\n- Inbox Comercial completo\n- Pipeline com agendamentos\n- EVA com análise de intenção, fit, urgência e objeções\n- Ranking e metas do time\n- Relatórios completos",
       },
       {

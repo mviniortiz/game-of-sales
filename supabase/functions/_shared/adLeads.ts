@@ -45,7 +45,7 @@ async function readLead(conversa: string, cfg: LeadConfig, nome: string | null):
     `O que descobrir, uma pergunta por vez e só o que ainda não se sabe: ${(cfg.perguntas || []).join("; ")}.`,
     `Se a pessoa preferir conversar, proponha dois horários entre estes (${cfg.horario_conversa || "dias úteis a partir das 15h"}): ${nextSlots()}.`,
     `Tom: ${cfg.tom || "curto, sem emoji, sem travessão, sem prometer resultado."}`,
-    "Regras: até 3 frases; nunca invente preço, resultado ou recurso; o plano custa R$ 497 por mês e só fale disso se perguntarem; se não for integrador (consumidor querendo placa, curioso, vendedor), agradeça e diga com educação que o Raio-X é para integradoras.",
+    "Regras: até 3 frases; nunca invente preço, resultado ou recurso; o plano custa R$ 197 por mês, com preço de fundador de R$ 97 por mês nos 3 primeiros meses para as 10 primeiras integradoras, e só fale disso se perguntarem; se não for integrador (consumidor querendo placa, curioso, vendedor), agradeça e diga com educação que o Raio-X é para integradoras.",
     "Quando já souber que é integrador, ofereça o Raio-X com o link. Se ele disser que já fez ou vai fazer, ofereça ajuda na conversa de 20 minutos.",
     `status: um de ${STATUS.join(", ")}.`,
     'Responda só JSON: {"status": "...", "is_integrador": true|false|null, "propostas_mes": "..."|null, "cidade": "..."|null, "draft": "..."}',

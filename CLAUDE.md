@@ -113,7 +113,8 @@ está BLOQUEADO por billing; não criar workflows.
 - Rotas públicas/SEO em `App.tsx`; `/auth`, `/criar-conta` e o app
   autenticado (catch-all) em `AppShell.tsx`. `/onboarding` e `/register` são
   redirects de compatibilidade.
-- Plano único "Vyzon" R$ 497 (id `pro`). SEM teste grátis (08/10/2026): conta
+- Plano único "Vyzon" R$ 197/mês (id `pro`, decisão de 16/10/2026), com preço de
+  fundador de R$ 97/mês nos 3 primeiros meses para as 10 primeiras integradoras. SEM teste grátis (08/10/2026): conta
   nova nasce free/inactive (o `guard_company_billing` força) e o grátis é o
   Raio-X automático (`/raio-x` → edge `raio-x-build` em modo dono → relatório
   em `/relatorio/:token`, que o dono confere e corrige). Paga = assinatura
