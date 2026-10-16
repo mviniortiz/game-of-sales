@@ -1,272 +1,249 @@
-import { ArrowLeft, Shield, Lock, Eye, Database, UserCheck, Share2, CalendarCheck, UserCog, Clock, RefreshCw, Mail, type LucideIcon } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { A, Destaque, LegalLayout, Lista, P, Sub, type LegalSection } from "@/components/legal/LegalLayout";
 
-type SectionProps = {
-  number: string;
-  icon: LucideIcon;
-  title: string;
-  children: React.ReactNode;
-};
+// Data fixa: muda só quando o texto muda.
+const ATUALIZADA = "Atualizada em 16 de outubro de 2026";
 
-const Section = ({ number, icon: Icon, title, children }: SectionProps) => (
-  <section
-    className="rounded-2xl p-6 sm:p-8"
-    style={{
-      background: "rgba(255,255,255,0.02)",
-      border: "1px solid rgba(255,255,255,0.06)",
-    }}
-  >
-    <header className="flex items-center gap-3 mb-4">
-      <div
-        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-        style={{ background: "rgba(37, 99, 235,0.1)", border: "1px solid rgba(37, 99, 235,0.2)" }}
-      >
-        <Icon className="h-4 w-4 text-emerald-400" strokeWidth={2} />
-      </div>
-      <div className="flex items-baseline gap-2 min-w-0">
-        <span className="text-xs font-mono tracking-wider text-[rgba(255,255,255,0.3)]">{number}</span>
-        <h2 className="font-heading text-lg sm:text-xl font-bold text-white tracking-tight truncate">
-          {title}
-        </h2>
-      </div>
-    </header>
-    <div className="space-y-4 text-[15px] leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
-      {children}
-    </div>
-  </section>
+const RESUMO = [
+    "Para funcionar, o Vyzon guarda as conversas do WhatsApp que a sua empresa conecta, além dos dados da sua conta e do seu funil.",
+    "A EVA lê essas conversas com a ajuda de provedores de inteligência artificial para sugerir o próximo passo. Nenhuma mensagem sai para o seu cliente sem alguém do seu time aprovar.",
+    "Não vendemos dados. Só compartilhamos com os fornecedores que fazem o serviço funcionar, listados aqui.",
+    "Você pode pedir acesso, correção ou exclusão dos seus dados quando quiser, por contato@vyzon.com.br.",
+];
+
+const SECOES: LegalSection[] = [
+    {
+        id: "quem-somos",
+        title: "Quem somos e o que esta política cobre",
+        body: (
+            <>
+                <P>
+                    O Vyzon é uma ferramenta para integradores de energia solar que vendem pelo WhatsApp. Ele acompanha cada
+                    proposta enviada, mostra o que está parado e, com a EVA, sugere a retomada certa na hora certa.
+                </P>
+                <P>Esta política explica como tratamos dados pessoais de três grupos de pessoas:</P>
+                <Lista itens={[
+                    "quem usa o Vyzon, como donos, vendedores e administradores das empresas clientes;",
+                    "as pessoas com quem essas empresas conversam pelo WhatsApp conectado, que são os clientes delas;",
+                    "quem visita o nosso site ou recebe um contato comercial nosso.",
+                ]} />
+                <P>Ao usar o Vyzon, você declara que leu esta política.</P>
+            </>
+        ),
+    },
+    {
+        id: "dados",
+        title: "Que dados tratamos",
+        body: (
+            <>
+                <Sub>Dados da sua conta</Sub>
+                <Lista itens={["Nome, e-mail e número de WhatsApp.", "Nome e segmento da empresa.", "Foto de perfil, se você enviar."]} />
+
+                <Sub>Conversas do WhatsApp conectado</Sub>
+                <P>
+                    Quando a sua empresa conecta um número de WhatsApp, recebemos as mensagens das conversas desse número:
+                    textos, áudios, imagens e documentos, como o PDF de uma proposta. Também recebemos o nome e o número de
+                    cada contato. Áudios podem ser transcritos e o valor de uma proposta em PDF pode ser lido automaticamente,
+                    para o orçamento entrar no placar.
+                </P>
+
+                <Sub>Dados do seu funil</Sub>
+                <Lista itens={["Oportunidades, etapas, valores, notas e tarefas.", "Propostas e produtos que você cadastra.", "O histórico de ações do seu time no Vyzon."]} />
+
+                <Sub>Site da sua empresa</Sub>
+                <P>
+                    Se você digitar o endereço do site da sua empresa ao configurar a EVA, nós lemos esse site para resumir o que
+                    a empresa faz. O resumo só é gravado depois que você confirma.
+                </P>
+
+                <Sub>Google Calendar</Sub>
+                <P>Se você conectar a sua agenda, acessamos os eventos dos agendamentos feitos pelo Vyzon. Os detalhes estão na seção sobre o Google, mais abaixo.</P>
+
+                <Sub>Navegação e medição</Sub>
+                <P>
+                    No site e no app usamos ferramentas de medição e de anúncios: Google Analytics, Google Ads, Meta Pixel e
+                    Microsoft Clarity. Elas registram páginas visitadas, cliques e dados do aparelho, e são carregadas depois da
+                    primeira interação com a página.
+                </P>
+
+                <Sub>Pagamento</Sub>
+                <P>A cobrança é feita por link do Mercado Pago. Os dados do cartão ficam com o Mercado Pago, e o Vyzon não os recebe.</P>
+            </>
+        ),
+    },
+    {
+        id: "uso",
+        title: "Para que usamos os dados",
+        body: (
+            <Lista itens={[
+                "Mostrar as suas conversas, o placar de orçamentos e o pipeline.",
+                "Fazer a EVA ler as conversas, entender em que pé cada proposta está e preparar rascunhos de mensagem. O rascunho só é enviado depois que alguém do seu time aprova.",
+                "Gerar o Raio-X das propostas paradas.",
+                "Dar suporte, cobrar a assinatura e avisar sobre a sua conta.",
+                "Melhorar o produto e medir o resultado das nossas campanhas.",
+                "Cumprir obrigações legais.",
+            ]} />
+        ),
+    },
+    {
+        id: "eva",
+        title: "A EVA e os provedores de inteligência artificial",
+        body: (
+            <>
+                <P>
+                    Para ler uma conversa, transcrever um áudio ou ler uma proposta, enviamos o trecho necessário a um provedor de
+                    inteligência artificial e recebemos de volta a leitura. Hoje usamos estes provedores, nesta ordem de
+                    preferência, trocando para o seguinte quando um deles falha:
+                </P>
+                <Lista itens={[
+                    "Anthropic (modelos Claude);",
+                    "DeepSeek;",
+                    "Google (modelos Gemini);",
+                    "OpenAI.",
+                ]} />
+                <P>Para transcrever áudio também podemos usar o Groq.</P>
+                <P>Nós não usamos as suas conversas para treinar modelos próprios de inteligência artificial.</P>
+                <Destaque>
+                    A EVA é assistida: ela lê, organiza e sugere. Toda mensagem para o seu cliente passa pela aprovação de uma
+                    pessoa do seu time antes de sair.
+                </Destaque>
+            </>
+        ),
+    },
+    {
+        id: "compartilhamento",
+        title: "Com quem compartilhamos",
+        body: (
+            <>
+                <P>Não vendemos nem alugamos dados pessoais. Compartilhamos dados apenas com:</P>
+                <Lista itens={[
+                    "Supabase, onde ficam o banco de dados e o login;",
+                    "Vercel, que hospeda o site e o app;",
+                    "Railway, que hospeda o servidor de conexão do WhatsApp por QR code;",
+                    "Kapso, quando a conexão usa a API oficial do WhatsApp;",
+                    "os provedores de inteligência artificial da seção anterior;",
+                    "Mercado Pago, para a cobrança;",
+                    "Google, Meta e Microsoft, nas ferramentas de medição e anúncios;",
+                    "autoridades, quando a lei exigir.",
+                ]} />
+            </>
+        ),
+    },
+    {
+        id: "transferencia",
+        title: "Transferência para fora do Brasil",
+        body: (
+            <P>
+                Vários desses fornecedores processam dados fora do Brasil, incluindo nos Estados Unidos e, no caso da DeepSeek, na
+                China. Enviamos a cada um apenas o necessário para a tarefa que ele faz.
+            </P>
+        ),
+    },
+    {
+        id: "papeis",
+        title: "Quem responde por cada dado",
+        body: (
+            <>
+                <P>
+                    Para as conversas do WhatsApp conectado e os dados dos clientes da sua empresa, a sua empresa decide o que fazer
+                    com eles e o Vyzon trata esses dados em nome dela, seguindo as instruções dadas pelo uso do produto.
+                </P>
+                <P>Para os dados da sua conta, da cobrança e da navegação no site, quem decide é o Vyzon.</P>
+                <P>
+                    Também procuramos empresas do setor solar a partir de dados públicos de CNPJ para um primeiro contato comercial.
+                    Quem não quiser receber novos contatos pode pedir a qualquer momento, e paramos.
+                </P>
+            </>
+        ),
+    },
+    {
+        id: "seguranca",
+        title: "Segurança",
+        body: (
+            <>
+                <P>Protegemos os dados com medidas técnicas e de organização, entre elas:</P>
+                <Lista itens={[
+                    "conexão criptografada entre o seu aparelho e o Vyzon;",
+                    "criptografia dos dados armazenados, feita pelo provedor do banco;",
+                    "separação dos dados por empresa no banco, para uma empresa nunca ver os dados de outra;",
+                    "acesso por login, com permissões diferentes para vendedor e administrador.",
+                ]} />
+            </>
+        ),
+    },
+    {
+        id: "retencao",
+        title: "Por quanto tempo guardamos",
+        body: (
+            <P>
+                Mantemos os dados apenas pelo tempo necessário para as finalidades desta política ou pelo prazo que a lei exigir.
+                Você pode pedir a exclusão da sua conta e dos dados ligados a ela a qualquer momento.
+            </P>
+        ),
+    },
+    {
+        id: "direitos",
+        title: "Seus direitos",
+        body: (
+            <>
+                <P>Pela Lei Geral de Proteção de Dados (Lei 13.709/2018), você pode:</P>
+                <Lista itens={[
+                    "confirmar se tratamos dados seus e ter acesso a eles;",
+                    "corrigir dados incompletos ou errados;",
+                    "pedir a exclusão, o bloqueio ou a anonimização de dados;",
+                    "pedir a portabilidade dos seus dados;",
+                    "saber com quem compartilhamos os seus dados;",
+                    "revogar consentimentos, como a ligação com o Google Calendar;",
+                    "desconectar o WhatsApp do Vyzon quando quiser.",
+                ]} />
+                <P>Se a pessoa for cliente de uma empresa que usa o Vyzon, o pedido pode ser feito para essa empresa ou para nós, e nós encaminhamos.</P>
+            </>
+        ),
+    },
+    {
+        id: "google",
+        title: "Google Calendar e uso limitado",
+        body: (
+            <>
+                <P>
+                    O uso que fazemos das informações recebidas das APIs do Google segue a{" "}
+                    <A href="https://developers.google.com/terms/api-services-user-data-policy">Política de Dados do Usuário dos Serviços de API do Google</A>,
+                    incluindo os requisitos de Uso Limitado.
+                </P>
+                <Lista itens={[
+                    "Acessamos só o mínimo necessário para sincronizar os agendamentos.",
+                    "Não lemos, alteramos nem compartilhamos os outros eventos da sua agenda.",
+                    "Não guardamos dados da agenda além do necessário.",
+                    "Você pode revogar o acesso a qualquer momento.",
+                ]} />
+            </>
+        ),
+    },
+    {
+        id: "mudancas",
+        title: "Mudanças nesta política",
+        body: (
+            <P>
+                Podemos atualizar esta política. Quando a mudança for importante, avisamos por e-mail ou por um aviso no app. A data
+                no topo da página mostra a última atualização.
+            </P>
+        ),
+    },
+    {
+        id: "contato",
+        title: "Contato",
+        body: (
+            <>
+                <P>
+                    Dúvidas sobre esta política ou pedidos sobre os seus dados: <A href="mailto:contato@vyzon.com.br">contato@vyzon.com.br</A>.
+                </P>
+                <P>Veja também os <A href="/termos-de-servico">Termos de serviço</A>.</P>
+            </>
+        ),
+    },
+];
+
+const PoliticaPrivacidade = () => (
+    <LegalLayout path="/politica-privacidade" title="Política de Privacidade" updated={ATUALIZADA} summary={RESUMO} sections={SECOES} />
 );
-
-const Bullet = ({ children }: { children: React.ReactNode }) => (
-  <li className="flex items-start gap-3">
-    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 shrink-0" />
-    <span>{children}</span>
-  </li>
-);
-
-const SubHeading = ({ children }: { children: React.ReactNode }) => (
-  <h3 className="font-heading text-white/90 font-semibold text-[15px] mt-2">{children}</h3>
-);
-
-const PoliticaPrivacidade = () => {
-  const navigate = useNavigate();
-  const today = new Date().toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-
-  return (
-    <div className="min-h-screen relative overflow-hidden" style={{ background: "#06080a" }}>
-      <div
-        className="absolute inset-x-0 top-0 h-[500px] pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(ellipse 70% 55% at 50% 0%, rgba(37, 99, 235,0.14) 0%, rgba(37, 99, 235,0.04) 35%, transparent 65%)",
-        }}
-      />
-      <div
-        className="absolute inset-0 opacity-[0.025] pointer-events-none"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-          backgroundSize: "80px 80px",
-        }}
-      />
-
-      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-20">
-        <button
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-sm text-[rgba(255,255,255,0.5)] hover:text-white mb-10 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" strokeWidth={2} />
-          Voltar
-        </button>
-
-        <div className="mb-12">
-          <p className="text-xs font-mono tracking-[0.2em] uppercase text-emerald-400/80 mb-3">
-            Legal / Vyzon
-          </p>
-          <h1
-            className="font-heading font-bold text-white tracking-tight leading-[1.05]"
-            style={{ fontSize: "clamp(2rem, 5vw, 3rem)", letterSpacing: "-0.03em" }}
-          >
-            Política de Privacidade
-          </h1>
-          <p className="mt-3 text-sm text-[rgba(255,255,255,0.45)]">
-            Última atualização: {today}
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          <Section number="01" icon={Eye} title="Introdução">
-            <p>
-              Esta Política de Privacidade descreve como coletamos, usamos e protegemos suas
-              informações pessoais quando você utiliza nossa plataforma de gestão de vendas.
-            </p>
-            <p>
-              Ao usar nossos serviços, você concorda com a coleta e uso de informações de acordo
-              com esta política.
-            </p>
-          </Section>
-
-          <Section number="02" icon={Database} title="Informações que Coletamos">
-            <SubHeading>2.1 Informações de Cadastro</SubHeading>
-            <ul className="space-y-2.5">
-              <Bullet>Nome completo</Bullet>
-              <Bullet>Endereço de e-mail</Bullet>
-              <Bullet>Foto de perfil (opcional)</Bullet>
-            </ul>
-            <SubHeading>2.2 Dados de Vendas e Atividades</SubHeading>
-            <ul className="space-y-2.5">
-              <Bullet>Registros de vendas e transações</Bullet>
-              <Bullet>Informações de clientes (nomes e dados de contato)</Bullet>
-              <Bullet>Histórico de calls e agendamentos</Bullet>
-              <Bullet>Metas e desempenho</Bullet>
-            </ul>
-            <SubHeading>2.3 Integração com Google Calendar</SubHeading>
-            <ul className="space-y-2.5">
-              <Bullet>Acesso aos seus eventos de calendário</Bullet>
-              <Bullet>Permissão para criar, editar e deletar eventos</Bullet>
-              <Bullet>Sincronização bidirecional de agendamentos</Bullet>
-            </ul>
-            <div
-              className="rounded-xl p-4 mt-4"
-              style={{ background: "rgba(37, 99, 235,0.06)", border: "1px solid rgba(37, 99, 235,0.2)" }}
-            >
-              <p className="text-sm text-[rgba(255,255,255,0.85)]">
-                <strong className="text-emerald-400">Importante:</strong> Só acessamos e
-                modificamos eventos relacionados aos agendamentos criados através da nossa
-                plataforma. Não lemos, modificamos ou compartilhamos outros eventos do seu
-                calendário.
-              </p>
-            </div>
-          </Section>
-
-          <Section number="03" icon={UserCheck} title="Como Usamos suas Informações">
-            <ul className="space-y-2.5">
-              <Bullet>Fornecer e manter nossos serviços de gestão de vendas</Bullet>
-              <Bullet>Sincronizar agendamentos com seu Google Calendar</Bullet>
-              <Bullet>Gerar relatórios e análises de desempenho</Bullet>
-              <Bullet>Melhorar e personalizar sua experiência</Bullet>
-              <Bullet>Enviar notificações importantes sobre sua conta</Bullet>
-            </ul>
-          </Section>
-
-          <Section number="04" icon={Lock} title="Segurança dos Dados">
-            <p>
-              A segurança dos seus dados é extremamente importante para nós. Implementamos
-              medidas de segurança técnicas e organizacionais para proteger suas informações:
-            </p>
-            <ul className="space-y-2.5">
-              <Bullet>Criptografia de dados em trânsito e em repouso</Bullet>
-              <Bullet>Autenticação segura com tokens de acesso</Bullet>
-              <Bullet>Controle de acesso baseado em função (RBAC)</Bullet>
-              <Bullet>Backups regulares dos dados</Bullet>
-              <Bullet>Monitoramento contínuo de segurança</Bullet>
-            </ul>
-          </Section>
-
-          <Section number="05" icon={Share2} title="Compartilhamento de Dados">
-            <p>
-              Não vendemos, alugamos ou compartilhamos suas informações pessoais com terceiros,
-              exceto:
-            </p>
-            <ul className="space-y-2.5">
-              <Bullet>Com seu consentimento explícito</Bullet>
-              <Bullet>Para cumprir obrigações legais</Bullet>
-              <Bullet>Com provedores de serviços essenciais (ex: hospedagem)</Bullet>
-            </ul>
-          </Section>
-
-          <Section number="06" icon={CalendarCheck} title="Google Calendar — Uso Limitado">
-            <p>
-              O uso que fazemos das informações recebidas das APIs do Google está em
-              conformidade com a{" "}
-              <a
-                href="https://developers.google.com/terms/api-services-user-data-policy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors"
-              >
-                Política de Dados do Usuário dos Serviços de API do Google
-              </a>
-              , incluindo os requisitos de Uso Limitado.
-            </p>
-            <div
-              className="rounded-xl p-4 mt-2"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
-            >
-              <p className="font-heading text-white/90 font-semibold text-sm mb-3">
-                Compromissos específicos:
-              </p>
-              <ul className="space-y-2.5 text-sm">
-                <Bullet>Só acessamos os dados mínimos necessários para sincronizar agendamentos</Bullet>
-                <Bullet>Não armazenamos dados do Google Calendar além do necessário</Bullet>
-                <Bullet>Não compartilhamos dados do seu calendário com terceiros</Bullet>
-                <Bullet>Você pode revogar o acesso a qualquer momento</Bullet>
-              </ul>
-            </div>
-          </Section>
-
-          <Section number="07" icon={UserCog} title="Seus Direitos">
-            <p>Você tem direito a:</p>
-            <ul className="space-y-2.5">
-              <Bullet>Acessar seus dados pessoais</Bullet>
-              <Bullet>Corrigir dados incorretos ou incompletos</Bullet>
-              <Bullet>Solicitar a exclusão de seus dados</Bullet>
-              <Bullet>Revogar permissões de integração com Google Calendar</Bullet>
-              <Bullet>Exportar seus dados em formato legível</Bullet>
-            </ul>
-          </Section>
-
-          <Section number="08" icon={Clock} title="Retenção de Dados">
-            <p>
-              Mantemos suas informações pessoais apenas pelo tempo necessário para os fins
-              descritos nesta política, ou conforme exigido por lei. Você pode solicitar a
-              exclusão de sua conta e dados associados a qualquer momento.
-            </p>
-          </Section>
-
-          <Section number="09" icon={RefreshCw} title="Alterações nesta Política">
-            <p>
-              Podemos atualizar esta Política de Privacidade periodicamente. Notificaremos você
-              sobre alterações significativas por e-mail ou através de um aviso em destaque na
-              plataforma.
-            </p>
-          </Section>
-
-          <Section number="10" icon={Mail} title="Contato">
-            <p>
-              Se você tiver dúvidas sobre esta Política de Privacidade ou sobre como tratamos
-              seus dados, entre em contato:
-            </p>
-            <div
-              className="rounded-xl p-4 flex items-center gap-3"
-              style={{ background: "rgba(37, 99, 235,0.06)", border: "1px solid rgba(37, 99, 235,0.2)" }}
-            >
-              <Mail className="h-4 w-4 text-emerald-400 shrink-0" strokeWidth={2} />
-              <a
-                href="mailto:contato@vyzon.com.br"
-                className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
-              >
-                contato@vyzon.com.br
-              </a>
-            </div>
-            <p className="text-sm text-[rgba(255,255,255,0.45)]">
-              Consulte também nossos{" "}
-              <Link
-                to="/termos-de-servico"
-                className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors"
-              >
-                Termos de Serviço
-              </Link>
-              .
-            </p>
-          </Section>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default PoliticaPrivacidade;
