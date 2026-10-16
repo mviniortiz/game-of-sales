@@ -71,7 +71,7 @@ async function getProfile(adminClient: any, userId: string, useCache: boolean): 
 // A Whatsmiau manda o arquivo de mídia dentro do próprio webhook (base64), o
 // histórico recente no evento messages.set, logo depois que o número conecta, e
 // nome/telefone dos contatos em contacts.upsert.
-const WEBHOOK_EVENTS = ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "MESSAGES_SET", "CONTACTS_UPSERT"];
+const WEBHOOK_EVENTS = ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "MESSAGES_SET", "CONTACTS_UPSERT", "CONNECTION_UPDATE"];
 
 function webhookConfig() {
   return {

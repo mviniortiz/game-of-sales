@@ -939,6 +939,19 @@ serve(async (req) => {
     return await handlePresenceUpdate(payload);
   }
 
+  // Abertura e queda da sessão, com o código do motivo, para explicar queda depois.
+  if (event === "connection.update") {
+    const d = payload?.data ?? {};
+    await createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY).from("whatsapp_connection_log").insert({
+      instance_name: String(payload?.instance || d.instance || ""),
+      state: String(d.state || ""),
+      status_reason: Number.isFinite(Number(d.statusReason)) ? Number(d.statusReason) : null,
+      wuid: d.wuid ?? null,
+      raw: payload,
+    });
+    return json(200, { ok: true });
+  }
+
   if (event !== "messages.upsert") {
     return json(200, { ok: true, ignored: event || "unknown" });
   }
