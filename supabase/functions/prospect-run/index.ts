@@ -22,8 +22,9 @@ import {
   brKey, enviarRespostasPorta, firstMessage, lembretesDeConversa, followupMessage, notifyDecision, notifyOwner, prospectNumber, randomCode,
   sendHumanText, sendVoiceNote, whatsappKeys,
 } from "../_shared/prospecting.ts";
-import { chipAquecendo, nextVariant, primeiroNome, tetoDoChip, type ProspectVariant } from "../_shared/prospectingText.ts";
+import { chipAquecendo, nextVariant, tetoDoChip, type ProspectVariant } from "../_shared/prospectingText.ts";
 import { groupJid } from "../_shared/ownerGroups.ts";
+import { CORTE_ENCAIXE } from "../_shared/prospectFit.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -128,9 +129,10 @@ Deno.serve(async (req) => {
     if (!tetoHoje) { r.chip_aquecendo = "dia sem mensagem fria"; continue; }
     if (!lotesHoje) {
       const { data: fila } = await admin.from("prospecting_allowlist")
-        .select("id, agency_name, city, rating_count, first_message, phone_e164, phone_tail, score, variant, metadata, signal")
-        .eq("user_id", inst.user_id).eq("is_active", true).eq("status", "mapeado").gte("score", 2)
-        .order("score", { ascending: false }).order("rating_count", { ascending: false, nullsFirst: false })
+        .select("id, agency_name, city, rating_count, first_message, phone_e164, phone_tail, score, fit_score, variant, metadata, signal")
+        // Só entra quem passou na qualificação (prospect-qualify), da maior nota para a menor.
+        .eq("user_id", inst.user_id).eq("is_active", true).eq("status", "mapeado").gte("fit_score", CORTE_ENCAIXE)
+        .order("fit_score", { ascending: false })
         .limit(tetoHoje * 2);
       // Número sem WhatsApp falha no envio e gasta uma vaga do lote aprovado: sai antes.
       const comNumero = (fila || []).filter((c: any) => prospectNumber(c));
@@ -166,9 +168,8 @@ Deno.serve(async (req) => {
           company_id: inst.company_id, user_id: inst.user_id, code, contact_ids: validos.map((c: any) => c.id),
         });
         const lista = validos.map((c: any, i: number) => {
-          const dono = primeiroNome(c.metadata?.socio);
-          const sinal = c.signal ? ` · ${String(c.signal).slice(0, 80)}` : "";
-          return `${i + 1}. ${c.agency_name}${c.city ? ` (${c.city})` : ""}${c.rating_count ? `, ${c.rating_count} avaliações` : ""}${dono ? ` · fala com ${dono}` : ""}${sinal} · versão ${c.variant}`;
+          const motivos = ((c.metadata?.qualif?.motivos ?? []) as string[]).slice(0, 2).join(", ");
+          return `${i + 1}. ${c.agency_name}${c.city ? ` (${c.city})` : ""} · nota ${c.fit_score}${motivos ? ` · ${motivos}` : ""}`;
         }).join("\n");
         const destino = (await groupJid(admin, instanceName, "prospeccao")) || ownerNumber;
         await notifyDecision(admin, { instanceName, destino, userId: inst.user_id, code }, [
