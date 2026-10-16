@@ -245,6 +245,25 @@ async function sendTextViaEva(phoneId: string, to: string, text: string): Promis
 
 // ── Número do dono da instância ─────────────────────────────────────────────
 
+/** Número conectado agora na instância, lido do servidor de WhatsApp, sem cache. */
+export async function connectedNumber(instanceName: string): Promise<string | null> {
+    try {
+        const res = await evolutionRequest(
+            `/instance/fetchInstances?instanceName=${encodeURIComponent(instanceName)}`,
+            { method: "GET" },
+            10000,
+        );
+        for (const entry of Array.isArray(res) ? res : [res]) {
+            const jid = entry?.ownerJid || entry?.owner || entry?.instance?.owner || entry?.instance?.ownerJid;
+            const numero = jid ? normalizeNumber(String(jid)) : null;
+            if (numero) return numero;
+        }
+    } catch (err) {
+        console.warn(`[approval] fetchInstances ${instanceName}:`, (err as Error)?.message);
+    }
+    return null;
+}
+
 /** Descobre o WhatsApp do dono da instância e cacheia em
  *  channel_connections.metadata.owner_jid. Ordem: cache, Evolution, telefone do
  *  perfil. Sem isso a EVA não tem pra onde mandar o rascunho. */
@@ -262,24 +281,7 @@ export async function resolveOwnerNumber(
     const cached = conn?.metadata?.owner_jid ? normalizeNumber(String(conn.metadata.owner_jid)) : null;
     if (cached) return cached;
 
-    let discovered: string | null = null;
-    try {
-        const res = await evolutionRequest(
-            `/instance/fetchInstances?instanceName=${encodeURIComponent(instanceName)}`,
-            { method: "GET" },
-            10000,
-        );
-        const list = Array.isArray(res) ? res : [res];
-        for (const entry of list) {
-            const jid = entry?.ownerJid || entry?.owner || entry?.instance?.owner || entry?.instance?.ownerJid;
-            if (jid) {
-                discovered = normalizeNumber(String(jid));
-                if (discovered) break;
-            }
-        }
-    } catch (err) {
-        console.warn(`[approval] fetchInstances ${instanceName}:`, (err as Error)?.message);
-    }
+    let discovered = await connectedNumber(instanceName);
 
     if (!discovered) {
         const userId = userIdFromInstance(instanceName);

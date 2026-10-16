@@ -229,7 +229,7 @@ export async function handleProspectCommand(
         .update({ status: "aprovado", approved_at: new Date().toISOString() })
         .in("id", batch.contact_ids).eq("status", "aguardando_aprovacao").select("id");
       await admin.from("prospecting_batches").update({ status: "aprovado", decided_at: new Date().toISOString() }).eq("id", batch.id);
-      await pronto(`Lote ${cmd.code} aprovado: ${ok?.length || 0} abordagens saem hoje, com 2 a 5 minutos entre elas.`);
+      await pronto(`Lote ${cmd.code} aprovado: ${ok?.length || 0} abordagens saem hoje, uma de cada vez, com pausa entre elas.`);
     } else if (cmd.intent === "reject") {
       await admin.from("prospecting_allowlist").update({ status: "mapeado" })
         .in("id", batch.contact_ids).eq("status", "aguardando_aprovacao");
@@ -242,10 +242,18 @@ export async function handleProspectCommand(
   }
 
   const { data: row } = await admin.from("prospecting_allowlist")
-    .select("id, agency_name, phone_e164, phone_tail, reply_draft, reply_kind, last_reply")
+    .select("id, agency_name, phone_e164, phone_tail, reply_draft, reply_kind, last_reply, sent_at")
     .eq("user_id", args.userId).eq("reply_code", cmd.code).maybeSingle();
   if (!row) {
     await avisar(`Isso já foi resolvido ou expirou (${cmd.code}). Nada foi enviado agora.`);
+    return true;
+  }
+  const { data: inst } = await admin.from("prospecting_instances").select("chip_desde")
+    .eq("user_id", args.userId).maybeSingle();
+  if (cmd.intent !== "reject" && inst?.chip_desde && row.sent_at && new Date(row.sent_at) < new Date(inst.chip_desde)) {
+    await admin.from("prospecting_allowlist").update({ reply_code: null, reply_draft: null }).eq("id", row.id);
+    const texto = cmd.intent === "replace" ? cmd.text : row.reply_draft;
+    await avisar(`Não enviei para ${row.agency_name}: essa conversa começou no seu número antigo, e pelo novo eles não sabem quem é. Responda pelo número antigo${texto ? `:\n\n${texto}` : "."}`);
     return true;
   }
   // Quem limpa o código primeiro é quem envia: duas leituras do mesmo comando não
@@ -409,13 +417,18 @@ async function escreverLembrete(row: ProspectRow): Promise<string> {
  *  espera o dono. A IA escreve um lembrete e o dono decide no grupo, como qualquer
  *  rascunho. Um por conversa e só nas paradas há até 3 dias: cobrar quem sumiu há uma
  *  semana soa como mala direta. O prospect-run chama dentro da janela de envio. */
-export async function lembretesDeConversa(admin: any, userId: string, instanceName: string, destino: string, maximo = 3): Promise<string[]> {
+export async function lembretesDeConversa(
+  admin: any, userId: string, instanceName: string, destino: string, chipDesde: string | null = null, maximo = 3,
+): Promise<string[]> {
   const agora = Date.now();
-  const { data } = await admin.from("prospecting_allowlist").select("*")
+  let consulta = admin.from("prospecting_allowlist").select("*")
     .eq("user_id", userId).eq("status", "respondeu").is("reply_code", null)
     .lt("updated_at", new Date(agora - 24 * 3600 * 1000).toISOString())
-    .gt("updated_at", new Date(agora - 3 * 24 * 3600 * 1000).toISOString())
-    .order("updated_at", { ascending: false }).limit(30);
+    .gt("updated_at", new Date(agora - 3 * 24 * 3600 * 1000).toISOString());
+  // Conversa aberta pelo número anterior não ganha lembrete do novo: do outro lado
+  // ninguém reconhece quem está cobrando.
+  if (chipDesde) consulta = consulta.gte("sent_at", chipDesde);
+  const { data } = await consulta.order("updated_at", { ascending: false }).limit(30);
   const feitos: string[] = [];
   for (const row of data || []) {
     if (feitos.length >= maximo) break;

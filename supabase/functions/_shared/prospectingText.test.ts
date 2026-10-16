@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { dividirMensagens, firstMessage, MARCA_IMAGEM, RESPOSTA_PORTA, followupMessage, nextVariant, pausaEntreMensagens, primeiroNome, tempoDigitando, VARIANTS } from "./prospectingText.ts";
+import { dividirMensagens, firstMessage, MARCA_IMAGEM, RESPOSTA_PORTA, followupMessage, nextVariant, pausaEntreMensagens, primeiroNome, tempoDigitando, chipAquecendo, tetoDoChip, VARIANTS } from "./prospectingText.ts";
 
 const ALVO = { agency_name: "Sol do Vale", city: "Blumenau", rating_count: 42 };
 
@@ -66,4 +66,19 @@ Deno.test("primeiro nome ignora sócio inválido", () => {
   assertEquals(primeiroNome("12.345.678 JOAO"), null);
   assertEquals(primeiroNome(""), null);
   assertEquals(primeiroNome(null), null);
+});
+
+Deno.test("chip novo: zero frias no dia da troca e sobe aos poucos até o teto", () => {
+  const troca = "2026-10-16T13:00:00.000Z"; // 10h de Brasília
+  const em = (dias: number, hora = "15:00") => new Date(new Date(`2026-10-16T${hora}:00.000Z`).getTime() + dias * 86400000);
+  assertEquals(tetoDoChip(troca, em(0), 50), 0);
+  assertEquals(tetoDoChip(troca, em(0, "23:30"), 50), 0); // 20h30 de Brasília, ainda o mesmo dia
+  assertEquals(tetoDoChip(troca, em(1), 50), 3);
+  assertEquals(tetoDoChip(troca, em(4), 50), 10);
+  assertEquals(tetoDoChip(troca, em(9), 50), 23);
+  assertEquals(tetoDoChip(troca, em(40), 50), 50);
+  assertEquals(tetoDoChip(null, em(0), 50), 50);
+  assert(chipAquecendo(troca, em(13)));
+  assert(!chipAquecendo(troca, em(14)));
+  assert(!chipAquecendo(null, em(0)));
 });

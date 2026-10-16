@@ -161,3 +161,29 @@ export function parseProspectCommand(raw: string): ProspectCommand | null {
   if (rest.length >= 6) return { code, intent: "replace", text: rest };
   return null;
 }
+
+// Número recém-conectado que já sai mandando mensagem para desconhecidos é o
+// perfil que o WhatsApp bane. O dia da troca fica só para conversar; depois o
+// teto sobe um pouco por dia até o daily_cap da instância.
+const RAMPA_CHIP = [0, 3, 5, 8, 10, 12, 15, 18, 20];
+const DIAS_AQUECENDO = 14;
+
+function diasDoChip(chipDesde: string, agora: Date): number {
+  const diaBr = (d: Date) => Math.floor((d.getTime() - 3 * 3600 * 1000) / 86400000);
+  return diaBr(agora) - diaBr(new Date(chipDesde));
+}
+
+/** Teto de envios frios de hoje (primeiro contato + seguimento). */
+export function tetoDoChip(chipDesde: string | null, agora: Date, teto: number): number {
+  if (!chipDesde) return teto;
+  const dias = Math.max(0, diasDoChip(chipDesde, agora));
+  const rampa = dias < RAMPA_CHIP.length
+    ? RAMPA_CHIP[dias]
+    : RAMPA_CHIP[RAMPA_CHIP.length - 1] + 3 * (dias - RAMPA_CHIP.length + 1);
+  return Math.min(teto, rampa);
+}
+
+/** Nas duas primeiras semanas o intervalo entre contatos dobra. */
+export function chipAquecendo(chipDesde: string | null, agora: Date): boolean {
+  return Boolean(chipDesde) && diasDoChip(chipDesde!, agora) < DIAS_AQUECENDO;
+}
