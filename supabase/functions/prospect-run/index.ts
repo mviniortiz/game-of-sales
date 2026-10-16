@@ -17,7 +17,7 @@
 // (RESPOSTA_PORTA) sai sozinha uns 2 minutos depois, das 8h às 21h.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { connectedNumber, instanceNameFor, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
+import { connectedNumber, connectionState, instanceNameFor, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
 import {
   brKey, enviarRespostasPorta, firstMessage, lembretesDeConversa, followupMessage, notifyDecision, notifyOwner, prospectNumber, randomCode,
   sendHumanText, sendVoiceNote, whatsappKeys,
@@ -195,6 +195,10 @@ Deno.serve(async (req) => {
     // 3. Um envio por rodada, no ritmo.
     if (inst.pausa_ate && new Date(inst.pausa_ate) > agora) { r.pausado_ate = inst.pausa_ate; continue; }
     if (inst.next_send_at && new Date(inst.next_send_at) > agora && payload?.force !== true) { r.aguardando_ritmo = inst.next_send_at; continue; }
+    // Sessão caída faz todo envio falhar: sem esta checagem, três integradoras
+    // ganhavam falha (e iam para o descarte) por culpa da conexão, não do número.
+    const estado = await connectionState(instanceName);
+    if (estado && !["open", "connected", "online"].includes(estado)) { r.desconectado = estado; continue; }
     // No dia da troca, o que saiu pelo número antigo não gasta o teto do chip novo.
     const contarDesde = inst.chip_desde && new Date(inst.chip_desde) > new Date(inicioDia) ? inst.chip_desde : inicioDia;
     const [{ count: enviadosHoje }, { count: seguimentosHoje }] = await Promise.all([

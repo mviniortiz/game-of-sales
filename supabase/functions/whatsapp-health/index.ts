@@ -37,7 +37,7 @@ function json(status: number, body: unknown) {
     return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 }
 
-type Probe = { ok: boolean; ms: number; error: string | null; instances: number; connected: number; states: Record<string, number> };
+type Probe = { ok: boolean; ms: number; error: string | null; instances: number; connected: number; states: Record<string, number>; porNome: Record<string, string> };
 
 /** A lista de instâncias da Whatsmiau não traz o estado; ele vem por instância
  *  em /instance/connectionState/{nome} (rota da Evolution). */
@@ -57,13 +57,13 @@ async function stateOf(name: string): Promise<string> {
 
 async function probe(): Promise<Probe> {
     const started = Date.now();
-    if (!API_URL || !API_KEY) return { ok: false, ms: 0, error: "EVOLUTION_API_URL/KEY ausentes", instances: 0, connected: 0, states: {} };
+    if (!API_URL || !API_KEY) return { ok: false, ms: 0, error: "EVOLUTION_API_URL/KEY ausentes", instances: 0, connected: 0, states: {}, porNome: {} };
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 15000);
     try {
         const res = await fetch(`${API_URL}/instance/fetchInstances`, { headers: { apikey: API_KEY }, signal: ctrl.signal });
         const ms = Date.now() - started;
-        if (!res.ok) return { ok: false, ms, error: `HTTP ${res.status}`, instances: 0, connected: 0, states: {} };
+        if (!res.ok) return { ok: false, ms, error: `HTTP ${res.status}`, instances: 0, connected: 0, states: {}, porNome: {} };
         const body = await res.json().catch(() => null);
         const list: Record<string, any>[] = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
         const nomes = list.map((e) => String(e?.instanceName ?? e?.id ?? e?.name ?? "")).filter(Boolean);
@@ -71,10 +71,11 @@ async function probe(): Promise<Probe> {
         const states: Record<string, number> = {};
         for (const s of estados) states[s] = (states[s] || 0) + 1;
         const connected = estados.filter((s) => ["open", "connected", "online"].includes(s)).length;
-        return { ok: true, ms, error: null, instances: list.length, connected, states };
+        const porNome = Object.fromEntries(nomes.map((n, i) => [n, estados[i]]));
+        return { ok: true, ms, error: null, instances: list.length, connected, states, porNome };
     } catch (e) {
         const msg = (e as Error).name === "AbortError" ? "sem resposta em 15s" : (e as Error).message;
-        return { ok: false, ms: Date.now() - started, error: msg, instances: 0, connected: 0, states: {} };
+        return { ok: false, ms: Date.now() - started, error: msg, instances: 0, connected: 0, states: {}, porNome: {} };
     } finally {
         clearTimeout(timer);
     }
@@ -107,7 +108,7 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const simular = body?.simular_queda === true;
     const p: Probe = simular
-        ? { ok: false, ms: 0, error: "queda simulada", instances: 0, connected: 0, states: {} }
+        ? { ok: false, ms: 0, error: "queda simulada", instances: 0, connected: 0, states: {}, porNome: {} }
         : await probe();
     const agora = new Date().toISOString();
     const { data: antes } = await supabase.from("service_health").select("*").eq("service", SERVICE).maybeSingle();
@@ -134,6 +135,29 @@ serve(async (req) => {
         ].filter(Boolean));
     }
 
+    // Uma sessão cai com o servidor no ar (celular desconectado, número bloqueado) e
+    // nada avisa: o aviso da prospecção sai pelo mesmo WhatsApp que caiu. Medido em
+    // 16/10/2026: o chip novo fechou às 11h40 e só foi notado às 12h25.
+    const ABERTO = ["open", "connected", "online"];
+    const antesPorNome: Record<string, string> = antes?.details?.por_nome ?? {};
+    if (p.ok && !simular) {
+        const caiu = Object.keys(p.porNome).filter((n) => ABERTO.includes(antesPorNome[n]) && !ABERTO.includes(p.porNome[n]));
+        const voltou = Object.keys(p.porNome).filter((n) => antesPorNome[n] && !ABERTO.includes(antesPorNome[n]) && ABERTO.includes(p.porNome[n]));
+        if (caiu.length) {
+            avisado = (await avisar(`WhatsApp desconectado: ${caiu.join(", ")}`, [
+                `A conexão ${caiu.join(", ")} saiu do ar (estado: ${caiu.map((n) => p.porNome[n]).join(", ")}). O servidor continua funcionando.`,
+                "",
+                "Enquanto ela estiver fora, a prospecção não envia nada e as respostas não chegam no Vyzon.",
+                "Abra o WhatsApp no celular desse número: se aparecer aviso de banimento ou de conta desconectada, é isso. Se o app estiver normal, conecte de novo pelo QR em Configurações, WhatsApp.",
+            ])) || avisado;
+        }
+        if (voltou.length) {
+            avisado = (await avisar(`WhatsApp conectado de novo: ${voltou.join(", ")}`, [
+                `A conexão ${voltou.join(", ")} voltou. Sessões conectadas agora: ${p.connected} de ${p.instances}.`,
+            ])) || avisado;
+        }
+    }
+
     const linha = {
         service: SERVICE,
         status,
@@ -141,7 +165,7 @@ serve(async (req) => {
         last_checked_at: agora,
         consecutive_fails: fails,
         last_error: p.error,
-        details: { ms: p.ms, instances: p.instances, connected: p.connected, states: p.states, last_alert_sent: avisado ? agora : antes?.details?.last_alert_sent ?? null },
+        details: { ms: p.ms, instances: p.instances, connected: p.connected, states: p.states, por_nome: p.ok ? p.porNome : antesPorNome, last_alert_sent: avisado ? agora : antes?.details?.last_alert_sent ?? null },
     };
     const { error } = await supabase.from("service_health").upsert(linha);
     if (error) return json(500, { error: error.message });

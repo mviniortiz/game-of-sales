@@ -264,6 +264,18 @@ export async function connectedNumber(instanceName: string): Promise<string | nu
     return null;
 }
 
+/** Estado da sessão ("open", "close", "connecting"), ou null se o servidor não respondeu. */
+export async function connectionState(instanceName: string): Promise<string | null> {
+    try {
+        const res = await evolutionRequest(`/instance/connectionState/${encodeURIComponent(instanceName)}`, { method: "GET" }, 8000);
+        const estado = res?.instance?.state ?? res?.state ?? res?.status;
+        return estado ? String(estado).toLowerCase() : null;
+    } catch (err) {
+        console.warn(`[approval] connectionState ${instanceName}:`, (err as Error)?.message);
+        return null;
+    }
+}
+
 /** Descobre o WhatsApp do dono da instância e cacheia em
  *  channel_connections.metadata.owner_jid. Ordem: cache, Evolution, telefone do
  *  perfil. Sem isso a EVA não tem pra onde mandar o rascunho. */
