@@ -9,7 +9,7 @@ import { evolutionRequest, normalizeNumber } from "./whatsappApproval.ts";
 import { saveNotice } from "./ownerGroups.ts";
 import { llmChat } from "./llm.ts";
 import { PREFIXO_AUDIO } from "./transcribe.ts";
-import { AUTO_ENVIO_MS, dividirMensagens, firstMessage, IMAGEM_RETOMADA, MARCA_IMAGEM, nextSlots, RESPOSTA_PORTA, parseProspectCommand, pausaEntreMensagens, RAIO_X_LINK, randomCode, tempoDigitando } from "./prospectingText.ts";
+import { AUTO_ENVIO_MS, dividirMensagens, firstMessage, ehDistribuidora, IMAGEM_RETOMADA, MARCA_IMAGEM, nextSlots, parseProspectCommand, pausaEntreMensagens, RAIO_X_LINK, randomCode, respostaPorta, tempoDigitando } from "./prospectingText.ts";
 export { firstMessage, followupMessage, nextSlots, parseProspectCommand, randomCode } from "./prospectingText.ts";
 
 export const PROSPECT_PREFIX = "PROSPECÇÃO";
@@ -21,6 +21,7 @@ export type ProspectRow = {
   phone_e164: string | null;
   phone_tail: string;
   agency_name: string | null;
+  niche?: string | null;
   city: string | null;
   rating_count: number | null;
   status: string;
@@ -115,6 +116,10 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
   const ofereceuLink = row.variant === "raiox";
   const system = [
     "Você ajuda o Markus, fundador da Vyzon (Florianópolis), a conversar com donos de integradoras de energia solar.",
+    // Mesmo produto visto do lado da distribuidora: as regras abaixo continuam valendo com outro vocabulário.
+    ...(ehDistribuidora(row.niche) ? [
+      "ESTA EMPRESA É UMA DISTRIBUIDORA de equipamento solar (vende kits, painéis e inversores para integradoras), não uma integradora. Em todas as regras abaixo, leia 'integradora' como a distribuidora, 'cliente' como o integrador que recebeu a cotação, 'proposta' e 'orçamento' como cotação, e 'o dono' como o dono ou o vendedor. Nos modelos de frase, troque assim: 'Tô montando uma ferramenta pra distribuidora: quando uma cotação fica 2 dias sem resposta do integrador, ela avisa o vendedor no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.' No preço, diga 'as 10 primeiras empresas' em vez de 'as 10 primeiras integradoras'. fora_do_perfil também inclui quem vende direto para o consumidor final (é integradora) e quem só fabrica.",
+    ] : []),
     ofereceuLink
       ? "A primeira mensagem do Markus ofereceu o link do Raio-X grátis: uma ferramenta que lê o WhatsApp da integradora e acha as propostas que o cliente visualizou e não respondeu. Objetivo: que o dono ou sócio abra o link. Não fale de preço nem de plano."
       : [
@@ -384,7 +389,7 @@ export async function onProspectInbound(
     replied_at: agora,
     followup_due_at: null,
     reply_kind: lido.kind,
-    reply_draft: porta ? RESPOSTA_PORTA : lido.draft,
+    reply_draft: porta ? respostaPorta(row.niche) : lido.draft,
     reply_code: code,
     metadata: porta ? { ...metadata, auto_envio_em: new Date(Date.now() + AUTO_ENVIO_MS).toISOString() } : metadata,
     last_reply: `${row.last_reply ? row.last_reply + "\n" : ""}Eles: ${args.text}`.slice(-3000),
@@ -394,7 +399,7 @@ export async function onProspectInbound(
       `${nome} respondeu:`,
       `"${args.text.slice(0, 600)}"`,
       porta ? "Abriu a porta. A resposta padrão sai sozinha em uns 2 minutos:" : `Leitura: ${KIND_LABEL[lido.kind]}.`,
-      porta ? `"${RESPOSTA_PORTA}"` : `Sugestão:\n"${lido.draft}"`,
+      porta ? `"${respostaPorta(row.niche)}"` : `Sugestão:\n"${lido.draft}"`,
       ...(cardNovo ? ["Coloquei no pipeline, em Qualificação."] : []),
     ].join("\n\n"), {
       grupo: porta
@@ -447,10 +452,10 @@ async function escreverLembrete(row: ProspectRow): Promise<string> {
       {
         role: "system",
         content: [
-          "Você escreve pelo Markus, fundador da Vyzon (Florianópolis), no WhatsApp de uma integradora de energia solar.",
-          "A integradora parou de responder há um dia, depois da última mensagem do Markus. Escreva UM lembrete de uma frase só, fácil de responder com sim, não ou um número, que retome a última pergunta dele.",
+          `Você escreve pelo Markus, fundador da Vyzon (Florianópolis), no WhatsApp de uma ${ehDistribuidora(row.niche) ? "distribuidora de equipamento solar" : "integradora de energia solar"}.`,
+          "A empresa parou de responder há um dia, depois da última mensagem do Markus. Escreva UM lembrete de uma frase só, fácil de responder com sim, não ou um número, que retome a última pergunta dele.",
           "No máximo 20 palavras, uma pergunta só. Sem cobrar, sem repetir o que a ferramenta faz, sem oferecer nada novo, sem pedir desculpa, sem emoji, sem travessão. Tom de quem digita no WhatsApp com alguém da região ('pra', 'tá'). Se a última mensagem propôs horário, pergunte se algum dos horários serve.",
-          "Nunca pergunte quantas propostas, quanto vale ou números do mês: a pergunta de quantidade travou conversas em 14/10/2026. Se a última pergunta do Markus foi de quantidade, troque por uma de sim ou não ('Isso acontece aí ou é raro?').",
+          "Nunca pergunte quantas propostas ou cotações, quanto vale ou números do mês: a pergunta de quantidade travou conversas em 14/10/2026. Se a última pergunta do Markus foi de quantidade, troque por uma de sim ou não ('Isso acontece aí ou é raro?').",
           "Responda só o texto do lembrete.",
         ].join("\n"),
       },

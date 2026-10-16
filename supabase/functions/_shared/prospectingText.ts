@@ -19,9 +19,18 @@ export type ProspectVariant = "pergunta" | "numero" | "curta" | "encaminha" | "r
  *  Sem "Não é venda": a resposta seguinte mostra a ferramenta, e a frase viraria mentira. */
 export const VARIANTS: ProspectVariant[] = ["encaminha"];
 
+/** Distribuidora de kit solar é um teste à parte (decisão de 16/10/2026): a integradora
+ *  segue sendo o público do critério de 30/10, e a distribuidora entra como 1 de cada 5
+ *  envios, com o mesmo produto visto do lado dela (cotação que o integrador visualiza e
+ *  não responde). O segmento fica em prospecting_allowlist.niche. */
+export const NICHO_DISTRIBUIDORA = "distribuidora solar";
+export const ehDistribuidora = (niche?: string | null) => niche === NICHO_DISTRIBUIDORA;
+
 /** A pergunta que valida ou mata o ICP. Vai no WhatsApp antes de qualquer convite de reunião. */
 export const PERGUNTA_DOR =
   "Quando o cliente visualiza a proposta e some, vocês chamam de novo ou deixam pra lá? Quantas ficaram assim no último mês, mais ou menos?";
+const PERGUNTA_DOR_DISTRIBUIDORA =
+  "Quando o integrador visualiza a cotação e some, vocês chamam de novo ou deixam pra lá? Quantas ficaram assim no último mês, mais ou menos?";
 
 export const RAIO_X_LINK = "https://vyzon.com.br/criar-conta?segmento=energia_solar&utm_source=prospeccao&utm_content=raiox";
 
@@ -41,10 +50,18 @@ export const RESPOSTA_PORTA = [
   MARCA_IMAGEM,
   "Vocês fazem algo assim hoje ou fica no braço?",
 ].join("\n\n");
+const RESPOSTA_PORTA_DISTRIBUIDORA = [
+  "Tô montando uma ferramenta pra distribuidora: quando uma cotação fica 2 dias sem resposta do integrador, ela avisa o vendedor no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.",
+  MARCA_IMAGEM,
+  "Vocês fazem algo assim hoje ou fica no braço?",
+].join("\n\n");
+export const respostaPorta = (niche?: string | null) =>
+  ehDistribuidora(niche) ? RESPOSTA_PORTA_DISTRIBUIDORA : RESPOSTA_PORTA;
 export const AUTO_ENVIO_MS = 90_000;
 
 type ProspectTarget = {
   agency_name: string | null; city: string | null; rating_count: number | null;
+  niche?: string | null;
   /** socio: nome do sócio administrador, do cadastro do CNPJ na Receita. */
   metadata?: { socio?: string | null } | null;
 };
@@ -76,6 +93,10 @@ export function firstMessage(row: ProspectTarget, variant: ProspectVariant = "pe
   // ("propostas que vocês mandam", "ferramenta pra integradora"): sem isso, PG Energy e
   // Envolty leram como cliente reclamando de orçamento sem resposta (15/10/2026).
   if (variant === "encaminha") {
+    if (ehDistribuidora(row.niche)) {
+      if (dono) return `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra distribuidora de equipamento solar e queria te fazer uma pergunta rápida sobre as cotações que vocês mandam e o integrador visualiza e não responde. É você que cuida disso na ${nome}?`;
+      return `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra distribuidora de equipamento solar e queria fazer uma pergunta rápida sobre as cotações que vocês mandam e o integrador visualiza e não responde. Consegue me passar pra quem cuida do comercial na ${nome}?`;
+    }
     if (dono) return `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar e queria te fazer uma pergunta rápida sobre as propostas que vocês mandam e o cliente visualiza e não responde. É você que cuida disso na ${nome}?`;
     return `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar e queria fazer uma pergunta rápida sobre as propostas que vocês mandam e o cliente visualiza e não responde. Consegue me passar pra quem cuida disso na ${nome}?`;
   }
@@ -124,9 +145,10 @@ export function dividirMensagens(texto: string): string[] {
 }
 
 /** Seguimento do dia 4 para quem não respondeu: a mesma pergunta da dor, sem pedir reunião. */
-export function followupMessage(row?: Pick<ProspectTarget, "metadata">, sender = "Markus"): string {
+export function followupMessage(row?: Pick<ProspectTarget, "metadata" | "niche">, sender = "Markus"): string {
   const dono = primeiroNome(row?.metadata?.socio);
-  return `Oi${dono ? `, ${dono}` : ""}, tudo bem? Passando só pra não deixar minha mensagem solta. É uma pergunta só: ${PERGUNTA_DOR.charAt(0).toLowerCase()}${PERGUNTA_DOR.slice(1)} ${sender}`;
+  const pergunta = ehDistribuidora(row?.niche) ? PERGUNTA_DOR_DISTRIBUIDORA : PERGUNTA_DOR;
+  return `Oi${dono ? `, ${dono}` : ""}, tudo bem? Passando só pra não deixar minha mensagem solta. É uma pergunta só: ${pergunta.charAt(0).toLowerCase()}${pergunta.slice(1)} ${sender}`;
 }
 
 /** Próximos horários livres do Markus: dias úteis, a partir das 15h, pulando hoje. */

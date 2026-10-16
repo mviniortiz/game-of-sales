@@ -7,7 +7,8 @@
 // e do juiz (googleBuscado false); quando a chave chega, essas são refeitas.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import { llmChat } from "../_shared/llm.ts";
-import { CNAE_RAMO, CORTE_ENCAIXE, escolherLugar, notaDeEncaixe, type Evidencia, type Juiz, type LugarGoogle } from "../_shared/prospectFit.ts";
+import { ehDistribuidora } from "../_shared/prospectingText.ts";
+import { CNAE_ATACADO, CNAE_RAMO, CORTE_ENCAIXE, escolherLugar, notaDeEncaixe, type Evidencia, type Juiz, type LugarGoogle } from "../_shared/prospectFit.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -74,7 +75,7 @@ async function textoDoSite(url: string | null): Promise<string> {
 async function julgar(e: Evidencia, extras: { avaliacoes: string[]; site: string }): Promise<Juiz | null> {
   const fatos = [
     `Empresa: ${e.nome}${e.razao && e.razao !== e.nome ? ` (razão social: ${e.razao})` : ""}, ${e.cidade ?? "?"} - SC`,
-    e.cnae ? `Atividade principal no CNPJ: ${CNAE_RAMO[e.cnae] ?? `código ${e.cnae}`}` : null,
+    e.cnae ? `Atividade principal no CNPJ: ${CNAE_RAMO[e.cnae] ?? CNAE_ATACADO[e.cnae] ?? `código ${e.cnae}`}` : null,
     e.porte ? `Porte: ${e.porte}` : null,
     e.google?.achou
       ? `Google Maps: "${e.google.nome}", categoria "${e.google.categoria ?? "?"}", ${e.google.avaliacoes} avaliações`
@@ -86,15 +87,22 @@ async function julgar(e: Evidencia, extras: { avaliacoes: string[]; site: string
     messages: [
       {
         role: "system",
-        content: [
+        content: (e.distribuidora ? [
+          "Você avalia se uma empresa de Santa Catarina é cliente para uma ferramenta que acompanha cotações de equipamento solar enviadas pelo WhatsApp.",
+          "O cliente certo é uma DISTRIBUIDORA de equipamento fotovoltaico: vende kits, painéis, inversores ou estruturas para integradoras e instaladores, manda cotação e negocia.",
+          "Distribuidora costuma registrar atacado (de máquinas e equipamentos, de material elétrico). Atacado com nome solar ou fotovoltaico é sinal forte: responda 'sim'.",
+          "Não é cliente, responda 'nao': aquecedor solar ou aquecimento de água (é térmico), usina ou geração de energia, empresa de outro ramo com 'sol' no nome, ou empresa fechada.",
+          "Nome solar sem atacado no CNPJ (instalação elétrica, loja de varejo, engenharia) parece integradora, não distribuidora: responda 'duvida'.",
+        ] : [
           "Você avalia se uma empresa de Santa Catarina é cliente para uma ferramenta que acompanha propostas de energia solar enviadas pelo WhatsApp.",
           "O cliente certo é uma INTEGRADORA: vende e instala sistemas fotovoltaicos para o cliente final (casa, comércio, agro), manda orçamento e negocia.",
           "Não existe código de atividade (CNAE) próprio de energia solar: integradoras registram instalação elétrica (4321500), loja de material elétrico (4742300) ou engenharia (7112000). Um desses códigos com nome de empresa solar ou fotovoltaica é sinal forte de integradora: responda 'sim'.",
           "Não é cliente, responda 'nao': aquecedor solar ou aquecimento de água (é térmico, não fotovoltaico), quem só faz instalação elétrica sem nada de solar, usina ou geração de energia, distribuidora ou atacado, loja que só revende peças, imobiliária, financeira, empresa de outro ramo com 'sol' no nome, ou empresa fechada.",
           "Fora do ramo no CNAE (comunicação, publicidade, hidráulica, por exemplo) com nome solar: responda 'duvida'.",
+        ]).concat([
           "Use só os fatos dados. Google Maps não consultado não é sinal contra.",
           'Responda só JSON: {"veredito": "sim" | "nao" | "duvida", "motivo": "até 12 palavras, em português, sem travessão"}',
-        ].join("\n"),
+        ]).join("\n"),
       },
       { role: "user", content: fatos },
     ],
@@ -122,7 +130,7 @@ Deno.serve(async (req) => {
   // Aprovadas primeiro: são as próximas a sair e podem ter entrado pela nota antiga.
   const limite = Math.min(Number(payload?.limite) || POR_RODADA, 40);
   let consulta = admin.from("prospecting_allowlist")
-    .select("id, agency_name, city, phone_e164, status, metadata")
+    .select("id, agency_name, city, phone_e164, status, metadata, niche")
     .eq("is_active", true).in("status", ["aprovado", "mapeado"]).is("sent_at", null);
   // Com a chave, também refaz quem foi qualificado sem o Google.
   consulta = PLACES_KEY
@@ -139,6 +147,7 @@ Deno.serve(async (req) => {
     const md = row.metadata ?? {};
     const evid: Evidencia = {
       nome: row.agency_name || md.fantasia || md.razao || "",
+      distribuidora: ehDistribuidora(row.niche),
       razao: md.razao ?? null,
       cidade: row.city ?? null,
       cnae: md.cnae ?? null,

@@ -57,3 +57,15 @@ Deno.test("sem a busca do Google, perfil completo chega no corte e perfil fraco 
   assert(fraco.nota < CORTE_ENCAIXE, `nota ${fraco.nota}`);
   assertEquals(notaDeEncaixe({ ...base, googleBuscado: false, juiz: { veredito: "nao", motivo: "imobiliária" } }, hoje).nota, 0);
 });
+
+Deno.test("distribuidora pontua pelo atacado e pelo porte maior, não pela instalação elétrica", () => {
+  const dist: Evidencia = { ...base, nome: "Sul Solar Distribuidora", distribuidora: true, cnae: "4669999", porte: "EPP", googleBuscado: false, juiz: { veredito: "sim", motivo: "atacado de kits solares" } };
+  const n = notaDeEncaixe(dist, hoje);
+  assert(n.motivos.includes("atividade principal: atacado de máquinas e equipamentos"), n.motivos.join(" | "));
+  assert(n.motivos.includes("porte EPP"));
+  assert(n.nota >= CORTE_ENCAIXE, `nota ${n.nota}`);
+  const comoIntegradora = notaDeEncaixe({ ...dist, cnae: "4321500" }, hoje);
+  assert(!comoIntegradora.motivos.some((m) => m.startsWith("atividade principal")), "instalação elétrica não conta para distribuidora");
+  const micro = notaDeEncaixe({ ...dist, porte: "ME" }, hoje);
+  assert(!micro.motivos.includes("porte ME"));
+});

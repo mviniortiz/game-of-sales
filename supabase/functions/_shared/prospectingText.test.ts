@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { dividirMensagens, firstMessage, MARCA_IMAGEM, RESPOSTA_PORTA, followupMessage, nextVariant, pausaEntreMensagens, primeiroNome, tempoDigitando, chipAquecendo, tetoDoChip, VARIANTS } from "./prospectingText.ts";
+import { dividirMensagens, firstMessage, MARCA_IMAGEM, RESPOSTA_PORTA, respostaPorta, followupMessage, nextVariant, pausaEntreMensagens, primeiroNome, tempoDigitando, chipAquecendo, tetoDoChip, VARIANTS } from "./prospectingText.ts";
 
 const ALVO = { agency_name: "Sol do Vale", city: "Blumenau", rating_count: 42 };
 
@@ -84,4 +84,18 @@ Deno.test("chip novo: zero frias no dia da troca e sobe por dia útil até o tet
   assert(chipAquecendo(troca, em(13)));
   assert(!chipAquecendo(troca, em(14)));
   assert(!chipAquecendo(null, em(0)));
+});
+
+Deno.test("distribuidora recebe abordagem de cotação e integrador, nos três textos fixos", () => {
+  const dist = { ...ALVO, agency_name: "Sul Solar Distribuidora", niche: "distribuidora solar", metadata: { socio: "ANA PAULA SOUZA" } };
+  const primeira = firstMessage(dist, "encaminha");
+  assert(primeira.startsWith("Oi, Ana,"), primeira);
+  assert(primeira.includes("distribuidora de equipamento solar") && primeira.includes("integrador"), primeira);
+  assert(!primeira.includes("integradora solar"), primeira);
+  assert(followupMessage(dist).includes("o integrador visualiza a cotação"));
+  const porta = respostaPorta("distribuidora solar");
+  assert(porta.includes("cotação") && porta.includes(MARCA_IMAGEM), porta);
+  assertEquals(respostaPorta(null), RESPOSTA_PORTA);
+  assertEquals(respostaPorta("integradorasolar"), RESPOSTA_PORTA);
+  for (const t of [primeira, followupMessage(dist), porta]) assert(!/[—–]/.test(t), "travessão");
 });

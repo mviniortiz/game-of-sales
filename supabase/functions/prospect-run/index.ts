@@ -22,7 +22,7 @@ import {
   brKey, enviarRespostasPorta, firstMessage, lembretesDeConversa, followupMessage, notifyDecision, notifyOwner, prospectNumber, randomCode,
   sendHumanText, sendVoiceNote, whatsappKeys,
 } from "../_shared/prospecting.ts";
-import { chipAquecendo, nextVariant, tetoDoChip, type ProspectVariant } from "../_shared/prospectingText.ts";
+import { chipAquecendo, ehDistribuidora, NICHO_DISTRIBUIDORA, nextVariant, tetoDoChip, type ProspectVariant } from "../_shared/prospectingText.ts";
 import { groupJid } from "../_shared/ownerGroups.ts";
 import { CORTE_ENCAIXE } from "../_shared/prospectFit.ts";
 
@@ -128,21 +128,29 @@ Deno.serve(async (req) => {
       .eq("user_id", inst.user_id).gte("created_at", inicioDia);
     if (!tetoHoje) { r.chip_aquecendo = "dia sem mensagem fria"; continue; }
     if (!lotesHoje) {
-      const { data: fila } = await admin.from("prospecting_allowlist")
-        .select("id, agency_name, city, rating_count, first_message, phone_e164, phone_tail, score, fit_score, variant, metadata, signal")
-        // Só entra quem passou na qualificação (prospect-qualify), da maior nota para a menor.
-        .eq("user_id", inst.user_id).eq("is_active", true).eq("status", "mapeado").gte("fit_score", CORTE_ENCAIXE)
-        .order("fit_score", { ascending: false })
-        .limit(tetoHoje * 2);
+      // Só entra quem passou na qualificação (prospect-qualify), da maior nota para a menor.
+      // A distribuidora é teste à parte e fica com 1 de cada 5 vagas; vaga dela que
+      // sobrar vai para integradora.
+      const filaDo = (distribuidora: boolean, n: number) => {
+        let q = admin.from("prospecting_allowlist")
+          .select("id, agency_name, city, rating_count, first_message, phone_e164, phone_tail, score, fit_score, variant, metadata, signal, niche")
+          .eq("user_id", inst.user_id).eq("is_active", true).eq("status", "mapeado").gte("fit_score", CORTE_ENCAIXE);
+        q = distribuidora ? q.eq("niche", NICHO_DISTRIBUIDORA) : q.or(`niche.is.null,niche.neq."${NICHO_DISTRIBUIDORA}"`);
+        return q.order("fit_score", { ascending: false }).limit(n);
+      };
+      const vagasDist = tetoHoje >= 3 ? Math.max(1, Math.round(tetoHoje / 5)) : 0;
+      const [{ data: filaInt }, { data: filaDist }] = await Promise.all([filaDo(false, tetoHoje * 2), filaDo(true, vagasDist * 2)]);
       // Número sem WhatsApp falha no envio e gasta uma vaga do lote aprovado: sai antes.
-      const comNumero = (fila || []).filter((c: any) => prospectNumber(c));
+      const comNumero = [...(filaDist || []), ...(filaInt || [])].filter((c: any) => prospectNumber(c));
       const temZap = await whatsappKeys(instanceName, comNumero.map((c: any) => prospectNumber(c)!));
       const semZap = temZap ? comNumero.filter((c: any) => !temZap.has(brKey(prospectNumber(c)))) : [];
       if (semZap.length) {
         await admin.from("prospecting_allowlist").update({ status: "descartado", notes: "sem WhatsApp na checagem do lote" })
           .in("id", semZap.map((c: any) => c.id));
       }
-      const validos = comNumero.filter((c: any) => !semZap.includes(c)).slice(0, tetoHoje);
+      const ok = comNumero.filter((c: any) => !semZap.includes(c));
+      const dist = ok.filter((c: any) => ehDistribuidora(c.niche)).slice(0, vagasDist);
+      const validos = [...dist, ...ok.filter((c: any) => !ehDistribuidora(c.niche)).slice(0, tetoHoje - dist.length)];
       if (validos.length) {
         // Teste de abordagens: cada nova integradora recebe a variante menos usada.
         const { data: usadas } = await admin.from("prospecting_allowlist").select("variant")
@@ -169,7 +177,7 @@ Deno.serve(async (req) => {
         });
         const lista = validos.map((c: any, i: number) => {
           const motivos = ((c.metadata?.qualif?.motivos ?? []) as string[]).slice(0, 2).join(", ");
-          return `${i + 1}. ${c.agency_name}${c.city ? ` (${c.city})` : ""} · nota ${c.fit_score}${motivos ? ` · ${motivos}` : ""}`;
+          return `${i + 1}. ${c.agency_name}${c.city ? ` (${c.city})` : ""}${ehDistribuidora(c.niche) ? " · distribuidora (teste)" : ""} · nota ${c.fit_score}${motivos ? ` · ${motivos}` : ""}`;
         }).join("\n");
         const destino = (await groupJid(admin, instanceName, "prospeccao")) || ownerNumber;
         await notifyDecision(admin, { instanceName, destino, userId: inst.user_id, code }, [

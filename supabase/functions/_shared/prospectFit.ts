@@ -30,6 +30,7 @@ export type Juiz = { veredito: "sim" | "nao" | "duvida"; motivo: string };
 
 export type Evidencia = {
   nome: string;
+  distribuidora?: boolean; // teste à parte: vende kit para integradora (ver prospectingText.ts)
   razao?: string | null;
   cidade?: string | null;
   cnae?: string | null;
@@ -51,6 +52,18 @@ export const CNAE_RAMO: Record<string, string> = {
   "4742300": "loja de material elétrico",
   "7112000": "engenharia",
   "3321000": "instalação de máquinas e equipamentos",
+};
+
+// Atacado onde a distribuidora de kit solar se registra.
+export const CNAE_ATACADO: Record<string, string> = {
+  "4669999": "atacado de máquinas e equipamentos",
+  "4673700": "atacado de material elétrico",
+  "4679699": "atacado de materiais de construção",
+  "4661300": "atacado de máquinas para agropecuária",
+  "4649499": "atacado de outros equipamentos",
+  "4689399": "atacado de produtos intermediários",
+  "4652400": "atacado de componentes eletrônicos",
+  "4651601": "atacado de equipamentos de informática",
 };
 
 const SOLAR = /SOLAR|FOTOVOLT|\bSOL\b|\bSUN/i;
@@ -82,9 +95,11 @@ export function notaDeEncaixe(e: Evidencia, hoje: Date = new Date()): Nota {
   if (e.celular) add(e.socio ? 15 : 8, e.socio ? `celular do CNPJ, fala com ${e.socio.split(" ")[0]}` : "celular do CNPJ");
 
   // O perfil bate? (até 25)
-  if (e.cnae && CNAE_RAMO[e.cnae]) add(10, `atividade principal: ${CNAE_RAMO[e.cnae]}`);
+  const ramo = e.distribuidora ? CNAE_ATACADO : CNAE_RAMO;
+  if (e.cnae && ramo[e.cnae]) add(10, `atividade principal: ${ramo[e.cnae]}`);
   if (SOLAR.test(`${e.nome} ${e.razao ?? ""}`)) add(5, "nome de empresa solar");
-  if (e.porte === "ME" || e.porte === "EPP") add(5, `porte ${e.porte}`);
+  // Distribuidora micro costuma ser revenda de um vendedor só, sem fila de cotação.
+  if (e.distribuidora ? e.porte === "EPP" || e.porte === "demais" : e.porte === "ME" || e.porte === "EPP") add(5, `porte ${e.porte}`);
   if (e.inicio && /^\d{8}$/.test(e.inicio)) {
     const anos = hoje.getUTCFullYear() - Number(e.inicio.slice(0, 4));
     add(anos >= 2 && anos <= 8 ? 5 : anos > 8 ? 3 : 1, `CNPJ há ${anos} ${anos === 1 ? "ano" : "anos"}`);
