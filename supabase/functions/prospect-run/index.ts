@@ -5,6 +5,8 @@
 //     ao dono pelo WhatsApp ("PK4 1");
 //  3. envia UMA mensagem por vez (seguimento do dia 4 primeiro, depois as
 //     aprovadas), respeitando o teto diário e 2 a 5 minutos entre contatos.
+//  4. conversa parada do lado deles há mais de um dia ganha UM lembrete escrito
+//     pela IA, que vai para o grupo pedir o 👍 do dono (lembretesDeConversa).
 // Nada sai para uma integradora sem aprovação: só status "aprovado" é enviado,
 // e o seguimento só existe para quem foi aprovado e não respondeu. Exceção decidida
 // pelo Markus em 15/10/2026: a resposta padrão a quem só disse "pode falar"
@@ -13,7 +15,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { instanceNameFor, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
 import {
-  brKey, enviarRespostasPorta, firstMessage, followupMessage, notifyDecision, prospectNumber, randomCode, sendHumanText, sendVoiceNote,
+  brKey, enviarRespostasPorta, firstMessage, lembretesDeConversa, followupMessage, notifyDecision, prospectNumber, randomCode, sendHumanText, sendVoiceNote,
   whatsappKeys,
 } from "../_shared/prospecting.ts";
 import { nextVariant, primeiroNome, type ProspectVariant } from "../_shared/prospectingText.ts";
@@ -64,6 +66,13 @@ Deno.serve(async (req) => {
     if (!dentro) { r.fora_da_janela = true; continue; }
     const ownerNumber = await resolveOwnerNumber(admin, instanceName);
     if (!ownerNumber) { r.erro = "número do dono não encontrado"; continue; }
+    try {
+      const destinoLembrete = (await groupJid(admin, instanceName, "prospeccao")) || ownerNumber;
+      const lembretes = await lembretesDeConversa(admin, inst.user_id, instanceName, destinoLembrete);
+      if (lembretes.length) r.lembretes = lembretes;
+    } catch (e) {
+      r.erro_lembrete = (e as Error).message;
+    }
     const inicioDia = new Date(`${dia}T03:00:00.000Z`).toISOString(); // 00h de Brasília
 
     // 1. Lote pendente há mais de 20h expira; os contatos voltam para a fila.

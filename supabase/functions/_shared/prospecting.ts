@@ -106,7 +106,7 @@ export async function sendVoiceNote(instanceName: string, number: string, audioU
   }, 30000);
 }
 
-export type ReplyRead = { kind: "interesse" | "sem_interesse" | "automatico" | "duvida"; draft: string; porta: boolean; quer: boolean };
+export type ReplyRead = { kind: "interesse" | "sem_interesse" | "automatico" | "duvida" | "fora_do_perfil"; draft: string; porta: boolean; quer: boolean };
 
 /** A EVA lê a resposta da integradora e escreve a próxima mensagem do Markus. */
 export async function readProspectReply(row: ProspectRow, newText: string, freeSlots: string): Promise<ReplyRead> {
@@ -128,7 +128,7 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
     "Classifique a última resposta da integradora e escreva a próxima mensagem do Markus.",
     ofereceuLink
       ? "kind: 'interesse' (quer o link, diz sim, pede para mandar), 'sem_interesse' (recusou), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (pergunta quem é, como funciona, ou pede mais detalhe)."
-      : "kind: 'interesse' (respondeu a pergunta com algo concreto, inclusive 'já fazemos follow-up' ou 'já temos ferramenta', ou pediu para conversar/horário), 'sem_interesse' (só recusa explícita: 'não tenho interesse', 'não quero'), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (pessoa abriu a porta sem responder ainda: 'pode perguntar', 'é comigo', 'o que precisa?', 'oi', ou perguntou quem é/do que se trata).",
+      : "kind: 'fora_do_perfil' (não é o cliente: só instala para outras empresas, não trabalha mais com solar, número errado ou não é a empresa), 'interesse' (respondeu a pergunta com algo concreto, inclusive 'já fazemos follow-up' ou 'já temos ferramenta', ou pediu para conversar/horário), 'sem_interesse' (só recusa explícita: 'não tenho interesse', 'não quero'), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (pessoa abriu a porta sem responder ainda: 'pode perguntar', 'é comigo', 'o que precisa?', 'oi', ou perguntou quem é/do que se trata).",
     "Regras da mensagem: português do Brasil, curta (até 3 frases no total), sem emoji, sem travessão, sem prometer nada, assina só quando for a primeira frase de apresentação.",
     "Tom: como o Markus digita no WhatsApp com alguém da região, não como atendente. Informal e direto ('pra', 'tá', 'beleza', 'show', 'valeu'), frases curtas, uma ideia por frase, ortografia e acentos certos. Proibido frase de atendimento ou de e-mail: 'Obrigado pelo retorno', 'agradeço o contato', 'fico à disposição', 'Que bom saber', 'perfeitamente', 'gostaria de', 'poderia'. Nada de elogio vazio nem de repetir o que a pessoa disse com outras palavras. No máximo um ponto de exclamação. Quando a pessoa conta um problema ou um número ruim, não reaja com 'show', 'que bom' ou 'beleza': reaja como quem leva a sério ('putz', 'pois é', 'entendi').",
     `Pode dividir em DUAS mensagens de texto, como uma pessoa digitando: uma reação curta e depois a pergunta. Separe com uma linha em branco; cada parágrafo sai como uma mensagem. Nunca mais de duas de texto, além do parágrafo ${MARCA_IMAGEM} quando a regra pedir.`,
@@ -146,6 +146,8 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
     ofereceuLink
       ? "- duvida: explique em uma frase que é um Raio-X grátis das propostas paradas no WhatsApp, que só lê e não manda nada para cliente, e pergunte se pode mandar o link."
       : `- duvida ('pode falar', 'é comigo', 'o que precisa?', 'oi', ou perguntou quem é): mostre agora, em três parágrafos. Primeiro: o que estão montando, com o aviso do 2º dia, a mensagem pronta e o envio pelo número dele, adaptando este modelo sem encurtar: 'Tô montando uma ferramenta pra integradora: quando um orçamento fica 2 dias sem resposta do cliente, ela avisa o dono no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.' (se perguntaram quem é, comece por 'Sou o Markus, de Floripa.'). Segundo: ${MARCA_IMAGEM}. Terceiro: só a pergunta 'Vocês fazem algo assim hoje ou fica no braço?' ou uma variação curta dela. Não peça número nem reunião. Se o print já foi e a pessoa ainda não respondeu sobre ele, só repita a pergunta curta.`,
+    "- fora_do_perfil: agradeça em uma frase curta e encerre. Não ofereça nada.",
+    "- Objeção 'quem visualiza e some não tem interesse' ou 'correr atrás é perder tempo': não discuta nem chame de erro. Concorde em parte em meia frase e faça UMA pergunta: desses que sumiram, algum já voltou depois e fechou com outra empresa? kind: duvida.",
     "- sem_interesse: agradeça, deixe a porta aberta e não insista. Se ele disse que já usa uma ferramenta parecida, pergunte numa frase qual é e o que ela ainda não resolve.",
     "porta: true só quando a nova resposta apenas confirma que é com ela ou manda falar ('pode falar', 'é comigo', 'pode perguntar', 'sou eu', 'o que precisa?'), sem pergunta sobre quem é, sem objeção e sem contar nada. Saudação sozinha ('oi', 'boa tarde') é false.",
     "quer: true só quando a pessoa mostra intenção de usar: pergunta preço, pede pra testar ou ver funcionando, pede o link, ou aceita conversar/marcar horário. Curiosidade ('como funciona?') sozinha é false.",
@@ -166,7 +168,7 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
   const data = await res.json();
   const raw = String(data?.choices?.[0]?.message?.content || "{}").replace(/^```(json)?|```$/g, "").trim();
   const parsed = JSON.parse(raw);
-  const kinds = ["interesse", "sem_interesse", "automatico", "duvida"];
+  const kinds = ["interesse", "sem_interesse", "automatico", "duvida", "fora_do_perfil"];
   const kind = kinds.includes(parsed.kind) ? parsed.kind : "duvida";
   const draft = String(parsed.draft || "").replace(/\s*[—–]\s*/g, ", ").trim();
   if (!draft) throw new Error("IA sem rascunho");
@@ -201,6 +203,7 @@ export async function notifyDecision(
 const KIND_LABEL: Record<string, string> = {
   interesse: "quer conversar",
   sem_interesse: "não tem interesse",
+  fora_do_perfil: "não é o cliente (só instala, saiu do solar ou número errado)",
   automatico: "atendimento automático",
   duvida: "tem dúvida",
 };
@@ -276,7 +279,7 @@ export async function enviarRascunho(
   await admin.from("prospecting_allowlist").update({
     reply_code: null,
     reply_draft: null,
-    status: row.reply_kind === "sem_interesse" ? "sem_interesse" : "respondeu",
+    status: row.reply_kind === "sem_interesse" ? "sem_interesse" : row.reply_kind === "fora_do_perfil" ? "descartado" : "respondeu",
     last_reply: `${row.last_reply ? row.last_reply + "\n" : ""}Markus: ${texto}`.slice(-3000),
   }).eq("id", row.id);
 }
@@ -304,13 +307,7 @@ export async function onProspectInbound(
   }
 
   const lido = await readProspectReply(row as ProspectRow, args.text, nextSlots());
-  let code = randomCode();
-  for (let i = 0; i < 5; i++) {
-    const { count } = await admin.from("prospecting_allowlist").select("id", { count: "exact", head: true })
-      .eq("user_id", args.userId).eq("reply_code", code);
-    if (!count) break;
-    code = randomCode();
-  }
+  const code = await codigoLivre(admin, args.userId);
   // Áudio transcrito nunca dispara envio sozinho: a transcrição pode ter errado.
   // Só abriu a porta e ainda não viu o print: a resposta padrão sai sozinha pelo
   // prospect-run (RESPOSTA_PORTA). Mensagem nova antes disso reescreve ou cancela.
@@ -324,7 +321,7 @@ export async function onProspectInbound(
     metadata.sinal_compra_texto = args.text.slice(0, 300);
   }
   await admin.from("prospecting_allowlist").update({
-    status: lido.kind === "sem_interesse" ? "sem_interesse" : "respondeu",
+    status: lido.kind === "sem_interesse" ? "sem_interesse" : lido.kind === "fora_do_perfil" ? "descartado" : "respondeu",
     replied_at: agora,
     followup_due_at: null,
     reply_kind: lido.kind,
@@ -369,4 +366,78 @@ export async function enviarRespostasPorta(admin: any, userId: string, instanceN
     enviadas.push(row.agency_name);
   }
   return enviadas;
+}
+
+/** Código curto que nenhuma conversa pendente do dono está usando. */
+async function codigoLivre(admin: any, userId: string): Promise<string> {
+  let code = randomCode();
+  for (let i = 0; i < 5; i++) {
+    const { count } = await admin.from("prospecting_allowlist").select("id", { count: "exact", head: true })
+      .eq("user_id", userId).eq("reply_code", code);
+    if (!count) break;
+    code = randomCode();
+  }
+  return code;
+}
+
+/** Um lembrete de uma frase para quem parou de responder depois da última mensagem do Markus. */
+async function escreverLembrete(row: ProspectRow): Promise<string> {
+  const res = await llmChat({
+    messages: [
+      {
+        role: "system",
+        content: [
+          "Você escreve pelo Markus, fundador da Vyzon (Florianópolis), no WhatsApp de uma integradora de energia solar.",
+          "A integradora parou de responder há um dia, depois da última mensagem do Markus. Escreva UM lembrete de uma frase só, fácil de responder com sim, não ou um número, que retome a última pergunta dele.",
+          "Sem cobrar, sem repetir o que a ferramenta faz, sem pedir desculpa, sem emoji, sem travessão. Tom de quem digita no WhatsApp com alguém da região ('pra', 'tá'). Se a última mensagem propôs horário, pergunte se algum dos horários serve.",
+          "Responda só o texto do lembrete.",
+        ].join("\n"),
+      },
+      { role: "user", content: `Empresa: ${row.agency_name || "(sem nome)"}.\n\nConversa até aqui:\n${String(row.last_reply).slice(-1500)}` },
+    ],
+    max_completion_tokens: 120,
+  }, { label: "prospect-lembrete", prefer: "anthropic" });
+  if (!res.ok) throw new Error(`IA ${res.status}`);
+  const data = await res.json();
+  const texto = String(data?.choices?.[0]?.message?.content || "").replace(/\s*[—–]\s*/g, ", ").replace(/^"|"$/g, "").trim();
+  if (!texto) throw new Error("IA sem lembrete");
+  return texto;
+}
+
+/** Conversas paradas do lado deles: a última fala é do Markus, faz mais de um dia e nada
+ *  espera o dono. A IA escreve um lembrete e o dono decide no grupo, como qualquer
+ *  rascunho. Um por conversa e só nas paradas há até 3 dias: cobrar quem sumiu há uma
+ *  semana soa como mala direta. O prospect-run chama dentro da janela de envio. */
+export async function lembretesDeConversa(admin: any, userId: string, instanceName: string, destino: string, maximo = 3): Promise<string[]> {
+  const agora = Date.now();
+  const { data } = await admin.from("prospecting_allowlist").select("*")
+    .eq("user_id", userId).eq("status", "respondeu").is("reply_code", null)
+    .lt("updated_at", new Date(agora - 24 * 3600 * 1000).toISOString())
+    .gt("updated_at", new Date(agora - 3 * 24 * 3600 * 1000).toISOString())
+    .order("updated_at", { ascending: false }).limit(30);
+  const feitos: string[] = [];
+  for (const row of data || []) {
+    if (feitos.length >= maximo) break;
+    const conversa = String(row.last_reply || "");
+    if (row.metadata?.lembrete_em || conversa.lastIndexOf("Markus:") <= conversa.lastIndexOf("Eles:")) continue;
+    const lembrete = await escreverLembrete(row as ProspectRow);
+    const code = await codigoLivre(admin, userId);
+    const { data: marcado } = await admin.from("prospecting_allowlist").update({
+      reply_code: code,
+      reply_draft: lembrete,
+      metadata: { ...(row.metadata || {}), lembrete_em: new Date(agora).toISOString() },
+    }).eq("id", row.id).is("reply_code", null).select("id");
+    if (!marcado?.length) continue;
+    const ultima = conversa.slice(conversa.lastIndexOf("Markus:") + 7).trim().slice(0, 300);
+    await notifyDecision(admin, { instanceName, destino, userId, code }, [
+      `${row.agency_name || "Uma integradora"} não responde há mais de um dia.`,
+      `Sua última mensagem:\n"${ultima}"`,
+      `Lembrete sugerido:\n"${lembrete}"`,
+    ].join("\n\n"), {
+      grupo: "👍 envia o lembrete · 👎 deixa quieto · ou responda esta mensagem com o seu texto",
+      chat: `Responda ${code} 1 para enviar, ${code} 2 para não enviar, ou ${code} seguido do seu texto.`,
+    });
+    feitos.push(row.agency_name);
+  }
+  return feitos;
 }
