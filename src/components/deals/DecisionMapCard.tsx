@@ -98,10 +98,14 @@ const RELATION_PATTERNS: { re: RegExp; relacao: string; papel: string }[] = [
     { re: /\b(quem decide|preciso falar com|vou (?:conversar|alinhar) com|preciso ver com)\b/i, relacao: "", papel: "Influenciador" },
 ];
 
+// A sugestão diz onde a pessoa apareceu, não o que foi dito: mensagem do
+// cliente aparece crua só no Inbox.
 interface DecisionSuggestion {
     relacao: string;
     papel: string;
-    trecho: string;
+    ts: string;
+    kind: ContextItem["kind"];
+    direction?: string;
 }
 
 function detectSuggestions(items: ContextItem[], people: DecisionPerson[]): DecisionSuggestion[] {
@@ -116,7 +120,7 @@ function detectSuggestions(items: ContextItem[], people: DecisionPerson[]): Deci
             if (pat.relacao && existingRel.has(pat.relacao.toLowerCase())) continue;
             const key = pat.relacao || "__generico";
             if (!found.has(key)) {
-                found.set(key, { relacao: pat.relacao, papel: pat.papel, trecho: snippet(text, m.index) });
+                found.set(key, { relacao: pat.relacao, papel: pat.papel, ts: it.ts, kind: it.kind, direction: it.direction });
             }
         }
     }
@@ -130,6 +134,9 @@ function findMentions(person: DecisionPerson, items: ContextItem[]) {
         .filter((it) => (it.body || "").toLowerCase().includes(first))
         .map((it) => ({ ...it, trecho: snippet(it.body, it.body.toLowerCase().indexOf(first)) }));
 }
+
+const ondeApareceu = (kind: ContextItem["kind"], direction?: string) =>
+    kind === "note" ? "Numa nota do time" : direction === "outbound" ? "Numa mensagem sua" : "Numa mensagem do cliente";
 
 const fmtDate = (ts: string) => {
     try {
@@ -349,7 +356,7 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
                                         ? <>A EVA notou menção a <strong className="font-semibold">{s.relacao.toLowerCase()}</strong> na conversa.</>
                                         : <>A EVA notou alguém que pode influenciar a decisão.</>}
                                 </p>
-                                <p className="text-[10px] text-slate-400 italic leading-snug mt-0.5 truncate">"{s.trecho}"</p>
+                                <p className="text-[10.5px] text-slate-500 leading-snug mt-0.5">{ondeApareceu(s.kind, s.direction)} · {fmtDate(s.ts)}</p>
                             </div>
                             <button
                                 type="button"
@@ -505,9 +512,9 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
                                                             ? <StickyNote className="h-3.5 w-3.5 text-slate-400 mt-px shrink-0" />
                                                             : <MessageSquare className="h-3.5 w-3.5 text-slate-400 mt-px shrink-0" />}
                                                         <div className="min-w-0">
-                                                            <p className="text-[11.5px] text-[#0B1220] leading-snug">{m.trecho}</p>
-                                                            <p className="text-[10px] text-slate-400 mt-0.5">
-                                                                {m.kind === "note" ? "Nota" : m.direction === "outbound" ? "Resposta enviada" : "Mensagem recebida"} · {fmtDate(m.ts)}
+                                                            {m.kind === "note" && <p className="text-[11.5px] text-[#0B1220] leading-snug">{m.trecho}</p>}
+                                                            <p className={m.kind === "note" ? "text-[10px] text-slate-400 mt-0.5" : "text-[11.5px] text-[#0B1220] leading-snug"}>
+                                                                {m.kind === "note" ? "Nota do time" : `Citado ${ondeApareceu(m.kind, m.direction).replace("Numa", "numa")}`} · {fmtDate(m.ts)}
                                                             </p>
                                                         </div>
                                                     </li>
