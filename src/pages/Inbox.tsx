@@ -121,7 +121,10 @@ const Inbox = () => {
     // ou retorna vazio. Antes disso, fica inerte (enabled=false) → zero
     // queries / zero realtime / zero GC.
     const [legacyEnabled, setLegacyEnabled] = useState(false);
-    const legacyInbox = useWhatsAppInboxDb({ enabled: legacyEnabled });
+    const legacyInbox = useWhatsAppInboxDb({
+        enabled: legacyEnabled,
+        numeroDesde: (channelInbox.connection?.metadata?.numero_desde as string | undefined) || null,
+    });
 
     useEffect(() => {
         if (legacyEnabled) return; // já ativado, não reverter

@@ -62,11 +62,13 @@ Deno.serve(async (req) => {
         numero_chip: numero, chip_desde: inst.chip_desde, pausa_ate: null, falhas_envio: {},
       }).eq("id", inst.id);
       // O dono continua no pessoal; o número salvo como dono era o chip antigo.
+      // numero_desde faz o Inbox mostrar só as conversas do número novo.
       const { data: conn } = await admin.from("channel_connections").select("id, metadata")
         .eq("provider", "evolution").eq("external_id", instanceName).maybeSingle();
       if (conn?.id) {
         await admin.from("channel_connections")
-          .update({ metadata: { ...(conn.metadata || {}), owner_jid: numero } }).eq("id", conn.id);
+          .update({ metadata: { ...(conn.metadata || {}), owner_jid: numero, numero_desde: inst.chip_desde } })
+          .eq("id", conn.id);
       }
       const grupo = await groupJid(admin, instanceName, "prospeccao");
       if (grupo) {

@@ -156,10 +156,15 @@ export interface UseWhatsAppInboxDbOptions {
      *  não assina Realtime, não roda GC. Usado pela Inbox channel-first
      *  pra deferir o legacy até o channel falhar. */
     enabled?: boolean;
+    /** Desde quando vale o número conectado agora (metadata.numero_desde da
+     *  conexão). Mensagem anterior é do número antigo e não aparece. */
+    numeroDesde?: string | null;
 }
 
 export function useWhatsAppInboxDb(opts: UseWhatsAppInboxDbOptions = {}): UseWhatsAppInboxDbReturn {
     const { enabled = true } = opts;
+    const numeroDesdeRef = useRef<string | null>(null);
+    numeroDesdeRef.current = opts.numeroDesde || null;
     const { user } = useAuth();
     const { activeCompanyId } = useTenant();
     const userId = user?.id;
@@ -203,6 +208,7 @@ export function useWhatsAppInboxDb(opts: UseWhatsAppInboxDbOptions = {}): UseWha
                     "id, chat_jid, chat_phone, contact_name, is_group, direction, message_type, body, media_url, media_mimetype, media_caption, audio_duration, message_timestamp, deal_id",
                 )
                 .eq("user_id", userId)
+                .gte("message_timestamp", numeroDesdeRef.current || "1970-01-01")
                 .order("message_timestamp", { ascending: false })
                 .limit(CHATS_FETCH_LIMIT);
             if (error) throw error;
@@ -283,6 +289,7 @@ export function useWhatsAppInboxDb(opts: UseWhatsAppInboxDbOptions = {}): UseWha
                     )
                     .eq("user_id", userId)
                     .eq("chat_jid", chatJid)
+                    .gte("message_timestamp", numeroDesdeRef.current || "1970-01-01")
                     .order("message_timestamp", { ascending: false })
                     .limit(MESSAGES_FETCH_LIMIT);
                 if (error) throw error;

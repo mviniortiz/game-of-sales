@@ -264,6 +264,11 @@ export function useChannelInbox(): UseChannelInbox {
     const [connectionId, setConnectionId] = useState<string | null>(null);
     // F4W.7.1 — expõe a connection row resolvida (fonte única do status WhatsApp)
     const [connection, setConnection] = useState<ConnectionRow | null>(null);
+    // Trocou o número da instância: o Inbox mostra só o que chegou ao número
+    // atual. As mensagens do anterior ficam no banco para placar e histórico.
+    const numeroDesde = (connection?.metadata?.numero_desde as string | undefined) || null;
+    const numeroDesdeRef = useRef<string | null>(null);
+    numeroDesdeRef.current = numeroDesde;
     const [chats, setChats] = useState<Chat[]>([]);
     const [persistedMessages, setPersistedMessages] = useState<MessageLine[]>([]);
     // Paginação: a janela recente (persistedMessages) é gerida pelo fetch/realtime/
@@ -424,6 +429,7 @@ export function useChannelInbox(): UseChannelInbox {
                     )
                 `)
                 .eq("connection_id", connectionId)
+                .gte("last_message_at", numeroDesdeRef.current || "1970-01-01")
                 .order("last_message_at", { ascending: false, nullsFirst: false })
                 .limit(CHATS_FETCH_LIMIT);
             if (convErr) throw convErr;
@@ -446,6 +452,7 @@ export function useChannelInbox(): UseChannelInbox {
                     .from("channel_messages")
                     .select("conversation_id, direction, message_type, body, media_ref, message_timestamp")
                     .in("conversation_id", convIds)
+                    .gte("message_timestamp", numeroDesdeRef.current || "1970-01-01")
                     .order("message_timestamp", { ascending: false })
                     .limit(CHATS_FETCH_LIMIT * 3);
                 if (msgErr) throw msgErr;
@@ -530,6 +537,7 @@ export function useChannelInbox(): UseChannelInbox {
                     .from("channel_messages")
                     .select("id, conversation_id, direction, message_type, body, media_ref, message_timestamp, metadata, status")
                     .eq("conversation_id", conversationId)
+                    .gte("message_timestamp", numeroDesdeRef.current || "1970-01-01")
                     .order("message_timestamp", { ascending: false })
                     .limit(MESSAGES_FETCH_LIMIT);
                 if (e) throw e;
@@ -604,6 +612,7 @@ export function useChannelInbox(): UseChannelInbox {
                 .select("id, conversation_id, direction, message_type, body, media_ref, message_timestamp, metadata, status")
                 .eq("conversation_id", convId)
                 .lt("message_timestamp", beforeIso)
+                .gte("message_timestamp", numeroDesdeRef.current || "1970-01-01")
                 .order("message_timestamp", { ascending: false })
                 .limit(MESSAGES_FETCH_LIMIT);
             if (e) throw e;
