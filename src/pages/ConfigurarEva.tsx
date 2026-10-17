@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bolha, Leitura, type Msg } from "@/components/eva/ConversaEva";
+import { EvaThinking } from "@/components/eva/EvaThinking";
 import { VyzonMark } from "@/components/brand/VyzonMark";
 import { WhatsAppConnectModal } from "@/components/inbox/WhatsAppConnectModal";
 import { brl } from "@/lib/quoteText";
@@ -314,7 +315,11 @@ export default function ConfigurarEva() {
                 {msgs.map((m, i) => (
                     <Bolha key={i} de={m.de}>{m.texto}</Bolha>
                 ))}
-                {fase === "lendo" && <Bolha de="eva"><span className="text-[var(--vyz-text-muted)]">Lendo o site…</span></Bolha>}
+                {fase === "lendo" && (
+                    <div className="py-1">
+                        <EvaThinking tempo intervalo={2600} etapas={["Abrindo o site", "Lendo o que vocês vendem", "Vendo onde vocês atendem", "Montando o resumo"]} />
+                    </div>
+                )}
                 {fase === "importando" && <Leitura conversas={conversas} />}
 
                 {fase === "resumo" || fase === "salvando" ? (

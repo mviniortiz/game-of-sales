@@ -9,8 +9,9 @@ import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUp, CircleNotch, NotePencil, X } from "@phosphor-icons/react";
 import { EvaBot } from "@/components/eva/EvaBot";
+import { EvaThinking } from "@/components/eva/EvaThinking";
 import { useTypewriter } from "@/hooks/useTypewriter";
-import { useEvaHelpChat } from "@/hooks/useEvaHelpChat";
+import { ETAPAS_RESPOSTA, useEvaHelpChat } from "@/hooks/useEvaHelpChat";
 
 // Rótulo humano da tela atual (pra "Explicar esta tela" e contexto do endpoint).
 const ROUTE_LABELS: { prefix: string; label: string }[] = [
@@ -213,19 +214,8 @@ export function EvaHelpDock() {
                                     </motion.div>
                                 ))}
                                 {loading && (
-                                    <div className="flex items-center gap-2 text-[12.5px]" style={{ color: "#64748B" }}>
-                                        <span className="inline-flex gap-1">
-                                            {[0, 1, 2].map((d) => (
-                                                <motion.span
-                                                    key={d}
-                                                    className="inline-block h-1.5 w-1.5 rounded-full"
-                                                    style={{ background: "#2563EB" }}
-                                                    animate={reduce ? undefined : { opacity: [0.3, 1, 0.3], y: [0, -2, 0] }}
-                                                    transition={{ repeat: Infinity, duration: 0.9, delay: d * 0.15, ease: "easeInOut" }}
-                                                />
-                                            ))}
-                                        </span>
-                                        EVA está escrevendo
+                                    <div className="py-1">
+                                        <EvaThinking tamanho="sm" etapas={ETAPAS_RESPOSTA} />
                                     </div>
                                 )}
                             </div>

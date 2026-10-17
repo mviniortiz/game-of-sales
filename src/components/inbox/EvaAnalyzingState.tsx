@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
-import { useReducedMotion } from "framer-motion";
-import { ActionSwapBlurText } from "@/components/vendor/action-swap-blur";
 import { EvaBot } from "@/components/eva/EvaBot";
+import { EvaThinking } from "@/components/eva/EvaThinking";
 
 // Momento "EVA lendo a conversa" no Inbox. Em vez de um spinner, a EVA mostra
 // que está LENDO: uma linha de varredura passa sobre uma miniatura da conversa
@@ -24,21 +22,9 @@ const BUBBLES: { me: boolean; w: number }[] = [
 ];
 
 export function EvaAnalyzingState() {
-    const reduce = useReducedMotion();
-    const [status, setStatus] = useState(0);
-
-    useEffect(() => {
-        if (reduce) return; // sem rotação de texto quando o usuário pede menos movimento
-        const t = setInterval(() => setStatus((i) => (i + 1) % STATUSES.length), 1500);
-        return () => clearInterval(t);
-    }, [reduce]);
-
     return (
         <div className="flex-1 flex flex-col items-center justify-center px-5 py-6 text-center">
-            <EvaBot state="thinking" size={56} className="mb-3.5" />
-            <p className="text-[13px] font-semibold mb-4" style={{ color: "#0B1220" }}>
-                EVA lendo a conversa<span className="vz-eva-dots" aria-hidden="true" />
-            </p>
+            <EvaBot state="thinking" size={56} className="mb-4" />
 
             {/* Miniatura da conversa sendo varrida pela leitura da EVA */}
             <div className="vz-scan-wrap" aria-hidden="true">
@@ -57,17 +43,7 @@ export function EvaAnalyzingState() {
                 <span className="vz-scan-line" />
             </div>
 
-            {/* A troca de etapa era um corte seco no texto. Agora o rótulo sai
-                de foco e o próximo entra, que é como a leitura realmente avança:
-                uma coisa vira a outra, não pisca. Mecânica vinda do beui
-                (src/components/vendor), pintada com o tom daqui. */}
-            <p
-                className="vz-eva-steplabel mt-4 text-[12.5px] font-semibold"
-                aria-live="polite"
-                style={{ minHeight: 16 }}
-            >
-                <ActionSwapBlurText value={STATUSES[status]}>{STATUSES[status]}</ActionSwapBlurText>
-            </p>
+            <EvaThinking className="mt-5" etapas={STATUSES} intervalo={1600} tempo />
 
             <style>{`
                 .vz-scan-wrap {
@@ -97,20 +73,9 @@ export function EvaAnalyzingState() {
                     0% { transform: translateY(-26px); }
                     100% { transform: translateY(122px); }
                 }
-                .vz-eva-dots::after { content:""; animation: vzEvaDots 1.3s steps(1,end) infinite; }
-                @keyframes vzEvaDots { 0%{content:""} 25%{content:"."} 50%{content:".."} 75%{content:"..."} 100%{content:""} }
-                .vz-eva-steplabel {
-                    background: linear-gradient(90deg, #475569 0%, #475569 38%, #2563EB 50%, #475569 62%, #475569 100%);
-                    background-size: 240px 100%;
-                    -webkit-background-clip: text; background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    animation: vzEvaShimmer 1.7s linear infinite;
-                }
-                @keyframes vzEvaShimmer { 0%{background-position:-120px 0} 100%{background-position:240px 0} }
                 @media (prefers-reduced-motion: reduce) {
-                    .vz-scan-bubble, .vz-scan-line, .vz-eva-dots::after, .vz-eva-steplabel { animation: none !important; }
+                    .vz-scan-bubble, .vz-scan-line { animation: none !important; }
                     .vz-scan-line { display: none; }
-                    .vz-eva-steplabel { -webkit-text-fill-color: #475569; background: none; }
                 }
             `}</style>
         </div>

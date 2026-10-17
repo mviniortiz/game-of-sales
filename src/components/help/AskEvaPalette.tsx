@@ -9,9 +9,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUp, ChatCircleText, CircleNotch, Compass, MagnifyingGlass, NotePencil, WhatsappLogo, X } from "@phosphor-icons/react";
-import { useEvaHelpChat } from "@/hooks/useEvaHelpChat";
+import { ETAPAS_RESPOSTA, useEvaHelpChat } from "@/hooks/useEvaHelpChat";
 import { AssistantBubble, labelForPath } from "./EvaHelpDock";
 import { EvaBot } from "@/components/eva/EvaBot";
+import { EvaThinking } from "@/components/eva/EvaThinking";
 
 export function AskEvaPalette() {
     const reduce = useReducedMotion();
@@ -194,9 +195,8 @@ export function AskEvaPalette() {
                                     </div>
                                 ))}
                                 {loading && (
-                                    <div className="flex items-center gap-2 text-[12.5px]" style={{ color: "#64748B" }}>
-                                        <CircleNotch size={13} weight="bold" className="animate-spin" style={{ color: "#2563EB" }} />
-                                        EVA está escrevendo
+                                    <div className="py-1">
+                                        <EvaThinking tamanho="sm" etapas={ETAPAS_RESPOSTA} />
                                     </div>
                                 )}
                             </div>

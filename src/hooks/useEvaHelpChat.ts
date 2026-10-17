@@ -11,6 +11,9 @@ export interface EvaChatMsg {
     content: string;
 }
 
+/** O que a EVA faz enquanto responde uma dúvida (eva-help): lê, busca na ajuda, escreve. */
+export const ETAPAS_RESPOSTA = ["Lendo sua pergunta", "Procurando na ajuda do Vyzon", "Escrevendo a resposta"];
+
 export function useEvaHelpChat(pageLabel: string) {
     const { user } = useAuth();
     const storageKey = user ? `vyz-eva-help:${user.id}` : null;
