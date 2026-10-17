@@ -158,6 +158,16 @@ serve(async (req) => {
         }
     }
 
+    // Desde quando cada conexão está no estado atual: a pílula do app mostra
+    // "caiu há 12 min" a partir daqui.
+    const antesDesde: Record<string, string> = antes?.details?.desde_por_nome ?? {};
+    const desdePorNome: Record<string, string> = p.ok
+        ? Object.fromEntries(Object.keys(p.porNome).map((n) => [
+            n,
+            antesPorNome[n] === p.porNome[n] && antesDesde[n] ? antesDesde[n] : agora,
+        ]))
+        : antesDesde;
+
     const linha = {
         service: SERVICE,
         status,
@@ -165,7 +175,7 @@ serve(async (req) => {
         last_checked_at: agora,
         consecutive_fails: fails,
         last_error: p.error,
-        details: { ms: p.ms, instances: p.instances, connected: p.connected, states: p.states, por_nome: p.ok ? p.porNome : antesPorNome, last_alert_sent: avisado ? agora : antes?.details?.last_alert_sent ?? null },
+        details: { ms: p.ms, instances: p.instances, connected: p.connected, states: p.states, por_nome: p.ok ? p.porNome : antesPorNome, desde_por_nome: desdePorNome, last_alert_sent: avisado ? agora : antes?.details?.last_alert_sent ?? null },
     };
     const { error } = await supabase.from("service_health").upsert(linha);
     if (error) return json(500, { error: error.message });

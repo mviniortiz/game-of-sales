@@ -1,0 +1,88 @@
+/* Pílula de status do WhatsApp (WhatsappStatusPill). Mesmo desenho em dois tons da
+   pílula de "EVA pensando": miolo neutro com anel claro. */
+.wa-status {
+    --wa-cor: var(--vyz-success, #008a52);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    height: 30px;
+    padding: 0 6px 0 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--vyz-text-primary) 5%, var(--vyz-surface-1));
+    color: var(--vyz-text-primary);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+    box-shadow:
+        0 0 0 1px var(--vyz-border),
+        0 0 0 3px var(--vyz-surface-1),
+        0 0 0 4px var(--vyz-border-subtle),
+        0 8px 18px -12px rgba(15, 23, 42, 0.28);
+}
+.wa-status--conectado { padding-right: 12px; }
+.wa-status--conectando { --wa-cor: var(--vyz-warning, #b45309); padding-right: 12px; }
+.wa-status--desconectado { --wa-cor: var(--vyz-danger, #c0362c); }
+.wa-status--sem_conexao { --wa-cor: var(--vyz-text-muted); }
+.wa-status--desconectado .wa-status__texto { color: var(--vyz-danger, #c0362c); }
+
+.wa-status__ponto {
+    position: relative;
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--wa-cor);
+}
+/* Conectado respira devagar (está vivo); caído pisca mais rápido (precisa de você). */
+.wa-status__ponto::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    background: var(--wa-cor);
+    opacity: 0;
+    animation: wa-status-onda 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+.wa-status--desconectado .wa-status__ponto::after { animation-duration: 1.2s; }
+.wa-status--sem_conexao .wa-status__ponto::after { animation: none; }
+.wa-status--conectando .wa-status__ponto { animation: wa-status-pisca 1s ease-in-out infinite; }
+
+.wa-status__texto { overflow: hidden; text-overflow: ellipsis; }
+
+.wa-status__acao {
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: var(--vyz-text-primary);
+    color: var(--vyz-surface-1);
+    font-size: 12px;
+    font-weight: 600;
+    transition: transform 150ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.wa-status__acao:hover { opacity: 0.88; }
+.wa-status__acao:active { transform: scale(0.96); }
+.wa-status__acao:focus-visible { outline: 2px solid var(--vyz-accent, #2563eb); outline-offset: 2px; }
+.dark .wa-status__acao { background: #fff; color: #0b1220; }
+
+@keyframes wa-status-onda {
+    0% { transform: scale(0.6); opacity: 0.45; }
+    100% { transform: scale(2); opacity: 0; }
+}
+@keyframes wa-status-pisca {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
+
+/* Celular: conectado vira só o ponto; o "caiu" continua escrito, curto, é o que importa. */
+.wa-status__texto--curto { display: none; }
+@media (max-width: 639px) {
+    .wa-status--conectado { padding: 0 11px; }
+    .wa-status__texto--longo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .wa-status__texto--curto { display: inline; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wa-status__ponto, .wa-status__ponto::after { animation: none; }
+}

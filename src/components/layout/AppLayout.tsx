@@ -7,6 +7,7 @@ import { EvaLiveIsland } from "@/components/eva/EvaLiveIsland";
 import { FaixaPlanoGratis, TelaDoPlano } from "./PlanoGratis";
 import { EvaHelpDock, PerguntarEvaCabecalho } from "@/components/help/EvaHelpDock";
 import { AskEvaPalette } from "@/components/help/AskEvaPalette";
+import { WhatsappStatusPill } from "@/components/whatsapp/WhatsappStatusPill";
 import { rotaGratis, usePlano } from "@/hooks/usePlano";
 
 // Page titles alinhados com nova nomenclatura visual da nav (F3 2026-05-19).
@@ -70,7 +71,8 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             {/* O trabalho da EVA acompanha a pessoa: o Diário vive no /inicio e
                 sumia assim que ela ia para o Inbox ou o Pipeline, que é onde ela
                 passa o dia. */}
-            <div className="ml-auto flex shrink-0 items-center gap-2">
+            <div className="ml-auto flex min-w-0 items-center gap-2">
+              <WhatsappStatusPill />
               <PerguntarEvaCabecalho />
               <EvaLiveIsland />
             </div>
