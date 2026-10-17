@@ -4,7 +4,8 @@
 // A decisão humana continua obrigatória; esta edge só leva o rascunho até onde
 // o dono está. Quem lê a resposta dele é a evolution-message-webhook.
 //
-// action=notify   varre agent_suggestions pending sem notified_at e manda.
+// action=notify   varre agent_suggestions pending sem notified_at e manda; no cron,
+//                 também envia o aprovado ('agendado') que passou da hora sem sair.
 // action=ping     diagnóstico: diz se acha o número do dono da instância.
 //
 // Chamada por cron (service_role) ou pelo app (JWT do usuário, escopo da
@@ -14,6 +15,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
+    enviarAgendadosVencidos,
     instanceNameFor,
     notifyPendingSuggestions,
     resolveOwnerNumber,
@@ -92,12 +94,14 @@ serve(async (req) => {
         }
 
         if (action === "notify") {
+            // Aprovado que não saiu nos 20s do desfazer (a execução do webhook morreu).
+            const agendadosEnviados = isService ? await enviarAgendadosVencidos(admin) : 0;
             const result = await notifyPendingSuggestions(admin, {
                 companyId: isService ? (body.companyId ?? null) : scopedCompanyId,
                 suggestionId: body.suggestionId ?? null,
                 limit: Number(body.limit) || 10,
             });
-            return json(200, { ok: true, ...result });
+            return json(200, { ok: true, agendadosEnviados, ...result });
         }
 
         return json(400, { error: `action desconhecida: ${action}` });

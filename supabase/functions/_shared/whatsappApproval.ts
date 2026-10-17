@@ -43,7 +43,7 @@ export const EVA_PREFIX = "EVA";
 
 export type ApprovalOutcome = {
     handled: boolean;
-    action?: "sent" | "rejected" | "adjusted" | "help";
+    action?: "sent" | "rejected" | "adjusted" | "help" | "agendado" | "desfeito";
     suggestionId?: string;
     reply?: string;
     error?: string;
@@ -553,10 +553,16 @@ const REJECT_WORDS = new Set([
     "2", "nao", "n", "descarta", "descartar", "cancela", "cancelar",
     "pula", "pular", "nao envia", "nao enviar",
 ]);
+// Desfaz o envio que acabou de ser aprovado. "cancela" e "nao" também desfazem
+// quando há um envio agendado (ver handleOwnerCommand); estas só desfazem.
+const UNDO_WORDS = new Set(["desfazer", "desfaz", "desfaca", "desfiz", "volta", "voltar", "0"]);
+
+/** Entre o "1" e o envio de verdade: tempo para o dono mandar "desfazer". */
+export const DESFAZER_MS = 20_000;
 
 export type ParsedCommand = {
     code: string | null;
-    intent: "send" | "reject" | "replace" | "none";
+    intent: "send" | "reject" | "replace" | "undo" | "none";
     replacement?: string;
 };
 
@@ -583,6 +589,7 @@ export function parseOwnerCommand(rawText: string): ParsedCommand {
     const normalized = stripAccents(rest).toLowerCase().replace(/[.!]+$/, "").trim();
 
     if (!normalized) return { code, intent: "none" };
+    if (UNDO_WORDS.has(normalized)) return { code, intent: "undo" };
     if (SEND_WORDS.has(normalized)) return { code, intent: "send" };
     if (REJECT_WORDS.has(normalized)) return { code, intent: "reject" };
     // Texto corrido só vira correção quando tem cara de mensagem, não de recado
@@ -615,6 +622,28 @@ export async function handleOwnerCommand(
 
     const parsed = parseOwnerCommand(params.text);
     if (parsed.intent === "none" && !parsed.code) return { handled: false };
+
+    // Desfazer: a mensagem aprovada ainda está nos 20 segundos de espera. "2" e
+    // "cancela" logo depois do "1" também valem como desfazer.
+    if (parsed.intent === "undo" || (parsed.intent === "reject" && !parsed.code)) {
+        let consulta = admin.from("agent_suggestions").select("id, approval_code")
+            .eq("company_id", companyId).eq("status", "agendado");
+        if (parsed.code) consulta = consulta.eq("approval_code", parsed.code);
+        const { data: agendado } = await consulta.order("send_at", { ascending: false }).limit(1).maybeSingle();
+        if (agendado) {
+            const { data: voltou } = await admin.from("agent_suggestions")
+                .update({ status: "pending", send_at: null, applied_payload: null })
+                .eq("id", agendado.id).eq("status", "agendado").select("id").maybeSingle();
+            if (voltou) {
+                await reply(`Desfeito, não enviei. O rascunho ${agendado.approval_code} continua aberto: responda 1 para enviar, 2 para descartar ou escreva o texto corrigido.`);
+                return { handled: true, action: "desfeito", suggestionId: agendado.id };
+            }
+        }
+        if (parsed.intent === "undo") {
+            await reply("Não tem envio para desfazer: a última mensagem aprovada já saiu.");
+            return { handled: true, action: "help" };
+        }
+    }
 
     // Alvo: pelo código, ou a única pendente notificada nas últimas 24h.
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -708,44 +737,99 @@ export async function handleOwnerCommand(
         return { handled: true, action: "help", suggestionId: target.id, error: "lead sem telefone" };
     }
 
-    // Mesma blindagem anti-ban do envio manual: teto por instância e por alvo.
-    const [instanceOk, targetOk] = await Promise.all([
-        admin.rpc("consume_rate_limit", { p_bucket: `wa-out:${instanceName}`, p_limit: 25, p_window_seconds: 60 }),
-        admin.rpc("consume_rate_limit", { p_bucket: `wa-out:${instanceName}:${leadNumber}`, p_limit: 12, p_window_seconds: 60 }),
-    ]);
-    if (instanceOk?.data === false || targetOk?.data === false) {
-        await reply("Muitas mensagens em sequência agora. Espere um minuto e responda de novo.");
-        return { handled: true, action: "help", suggestionId: target.id, error: "rate_limited" };
-    }
-
-    try {
-        await sendText(instanceName, leadNumber, finalText);
-    } catch (err) {
-        const msg = (err as Error)?.message || "falha no envio";
-        await reply(`Não consegui enviar: ${msg}`);
-        return { handled: true, action: "help", suggestionId: target.id, error: msg };
-    }
-
-    const ownerUserId = userIdFromInstance(instanceName);
-    await admin
+    // Não sai na hora: fica agendada por DESFAZER_MS para o dono poder mandar
+    // "desfazer". Quem manda é enviarAgendado, aqui em segundo plano, e o cron
+    // eva-approval-notify cobre o caso de esta execução morrer antes.
+    const quem = deal?.customer_name || deal?.account_name || "o lead";
+    const { data: agendou } = await admin
         .from("agent_suggestions")
         .update({
-            status: parsed.intent === "replace" ? "adjusted" : "sent",
-            applied_payload: { text: finalText, to: leadNumber, via: "whatsapp" },
+            status: "agendado",
+            send_at: new Date(Date.now() + DESFAZER_MS).toISOString(),
+            applied_payload: {
+                text: finalText, to: leadNumber, intent: parsed.intent, quem,
+                instance: instanceName, owner: ownerNumber, by: userIdFromInstance(instanceName), code: target.approval_code,
+            },
+        })
+        .eq("id", target.id)
+        .eq("status", "pending")
+        .select("id")
+        .maybeSingle();
+    if (!agendou) {
+        await reply("Esse rascunho já foi resolvido. Não enviei de novo.");
+        return { handled: true, action: "help", suggestionId: target.id };
+    }
+    await reply(`Sai em ${DESFAZER_MS / 1000} segundos para ${quem}. Mande "desfazer" para cancelar.`);
+
+    const envio = (async () => {
+        await new Promise((r) => setTimeout(r, DESFAZER_MS));
+        await enviarAgendado(admin, target.id, { reply, confirmar: params.confirmar });
+    })();
+    const runtime = (globalThis as any).EdgeRuntime;
+    if (runtime?.waitUntil) runtime.waitUntil(envio);
+    else await envio;
+    return { handled: true, action: "agendado", suggestionId: target.id };
+}
+
+/** Manda o rascunho agendado, se ninguém desfez. Marca como enviado ANTES de
+ *  mandar: a chamada da aprovação e a do cron nunca mandam a mesma mensagem duas
+ *  vezes. Falha no envio devolve o rascunho para pending, com o código de volta. */
+export async function enviarAgendado(
+    admin: any,
+    suggestionId: string,
+    avisar?: { reply?: (t: string) => Promise<void>; confirmar?: () => Promise<void> },
+): Promise<"sent" | "adjusted" | "desfeito" | "erro"> {
+    const { data: row } = await admin.from("agent_suggestions")
+        .select("id, status, applied_payload").eq("id", suggestionId).maybeSingle();
+    if (!row || row.status !== "agendado") return "desfeito";
+    const p = row.applied_payload || {};
+    const reply = avisar?.reply ?? ((t: string) => replyOwner(p.instance, p.owner, t));
+    const final = p.intent === "replace" ? "adjusted" : "sent";
+    const { data: meu } = await admin.from("agent_suggestions")
+        .update({
+            status: final,
+            send_at: null,
+            applied_payload: { text: p.text, to: p.to, via: "whatsapp" },
             resolved_at: new Date().toISOString(),
             resolved_via: "whatsapp",
-            resolved_by: ownerUserId,
+            resolved_by: p.by ?? null,
             approval_code: null,
         })
-        .eq("id", target.id);
+        .eq("id", row.id).eq("status", "agendado").select("id").maybeSingle();
+    if (!meu) return "desfeito";
 
-    const quem = deal?.customer_name || deal?.account_name || "o lead";
-    await (params.confirmar ? params.confirmar() : reply(`Enviado para ${quem}.`));
-    return {
-        handled: true,
-        action: parsed.intent === "replace" ? "adjusted" : "sent",
-        suggestionId: target.id,
+    const devolver = async (aviso: string) => {
+        await admin.from("agent_suggestions")
+            .update({ status: "pending", applied_payload: null, resolved_at: null, resolved_via: null, resolved_by: null, approval_code: p.code ?? null })
+            .eq("id", row.id);
+        await reply(aviso);
     };
+    // Mesma blindagem anti-ban do envio manual: teto por instância e por alvo.
+    const [instanceOk, targetOk] = await Promise.all([
+        admin.rpc("consume_rate_limit", { p_bucket: `wa-out:${p.instance}`, p_limit: 25, p_window_seconds: 60 }),
+        admin.rpc("consume_rate_limit", { p_bucket: `wa-out:${p.instance}:${p.to}`, p_limit: 12, p_window_seconds: 60 }),
+    ]);
+    if (instanceOk?.data === false || targetOk?.data === false) {
+        await devolver(`Muitas mensagens em sequência agora. Não enviei. Responda ${p.code ? `${p.code} 1` : "1"} de novo daqui a um minuto.`);
+        return "erro";
+    }
+    try {
+        await sendText(p.instance, p.to, p.text);
+    } catch (err) {
+        await devolver(`Não consegui enviar: ${(err as Error)?.message || "falha no envio"}. O rascunho continua aberto.`);
+        return "erro";
+    }
+    await (avisar?.confirmar ? avisar.confirmar() : reply(`Enviado para ${p.quem || "o lead"}.`));
+    return final;
+}
+
+/** Rede de segurança do cron: agendado que passou da hora sem sair. */
+export async function enviarAgendadosVencidos(admin: any): Promise<number> {
+    const { data } = await admin.from("agent_suggestions").select("id")
+        .eq("status", "agendado").lt("send_at", new Date(Date.now() - 60_000).toISOString()).limit(20);
+    let n = 0;
+    for (const r of data || []) if (["sent", "adjusted"].includes(await enviarAgendado(admin, r.id))) n++;
+    return n;
 }
 
 // ── Resposta do dono no número oficial da EVA ───────────────────────────────
