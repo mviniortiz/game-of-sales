@@ -72,7 +72,11 @@ Regras: nunca começar pelo logo; uma grande ideia visual por filme.
 
 ## 3. Motor: HyperFrames
 
-1. Copie o molde mais próximo (`vyzon-noite-azul-9x16` ou `vyzon-solar-launch-9x16`).
+1. Copie o molde: `videos/_molde-noite-azul` (base.css + base.js com batidas, curvas,
+   `montar(cenas)` e atalhos lineIn/lineOut/lit/entra/onda) para a Noite azul, ou
+   `vyzon-solar-launch-9x16` para o Papel. Filmes no molde: noite-azul-01, raio-x-02,
+   voce-decide-03, 30-dias-04 (`G:\Vyzon\videos\vyzon-*-9x16`). O verificador quer
+   `window.__timelines` no HTML: deixe a linha que só inicializa o objeto.
 2. Batidas: `python factory/scripts/audiomap.py <trilha.mp3> -o x.audiomap.json`;
    cole o array em `BEATS` e **ancore toda entrada de cena numa batida** `B(k)`.
 3. Movimento só na timeline GSAP (render avança quadro a quadro). Armadilhas já
@@ -93,15 +97,20 @@ Regras: nunca começar pelo logo; uma grande ideia visual por filme.
   - voz dele: clone `NFxuLarUQqN5VnbYCJVj`, `eleven_v4`, stability/similarity 1.0,
     style 0, texto começando com `[low-pitched, relaxed voice]` (ajuste "v4c");
   - narrador: Nassif `ulzsiMeCbfKyTPCNhCD5`, `eleven_v4`, stability 0.5.
-  Receita (scripts prontos em `factory/films/noite-azul-01/voz/`):
-  1. **Uma tomada só** com `/with-timestamps` (frase por chamada quebra a entonação).
-  2. Cortar por frase pelo alinhamento, com folga que **nunca entra na frase
-     vizinha** (senão vira gagueira).
-  3. Encaixar cada frase na batida da cena; frase longa acelera até 8% (`atempo`),
-     e a próxima espera a anterior acabar.
-  4. Trilha abaixa sob a voz por `sidechaincompress`; master -14 LUFS.
-  5. **Transcrever o mix final** (ElevenLabs `scribe_v1`) e comparar com o texto:
+  Receita (scripts em `G:\Vyzon\factory\films\noite-azul-01\voz\`):
+  1. Roteiro em `roteiro.json`, **uma frase inteira por cena** (frase completa, com
+     ponto). Frase que quebra no meio ("Nada sai…" / "sem você.") vira uma só.
+  2. `node gera-frases.mjs roteiro.json frases`: uma chamada por frase com
+     `previous_text`/`next_text` (a entonação continua), corta só o silêncio das pontas.
+     **Não** gerar uma tomada única e cortar: o narrador emenda as frases (pausas de
+     0,03 s) e o corte no meio da fala soa quebrado (Markus, 17/10/2026).
+  3. `python -I mixa-frases.py frases ancoras.json video.mp4 saida.mp4 <dur>`: cada
+     frase entra na batida da cena; frase que ainda fala empurra a próxima (+80 ms),
+     **nunca acelera**. Empurrão > 0,5 s = encurte o texto ou antecipe a âncora.
+     A trilha abaixa sob a voz (`sidechaincompress`); master -14 LUFS.
+  4. **Transcrever o mix final** (ElevenLabs `scribe_v1`) e comparar com o texto:
      gagueira, palavra comida ou marca errada reprovam.
+  Escolha do Markus (17/10/2026): **Nassif** para os reels.
   Pronúncia: a voz recebe "Váizom" e "Eva"; a tela mostra Vyzon e EVA. Números por
   extenso ("responde um").
 
