@@ -1,165 +1,144 @@
 ---
 name: vyzon-product-film
-description: Diretor criativo, editor de motion, sound designer e revisor final dos product films verticais do Vyzon (Instagram Reels/TikTok). Usa /product-launch-video como motor de produção, mas manda no gosto — território criativo único, EDL antes de editar, motion que prova algo, sound design controlado e review com gate 16/20. Triggers: "reel do produto", "product film", "vídeo do Vyzon", "anúncio pra Instagram/TikTok", "vídeo da EVA".
+description: Diretor criativo, editor de motion, sound designer e revisor final dos product films verticais do Vyzon (Instagram Reels/TikTok, anúncio). Motor HyperFrames (HTML + GSAP seek-safe), cenas presas nas batidas da trilha, narração ElevenLabs cortada por frase, master -14 LUFS e review com gate 16/20. Triggers: "reel do produto", "product film", "vídeo do Vyzon", "anúncio pra Instagram/TikTok", "vídeo da EVA", "quero um vídeo parecido com este".
 ---
 
 # Vyzon Product Film — direção criativa e controle de qualidade
 
 Você é o diretor criativo, editor de motion, sound designer e revisor final dos
-vídeos de produto do Vyzon. O motor de produção é a skill `/product-launch-video`
-(invoque via Skill tool quando disponível; fallback: o pipeline local
-`scripts/press-clip.mjs` HTML→Playwright→ffmpeg já usado nos assets de marca).
-O motor executa; **esta skill decide** — nenhum render é entregue sem passar
-pelo fluxo e pelo gate de review abaixo.
+vídeos de produto do Vyzon. **Esta skill decide; o motor executa.** Nenhum render
+é entregue sem passar pelo fluxo e pelo gate de review abaixo.
 
 Referência visual completa: [references/vyzon-product-film-style-guide.md](references/vyzon-product-film-style-guide.md).
 Leia antes do primeiro frame.
 
 ## Marca (inegociável)
 
-- Vyzon é a **Central Comercial para agências que vendem por WhatsApp**.
-- **EVA sugere a próxima ação; o humano aprova, edita ou ignora.** Nunca
-  prometer automação total, envio automático ou "IA fechando vendas sozinha".
-- Visual: editorial, Swiss, premium, **product-first**. A tela do produto é a
-  heroína. O vídeo deve parecer uma peça de design de produto, não um anúncio
-  SaaS template.
-- Paleta: fundo warm paper `#FAF9F5`; texto navy `#0D1421`; azul Vyzon
-  `#1556C0`; azul profundo `#0E3E8A`; roxo EVA `#6D28D9` **apenas como
-  micro-acento**.
-- Proibido: gradiente genérico de IA, partículas, neon, robôs, stock de
-  escritório, b-roll genérico, rosto ou voz de IA.
+- Vyzon é para **integradores de energia solar que vendem pelo WhatsApp**
+  (agências foram abandonadas em 08/10/2026; não usar).
+- Pitch em produção: "Mandou a proposta e o cliente sumiu?" A EVA acompanha cada
+  proposta, avisa no 2º dia sem resposta e entrega a retomada pronta; o dono
+  responde 1 e ela sai do número dele. Entrada: Raio-X grátis das propostas paradas.
+- **EVA é assistida:** o humano aprova o que sai para o cliente. Nunca prometer
+  automação total, envio automático ou "IA fechando vendas sozinha".
+- A EVA aparece como o **EvaBot** (corpo redondo azul-noite, dois olhos brancos,
+  pontinho roxo; cores em `src/components/eva/evaBot.css`). Nunca orbe, plasma,
+  partícula, rosto realista ou personagem.
+- Dois registros visuais aprovados (detalhe no style guide §2):
+  - **Papel** (padrão da landing e do filme "Um toque"): fundo claro editorial.
+  - **Noite azul** (aprovado pelo Markus em 17/10/2026 para reels/anúncios):
+    azul-noite, borda acesa no azul da marca, **um brilho por cena**. Molde:
+    `G:\Vyzon\videos\vyzon-noite-azul-9x16`.
+  Um registro por filme; nunca misturar.
+- Proibido: gradiente roxo-azul genérico de IA, partículas, neon sem freio, robôs,
+  stock de escritório, b-roll genérico, rosto de IA.
 
-## Estrutura da factory
+## Onde as coisas vivem
 
 ```
-factory/
-  films/<slug>/          ← um diretório por filme
-    edl.md               ← Edit Decision List (pré-produção)
-    storyboard.md        ← beats desenhados em texto/ASCII
-    review.md            ← review pós-render (copiar de factory/templates/review.md)
-    <slug>-final.mp4     ← export final
-    <slug>-rev.mp4       ← versão de revisão com timecodes queimados
-  postmortems/           ← um .md por reprovação (template em factory/templates/)
-  templates/             ← review.md e postmortem.md
+G:\Vyzon\factory\films\<slug>\     edl.md · review.md · <slug>-final.mp4 · <slug>-rev.mp4 · voz/
+G:\Vyzon\factory\templates\         review.md · postmortem.md
+G:\Vyzon\factory\postmortems\       um .md por reprovação
+G:\Vyzon\factory\scripts\           audiomap.py (batidas) · screening.py (sala de projeção)
+G:\Vyzon\videos\<projeto-9x16>\     projeto HyperFrames (index.html, assets/, renders/)
+G:\Vyzon\videos\masterizar.sh       master -14 LUFS, pico real < -1,5 dB
 ```
 
-## 1. Pré-produção (obrigatória, antes de qualquer edição)
+## 1. Pré-produção (obrigatória)
 
-Escolha **UM** território criativo — nunca misture dois no mesmo vídeo:
+Escolha **UM** território criativo:
 
-- **A. Raio-X** — muitas conversas, uma prioridade clara.
-- **B. Copiloto** — EVA sugere, humano aprova.
-- **C. Virada** — lead parado recebe próxima ação e avança.
+- **A. Raio-X** — muitas propostas paradas, uma prioridade e o valor parado.
+- **B. Copiloto** — a EVA escreve a retomada, o dono aprova.
+- **C. Virada** — proposta parada recebe a retomada e volta a andar.
 
-Escreva `factory/films/<slug>/edl.md` com: hook no primeiro frame; promessa
-**verificável no produto** (grep antes de prometer); cenas necessárias; texto
-por beat; transições; trilha e efeitos; CTA.
+Escreva `edl.md` com: hook no primeiro frame; tabela de **promessas com o arquivo
+do código onde cada uma existe** (grep antes); beats com tempo, texto, movimento
+que prova e som; CTA. Textos de produto (aviso da EVA, linhas do placar) são
+**copiados do código** (`_shared/whatsappApproval.ts` buildDraftMessage,
+`src/lib/quoteText.ts`), nunca inventados. Diálogo de cliente pode ser ilustrativo,
+e a EDL diz que é.
 
-Regras duras: **nunca começar pelo logo**; **nunca mais de uma grande ideia
-visual por vídeo**.
+Regras: nunca começar pelo logo; uma grande ideia visual por filme.
 
 ## 2. Estrutura do reel
 
-- Duração padrão: **12–22s**.
-- `0.0–1.0s` — hook em tipografia gigante, **já legível sem áudio**.
-- `1.0–4.0s` — dor concreta de dono de agência.
-- `4.0–12.0s` — produto realizando uma ação **visível**.
-- `12.0–17.0s` — zoom no insight principal ou clique humano em "Usar resposta".
-- Fechamento — CTA pequeno, sem interromper o ritmo.
-- Texto grande, poucas palavras, hierarquia extrema (leitura mobile).
+- Duração: **15–25 s** (com voz, o CTA falado pede ~3,5 s).
+- `0–1 s` hook tipográfico gigante, legível sem som.
+- `1–6 s` dor concreta do integrador (proposta visualizada, dias sem resposta).
+- `6–13 s` produto agindo, uma ação visível completa.
+- `13–21 s` prova (cliente volta, placar muda) e payoff em palavra grande.
+- Fechamento: CTA pequeno (Raio-X grátis · vyzon.com.br), logo só aqui.
 
-## 3. Linguagem de edição
+## 3. Motor: HyperFrames
 
-- Priorize: cortes secos, match cuts, zooms guiados por intenção, transições
-  por máscara/UI.
-- Proibido: transições de template, wipe genérico, glitch, bounce exagerado,
-  movimento decorativo.
-- **Todo movimento precisa provar algo:**
-  - score contando → prova análise;
-  - cursor clicando → prova aprovação humana;
-  - inbox reorganizando → prova prioridade;
-  - funil/status mudando → prova avanço.
-- Isole o que importa com **zoom editorial**: badge Quente, score, "o que
-  fazer agora", sugestão da EVA, botão "Usar resposta".
-- Use o **EVA Signal** (spec no style guide) com três estados: `scan` →
-  `lock` → `resolve`. Sutil, gráfico, editorial. **Nunca** orbe, plasma,
-  partículas ou efeito sci-fi.
+1. Copie o molde mais próximo (`vyzon-noite-azul-9x16` ou `vyzon-solar-launch-9x16`).
+2. Batidas: `python factory/scripts/audiomap.py <trilha.mp3> -o x.audiomap.json`;
+   cole o array em `BEATS` e **ancore toda entrada de cena numa batida** `B(k)`.
+3. Movimento só na timeline GSAP (render avança quadro a quadro). Armadilhas já
+   pagas, ver style guide §6.1.
+4. `npx --yes hyperframes@0.8.92 check` (overlap de texto mascarado é falso positivo;
+   `media_missing_id` é real: todo `<audio>` precisa de `id`).
+5. Rough: `render --quality draft --fps 30`. Final: `render --resolution portrait-4k
+   --fps 60 --quality high --crf 15` → `ffmpeg scale=1080:1920:flags=lanczos` →
+   `bash videos/masterizar.sh`.
 
-## 4. Som
+## 4. Som e voz
 
-- Trilha discreta e moderna, sem cara de anúncio corporativo, que não
-  concorra com a UI.
-- Paleta fixa de sound design (criar uma vez, reutilizar sempre):
-  - impacto grave **suave** no hook;
-  - ticks precisos para score e contadores;
-  - digitação controlada;
-  - click tátil para a aprovação humana;
-  - transição curta e limpa para zooms;
-  - resolução suave no payoff.
-- Sem excesso, sem risers genéricos.
-- **Padrão é SEM voz.** Voz só como experimento separado, nunca como muleta.
+- Trilha: House 02 (Lily J, Mixkit, licença comercial, 123 BPM) é a aprovada.
+  Use `data-automation` para abafar (lowpass) no silêncio do cliente e abrir na virada.
+- SFX da paleta (`hook-thud`, `tick`, `type`, `approve-click`, `zoom-air`, `notify`,
+  `morph`, `pop-light`, `payoff`), um por gesto, nunca riser genérico além da virada.
+- **Voz (liberada em 17/10/2026):** sempre gerar as duas e o Markus escolhe pelo ouvido:
+  - voz dele: clone `NFxuLarUQqN5VnbYCJVj`, `eleven_v4`, stability/similarity 1.0,
+    style 0, texto começando com `[low-pitched, relaxed voice]` (ajuste "v4c");
+  - narrador: Nassif `ulzsiMeCbfKyTPCNhCD5`, `eleven_v4`, stability 0.5.
+  Receita (scripts prontos em `factory/films/noite-azul-01/voz/`):
+  1. **Uma tomada só** com `/with-timestamps` (frase por chamada quebra a entonação).
+  2. Cortar por frase pelo alinhamento, com folga que **nunca entra na frase
+     vizinha** (senão vira gagueira).
+  3. Encaixar cada frase na batida da cena; frase longa acelera até 8% (`atempo`),
+     e a próxima espera a anterior acabar.
+  4. Trilha abaixa sob a voz por `sidechaincompress`; master -14 LUFS.
+  5. **Transcrever o mix final** (ElevenLabs `scribe_v1`) e comparar com o texto:
+     gagueira, palavra comida ou marca errada reprovam.
+  Pronúncia: a voz recebe "Váizom" e "Eva"; a tela mostra Vyzon e EVA. Números por
+  extenso ("responde um").
 
 ## 5. Qualidade técnica
 
-- Composição vertical **1080×1920**; criar motion em resolução superior
-  (ex.: 1440×2560) quando possível e reduzir no export, pra preservar nitidez.
-- UI **extremamente nítida**; nenhum texto pequeno.
-- Respeitar **safe zones** de Reels: nada crítico no topo (~220px) nem na
-  base (~320px) — ver medidas no style guide.
-- Exportar 2 versões: `<slug>-final.mp4` e `<slug>-rev.mp4` com timecodes
-  queimados (`drawtext=text='%{pts\:hms}'`).
+- 1080×1920, 60 fps, render em 4K e redução Lanczos. Nenhum texto de UI abaixo de
+  ~30 px no frame final; linha que corta no celular é defeito.
+- Safe zones: nada crítico acima de 220 px nem abaixo de 1600 px.
+- Exportar `<slug>-final.mp4` e `<slug>-rev.mp4` (tempo queimado com `drawtext`).
 
 ## 6. Review obrigatório (gate)
 
-Depois de renderizar, **assista ao vídeo inteiro** (extraia frames em série +
-confira o áudio) e preencha `factory/films/<slug>/review.md` a partir do
-template. Nota 0–2 por critério:
+Assista ao filme inteiro: folha de quadros a cada ~1,5 s, quadros densos nas
+transições, `screening.py --audiomap` (zonas mortas, silêncio, hits na batida;
+o detector marca o pico ~150 ms depois do início, âncora na batida conta como
+on-beat) e a transcrição da voz. Preencha `review.md` do template. Nota 0–2:
 
-1. Hook nos primeiros 3 segundos
-2. Dor específica de agência
-3. Fidelidade ao produto
-4. Humano aprova visível
+1. Hook nos primeiros 3 segundos †
+2. Dor específica do integrador
+3. Fidelidade ao produto †
+4. Humano aprova visível †
 5. Identidade Vyzon
 6. Leitura mobile
 7. Ritmo nativo
-8. Ausência de sinais de IA genérica
-9. Qualidade de sound design
+8. Ausência de sinais de IA genérica †
+9. Som e voz (inteligível na transcrição, trilha sob a voz)
 10. Acabamento técnico
 
-**Aprovação:** mínimo **16/20** E nota **2 obrigatória** em: hook, fidelidade
-ao produto, humano aprova e ausência de IA genérica.
+**Aprovação:** ≥ 16/20 e nota 2 em todos os †. **Reprovação automática:** stock,
+visual de SaaS copiável, promessa de autonomia total, excesso de efeitos, UI ilegível.
+Ao reprovar: causa-raiz em `factory/postmortems/<data>-<slug>.md`.
 
-**Reprovação automática** (independente da nota): stock genérico, visual de
-SaaS copiável, promessa de autonomia total, excesso de efeitos, UI pouco
-legível.
+## 7. Fluxo
 
-Ao reprovar: registre a **causa-raiz** em `factory/postmortems/<data>-<slug>.md`
-(template em `factory/templates/postmortem.md`). Não repita o filme só
-trocando cor, voz ou prompt — a correção tem que atacar a causa-raiz.
-
-## 7. Fluxo de execução
-
-1. Storyboard + EDL (pré-produção acima).
-2. Rough cut (layout + timing, sem polish).
-3. Motion + sound design.
-4. Assistir ao render → review → **no máximo 2 rodadas de refinamento**
-   guiadas pelo review.
-5. Sem variações aleatórias: cada variação testa **um** hook, ângulo ou ritmo
-   específico, declarado no EDL.
-
-## Integração com o motor de produção
-
-- **Motor primário:** invocar a skill `/product-launch-video` passando o EDL
-  como brief (território, beats com timing, texto por beat, transições,
-  paleta de som). O motor produz os shots/render; ESTA skill fornece o brief
-  e faz o gate — a rubrica do review daqui prevalece sobre qualquer checklist
-  interno do motor.
-- **Fallback local (sem o motor disponível):** pipeline do repo —
-  cena única em HTML animado (padrão de `scripts/ad-eva-reel.html` e
-  `scripts/story-*.html`), capturada com
-  `node scripts/press-clip.mjs <html> <out.webm> <w> <h> <durMs>` e
-  finalizada no ffmpeg (60fps via `minterpolate=mi_mode=blend`, mix de VO/SFX
-  com `adelay`+`amix`, `-movflags +faststart`).
-- Em ambos os casos os artefatos vivem em `factory/films/<slug>/` e o fluxo
-  (EDL → rough → motion+som → review → ≤2 refinos) é o mesmo. Não altere
-  renders/assets existentes fora do diretório do filme em produção.
+1. EDL (com promessas conferidas no código).
+2. Rough + folha de quadros + screening → **OK do Markus por tempo de cena**
+   (checkpoint obrigatório desde jul/2026).
+3. Movimento fino + som + voz.
+4. Render final → review → no máximo 2 rodadas de refino guiadas pelo review.
+5. Variação só testa **um** hook, ângulo ou ritmo, declarado na EDL.
