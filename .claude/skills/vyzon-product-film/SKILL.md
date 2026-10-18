@@ -146,8 +146,10 @@ Ao reprovar: causa-raiz em `factory/postmortems/<data>-<slug>.md`.
 ## 7. Fluxo
 
 1. EDL (com promessas conferidas no código).
-2. Rough + folha de quadros + screening → **OK do Markus por tempo de cena**
-   (checkpoint obrigatório desde jul/2026).
+2. Rough interno + folha de quadros + screening. **Sem checkpoint com o Markus**
+   (revogado em 18/10/2026): ele recebe o filme pronto. Você é o revisor: assista
+   tudo, corrija bug, texto fora do padrão e trecho que não faz sentido antes de
+   entregar, e diga se a peça serve para anúncio e por quê.
 3. Movimento fino + som + voz.
 4. Render final → review → no máximo 2 rodadas de refino guiadas pelo review.
 5. Variação só testa **um** hook, ângulo ou ritmo, declarado na EDL.
