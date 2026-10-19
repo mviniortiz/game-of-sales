@@ -14,7 +14,8 @@ export type FunnelEvent =
     | "form_start"
     | "form_submit"
     | "form_error"
-    | "section_view";
+    | "section_view"
+    | "calc_use";
 
 const SID_KEY = "vyz_lp_sid";
 let memorySid: string | null = null;

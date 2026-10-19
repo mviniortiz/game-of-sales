@@ -3675,6 +3675,11 @@ All colors MUST be HSL.
   font-style: normal;
   font-weight: 400;
 }
+.lp-v2 .lp-bold {
+  font-family: 'Satoshi', var(--font-geist);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
 .lp-v2 .lp-serif {
   font-family: var(--font-display);
   font-style: italic;
