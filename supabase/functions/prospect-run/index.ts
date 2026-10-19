@@ -246,10 +246,14 @@ Deno.serve(async (req) => {
       .lte("followup_due_at", agora.toISOString());
     // "Passando só pra não deixar minha mensagem solta" vindo de outro número não faz sentido.
     if (inst.chip_desde) consultaSeguimento = consultaSeguimento.gte("sent_at", inst.chip_desde);
-    const { data: seguimento } = await consultaSeguimento.order("followup_due_at").limit(1).maybeSingle();
-    const alvo = seguimento || (await admin.from("prospecting_allowlist").select("*")
+    const { data: pendente } = await consultaSeguimento.order("followup_due_at").limit(1).maybeSingle();
+    const { data: novo } = await admin.from("prospecting_allowlist").select("*")
       .eq("user_id", inst.user_id).eq("status", "aprovado")
-      .order("approved_at").order("score", { ascending: false }).limit(1).maybeSingle()).data;
+      .order("approved_at").order("score", { ascending: false }).limit(1).maybeSingle();
+    // Seguimento e primeira mensagem dividem o teto meio a meio: com fila de seguimento,
+    // a primeira mensagem (e o teste de dores) ficava dias sem sair (19/10/2026, 21 na fila).
+    const seguimento = pendente && (!novo || (seguimentosHoje || 0) < (enviadosHoje || 0)) ? pendente : null;
+    const alvo = seguimento || novo;
     if (!alvo) { r.nada_para_enviar = true; continue; }
     const destinoAlvo = prospectNumber(alvo);
     if (!destinoAlvo) {
