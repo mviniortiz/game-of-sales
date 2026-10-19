@@ -9,7 +9,7 @@ import { evolutionRequest, normalizeNumber } from "./whatsappApproval.ts";
 import { saveNotice } from "./ownerGroups.ts";
 import { llmChat } from "./llm.ts";
 import { PREFIXO_AUDIO } from "./transcribe.ts";
-import { AUTO_ENVIO_MS, dividirMensagens, firstMessage, ehDistribuidora, IMAGEM_RETOMADA, MARCA_IMAGEM, nextSlots, parseProspectCommand, pausaEntreMensagens, RAIO_X_LINK, randomCode, respostaPorta, tempoDigitando } from "./prospectingText.ts";
+import { AUTO_ENVIO_MS, dividirMensagens, firstMessage, ehDistribuidora, IMAGEM_RETOMADA, MARCA_IMAGEM, nextSlots, parseProspectCommand, pausaEntreMensagens, portaJaFoi, RAIO_X_LINK, randomCode, respostaPorta, tempoDigitando } from "./prospectingText.ts";
 export { firstMessage, followupMessage, nextSlots, parseProspectCommand, randomCode } from "./prospectingText.ts";
 
 export const PROSPECT_PREFIX = "PROSPECÇÃO";
@@ -114,6 +114,20 @@ export type ReplyRead = { kind: "interesse" | "sem_interesse" | "automatico" | "
 export async function readProspectReply(row: ProspectRow, newText: string, freeSlots: string): Promise<ReplyRead> {
   // A versão "raiox" oferece o link do Raio-X grátis em vez da chamada de 20 minutos.
   const ofereceuLink = row.variant === "raiox";
+  // Teste de dores (19 a 30/10/2026): cada assunto tem objetivo e respostas próprios.
+  const dor = row.variant === "time" ? "time" : row.variant === "aberta" ? "aberta" : null;
+  const objetivoTime = [
+    "A primeira mensagem do Markus perguntou como o dono acompanha as propostas que os vendedores mandam pelo WhatsApp. Objetivo: ouvir se isso é um problema real para ele.",
+    "O que o Markus está montando, nestas palavras e sem prometer resultado: cada vendedor conecta o WhatsApp dele, toda proposta que sai entra numa lista só que o dono vê (quanto vale, há quantos dias e se o cliente respondeu), e no 2º dia sem resposta o vendedor recebe a mensagem pronta pra retomar. Nada sai sem aprovação.",
+    "Nunca diga que o dono vê de qual vendedor é cada proposta, que lê as conversas dos vendedores ou que acompanha o vendedor em tempo real: isso não existe.",
+    `Não mande ${MARCA_IMAGEM}. Preço só se perguntarem, e aí direto, sem enrolar e sem dizer que não tem preço: R$ 197 por mês, tudo liberado, até 10 usuários; as 10 primeiras integradoras pagam R$ 97 por mês nos 3 primeiros meses. Na mesma resposta, ofereça fazer com o Markus o Raio-X grátis de 20 minutos antes de qualquer pagamento, com dois horários entre estes: ${freeSlots}.`,
+  ].join(" ");
+  const objetivoAberta = [
+    "A primeira mensagem do Markus pediu para fazer uma pergunta sobre o que mais faz a integradora perder venda hoje. Objetivo: ouvir a dor da pessoa, com as palavras dela.",
+    `Não mostre produto, não mande ${MARCA_IMAGEM}, link nem convite de reunião enquanto ela estiver contando.`,
+    "Se perguntarem o que o Markus está montando: diga em uma frase que é uma ferramenta que acompanha os orçamentos do WhatsApp e avisa o dono no 2º dia sem resposta com a mensagem pronta, e que ele quer saber se isso resolve algo real antes de vender.",
+    `Preço só se perguntarem, e aí direto, sem enrolar e sem dizer que não tem preço: R$ 197 por mês, tudo liberado, até 10 usuários; as 10 primeiras integradoras pagam R$ 97 por mês nos 3 primeiros meses. Na mesma resposta, ofereça fazer com o Markus o Raio-X grátis de 20 minutos antes de qualquer pagamento, com dois horários entre estes: ${freeSlots}.`,
+  ].join(" ");
   const system = [
     "Você ajuda o Markus, fundador da Vyzon (Florianópolis), a conversar com donos de integradoras de energia solar.",
     // Mesmo produto visto do lado da distribuidora: as regras abaixo continuam valendo com outro vocabulário.
@@ -122,6 +136,8 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
     ] : []),
     ofereceuLink
       ? "A primeira mensagem do Markus ofereceu o link do Raio-X grátis: uma ferramenta que lê o WhatsApp da integradora e acha as propostas que o cliente visualizou e não respondeu. Objetivo: que o dono ou sócio abra o link. Não fale de preço nem de plano."
+      : dor === "time" ? objetivoTime
+      : dor === "aberta" ? objetivoAberta
       : [
         "Objetivo do Markus: quando a pessoa abrir a porta, mostrar em uma frase e num print o que ele está montando e ouvir se a integradora faz algo assim hoje. Só depois, se aparecer dor ou curiosidade, convidar para 20 minutos online ou oferecer o Raio-X.",
         "Por que mostrar e não perguntar número: perguntar 'quantas propostas ficaram sem resposta' a um desconhecido soa como pedir para confessar que perde venda, e as conversas morreram ou travaram ('Porque eu te falaria isso?'). E quem diz que já resolve costuma ter só o aviso de que o cliente abriu; a diferença é a retomada já escrita (medido em 14/10/2026).",
@@ -134,12 +150,25 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
     "Classifique a última resposta da integradora e escreva a próxima mensagem do Markus.",
     ofereceuLink
       ? "kind: 'interesse' (quer o link, diz sim, pede para mandar), 'sem_interesse' (recusou), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (pergunta quem é, como funciona, ou pede mais detalhe)."
+      : dor === "aberta"
+      ? "kind: 'fora_do_perfil' (só instala para outras empresas, não trabalha mais com solar, número errado ou não é a empresa), 'interesse' (contou uma dor ou um problema concreto de venda, qualquer que seja, ou pediu para conversar), 'sem_interesse' (só recusa explícita), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (abriu a porta sem contar nada ainda: 'pode perguntar', 'é comigo', 'oi', ou perguntou quem é)."
       : "kind: 'fora_do_perfil' (não é o cliente: só instala para outras empresas, não trabalha mais com solar, número errado ou não é a empresa), 'interesse' (respondeu a pergunta com algo concreto, inclusive 'já fazemos follow-up' ou 'já temos ferramenta', ou pediu para conversar/horário), 'sem_interesse' (só recusa explícita: 'não tenho interesse', 'não quero'), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (pessoa abriu a porta sem responder ainda: 'pode perguntar', 'é comigo', 'o que precisa?', 'oi', ou perguntou quem é/do que se trata).",
     "Regras da mensagem: português do Brasil, curta (até 3 frases no total), sem emoji, sem travessão, sem prometer nada, assina só quando for a primeira frase de apresentação.",
     "Tom: como o Markus digita no WhatsApp com alguém da região, não como atendente. Informal e direto ('pra', 'tá', 'beleza', 'show', 'valeu'), frases curtas, uma ideia por frase, ortografia e acentos certos. Proibido frase de atendimento ou de e-mail: 'Obrigado pelo retorno', 'agradeço o contato', 'fico à disposição', 'Que bom saber', 'perfeitamente', 'gostaria de', 'poderia'. Nada de elogio vazio nem de repetir o que a pessoa disse com outras palavras. No máximo um ponto de exclamação. Quando a pessoa conta um problema ou um número ruim, não reaja com 'show', 'que bom' ou 'beleza': reaja como quem leva a sério ('putz', 'pois é', 'entendi').",
     `Pode dividir em DUAS mensagens de texto, como uma pessoa digitando: uma reação curta e depois a pergunta. Separe com uma linha em branco; cada parágrafo sai como uma mensagem. Nunca mais de duas de texto, além do parágrafo ${MARCA_IMAGEM} quando a regra pedir.`,
     ofereceuLink
       ? `- interesse: mande este link exatamente: ${RAIO_X_LINK} . Diga em uma frase que leva uns 3 minutos, que a ferramenta só lê e nada é enviado para os clientes dele.`
+      : dor === "time" ? [
+        "- interesse, quando ele conta como acompanha hoje (pergunta pra cada vendedor, planilha, CRM, grupo): reaja como quem leva a sério e faça UMA pergunta: o que acontece hoje quando um vendedor esquece de retomar um cliente? Não peça número.",
+        `- interesse, quando ele mostrou que isso dói (perde venda, não sabe o que o vendedor fez, cliente esquecido): comente em uma frase o que ele contou e convide para 20 minutos online com dois horários entre estes: ${freeSlots}.`,
+        "- quando ele vende sozinho, sem vendedor: diga 'Entendi, então é você mesmo que manda as propostas.' e pergunte: quando o cliente some depois do orçamento, você chama de novo ou deixa pra lá? kind: duvida.",
+        `- interesse, quando ele só pediu para conversar: proponha dois horários entre estes: ${freeSlots} e diga que manda o link da chamada.`,
+      ].join("\n")
+      : dor === "aberta" ? [
+        "- interesse, quando ele contou a dor pela primeira vez: reaja como quem leva a sério ('putz', 'pois é', 'entendi') e faça UMA pergunta para aprofundar, nas palavras dele: com que frequência isso acontece, ou o que ele já tentou para resolver. Não mostre produto.",
+        `- interesse, quando ele já aprofundou a dor (é a segunda vez que fala dela na conversa): agradeça em meia frase e pergunte se ele toparia 20 minutos online para contar mais, com dois horários entre estes: ${freeSlots}. Se a dor for cliente que some depois do orçamento, diga em uma frase que é exatamente o que o Markus está montando.`,
+        `- interesse, quando ele só pediu para conversar: proponha dois horários entre estes: ${freeSlots} e diga que manda o link da chamada.`,
+      ].join("\n")
       : [
         `- interesse, quando ele diz que já resolve ('fazemos follow-up com todos', 'temos CRM', 'temos uma ferramenta que avisa quando abre'): não feche a conversa e não convide para reunião ainda. Se o print ainda não foi: primeiro parágrafo, uma reação curta ao que ele disse e meia frase do que a EVA faz; segundo, ${MARCA_IMAGEM}; terceiro, UMA pergunta: o de vocês já deixa a mensagem pronta assim ou só avisa? Se o print já foi, pergunte isso sem imagem. Se ele já contou como e mesmo assim não mostrou dor, ofereça conferir de graça com o Raio-X se alguma proposta escapou, sem insistir.`,
         `- interesse, quando ele mostrou dor ou deu número: agradeça, comente em uma frase o que ele contou (com o número dele) e convide para 20 minutos online com dois horários entre estes: ${freeSlots}, ou ofereça mostrar de graça quanto está parado com o Raio-X.`,
@@ -148,9 +177,17 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
       ].join("\n"),
     ofereceuLink
       ? "- automatico: peça com educação para falar com o dono ou com quem cuida das propostas, e diga que é para mostrar quanto está parado em proposta sem resposta."
+      : dor === "time"
+      ? "- automatico: peça com educação para falar com o dono, dizendo em meia frase que é sobre como ele acompanha as propostas que os vendedores mandam no WhatsApp."
+      : dor === "aberta"
+      ? "- automatico: peça com educação para falar com o dono ou com quem cuida do comercial, dizendo em meia frase que é uma pergunta rápida sobre o que mais faz perder venda."
       : "- automatico: peça com educação para falar com o dono ou com quem cuida das propostas, dizendo em meia frase que é sobre orçamento que o cliente visualiza e para de responder. Não mande o print nem peça reunião: isso fica para quando uma pessoa responder.",
     ofereceuLink
       ? "- duvida: explique em uma frase que é um Raio-X grátis das propostas paradas no WhatsApp, que só lê e não manda nada para cliente, e pergunte se pode mandar o link."
+      : dor === "time"
+      ? `- duvida ('pode falar', 'é comigo', 'oi', ou perguntou quem é): mostre em dois parágrafos, adaptando este modelo sem encurtar (se perguntaram quem é, comece por 'Sou o Markus, de Floripa.'): '${respostaPorta(row.niche, "time")}'`
+      : dor === "aberta"
+      ? `- duvida ('pode falar', 'é comigo', 'oi', ou perguntou quem é): faça a pergunta, adaptando este modelo (se perguntaram quem é, comece por 'Sou o Markus, de Floripa.'): '${respostaPorta(row.niche, "aberta")}'`
       : `- duvida ('pode falar', 'é comigo', 'o que precisa?', 'oi', ou perguntou quem é): mostre agora, em três parágrafos. Primeiro: o que estão montando, com o aviso do 2º dia, a mensagem pronta e o envio pelo número dele, adaptando este modelo sem encurtar: 'Tô montando uma ferramenta pra integradora: quando um orçamento fica 2 dias sem resposta do cliente, ela avisa o dono no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.' (se perguntaram quem é, comece por 'Sou o Markus, de Floripa.'). Segundo: ${MARCA_IMAGEM}. Terceiro: só a pergunta 'Vocês fazem algo assim hoje ou fica no braço?' ou uma variação curta dela. Não peça número nem reunião. Se o print já foi e a pessoa ainda não respondeu sobre ele, só repita a pergunta curta.`,
     "- fora_do_perfil: agradeça em uma frase curta e encerre. Não ofereça nada.",
     "- Objeção 'quem visualiza e some não tem interesse' ou 'correr atrás é perder tempo': não discuta nem chame de erro. Concorde em parte em meia frase e faça UMA pergunta: desses que sumiram, algum já voltou depois e fechou com outra empresa? kind: duvida.",
@@ -368,7 +405,14 @@ export async function onProspectInbound(
   // Só abriu a porta e ainda não viu o print: a resposta padrão sai sozinha pelo
   // prospect-run (RESPOSTA_PORTA). Mensagem nova antes disso reescreve ou cancela.
   const porta = lido.kind === "duvida" && lido.porta && args.text.length <= 80 && !args.text.startsWith(PREFIXO_AUDIO) &&
-    !String(row.last_reply || "").includes(MARCA_IMAGEM);
+    !portaJaFoi(row.last_reply, row.niche, row.variant);
+  // Modo automático (prospecting_instances.auto_ate, decisão do Markus em 19/10/2026 para
+  // a hora do almoço): a sugestão sai sozinha como a resposta padrão. Áudio transcrito
+  // continua esperando o dono.
+  const { data: inst } = await admin.from("prospecting_instances").select("auto_ate").eq("user_id", args.userId).maybeSingle();
+  const autoAte = inst?.auto_ate && new Date(inst.auto_ate) > new Date() ? new Date(inst.auto_ate) : null;
+  const sozinha = porta || Boolean(autoAte && !args.text.startsWith(PREFIXO_AUDIO));
+  const rascunho = porta ? respostaPorta(row.niche, row.variant) : lido.draft;
   const { auto_envio_em: _antigo, ...metadata } = row.metadata || {};
   // Sinal de compra (preço, teste, link, conversa): é o que o painel conta para o
   // critério do nicho de 30/10/2026. Fica a primeira vez, com a frase da pessoa.
@@ -389,20 +433,22 @@ export async function onProspectInbound(
     replied_at: agora,
     followup_due_at: null,
     reply_kind: lido.kind,
-    reply_draft: porta ? respostaPorta(row.niche) : lido.draft,
+    reply_draft: rascunho,
     reply_code: code,
-    metadata: porta ? { ...metadata, auto_envio_em: new Date(Date.now() + AUTO_ENVIO_MS).toISOString() } : metadata,
+    metadata: sozinha ? { ...metadata, auto_envio_em: new Date(Date.now() + AUTO_ENVIO_MS).toISOString() } : metadata,
     last_reply: `${row.last_reply ? row.last_reply + "\n" : ""}Eles: ${args.text}`.slice(-3000),
   }).eq("id", row.id);
   if (args.ownerNumber) {
     await notifyDecision(admin, { instanceName: args.instanceName, destino: args.ownerNumber, userId: args.userId, code }, [
       `${nome} respondeu:`,
       `"${args.text.slice(0, 600)}"`,
-      porta ? "Abriu a porta. A resposta padrão sai sozinha em uns 2 minutos:" : `Leitura: ${KIND_LABEL[lido.kind]}.`,
-      porta ? `"${respostaPorta(row.niche)}"` : `Sugestão:\n"${lido.draft}"`,
+      porta ? "Abriu a porta. A resposta padrão sai sozinha em uns 2 minutos:"
+        : sozinha ? `Leitura: ${KIND_LABEL[lido.kind]}. Modo automático até ${autoAte!.toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" })}: a sugestão sai sozinha em uns 2 minutos:`
+        : `Leitura: ${KIND_LABEL[lido.kind]}.`,
+      porta ? `"${rascunho}"` : `Sugestão:\n"${rascunho}"`,
       ...(cardNovo ? ["Coloquei no pipeline, em Qualificação."] : []),
     ].join("\n\n"), {
-      grupo: porta
+      grupo: sozinha
         ? "👎 não envia · 👍 envia agora · ou responda esta mensagem com o seu texto"
         : "👍 envia a sugestão · 👎 não responde · ou responda esta mensagem com o seu texto",
       chat: `Responda ${code} 1 para enviar, ${code} 2 para não responder, ou ${code} seguido do seu texto.`,
@@ -427,7 +473,7 @@ export async function enviarRespostasPorta(admin: any, userId: string, instanceN
     const numero = prospectNumber(row);
     if (!numero || !row.reply_draft) continue;
     await enviarRascunho(admin, instanceName, numero, row, row.reply_draft);
-    await notifyOwner(instanceName, destino, `Saiu para ${row.agency_name}: a resposta padrão com o print.`);
+    await notifyOwner(instanceName, destino, `Saiu para ${row.agency_name}${row.reply_draft.includes(MARCA_IMAGEM) ? ": a resposta com o print." : "."}`);
     enviadas.push(row.agency_name);
   }
   return enviadas;

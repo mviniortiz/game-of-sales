@@ -26,7 +26,7 @@ import {
   brKey, enviarRespostasPorta, firstMessage, lembretesDeConversa, followupMessage, notifyDecision, notifyOwner, prospectNumber, randomCode,
   sendHumanText, sendVoiceNote, whatsappKeys,
 } from "../_shared/prospecting.ts";
-import { chipAquecendo, ehDistribuidora, NICHO_DISTRIBUIDORA, nextVariant, tetoComSinal, tetoDoChip, type ProspectVariant } from "../_shared/prospectingText.ts";
+import { chipAquecendo, DISTRIBUIDORA_PAUSADA_ATE, ehDistribuidora, NICHO_DISTRIBUIDORA, nextVariant, TESTE_DORES_DESDE, tetoComSinal, tetoDoChip, VARIANTS, type ProspectVariant } from "../_shared/prospectingText.ts";
 import { groupJid } from "../_shared/ownerGroups.ts";
 import { CORTE_ENCAIXE } from "../_shared/prospectFit.ts";
 
@@ -144,7 +144,14 @@ Deno.serve(async (req) => {
     const { count: lotesHoje } = await admin.from("prospecting_batches").select("id", { count: "exact", head: true })
       .eq("user_id", inst.user_id).gte("created_at", inicioDia);
     if (!tetoHoje) { r.chip_aquecendo = "dia sem mensagem fria"; continue; }
-    if (!lotesHoje) {
+    // Modo automático: lote pequeno, aprovado na hora, sempre que a fila aprovada esvazia.
+    // Pequeno para quase nada aprovado sobrar quando o modo acaba.
+    const auto = Boolean(inst.auto_ate && new Date(inst.auto_ate) > agora);
+    const { count: aprovadosNaFila } = auto
+      ? await admin.from("prospecting_allowlist").select("id", { count: "exact", head: true }).eq("user_id", inst.user_id).eq("status", "aprovado")
+      : { count: 1 };
+    if (!lotesHoje || (auto && !aprovadosNaFila)) {
+      const tamanho = auto ? Math.min(tetoHoje, 2) : tetoHoje;
       // Só entra quem passou na qualificação (prospect-qualify), da maior nota para a menor.
       // A distribuidora é teste à parte e fica com 1 de cada 5 vagas; vaga dela que
       // sobrar vai para integradora.
@@ -155,8 +162,8 @@ Deno.serve(async (req) => {
         q = distribuidora ? q.eq("niche", NICHO_DISTRIBUIDORA) : q.or(`niche.is.null,niche.neq."${NICHO_DISTRIBUIDORA}"`);
         return q.order("fit_score", { ascending: false }).limit(n);
       };
-      const vagasDist = tetoHoje >= 3 ? Math.max(1, Math.round(tetoHoje / 5)) : 0;
-      const [{ data: filaInt }, { data: filaDist }] = await Promise.all([filaDo(false, tetoHoje * 2), filaDo(true, vagasDist * 2)]);
+      const vagasDist = tetoHoje >= 3 && agora >= new Date(DISTRIBUIDORA_PAUSADA_ATE) ? Math.max(1, Math.round(tamanho / 5)) : 0;
+      const [{ data: filaInt }, { data: filaDist }] = await Promise.all([filaDo(false, tamanho * 2), filaDo(true, vagasDist * 2)]);
       // Número sem WhatsApp falha no envio e gasta uma vaga do lote aprovado: sai antes.
       const comNumero = [...(filaDist || []), ...(filaInt || [])].filter((c: any) => prospectNumber(c));
       const temZap = await whatsappKeys(instanceName, comNumero.map((c: any) => prospectNumber(c)!));
@@ -167,13 +174,17 @@ Deno.serve(async (req) => {
       }
       const ok = comNumero.filter((c: any) => !semZap.includes(c));
       const dist = ok.filter((c: any) => ehDistribuidora(c.niche)).slice(0, vagasDist);
-      const validos = [...dist, ...ok.filter((c: any) => !ehDistribuidora(c.niche)).slice(0, tetoHoje - dist.length)];
+      const validos = [...dist, ...ok.filter((c: any) => !ehDistribuidora(c.niche)).slice(0, tamanho - dist.length)];
       if (validos.length) {
         // Teste de abordagens: cada nova integradora recebe a variante menos usada.
-        const { data: usadas } = await admin.from("prospecting_allowlist").select("variant")
-          .eq("user_id", inst.user_id).not("variant", "is", null);
+        // Só conta o que entrou no teste de dores: a encaminha tem 59 envios de antes.
+        const { data: usadas } = await admin.from("prospecting_allowlist").select("variant, sent_at, status")
+          .eq("user_id", inst.user_id).in("variant", VARIANTS);
         const contagem: Partial<Record<ProspectVariant, number>> = {};
-        for (const u of usadas || []) contagem[u.variant as ProspectVariant] = (contagem[u.variant as ProspectVariant] || 0) + 1;
+        for (const u of usadas || []) {
+          const noTeste = u.sent_at ? u.sent_at >= TESTE_DORES_DESDE : ["aguardando_aprovacao", "aprovado"].includes(u.status);
+          if (noTeste) contagem[u.variant as ProspectVariant] = (contagem[u.variant as ProspectVariant] || 0) + 1;
+        }
         for (const c of validos) {
           // Contato que voltou de lote expirado mantém versão e texto juntos: a
           // versão decide a resposta da IA (raiox oferece link) e o placar do teste.
@@ -182,7 +193,8 @@ Deno.serve(async (req) => {
           if (!jaTinha) contagem[variant] = (contagem[variant] || 0) + 1;
           c.variant = variant;
           await admin.from("prospecting_allowlist").update({
-            status: "aguardando_aprovacao",
+            status: auto ? "aprovado" : "aguardando_aprovacao",
+            ...(auto ? { approved_at: agora.toISOString() } : {}),
             variant,
             first_message: jaTinha ? c.first_message : firstMessage(c, variant),
             followup_message: followupMessage(c),
@@ -191,13 +203,18 @@ Deno.serve(async (req) => {
         const code = randomCode();
         await admin.from("prospecting_batches").insert({
           company_id: inst.company_id, user_id: inst.user_id, code, contact_ids: validos.map((c: any) => c.id),
+          ...(auto ? { status: "aprovado", decided_at: agora.toISOString() } : {}),
         });
         const lista = validos.map((c: any, i: number) => {
           const motivos = ((c.metadata?.qualif?.motivos ?? []) as string[]).slice(0, 2).join(", ");
           return `${i + 1}. ${c.agency_name}${c.city ? ` (${c.city})` : ""}${ehDistribuidora(c.niche) ? " · distribuidora (teste)" : ""} · nota ${c.fit_score}${motivos ? ` · ${motivos}` : ""}`;
         }).join("\n");
         const destino = (await groupJid(admin, instanceName, "prospeccao")) || ownerNumber;
-        await notifyDecision(admin, { instanceName, destino, userId: inst.user_id, code }, [
+        if (auto) {
+          const ate = new Date(inst.auto_ate).toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" });
+          await notifyOwner(instanceName, destino, `Modo automático até ${ate}: estas saem sem 👍, uma de cada vez.\n\n${lista}`);
+          r.lote = { code, contatos: validos.length, auto: true };
+        } else await notifyDecision(admin, { instanceName, destino, userId: inst.user_id, code }, [
           `Bom dia. Tenho ${validos.length} abordagens prontas para hoje:`,
           lista,
           `Saem entre ${inst.window_start}h e ${inst.window_end}h, uma de cada vez, com ${chipAquecendo(rampa, agora) ? "5 a 10" : "2 a 5"} minutos entre elas.${tetoHoje < inst.daily_cap ? ` O chip ainda está aquecendo: hoje o teto é ${tetoHoje}, contando os seguimentos.` : ""}`,

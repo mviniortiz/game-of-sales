@@ -12,12 +12,20 @@ export function randomCode(): string {
   return `P${l}${d}`;
 }
 
-export type ProspectVariant = "pergunta" | "numero" | "curta" | "encaminha" | "raiox";
+export type ProspectVariant = "pergunta" | "numero" | "curta" | "encaminha" | "raiox" | "time" | "aberta";
 /** Versões em uso. Até 15/10/2026 a encaminha trouxe pessoa de verdade em 10 de 17 envios,
  *  a curta em 1 de 16 (9 robôs) e a raiox em 1 de 15; ficou só a encaminha. As outras
  *  continuam em firstMessage/readProspectReply para as conversas que já começaram com elas.
  *  Sem "Não é venda": a resposta seguinte mostra a ferramenta, e a frase viraria mentira. */
-export const VARIANTS: ProspectVariant[] = ["encaminha"];
+export const VARIANTS: ProspectVariant[] = ["encaminha", "time", "aberta"];
+
+/** Teste de dores até 30/10/2026 (decisão do Markus em 19/10): o formato da encaminha,
+ *  que é o que faz pessoa responder, com três assuntos. encaminha = proposta parada,
+ *  time = acompanhar as propostas dos vendedores, aberta = pergunta o que mais faz perder
+ *  venda, sem mostrar produto. A divisão conta só o que entrou desde TESTE_DORES_DESDE. */
+export const TESTE_DORES_DESDE = "2026-10-19T15:30:00Z";
+/** A distribuidora para durante o teste: a amostra de cada dor já é pequena. */
+export const DISTRIBUIDORA_PAUSADA_ATE = "2026-10-31T03:00:00Z";
 
 /** Distribuidora de kit solar é um teste à parte (decisão de 16/10/2026): a integradora
  *  segue sendo o público do critério de 30/10, e a distribuidora entra como 1 de cada 5
@@ -55,8 +63,27 @@ const RESPOSTA_PORTA_DISTRIBUIDORA = [
   MARCA_IMAGEM,
   "Vocês fazem algo assim hoje ou fica no braço?",
 ].join("\n\n");
-export const respostaPorta = (niche?: string | null) =>
-  ehDistribuidora(niche) ? RESPOSTA_PORTA_DISTRIBUIDORA : RESPOSTA_PORTA;
+// Só o que existe: cada vendedor conecta o próprio número (evolution-whatsapp,
+// instância por usuário), as propostas de todos caem no placar da empresa
+// (get_quote_board) e o aviso vai para o dono do número (quoteTracking). O dono NÃO vê
+// de qual vendedor é cada proposta nem lê a conversa do vendedor.
+const RESPOSTA_PORTA_TIME = [
+  "Tô montando uma ferramenta pra integradora com equipe de venda: cada vendedor conecta o WhatsApp dele, e toda proposta que sai entra numa lista só, que você vê: quanto vale, há quantos dias e se o cliente respondeu. No 2º dia sem resposta, o vendedor recebe a mensagem pronta pra retomar.",
+  "Hoje você consegue ver isso ou depende de perguntar pra cada um?",
+].join("\n\n");
+const RESPOSTA_PORTA_ABERTA =
+  "Valeu! A pergunta é essa: hoje, o que mais te faz perder venda de energia solar? Preço, cliente que some depois do orçamento, falta de cliente novo, financiamento que não aprova, vendedor... O que pesa mais aí?";
+export const respostaPorta = (niche?: string | null, variant?: string | null) =>
+  ehDistribuidora(niche) ? RESPOSTA_PORTA_DISTRIBUIDORA
+    : variant === "time" ? RESPOSTA_PORTA_TIME
+    : variant === "aberta" ? RESPOSTA_PORTA_ABERTA
+    : RESPOSTA_PORTA;
+/** A resposta padrão já foi nesta conversa? O print marca a da encaminha; as outras
+ *  não têm print, então vale o começo do próprio texto. */
+export const portaJaFoi = (conversa: string | null | undefined, niche?: string | null, variant?: string | null) => {
+  const c = String(conversa || "");
+  return c.includes(MARCA_IMAGEM) || c.includes(respostaPorta(niche, variant).slice(0, 60));
+};
 export const AUTO_ENVIO_MS = 90_000;
 
 type ProspectTarget = {
@@ -127,6 +154,32 @@ export function firstMessage(row: ProspectTarget, variant: ProspectVariant = "pe
       `Olá, tudo certo? Aqui é o ${sender}, de Floripa. Tô montando uma ferramenta pra integradora solar e queria fazer uma pergunta rápida sobre proposta que o cliente visualiza e deixa sem resposta. Quem cuida disso aí na ${nome}?`,
     ][i];
   }
+  if (variant === "time") {
+    const i = redacao(nome);
+    if (dono) return [
+      `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar com equipe de vendas e queria te fazer uma pergunta rápida sobre como você acompanha as propostas que seus vendedores mandam pelo WhatsApp. É você que cuida disso na ${nome}?`,
+      `Oi, ${dono}, tudo bem? Sou o ${sender}, de Florianópolis. Estou desenvolvendo uma ferramenta para integradoras de energia solar que têm vendedores e tenho uma pergunta rápida sobre como você acompanha as propostas que eles mandam no WhatsApp. Quem cuida disso na ${nome} é você?`,
+      `Oi, ${dono}! Aqui é o ${sender}, de Floripa. Tô montando uma ferramenta pra integradora solar com time de venda e queria te fazer uma pergunta rápida sobre como você acompanha as propostas que os vendedores mandam no WhatsApp. Você que cuida disso na ${nome}?`,
+    ][i];
+    return [
+      `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar com equipe de vendas e queria fazer uma pergunta rápida sobre como o dono acompanha as propostas que os vendedores mandam pelo WhatsApp. Consegue me passar pra quem cuida disso na ${nome}?`,
+      `Oi, tudo bem? Sou o ${sender}, de Florianópolis. Estou desenvolvendo uma ferramenta para integradoras de energia solar que têm vendedores e tenho uma pergunta rápida sobre como o dono acompanha as propostas que eles mandam no WhatsApp. Pode me passar para quem cuida disso na ${nome}?`,
+      `Olá, tudo certo? Aqui é o ${sender}, de Floripa. Tô montando uma ferramenta pra integradora solar com time de venda e queria fazer uma pergunta rápida sobre como o dono acompanha as propostas dos vendedores no WhatsApp. Quem cuida disso aí na ${nome}?`,
+    ][i];
+  }
+  if (variant === "aberta") {
+    const i = redacao(nome);
+    if (dono) return [
+      `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô conversando com donos de integradora solar pra entender o que mais faz perder venda hoje, antes de terminar uma ferramenta. Posso te fazer uma pergunta rápida? É você que cuida do comercial na ${nome}?`,
+      `Oi, ${dono}, tudo bem? Sou o ${sender}, de Florianópolis. Estou conversando com donos de integradoras de energia solar para entender o que mais faz perder venda hoje, antes de terminar uma ferramenta. Posso te fazer uma pergunta rápida? Quem cuida do comercial na ${nome} é você?`,
+      `Oi, ${dono}! Aqui é o ${sender}, de Floripa. Tô ouvindo dono de integradora solar pra entender o que mais trava venda hoje, antes de fechar uma ferramenta. Posso te fazer uma pergunta rápida? Você que cuida do comercial na ${nome}?`,
+    ][i];
+    return [
+      `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô conversando com donos de integradora solar pra entender o que mais faz perder venda hoje, antes de terminar uma ferramenta. Consegue me passar pra quem cuida do comercial na ${nome}?`,
+      `Oi, tudo bem? Sou o ${sender}, de Florianópolis. Estou conversando com donos de integradoras de energia solar para entender o que mais faz perder venda hoje, antes de terminar uma ferramenta. Pode me passar para quem cuida do comercial na ${nome}?`,
+      `Olá, tudo certo? Aqui é o ${sender}, de Floripa. Tô ouvindo dono de integradora solar pra entender o que mais trava venda hoje, antes de fechar uma ferramenta. Quem cuida do comercial aí na ${nome}?`,
+    ][i];
+  }
   // Em vez de pedir 20 minutos, oferece ver o próprio número; o link só vai se ele quiser.
   if (variant === "raiox") {
     return `Oi, ${dono ? `${dono}, ` : ""}tudo bem? Aqui é o ${sender}, de Florianópolis. Fiz uma ferramenta que lê o WhatsApp da integradora e acha as propostas que o cliente visualizou e não respondeu. Quer que eu te mande o link pra ver quanto está parado aí na ${nome}? É grátis.`;
@@ -171,10 +224,17 @@ export function dividirMensagens(texto: string): string[] {
   return String(texto || "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 }
 
+const PERGUNTA_TIME =
+  "Hoje você consegue ver as propostas que cada vendedor mandou e quais o cliente não respondeu, ou depende de perguntar pra cada um?";
+const PERGUNTA_ABERTA = "Hoje, o que mais te faz perder venda de energia solar?";
+
 /** Seguimento do dia 4 para quem não respondeu: a mesma pergunta da dor, sem pedir reunião. */
-export function followupMessage(row?: Pick<ProspectTarget, "metadata" | "niche">, sender = "Markus"): string {
+export function followupMessage(row?: Pick<ProspectTarget, "metadata" | "niche"> & { variant?: string | null }, sender = "Markus"): string {
   const dono = primeiroNome(row?.metadata?.socio);
-  const pergunta = ehDistribuidora(row?.niche) ? PERGUNTA_DOR_DISTRIBUIDORA : PERGUNTA_DOR;
+  const pergunta = ehDistribuidora(row?.niche) ? PERGUNTA_DOR_DISTRIBUIDORA
+    : row?.variant === "time" ? PERGUNTA_TIME
+    : row?.variant === "aberta" ? PERGUNTA_ABERTA
+    : PERGUNTA_DOR;
   return `Oi${dono ? `, ${dono}` : ""}, tudo bem? Passando só pra não deixar minha mensagem solta. É uma pergunta só: ${pergunta.charAt(0).toLowerCase()}${pergunta.slice(1)} ${sender}`;
 }
 

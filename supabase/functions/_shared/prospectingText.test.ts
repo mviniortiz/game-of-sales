@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { dividirMensagens, firstMessage, MARCA_IMAGEM, RESPOSTA_PORTA, respostaPorta, followupMessage, nextVariant, pausaEntreMensagens, primeiroNome, tempoDigitando, chipAquecendo, tetoDoChip, tetoComSinal, VARIANTS } from "./prospectingText.ts";
+import { dividirMensagens, firstMessage, MARCA_IMAGEM, RESPOSTA_PORTA, respostaPorta, followupMessage, nextVariant, pausaEntreMensagens, primeiroNome, tempoDigitando, chipAquecendo, tetoDoChip, tetoComSinal, VARIANTS, portaJaFoi } from "./prospectingText.ts";
 
 const ALVO = { agency_name: "Sol do Vale", city: "Blumenau", rating_count: 42 };
 
@@ -13,8 +13,26 @@ Deno.test("versões em teste usam o nome da integradora, sem travessão e sem li
 });
 
 Deno.test("a próxima versão é a em teste menos usada, ignorando as aposentadas", () => {
-  assertEquals(nextVariant({ pergunta: 0, curta: 3, encaminha: 1, raiox: 2 }), "encaminha");
+  assertEquals(nextVariant({ pergunta: 0, curta: 3, encaminha: 1, time: 1, aberta: 0, raiox: 2 }), "aberta");
+  assertEquals(nextVariant({ encaminha: 0, time: 2, aberta: 1 }), "encaminha");
   assertEquals(nextVariant({}), "encaminha");
+});
+
+Deno.test("teste de dores: time e aberta respondem no próprio assunto, sem print", () => {
+  assert(respostaPorta(null, "encaminha").includes(MARCA_IMAGEM));
+  for (const v of ["time", "aberta"]) {
+    const porta = respostaPorta(null, v);
+    assert(!porta.includes(MARCA_IMAGEM), `${v} manda print`);
+    assert(!/[—–]/.test(porta), `${v} tem travessão`);
+    assert(portaJaFoi(`Eles: pode falar
+Markus: ${porta}`, null, v), `${v} não reconhece a própria resposta`);
+    assert(!portaJaFoi("Eles: pode falar", null, v));
+  }
+  assert(respostaPorta(null, "time").includes("vendedor"));
+  assert(respostaPorta(null, "aberta").includes("perder venda"));
+  assert(followupMessage({ variant: "time" }).includes("vendedor"));
+  assert(followupMessage({ variant: "aberta" }).includes("perder venda"));
+  assert(followupMessage({ variant: "encaminha" }).includes("visualiza a proposta"));
 });
 
 Deno.test("com o sócio do CNPJ, todas as versões abrem pelo primeiro nome", () => {
