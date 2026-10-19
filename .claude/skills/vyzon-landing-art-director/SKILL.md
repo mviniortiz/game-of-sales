@@ -1,215 +1,119 @@
 ---
 name: vyzon-landing-art-director
-description: Use when designing, refactoring, or visually polishing the Vyzon/EVA landing page. Enforces a premium editorial SaaS visual direction inspired by Handhold without copying it.
+description: Use ao criar, refatorar ou polir a home do Vyzon (src/pages/SolarLanding.tsx) e as páginas por ângulo /raio-x/:angulo. Fixa o público (dono de integradora solar que vende pelo WhatsApp), a ordem das seções, a direção visual direta (Satoshi 900, botão preto com WhatsApp) e o que as páginas brasileiras de referência fazem e o Vyzon não copia.
 ---
 
-# Vyzon Landing Art Director
+# Diretor de arte da landing do Vyzon
 
-You are the art director and senior frontend designer for the Vyzon/EVA landing page.
+Você cuida da home do Vyzon. A fonte de verdade é o que está em produção:
+`src/pages/SolarLanding.tsx`, `index.html` (title, FAQPage e `<noscript>`)
+e a classe `.lp-bold` em `src/index.css`. Leia esses arquivos antes de
+propor mudança. Se esta skill e o código discordarem, vale o código, e esta
+skill deve ser corrigida na mesma entrega.
 
-Your job is not to create generic SaaS UI. Your job is to create a premium, editorial, restrained, high-trust landing page for an AI commercial assistant used by agencies.
+## Para quem é a página
 
-## Brand context
+Dono de integradora de energia solar que vende pelo WhatsApp. Pequena
+empresa, vive no celular, está em cima de telhado boa parte do dia,
+desconfia de software e já ouviu promessa de CRM antes.
 
-Vyzon is a commercial operating system for agencies.
-EVA is the AI assistant inside Vyzon.
-EVA follows WhatsApp conversations, understands context, suggests next commercial steps, and keeps the human team in control.
+O que ele diz (prospecção de out/2026, palavra por palavra) e a página
+responde:
 
-Core positioning:
+- "Quem visualiza e some não tem interesse."
+- "Meu sistema de proposta já avisa quando o cliente abre."
+- "Já tenho CRM."
+- Falta de tempo pra mais um sistema e medo de robô falar com cliente.
 
-“The AI suggests. The human approves.”
+Fale a língua dele: orçamento, proposta, conta de luz, kWp, telhado,
+"vou ver em casa", parcela, financiamento. Evite vocabulário do produto no
+topo (Raio-X, EVA, placar, rascunho, aprovação A2).
 
-The page must communicate:
+## Ordem das seções (molde de 19/10/2026)
 
-* EVA helps agencies handle commercial conversations.
-* EVA understands context and suggests the next step.
-* EVA does not replace the human team.
-* The product feels premium, calm, and trustworthy.
-* The main action is booking a demo.
+1. **Topo**: linha de dor ("Mandou o orçamento de energia solar e o cliente
+   sumiu?"), título com promessa e prazo ("No 2º dia sem resposta, a
+   mensagem pra chamar de volta chega pronta no seu WhatsApp"), subtítulo
+   com o mecanismo (responde 1, sai do seu número, nada vai sem aprovar).
+   Depois vêm o botão principal "Falar com o Markus no WhatsApp" e quem
+   responde ("Quem responde é o Markus, que criou o Vyzon. Sem compromisso").
+   Logo abaixo, a linha de preço de fundador e, por último, um link discreto
+   para o Raio-X automático.
+2. **Números de mercado com fonte** (Greener, Opinion Box e Mobile Time) no
+   lugar de depoimento, porque ainda não há cliente pagante para citar.
+3. **Calculadora**: o dono informa quantos orçamentos ficaram sem resposta
+   no último mês e o valor médio. A conta vai na mensagem do WhatsApp para o
+   Markus. É a pergunta que valida o ICP. Evento `calc_use`.
+4. **Mock do produto**: lista de propostas e a aprovação no WhatsApp, no
+   formato real de `_shared/whatsappApproval.ts`.
+5. **Como funciona em 3 passos**: conecta o WhatsApp, manda orçamento como
+   sempre, recebe o aviso no 2º dia.
+6. **Incluso + cartão de preço**: só o que existe no app. Preço de fundador
+   R$ 97/mês nos 3 primeiros meses para as 10 primeiras integradoras, depois
+   R$ 197/mês. Sem contrato (confirmado pelo Markus em 19/10/2026).
+7. **Objeções reais**, com as frases acima e a resposta de cada uma.
+8. **FAQ**, espelhado no FAQPage do `index.html`.
+9. **Bloco final do Markus**: "20 minutos comigo pelo WhatsApp", a
+   apresentação dele, o botão do WhatsApp e o formulário "Quero que o Markus
+   me chame" (`demo_requests`, source `orcamento_teste`).
 
-## Visual direction
+O botão principal da página inteira é a conversa com o Markus no WhatsApp.
+Conectar o WhatsApp num site recém-conhecido é pedir demais para o primeiro
+contato: na campanha de out/2026 foram 115 visitas, 9 cliques no botão e 0
+cadastros.
 
-Inspired by Handhold’s system, not copied literally.
+## Direção visual
 
-Adopt:
+- Títulos em Satoshi 900 (`.lp-bold`), sans direta e grande. Sem serifa nos
+  títulos. A serifa itálica só aparece nas falas da seção de objeções.
+- Corpo em Geist/Inter, 15 a 19px, cor `--lp-ink-70`.
+- Botão principal: pill preto, texto branco, ícone do WhatsApp
+  (`WhatsAppIcon`) à esquerda. Fundo escuro pede botão claro.
+- Destaque: azul `--lp-blue` (#1556c0) na segunda metade do título e nos
+  rótulos de preço. Verde `--lp-live` só nos checks do incluso. Roxo
+  `#6d28d9` só como micro-acento da EVA.
+- Fundo `--lp-paper` com cards brancos de borda `--lp-line`. Calculadora e
+  objeções em bloco escuro (`--lp-ink` / #0d1421) para quebrar o ritmo.
+- Mobile primeiro: CTA visível na primeira tela, nada de rolagem lateral,
+  inputs com 16px ou mais, botão que não cabe vira largura total.
 
-* Editorial composition.
-* Large negative space.
-* Strong display serif headline.
-* Minimal sans-serif UI.
-* Black pill buttons.
-* Off-white background.
-* One memorable abstract visual motif.
-* Calm, premium, product-led atmosphere.
+## Regras duras (do game-of-sales/CLAUDE.md)
 
-Avoid:
+- Sem travessão, sem emoji, sem ícones Sparkles/Zap, sem orbe ou glow de IA.
+- Claims Policy: só feature que existe no código, só número com fonte.
+  Antes de escrever copy de produto, grep.
+- EVA assistida: interno automático, saída pro lead sempre aprovada pelo
+  dono. Nunca "automatize suas vendas" nem "robô que vende sozinho".
+- Toda mensagem de WhatsApp da página precisa conter o prefill da automação
+  de leads, "Quero ver quanto está parado nos meus orçamentos"
+  (`20261009_automations_ad_leads.sql`). Sem isso a conversa não vira lead.
+- Mudou texto da página: atualize o `<noscript>` e o FAQPage do
+  `index.html` na mesma entrega.
+- Preço vem de `src/config/plans.ts`. Contato vem de `src/config/contact.ts`.
 
-* Generic AI startup look.
-* Badges, pills, and floating labels.
-* “AI powered” visual clichés.
-* Cyberpunk glow.
-* Neon effects.
-* Dashboard clutter.
-* Floating cards everywhere.
-* Tag chips like “lead quente”, “urgência alta”, “fit bom”, “intenção: preço”.
-* Text over the ribbon.
-* Text over a face/avatar.
-* Calendar icons in buttons.
-* Blue CTA buttons in the hero.
-* Heavy shadows.
-* Glassmorphism excess.
-* Gradients that look like PowerPoint.
+## Referências brasileiras (levantadas em 19/10/2026)
 
-## Typography
+Não existe taxa de conversão pública. O sinal é o anúncio que segue rodando
+na Meta Ads Library, porque ninguém paga meses por página que não vende.
 
-Use only two active fonts in the landing:
+| Página | Sinal | O que o Vyzon pegou |
+|---|---|---|
+| Heliux, grupoheliux.com/botstark/lp | 4 anúncios ativos desde 05/10/2026 | Promessa com prazo no título, preço no topo, "pelo WhatsApp mesmo", lista do incluso, sem contrato |
+| Pacote de Leonardo Moura, site.educacaoexemplar.com | Anúncio ativo desde 22/08/2026, o mais antigo do nicho | Lista concreta do que a pessoa recebe |
+| Azume, assineazume.com.br | 4 anúncios para a mesma página | Pergunta interativa logo no começo |
+| InfinitePay, infinitepay.io | Escala (6 milhões de clientes declarados) | Números grandes com fonte, título direto em letra forte |
 
-* Display serif for big headlines.
-* Neutral sans for everything else.
+O que essas páginas fazem e o Vyzon não copia: contagem regressiva falsa,
+"oferta só hoje", emoji, pilha de bônus com valor inventado e depoimento sem
+cliente real.
 
-Preferred:
+## Conferência antes de entregar
 
-* Display: Newsreader or a similar editorial serif.
-* Sans: Geist or a similar refined neutral sans.
-* Fallback: Inter/system.
-
-Do not use mono labels on the landing.
-Do not use a technical/devtool tone.
-
-Hero H1:
-
-* Serif.
-* Weight 400.
-* Very large.
-* Tight line-height.
-* Negative letter-spacing.
-* Centered.
-
-Body/subheadline:
-
-* Sans.
-* Calm.
-* Legible.
-* Slightly muted.
-
-## Buttons
-
-Primary CTA:
-
-* Black background.
-* White text.
-* Pill shape.
-* Border radius 999px.
-* Height 40–44px on desktop.
-* No icon except an optional subtle arrow.
-* No blue background.
-* No heavy shadow.
-
-Secondary CTA:
-
-* Transparent or off-white.
-* Black text.
-* Thin black border with low opacity.
-* Pill shape.
-* Same height as primary.
-* No icon.
-
-Header CTA:
-
-* Smaller black pill.
-* Height 32–36px.
-* Radius 999px.
-
-## Hero structure
-
-The hero must have:
-
-1. Header at top.
-2. Centered copy block:
-
-   * H1:
-     “Um copiloto para
-     cada conversa.”
-   * Subheadline:
-     “A EVA acompanha seus atendimentos no WhatsApp, entende o contexto e sugere o próximo passo para seu time aprovar.”
-   * CTA row:
-     “Agendar demo”
-     “Ver como funciona”
-3. Abstract Vyzon Flow Ribbon below the copy.
-
-The ribbon must start below the CTA area.
-It must not cross through the buttons.
-It must not look like a separator bar.
-It must not look like a blurry rectangle.
-
-## Vyzon Flow Ribbon
-
-Create a custom abstract SVG ribbon.
-
-It should represent the flow of commercial conversations and AI assistance.
-
-Technical requirements:
-
-* Implement as SVG, not as a div gradient.
-* Use multiple wide Bézier paths.
-* Use strokeLinecap="round" and strokeLinejoin="round".
-* Use layered strokes with different widths and opacities.
-* Use gradients with Vyzon blue, cyan, off-white, and a very subtle warm accent.
-* Add fine grain/noise using SVG filters or CSS mask.
-* Use blur subtly to soften edges.
-* Keep the shape organic and wave-like.
-* Place it low in the hero.
-* Preserve lots of white space above.
-
-The ribbon should feel like:
-
-* silk,
-* mist,
-* fluid data,
-* a calm conversation stream,
-* premium visual identity.
-
-It should not feel like:
-
-* laser,
-* smoke bomb,
-* neon tube,
-* PowerPoint gradient,
-* AI wallpaper,
-* horizontal divider.
-
-## Layout rules
-
-Desktop:
-
-* Header max-width: 1120–1200px.
-* Hero min-height around 760–860px.
-* Copy block centered with generous top spacing.
-* CTA row below subheadline.
-* Ribbon occupies the lower 35–45% of the hero.
-* Integrations section starts after enough whitespace.
-
-Mobile:
-
-* Keep copy centered.
-* Reduce H1 size carefully.
-* Keep buttons stacked or wrapped cleanly.
-* Ribbon lower, softer, and less tall.
-* No horizontal overflow.
-
-## Visual QA checklist
-
-Before considering the work done, inspect the page visually and answer:
-
-1. Does the page feel premium/editorial instead of generic AI SaaS?
-2. Is the hero calm and spacious?
-3. Is the ribbon a real curved SVG form, not a blurry horizontal bar?
-4. Are the CTAs clear and not intersecting the ribbon?
-5. Are there zero badges/chips/floating labels in the hero?
-6. Does the black CTA feel refined?
-7. Does the typography feel editorial?
-8. Does the page still clearly explain what EVA does?
-9. Does the layout work at desktop and mobile widths?
-10. Would this screenshot look acceptable next to Handhold as a quality reference, while still being Vyzon?
-
-If any answer is no, keep iterating.
+1. Em 5 segundos dá para entender para quem é, o que faz e quanto custa?
+2. O botão do WhatsApp aparece na primeira tela do celular (375px)?
+3. Toda afirmação de produto existe no código e todo número tem fonte?
+4. Algum termo interno (Raio-X, EVA, A2) aparece antes da metade da página
+   sem explicação?
+5. `<noscript>` e FAQPage do `index.html` batem com a página?
+6. Prints em 375px e 1366px sem rolagem lateral, e `tsc` + `npm run build`
+   passando.
