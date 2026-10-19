@@ -151,16 +151,15 @@ describe('Smoke Tests - Public Pages', () => {
         expect(container.firstChild).toBeTruthy();
     });
 
-    it('Home solar renders with the Raio-X form', async () => {
+    it('Home solar renders with the conversation CTA', async () => {
         const { default: SolarLanding } = await import('@/pages/SolarLanding');
         render(
             <MemoryRouter>
                 <SolarLanding />
             </MemoryRouter>
         );
-        expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/quanto dinheiro está parado/i);
-        // o botão fica sempre clicável: com campo faltando, o clique diz o que falta
-        expect(screen.getByRole('button', { name: /pedir meu raio-x/i })).toBeEnabled();
+        expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/quantas integradoras além de você/i);
+        expect(screen.getAllByRole('link', { name: /conversar 20 min com o markus/i }).length).toBeGreaterThan(0);
     });
 });
 
