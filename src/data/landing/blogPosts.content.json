@@ -183,6 +183,250 @@
     ]
   },
   {
+    "slug": "script-de-vendas-energia-solar",
+    "category": "Comercial",
+    "date": "2026-10-19",
+    "title": "Script de vendas de energia solar pelo WhatsApp: o que falar do primeiro oi até a resposta da proposta",
+    "excerpt": "Um roteiro simples para cada etapa da venda pelo WhatsApp: primeiro contato, perguntas antes do orçamento, envio da proposta, retorno combinado e as objeções que mais aparecem.",
+    "coverText": "Cada etapa tem a sua frase.",
+    "accent": "#0E3E8A",
+    "content": [
+      {
+        "type": "p",
+        "text": "Quase toda venda de energia solar hoje passa pelo WhatsApp. O cliente chega pelo anúncio, por indicação ou pelo Google, manda um oi e espera resposta. A partir daí, cada mensagem conta."
+      },
+      {
+        "type": "p",
+        "text": "O problema é que cada vendedor responde de um jeito. Um pede a conta de luz na primeira mensagem. Outro manda o preço antes de entender o caso. Outro envia o PDF e nunca mais volta. O resultado é uma venda que depende do humor do dia."
+      },
+      {
+        "type": "p",
+        "text": "Um script de vendas de energia solar resolve isso. Não é um texto decorado. É um roteiro com o que dizer em cada etapa, para ninguém pular passo. Abaixo está um modelo completo, do primeiro oi até a resposta da proposta."
+      },
+      {
+        "type": "h2",
+        "text": "Script não é texto de robô"
+      },
+      {
+        "type": "p",
+        "text": "O medo mais comum é soar artificial. Faz sentido. Cliente percebe quando recebe mensagem copiada e colada, ainda mais pelo WhatsApp, onde a conversa é próxima."
+      },
+      {
+        "type": "p",
+        "text": "Por isso, use o script como esqueleto. A ordem das etapas e as perguntas ficam fixas. As palavras você troca pelo seu jeito de falar. Use o nome do cliente, cite a cidade, comente algo que ele disse. O roteiro garante que nada importante fica de fora. O resto é conversa."
+      },
+      {
+        "type": "h2",
+        "text": "Etapa 1: o primeiro contato"
+      },
+      {
+        "type": "p",
+        "text": "Quem pede orçamento de energia solar costuma pedir para mais de uma empresa. Quem responde primeiro, e responde bem, sai na frente. A primeira mensagem tem um trabalho só: abrir a conversa e pedir o que você precisa para ajudar."
+      },
+      {
+        "type": "example",
+        "title": "Primeira resposta",
+        "body": [
+          "“Oi, Carla, tudo bem? Aqui é o Diego, da Sol Forte. Vi que você quer saber sobre energia solar. Para eu te passar um valor certo, me manda uma foto da sua última conta de luz? Com ela eu já consigo ver quanto você gasta por mês e o tamanho do sistema.”"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Repare que a mensagem não fala de preço, painel ou marca. Ela explica por que você precisa da conta. Quando o cliente entende o motivo, manda mais rápido."
+      },
+      {
+        "type": "h2",
+        "text": "Etapa 2: as perguntas antes do orçamento"
+      },
+      {
+        "type": "p",
+        "text": "A conta de luz mostra o consumo. Mas não mostra o que faz o cliente decidir. Antes de montar a proposta, faça poucas perguntas, uma por vez:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "O imóvel é próprio? Quem decide junto com você?",
+          "Tem planos de aumentar o consumo? Ar-condicionado, piscina, carro elétrico?",
+          "Como é o telhado? Laje, telha de barro, metálico?",
+          "Prefere pagar à vista ou pensa em financiar?",
+          "Para quando você gostaria de ter o sistema funcionando?"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "A primeira pergunta é a que mais evita surpresa. Se a esposa, o sócio ou o pai também decide, a proposta precisa chegar até essa pessoa. Muita venda trava porque o vendedor convenceu só metade da casa."
+      },
+      {
+        "type": "p",
+        "text": "A pergunta sobre pagamento também ajuda. Quem vai financiar quer ver a parcela ao lado da conta de luz. Quem paga à vista quer ver em quanto tempo o dinheiro volta. São duas propostas diferentes."
+      },
+      {
+        "type": "h2",
+        "text": "Etapa 3: o envio da proposta"
+      },
+      {
+        "type": "p",
+        "text": "Aqui está o erro mais comum. O vendedor monta um PDF caprichado, manda no WhatsApp e espera. O cliente abre no celular, vê muita página, fecha e diz que vai olhar com calma. Às vezes nunca olha."
+      },
+      {
+        "type": "p",
+        "text": "Mande o PDF, mas mande junto um resumo em texto. E já combine o próximo contato."
+      },
+      {
+        "type": "example",
+        "title": "Envio da proposta",
+        "body": [
+          "“Carla, segue a sua proposta. Resumindo: sistema de 4,5 kWp, valor de R$ 19.800 à vista ou parcela de R$ 410 em 60 vezes. Sua conta hoje é de uns R$ 480. Os detalhes estão no PDF.”",
+          "“Você consegue olhar com o Marcos até quinta? Te chamo na quinta à tarde para tirar as dúvidas dos dois.”",
+          "(Valores ilustrativos. Use os números da sua proposta.)"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "O resumo resolve a leitura no celular. O combinado resolve o sumiço. Quando você diz quando vai voltar, o retorno deixa de parecer cobrança. Vira o que foi combinado."
+      },
+      {
+        "type": "h2",
+        "text": "Etapa 4: o retorno combinado"
+      },
+      {
+        "type": "p",
+        "text": "Chegou o dia, volte. Mesmo que o cliente não tenha respondido nada. A mensagem de retorno não pergunta se ele viu a proposta. Ela facilita a resposta."
+      },
+      {
+        "type": "example",
+        "title": "Retorno no dia combinado",
+        "body": [
+          "“Oi, Carla, como combinamos. Conseguiu ver a proposta com o Marcos? Se ficou alguma dúvida sobre a parcela ou sobre a instalação, me fala que eu explico por aqui ou por áudio, como for melhor para vocês.”"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Se não houver resposta, tente de novo dois ou três dias depois, com uma mensagem curta e diferente. Para exemplos do que mandar em cada dia, veja o nosso post sobre follow-up de proposta de energia solar."
+      },
+      {
+        "type": "h2",
+        "text": "Etapa 5: as objeções que mais aparecem"
+      },
+      {
+        "type": "p",
+        "text": "Objeção não é um não. Quase sempre é uma dúvida que o cliente não sabe como perguntar. O script ajuda a responder sem discutir."
+      },
+      {
+        "type": "h3",
+        "text": "“Está caro”"
+      },
+      {
+        "type": "p",
+        "text": "Antes de dar desconto, descubra caro comparado com o quê. Com outro orçamento? Com o dinheiro que ele tem hoje? Com a conta de luz? Cada resposta pede um caminho diferente."
+      },
+      {
+        "type": "example",
+        "title": "Resposta para “está caro”",
+        "body": [
+          "“Entendo, Carla. Me ajuda a entender: está caro comparado com outro orçamento que você recebeu, ou o valor ficou alto para pagar agora? Se for o pagamento, consigo simular uma parcela que fique perto do que você já paga de luz.”"
+        ]
+      },
+      {
+        "type": "h3",
+        "text": "“Vou pensar”"
+      },
+      {
+        "type": "p",
+        "text": "Aceite, mas descubra no que ele vai pensar. Geralmente existe uma dúvida específica escondida atrás dessa frase."
+      },
+      {
+        "type": "example",
+        "title": "Resposta para “vou pensar”",
+        "body": [
+          "“Claro, é uma decisão importante. Só para eu te ajudar: o que ainda está pesando mais? O valor, a instalação ou alguma dúvida técnica? Assim eu já te mando a informação certa.”"
+        ]
+      },
+      {
+        "type": "h3",
+        "text": "“Ouvi dizer que vão taxar o sol”"
+      },
+      {
+        "type": "p",
+        "text": "Essa aparece muito, e merece resposta com fato. A Lei 14.300, publicada pelo governo federal em 2022, criou uma cobrança gradual sobre parte da tarifa (o chamado Fio B) para a energia que volta da rede. Para quem instala em 2026, o percentual cobrado é de 60% dessa parte, segundo o artigo 27 da lei. Não é uma taxa sobre toda a energia gerada."
+      },
+      {
+        "type": "example",
+        "title": "Resposta para “vão taxar o sol”",
+        "body": [
+          "“Existe uma regra nova sim, a Lei 14.300. Ela cobra uma parte da tarifa sobre a energia que você manda para a rede de dia e usa de volta, à noite. Essa cobrança já está incluída na conta da sua proposta. Se quiser, te mostro onde ela aparece no cálculo.”"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Só use essa resposta se a sua proposta realmente considerar essa cobrança. Se não considera, ajuste o cálculo antes."
+      },
+      {
+        "type": "h3",
+        "text": "“Vou ver outros orçamentos”"
+      },
+      {
+        "type": "p",
+        "text": "Não brigue com isso. Ajude o cliente a comparar direito. Quem ensina a comparar costuma ser lembrado na hora de decidir."
+      },
+      {
+        "type": "example",
+        "title": "Resposta para “vou ver outros orçamentos”",
+        "body": [
+          "“Faz bem. Na hora de comparar, olha três coisas: a potência do sistema em kWp, a garantia dos painéis e do inversor e quem cuida da homologação na distribuidora. Se quiser, me manda os outros que eu te ajudo a comparar item por item.”"
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "Como usar o script no dia a dia"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Salve cada mensagem como resposta rápida no WhatsApp Business. Assim ninguém precisa digitar do zero.",
+          "Troque nomes, valores e detalhes em toda mensagem. Nunca envie o modelo cru.",
+          "Mande uma pergunta por vez. Lista de cinco perguntas numa mensagem só assusta.",
+          "Anote a data de envio de cada proposta e o dia combinado de retorno. Sem isso, a etapa 4 não acontece.",
+          "Revise o script a cada mês. Se uma objeção nova aparece toda semana, ela ganha resposta própria."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "O ponto que mais falha"
+      },
+      {
+        "type": "p",
+        "text": "Das cinco etapas, a que mais quebra não é a do primeiro contato nem a das objeções. É a quarta. A proposta sai na terça, aparecem duas visitas e uma instalação, e na sexta ninguém lembra que precisava voltar para a Carla."
+      },
+      {
+        "type": "p",
+        "text": "O script diz o que falar. Mas alguém precisa lembrar quando falar. Uma lista simples de propostas abertas, com valor e data do último contato, olhada todo dia, já resolve boa parte do problema."
+      },
+      {
+        "type": "p",
+        "text": "Se você quer saber quantas propostas já estão paradas no seu WhatsApp agora, faça o Raio-X grátis do Vyzon. Ele lê o seu WhatsApp e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva 3 minutos, e nada é enviado aos seus clientes."
+      }
+    ],
+    "faq": [
+      {
+        "q": "O que é um script de vendas de energia solar?",
+        "a": "É um roteiro com o que dizer em cada etapa da venda: primeiro contato, perguntas antes do orçamento, envio da proposta, retorno e objeções. Ele garante que nenhum passo seja pulado. As palavras você adapta ao seu jeito de falar."
+      },
+      {
+        "q": "Posso usar o mesmo script pelo WhatsApp e por telefone?",
+        "a": "A ordem das etapas é a mesma. No WhatsApp, as mensagens precisam ser mais curtas e com uma pergunta por vez. Por telefone, você pode fazer as perguntas em sequência e anotar as respostas."
+      },
+      {
+        "q": "Como responder quando o cliente diz que está caro?",
+        "a": "Pergunte primeiro caro comparado com o quê: outro orçamento, o dinheiro disponível hoje ou a conta de luz. Se for o pagamento, mostre uma simulação de parcela ao lado da conta atual. Desconto só depois de entender o motivo."
+      },
+      {
+        "q": "Quanto tempo esperar para voltar a falar depois de enviar a proposta?",
+        "a": "O melhor é combinar a data no próprio envio, por exemplo dois ou três dias depois. Assim o retorno vira o que foi combinado, e não cobrança. Se o cliente não responder, tente de novo alguns dias depois com uma mensagem curta e diferente."
+      }
+    ]
+  },
+  {
     "slug": "como-prospectar-clientes-energia-solar",
     "category": "Crescimento",
     "date": "2026-10-12",
