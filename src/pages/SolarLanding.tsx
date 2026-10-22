@@ -195,37 +195,143 @@ const Header = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
     </header>
 );
 
+// Texto à esquerda e a proposta à direita: o dono reconhece na hora o papel
+// que ele manda todo dia. O destaque do título é marca-texto amarelo, não cor
+// de link: lê como alguém grifando a parte que importa.
 const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void; onWhatsapp: () => void }) => (
-    <section className="mx-auto w-full max-w-[1120px] px-5 pb-8 pt-4 text-center md:px-8 md:pb-14 md:pt-20" aria-label="Topo">
-        <p className="mx-auto max-w-[620px] text-[15px] font-semibold landing-fade-in-up-lg" style={{ color: "#050505", textWrap: "balance" }}>
-            {copy.kicker}
-        </p>
-        {/* Sans pesada em vez da serifa editorial: as páginas que convertem com
-            integrador (Heliux, Azume, SolarZ, InfinitePay) falam alto e direto. */}
-        <h1
-            className="lp-bold mx-auto mt-3 max-w-[920px] landing-fade-in-up-lg landing-delay-100 md:mt-4"
-            style={{ fontSize: "clamp(2rem, 5.4vw, 4.1rem)", lineHeight: 1.04, color: "#050505", textWrap: "balance" }}
+    <section
+        className="mx-auto grid w-full max-w-[1120px] items-center gap-12 px-4 pb-16 pt-4 sm:px-5 md:grid-cols-[1.15fr_0.85fr] md:gap-12 md:px-8 md:pb-24 md:pt-14"
+        aria-label="Topo"
+    >
+        <div>
+            <p className="flex items-center gap-2.5 text-[15px] font-semibold landing-fade-in-up-lg" style={{ color: "var(--lp-ink)" }}>
+                <span className="lp-cell" aria-hidden="true" />
+                {copy.kicker}
+            </p>
+            {/* Sans pesada em vez da serifa editorial: as páginas que convertem com
+                integrador (Heliux, Azume, SolarZ, InfinitePay) falam alto e direto. */}
+            <h1
+                className="lp-bold mt-4 landing-fade-in-up-lg landing-delay-100"
+                style={{ fontSize: "clamp(2.1rem, 4.1vw, 3.45rem)", lineHeight: 1.04, color: "var(--lp-ink)", textWrap: "balance" }}
+            >
+                {copy.h1} <span className="lp-mark lp-mark--draw">{copy.h1Accent}</span>
+            </h1>
+            <p
+                className="mt-5 max-w-[540px] landing-fade-in-up-lg landing-delay-200 md:mt-6"
+                style={{ fontSize: "clamp(1.0625rem, 1.4vw, 1.1875rem)", lineHeight: 1.55, color: "var(--lp-ink-70)" }}
+            >
+                {copy.sub}
+            </p>
+            <div className="mt-7 flex flex-col items-stretch gap-3 landing-fade-in-up-lg landing-delay-300 sm:items-start md:mt-8">
+                <WhatsappCta placement={onWhatsapp}>Falar com o Markus no WhatsApp</WhatsappCta>
+                <p className="text-[14px]" style={{ color: "var(--lp-ink-55)" }}>
+                    Quem responde é o Markus, que criou o Vyzon. Sem compromisso.
+                </p>
+            </div>
+            <PriceLine className="mt-7 max-w-[520px]" />
+            <Link to={RAIO_X_AUTO} className="mt-4 inline-block text-[14px] underline underline-offset-4" style={{ color: "var(--lp-ink-55)" }} onClick={onCta}>
+                Prefere ver sozinho? Veja em 3 minutos o que ficou sem resposta
+            </Link>
+        </div>
+        <PropostaExemplo />
+    </section>
+);
+
+// Proposta no formato que a integradora manda pelo WhatsApp, com o carimbo do
+// estado dela e o aviso que chega no 2º dia. Dados de exemplo.
+const PROPOSTA = [
+    ["Sistema", "6,2 kWp · 11 módulos"],
+    ["Geração", "780 kWh por mês"],
+    ["Economia", "até R$ 690 por mês"],
+    ["Investimento", "R$ 24.900"],
+] as const;
+
+const PropostaExemplo = () => (
+    <figure className="relative mx-auto w-full max-w-[440px] landing-fade-in-up-lg landing-delay-200" aria-label="Exemplo: proposta enviada há 2 dias e o aviso que chega no WhatsApp">
+        <div
+            className="overflow-hidden rounded-[12px] border"
+            style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)", boxShadow: "0 1px 2px rgba(13,20,33,0.05), 0 30px 60px -34px rgba(13,20,33,0.4)" }}
         >
-            {copy.h1}{" "}
-            <span style={{ color: "var(--lp-blue)" }}>{copy.h1Accent}</span>
-        </h1>
-        <p
-            className="mx-auto mt-5 max-w-[600px] landing-fade-in-up-lg landing-delay-200 md:mt-6"
-            style={{ fontSize: "clamp(1.0625rem, 1.4vw, 1.1875rem)", lineHeight: 1.55, color: "rgba(5,5,5,0.78)" }}
+            <TelhadoCapa />
+            <div className="p-5 sm:p-6">
+                <div className="flex items-baseline justify-between gap-3">
+                    <p className="text-[11.5px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--lp-ink-40)" }}>
+                        Proposta comercial
+                    </p>
+                    <p className="text-[12px] tabular-nums" style={{ color: "var(--lp-ink-40)" }}>
+                        Nº 0147
+                    </p>
+                </div>
+                <p className="lp-bold mt-1.5 text-[22px] leading-tight" style={{ color: "var(--lp-ink)" }}>
+                    Residência Oliveira
+                </p>
+                <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
+                    {PROPOSTA.map(([k, v]) => (
+                        <div key={k}>
+                            <dt className="text-[12px]" style={{ color: "var(--lp-ink-55)" }}>
+                                {k}
+                            </dt>
+                            <dd className="mt-0.5 text-[14.5px] font-semibold tabular-nums" style={{ color: "var(--lp-ink)" }}>
+                                {v}
+                            </dd>
+                        </div>
+                    ))}
+                </dl>
+                <p className="mt-4 flex items-center justify-between gap-3 border-t pt-3 text-[12.5px]" style={{ borderColor: "var(--lp-line-soft)", color: "var(--lp-ink-55)" }}>
+                    <span>Enviada pelo WhatsApp · segunda, 09:14</span>
+                    <span className="shrink-0">Visualizada</span>
+                </p>
+            </div>
+        </div>
+        <span className="lp-stamp absolute right-4 top-[98px] sm:right-6" style={{ color: "var(--lp-sun-deep)", background: "var(--lp-sun-soft)" }}>
+            2 dias sem resposta
+        </span>
+        <div
+            className="lp-toast relative -mt-4 ml-auto w-[90%] max-w-[360px] rounded-[12px] border p-3.5 md:-mr-6"
+            style={{ background: "var(--lp-white)", borderColor: "var(--lp-line)", boxShadow: "0 1px 2px rgba(13,20,33,0.06), 0 18px 40px -22px rgba(13,20,33,0.45)" }}
         >
-            {copy.sub}
-        </p>
-        <div className="mx-auto mt-7 flex max-w-[380px] flex-col items-stretch gap-3 landing-fade-in-up-lg landing-delay-300 md:mt-8">
-            <WhatsappCta placement={onWhatsapp}>Falar com o Markus no WhatsApp</WhatsappCta>
-            <p className="text-[14px]" style={{ color: "rgba(5,5,5,0.68)", textWrap: "balance" }}>
-                Quem responde é o Markus, que criou o Vyzon. Sem compromisso.
+            <p className="flex items-center gap-2 text-[12px]" style={{ color: "var(--lp-ink-55)" }}>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full text-white" style={{ background: "#25d366" }} aria-hidden="true">
+                    <WhatsAppIcon className="h-3 w-3" />
+                </span>
+                <span className="font-semibold" style={{ color: "var(--lp-ink)" }}>
+                    No seu WhatsApp
+                </span>
+                · quarta, 09:02
+            </p>
+            <p className="mt-1.5 text-[14px] font-semibold" style={{ color: "var(--lp-ink)" }}>
+                Mensagem pronta para o Carlos
+            </p>
+            <p className="mt-0.5 text-[13.5px] leading-snug" style={{ color: "var(--lp-ink-70)" }}>
+                “Oi, Carlos, conseguiu olhar a proposta? Te mando a simulação com financiamento.” Responda 1 e ela sai do seu número.
             </p>
         </div>
-        <PriceLine className="mx-auto mt-6 max-w-[520px]" />
-        <Link to={RAIO_X_AUTO} className="mt-5 inline-block text-[14px] underline underline-offset-4" style={{ color: "var(--lp-ink-55)" }} onClick={onCta}>
-            Prefere ver sozinho? Veja em 3 minutos o que ficou sem resposta
-        </Link>
-    </section>
+        <figcaption className="mt-3 text-right text-[12px]" style={{ color: "var(--lp-ink-40)" }}>
+            Exemplo
+        </figcaption>
+    </figure>
+);
+
+// Capa da proposta: módulos sobre telhado de cerâmica, desenhados em CSS. Sem
+// foto de banco: foto de cliente que não existe seria depoimento inventado.
+const TelhadoCapa = () => (
+    <div aria-hidden="true" className="relative h-[112px] overflow-hidden" style={{ background: "linear-gradient(180deg, #e6eef8 0%, var(--lp-sun-soft) 100%)" }}>
+        <span className="absolute right-7 top-4 h-8 w-8 rounded-full" style={{ background: "var(--lp-sun)" }} />
+        <div
+            className="absolute inset-x-5 bottom-0 h-[78px]"
+            style={{
+                background: "repeating-linear-gradient(90deg, #c4673f 0 13px, #b45a35 13px 15px)",
+                transform: "perspective(380px) rotateX(34deg)",
+                transformOrigin: "bottom",
+            }}
+        >
+            <div className="absolute inset-x-[8%] top-[10px] grid grid-cols-6 gap-[3px]">
+                {Array.from({ length: 12 }, (_, i) => (
+                    <span key={i} className="lp-panel block h-[26px]" />
+                ))}
+            </div>
+        </div>
+    </div>
 );
 
 const WhatsappCta = ({ placement, children }: { placement: () => void; children: ReactNode }) => (
@@ -239,29 +345,38 @@ const WhatsappCta = ({ placement, children }: { placement: () => void; children:
 // real: o preço de fundador vale para as 10 primeiras integradoras
 // (src/config/plans.ts).
 const PriceLine = ({ className = "" }: { className?: string }) => (
-    <p className={`rounded-[12px] border px-4 py-3 text-[14.5px] leading-snug ${className}`} style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)", color: "var(--lp-ink-70)" }}>
-        <strong style={{ color: "var(--lp-ink)" }}>R$ 97 por mês</strong> nos 3 primeiros meses para as 10 primeiras integradoras. Depois, R$ 197 por mês. Sem
-        contrato.
+    <p className={`flex items-start gap-3 text-[14.5px] leading-snug ${className}`} style={{ color: "var(--lp-ink-70)" }}>
+        <span className="mt-[1px] shrink-0 rounded-[5px] px-2 py-1 text-[11px] font-bold uppercase tracking-[0.07em]" style={{ background: "var(--lp-sun)", color: "var(--lp-ink)" }}>
+            Fundador
+        </span>
+        <span>
+            <strong style={{ color: "var(--lp-ink)" }}>R$ 97 por mês</strong> nos 3 primeiros meses para as 10 primeiras integradoras. Depois, R$ 197 por mês. Sem
+            contrato.
+        </span>
     </p>
 );
 
 // Números de mercado com fonte, no lugar de depoimento: ainda não há cliente
-// pagante para citar, e número inventado é proibido (Claims Policy).
+// pagante para citar, e número inventado é proibido (Claims Policy). Só
+// número de fora: o "2º dia" do Vyzon já está no título.
 const NUMBERS = [
     ["22", "orçamentos por mês faz, em média, uma integradora com mais de 2 anos.", "Greener, Estudo Estratégico de Geração Distribuída, 2025."],
     ["62%", "dos consumidores já desistiram de uma compra por demora na resposta.", "Opinion Box e Mobile Time, Panorama Mensageria 2025."],
-    ["2º dia", "sem resposta é quando o Vyzon te avisa, com a mensagem pronta.", "Como o Vyzon funciona."],
 ] as const;
 
 const Numbers = () => (
-    <section className="mx-auto w-full max-w-[1120px] px-4 pb-14 sm:px-5 md:px-8 md:pb-20" aria-label="Números">
-        <ul className="grid gap-3 md:grid-cols-3 md:gap-4">
-            {NUMBERS.map(([n, texto, fonte]) => (
-                <li key={n} className="rounded-[12px] border p-5" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
-                    <p className="lp-bold text-[40px] leading-none tabular-nums" style={{ color: "var(--lp-ink)" }}>
+    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-24" aria-label="Números">
+        <ul className="grid border-y md:grid-cols-2" style={{ borderColor: "var(--lp-line)" }}>
+            {NUMBERS.map(([n, texto, fonte], i) => (
+                <li
+                    key={n}
+                    className={`py-7 md:py-9 ${i > 0 ? "border-t md:border-l md:border-t-0 md:pl-10" : "md:pr-10"}`}
+                    style={{ borderColor: "var(--lp-line)" }}
+                >
+                    <p className="lp-bold text-[52px] leading-none tabular-nums md:text-[64px]" style={{ color: "var(--lp-ink)" }}>
                         {n}
                     </p>
-                    <p className="mt-2 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
+                    <p className="mt-3 max-w-[420px] text-[16px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
                         {texto}
                     </p>
                     <p className="mt-2 text-[12.5px]" style={{ color: "var(--lp-ink-40)" }}>
@@ -296,34 +411,32 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
         setQtd((q) => Math.min(200, Math.max(0, q + d)));
     };
 
+    // Faixa amarela de ponta a ponta e o resultado com cara de fatura: o dono
+    // vive de conta de luz, e aqui a conta é a do dinheiro que ficou parado.
     return (
-        <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-24" aria-label="Calculadora">
-            <div className="grid gap-8 rounded-[16px] p-6 md:grid-cols-2 md:gap-12 md:p-10" style={{ background: "var(--lp-ink)", color: "#f9fbff" }}>
+        <section className="py-16 md:py-24" style={{ background: "var(--lp-sun-soft)" }} aria-label="Calculadora">
+            <div className="mx-auto grid w-full max-w-[1120px] items-center gap-10 px-4 sm:px-5 md:grid-cols-2 md:gap-14 md:px-8">
                 <div>
-                    <p className="text-[13px] font-medium uppercase tracking-[0.08em]" style={{ color: "rgba(249,251,255,0.55)" }}>
-                        Faça a conta da sua integradora
-                    </p>
-                    <h2 className="lp-bold mt-2 text-[28px] leading-[1.1] md:text-[38px]" style={{ textWrap: "balance" }}>
-                        Quanto está esperando alguém chamar de volta?
-                    </h2>
-                    <div className="mt-7">
-                        <p className="text-[15px]" style={{ color: "rgba(249,251,255,0.75)" }}>
+                    <Eyebrow>Faça a conta da sua integradora</Eyebrow>
+                    <SectionTitle>Quanto está esperando alguém chamar de volta?</SectionTitle>
+                    <div className="mt-8">
+                        <p className="text-[15px]" style={{ color: "var(--lp-ink-70)" }}>
                             Orçamentos que ficaram sem resposta no último mês
                         </p>
                         <div className="mt-2 flex items-center gap-3">
-                            <button type="button" aria-label="Menos um" onClick={() => step(-1)} className="h-11 w-11 rounded-full border text-[20px]" style={{ borderColor: "rgba(249,251,255,0.25)" }}>
+                            <button type="button" aria-label="Menos um" onClick={() => step(-1)} className={stepperCls} style={stepperStyle}>
                                 −
                             </button>
-                            <output className="lp-bold w-16 text-center text-[32px] tabular-nums" aria-live="polite">
+                            <output className="lp-bold w-16 text-center text-[32px] tabular-nums" style={{ color: "var(--lp-ink)" }} aria-live="polite">
                                 {qtd}
                             </output>
-                            <button type="button" aria-label="Mais um" onClick={() => step(1)} className="h-11 w-11 rounded-full border text-[20px]" style={{ borderColor: "rgba(249,251,255,0.25)" }}>
+                            <button type="button" aria-label="Mais um" onClick={() => step(1)} className={stepperCls} style={stepperStyle}>
                                 +
                             </button>
                         </div>
                     </div>
                     <div className="mt-6">
-                        <p className="text-[15px]" style={{ color: "rgba(249,251,255,0.75)" }}>
+                        <p className="text-[15px]" style={{ color: "var(--lp-ink-70)" }}>
                             Valor médio de um orçamento
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Valor médio de um orçamento">
@@ -337,11 +450,11 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                                         marcar();
                                         setTicket(t);
                                     }}
-                                    className="h-10 rounded-full border px-4 text-[14.5px] font-medium transition-colors motion-reduce:transition-none"
+                                    className="h-10 rounded-full border px-4 text-[14.5px] font-medium transition-colors duration-150 motion-reduce:transition-none"
                                     style={
                                         ticket === t
-                                            ? { background: "#f9fbff", color: "var(--lp-ink)", borderColor: "#f9fbff" }
-                                            : { borderColor: "rgba(249,251,255,0.25)", color: "#f9fbff" }
+                                            ? { background: "var(--lp-ink)", color: "var(--lp-white)", borderColor: "var(--lp-ink)" }
+                                            : { background: "var(--lp-white)", borderColor: "var(--lp-line)", color: "var(--lp-ink)" }
                                     }
                                 >
                                     {brl(t)}
@@ -350,21 +463,47 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                         </div>
                     </div>
                 </div>
-                <div className="flex min-w-0 flex-col justify-center rounded-[12px] p-5 md:p-8" style={{ background: "rgba(249,251,255,0.06)" }}>
-                    <p className="text-[15px]" style={{ color: "rgba(249,251,255,0.7)" }}>
-                        Pela sua conta, no último mês:
-                    </p>
-                    <p className="lp-bold mt-2 text-[44px] leading-none tabular-nums md:text-[56px]">{brl(total)}</p>
-                    <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "rgba(249,251,255,0.75)" }}>
-                        em orçamentos que ninguém chamou de volta. O Vyzon custa R$ 197 por mês.
-                    </p>
+                <div
+                    className="flex min-w-0 flex-col rounded-[12px] border p-6 md:p-8"
+                    style={{ background: "var(--lp-white)", borderColor: "var(--lp-line)", boxShadow: "0 1px 2px rgba(13,20,33,0.05), 0 24px 48px -30px rgba(122,80,0,0.35)" }}
+                >
+                    <div className="flex items-center justify-between border-b border-dashed pb-3" style={{ borderColor: "var(--lp-line)" }}>
+                        <p className="text-[12px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--lp-ink-55)" }}>
+                            Sua conta do último mês
+                        </p>
+                        <span className="lp-cell" aria-hidden="true" />
+                    </div>
+                    <dl className="mt-4 space-y-2.5 text-[15px]">
+                        <div className="flex justify-between gap-4">
+                            <dt style={{ color: "var(--lp-ink-70)" }}>Orçamentos sem resposta</dt>
+                            <dd className="font-semibold tabular-nums" style={{ color: "var(--lp-ink)" }}>
+                                {qtd}
+                            </dd>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                            <dt style={{ color: "var(--lp-ink-70)" }}>Valor médio de cada um</dt>
+                            <dd className="font-semibold tabular-nums" style={{ color: "var(--lp-ink)" }}>
+                                {brl(ticket)}
+                            </dd>
+                        </div>
+                    </dl>
+                    <div className="mt-4 border-t border-dashed pt-4" style={{ borderColor: "var(--lp-line)" }}>
+                        <p className="text-[14.5px]" style={{ color: "var(--lp-ink-70)" }}>
+                            Esperando alguém chamar de volta
+                        </p>
+                        <p className="lp-bold mt-2 text-[44px] leading-none tabular-nums md:text-[54px]" style={{ color: "var(--lp-ink)" }}>
+                            <span className="lp-mark">{brl(total)}</span>
+                        </p>
+                        <p className="mt-3 text-[14.5px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
+                            O Vyzon custa R$ 197 por mês.
+                        </p>
+                    </div>
                     <a
                         href={whatsappUrl(msg)}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={onWhatsapp}
-                        className="vz-btn mt-6 justify-center gap-2 self-stretch sm:self-start"
-                        style={{ background: "#f9fbff", color: "var(--lp-ink)" }}
+                        className="vz-btn vz-btn--primary mt-6 justify-center gap-2 self-stretch sm:self-start"
                     >
                         <WhatsAppIcon className="h-[18px] w-[18px]" />
                         <span>Mandar essa conta pro Markus</span>
@@ -375,30 +514,56 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
     );
 };
 
+const stepperCls =
+    "h-11 w-11 rounded-full border text-[20px] transition-colors duration-150 hover:bg-[var(--lp-white)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-reduce:transition-none";
+const stepperStyle = { borderColor: "rgba(13,20,33,0.3)", color: "var(--lp-ink)" } as const;
+
+// A vida de um orçamento, do envio ao aviso: a mesma proposta do topo, dia a
+// dia. O 2º dia é o único marcado em amarelo, porque é ali que o Vyzon entra.
 const HOW = [
-    ["Conecte o seu WhatsApp", "Pelo código no celular, como no WhatsApp Web. O número continua o mesmo."],
-    ["Mande orçamento como sempre", "Cada proposta que sai do seu WhatsApp entra na lista sozinha. Você não cadastra nada."],
-    ["No 2º dia sem resposta, chega o aviso", "Com a mensagem pronta, no seu tom. Você responde 1 e ela sai do seu número."],
+    ["Uma vez", "Conecte o seu WhatsApp", "Pelo código no celular, como no WhatsApp Web. O número continua o mesmo."],
+    ["Dia 0", "Mande orçamento como sempre", "Cada proposta que sai do seu WhatsApp entra na lista sozinha. Você não cadastra nada."],
+    ["Dia 1", "O cliente visualiza e não responde", "Ficou pensando na parcela, na garantia ou na conversa em casa. Você segue o seu dia."],
+    ["Dia 2", "Chega o aviso com a mensagem pronta", "No seu tom. Você responde 1 e ela sai do seu número."],
 ] as const;
 
 const HowItWorks = () => (
-    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-24" aria-label="Como funciona">
+    <section className="mx-auto w-full max-w-[1120px] px-4 py-16 sm:px-5 md:px-8 md:py-24" aria-label="Como funciona">
         <Eyebrow>Como funciona</Eyebrow>
         <SectionTitle>Você continua no WhatsApp. O Vyzon lembra por você.</SectionTitle>
-        <ol className="mt-8 grid gap-3 md:mt-10 md:grid-cols-3 md:gap-4">
-            {HOW.map(([titulo, texto], i) => (
-                <li key={titulo} className="rounded-[12px] border p-5 md:p-6" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
-                    <span className="lp-bold flex h-9 w-9 items-center justify-center rounded-full text-[15px]" style={{ background: "var(--lp-ink)", color: "#fff" }} aria-hidden="true">
-                        {i + 1}
-                    </span>
-                    <h3 className="mt-4 text-[18px] font-semibold leading-snug" style={{ color: "var(--lp-ink)" }}>
-                        {titulo}
-                    </h3>
-                    <p className="mt-2 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
-                        {texto}
-                    </p>
-                </li>
-            ))}
+        <ol className="relative mt-10 grid gap-8 md:mt-14 md:grid-cols-4 md:gap-6">
+            <span
+                aria-hidden="true"
+                className="absolute bottom-3 left-[15px] top-3 w-px md:bottom-auto md:left-0 md:right-0 md:top-[15px] md:h-px md:w-auto"
+                style={{ background: "var(--lp-line)" }}
+            />
+            {HOW.map(([dia, titulo, texto], i) => {
+                const aviso = i === HOW.length - 1;
+                return (
+                    <li key={titulo} className="relative pl-12 md:pl-0 md:pt-12">
+                        <span
+                            aria-hidden="true"
+                            className="absolute left-0 top-0 flex h-[31px] w-[31px] items-center justify-center rounded-full border-2 text-[12.5px] font-bold tabular-nums"
+                            style={
+                                aviso
+                                    ? { background: "var(--lp-sun)", borderColor: "var(--lp-sun)", color: "var(--lp-ink)" }
+                                    : { background: "var(--lp-paper)", borderColor: "rgba(13,20,33,0.3)", color: "var(--lp-ink)" }
+                            }
+                        >
+                            {i + 1}
+                        </span>
+                        <p className="text-[12.5px] font-semibold uppercase tracking-[0.08em]" style={{ color: aviso ? "var(--lp-sun-deep)" : "var(--lp-ink-40)" }}>
+                            {dia}
+                        </p>
+                        <h3 className="mt-1.5 text-[18px] font-semibold leading-snug" style={{ color: "var(--lp-ink)" }}>
+                            {titulo}
+                        </h3>
+                        <p className="mt-2 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
+                            {texto}
+                        </p>
+                    </li>
+                );
+            })}
         </ol>
     </section>
 );
@@ -432,11 +597,11 @@ const Offer = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
                     ))}
                 </ul>
             </div>
-            <div className="rounded-[16px] border p-6 md:p-8" style={{ borderColor: "var(--lp-ink)", background: "var(--lp-white)" }}>
-                <p className="text-[14px] font-semibold uppercase tracking-[0.06em]" style={{ color: "var(--lp-blue)" }}>
+            <div className="relative rounded-[16px] border p-6 pt-8 md:p-8 md:pt-10" style={{ borderColor: "var(--lp-ink)", background: "var(--lp-white)" }}>
+                <span className="lp-stamp absolute -top-3.5 left-6 md:left-8" style={{ color: "var(--lp-ink)", background: "var(--lp-sun)", borderColor: "var(--lp-sun)" }}>
                     Preço de fundador
-                </p>
-                <p className="mt-3 flex items-baseline gap-2">
+                </span>
+                <p className="flex items-baseline gap-2">
                     <span className="lp-bold text-[52px] leading-none tabular-nums" style={{ color: "var(--lp-ink)" }}>
                         R$ 97
                     </span>
@@ -497,7 +662,7 @@ const Dot = ({ color }: { color: string }) => (
 );
 
 const ProductMock = () => (
-    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-24" aria-label="Como o Vyzon aparece pra você">
+    <section className="mx-auto w-full max-w-[1120px] px-4 pt-16 sm:px-5 md:px-8 md:pt-24" aria-label="Como o Vyzon aparece pra você">
         <div
             className="overflow-hidden"
             style={{
@@ -661,14 +826,15 @@ const WaBubble = ({ out, time, tail, children }: { out?: boolean; time: string; 
     </div>
 );
 
-const Eyebrow = ({ children }: { children: ReactNode }) => (
-    <p className="text-[13px] font-medium uppercase tracking-[0.08em]" style={{ color: "var(--lp-ink-40)" }}>
+const Eyebrow = ({ children, light }: { children: ReactNode; light?: boolean }) => (
+    <p className="flex items-center gap-2.5 text-[13px] font-semibold uppercase tracking-[0.08em]" style={{ color: light ? "rgba(249,251,255,0.6)" : "var(--lp-ink-55)" }}>
+        <span className="lp-cell" aria-hidden="true" />
         {children}
     </p>
 );
 
 const SectionTitle = ({ children, light }: { children: ReactNode; light?: boolean }) => (
-    <h2 className="lp-bold mt-2 text-[30px] leading-[1.08] md:text-[42px]" style={{ color: light ? "#f9fbff" : "#050505", textWrap: "balance" }}>
+    <h2 className="lp-bold mt-3 text-[30px] leading-[1.08] md:text-[42px]" style={{ color: light ? "#f9fbff" : "var(--lp-ink)", textWrap: "balance" }}>
         {children}
     </h2>
 );
@@ -696,9 +862,7 @@ const OBJECTIONS = [
 const Objections = () => (
     <section className="py-16 md:py-24" style={{ background: "#0d1421" }} aria-label="Objeções">
         <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-5 md:px-8">
-            <p className="text-[13px] font-medium uppercase tracking-[0.08em]" style={{ color: "rgba(249,251,255,0.5)" }}>
-                Antes que você diga
-            </p>
+            <Eyebrow light>Antes que você diga</Eyebrow>
             <SectionTitle light>O que a gente mais ouve de dono de integradora</SectionTitle>
             <ul className="mt-10 md:mt-12">
                 {OBJECTIONS.map(([fala, resposta]) => (
@@ -708,7 +872,9 @@ const Objections = () => (
                         style={{ borderColor: "rgba(249,251,255,0.12)" }}
                     >
                         <p className="lp-serif text-[22px] leading-snug md:text-[26px]" style={{ color: "#f9fbff", textWrap: "balance" }}>
-                            “{fala}”
+                            <span style={{ color: "var(--lp-sun)" }}>“</span>
+                            {fala}
+                            <span style={{ color: "var(--lp-sun)" }}>”</span>
                         </p>
                         <p className="text-[16px] leading-relaxed md:text-[17px]" style={{ color: "rgba(249,251,255,0.72)" }}>
                             {resposta}
@@ -744,10 +910,15 @@ const FAQ = [
     },
 ];
 
+// Na mesma grade das outras seções (título à esquerda, perguntas à direita), em
+// vez da coluna estreita centralizada que quebrava o alinhamento da página.
 const Faq = () => (
-    <section className="mx-auto w-full max-w-[720px] px-4 pb-16 pt-16 sm:px-5 md:px-8 md:pb-24 md:pt-24">
-        <SectionTitle>O que todo integrador pergunta antes</SectionTitle>
-        <div className="mt-6">
+    <section className="mx-auto grid w-full max-w-[1120px] gap-6 px-4 py-16 sm:px-5 md:grid-cols-[0.8fr_1.2fr] md:gap-14 md:px-8 md:py-24">
+        <div>
+            <Eyebrow>Perguntas</Eyebrow>
+            <SectionTitle>O que todo integrador pergunta antes</SectionTitle>
+        </div>
+        <div>
             {FAQ.map((f) => (
                 <details key={f.q} className="group border-t py-4" style={{ borderColor: "var(--lp-line)" }}>
                     <summary
@@ -843,7 +1014,7 @@ const SignupForm = ({ angle, onWhatsapp, onCta }: { angle: SolarAngle; onWhatsap
                 <SectionTitle>20 minutos comigo pelo WhatsApp</SectionTitle>
                 {/* Quem atende, com nome: no lugar de depoimento, que ainda não existe. */}
                 <div className="mt-5 flex items-start gap-3.5">
-                    <span className="lp-bold flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[20px]" style={{ background: "var(--lp-blue)", color: "#fff" }} aria-hidden="true">
+                    <span className="lp-bold flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[20px]" style={{ background: "var(--lp-sun)", color: "var(--lp-ink)" }} aria-hidden="true">
                         M
                     </span>
                     <p className="text-[15px] leading-relaxed md:text-[16px]" style={{ color: "var(--lp-ink-70)" }}>

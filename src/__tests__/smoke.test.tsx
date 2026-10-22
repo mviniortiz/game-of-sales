@@ -158,8 +158,8 @@ describe('Smoke Tests - Public Pages', () => {
                 <SolarLanding />
             </MemoryRouter>
         );
-        expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/quantas integradoras além de você/i);
-        expect(screen.getAllByRole('link', { name: /conversar 20 min com o markus/i }).length).toBeGreaterThan(0);
+        expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/chega pronta no seu whatsapp/i);
+        expect(screen.getAllByRole('link', { name: /falar com o markus no whatsapp/i }).length).toBeGreaterThan(0);
     });
 });
 

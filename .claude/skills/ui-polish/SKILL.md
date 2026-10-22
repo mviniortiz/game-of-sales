@@ -27,6 +27,9 @@ Tokens live in `src/index.css`. Always use tokens, never hardcode hex when a tok
 - `--lp-blue: #1556c0` (CTA/acento) · `--lp-blue-deep: #0e3e8a`
 - `--lp-eva: #6d28d9` (IA/EVA) · `--lp-live: #008a52` (status ao vivo)
 - `--lp-line` / `--lp-line-soft` (hairlines) · `--lp-radius: 10px`
+- Home solar (LP.7): `--lp-sun` (só preenchimento: marca-texto, carimbo, célula),
+  `--lp-sun-soft` (faixa), `--lp-sun-deep` (texto sobre amarelo claro),
+  `--lp-panel` (módulo fotovoltaico). Regras na skill `vyzon-landing-art-director`.
 
 ## Tokens — App (`--vyz-*`)
 

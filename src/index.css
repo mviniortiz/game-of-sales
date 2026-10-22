@@ -3660,9 +3660,92 @@ All colors MUST be HSL.
   --lp-serif: 'Sentient', 'Georgia', serif;
   --lp-mono: 'Cascadia Mono', 'SFMono-Regular', ui-monospace, 'Consolas', monospace;
   --lp-radius: 10px;
+  /* LP.7 (2026-10-22) — identidade solar da home (ver bloco LP.7 abaixo) */
+  --lp-sun: #f5b400;
+  --lp-sun-soft: #fdf3d3;
+  --lp-sun-deep: #7a5000;
+  --lp-panel: #16304f;
+  --lp-panel-line: rgba(180, 205, 235, 0.3);
   /* LP.6 (v2) — tipografia editorial, usada apenas via .lp-v2 (não afeta a /) */
   --font-display: 'Newsreader', 'Georgia', serif;
   --font-geist: 'Geist', 'Inter', system-ui, sans-serif;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   LP.7 (2026-10-22) — "DO TELHADO AO WHATSAPP" · identidade solar da home
+   A página fala a língua do integrador: a proposta de energia solar é o
+   objeto que se repete (capa com módulos, carimbo de "sem resposta"), a conta
+   da calculadora tem cara de fatura e o amarelo de sol marca o que importa.
+   Amarelo só como PREENCHIMENTO (marca-texto, carimbo, faixa, célula); texto
+   amarelo sobre papel não passa em contraste. Para texto: --lp-sun-deep.
+   ════════════════════════════════════════════════════════════════════════ */
+.lp-v2 .lp-mark {
+  background-image: linear-gradient(transparent 0 58%, var(--lp-sun) 58% 92%, transparent 92%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 0 0.06em;
+}
+.lp-v2 .lp-mark--draw {
+  animation: lp-mark-draw 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.45s both;
+}
+@keyframes lp-mark-draw {
+  from { background-size: 0% 100%; }
+  to { background-size: 100% 100%; }
+}
+
+/* Célula fotovoltaica: grade fina sobre azul de módulo, com o reflexo do vidro. */
+.lp-v2 .lp-panel {
+  background-color: var(--lp-panel);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 48%),
+    linear-gradient(var(--lp-panel-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--lp-panel-line) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 33.34%, 25% 100%;
+  border: 1.5px solid #d9dee5;
+  border-radius: 2px;
+}
+
+/* Marcador das seções: uma célula de sol no lugar do eyebrow cinza solto. */
+.lp-v2 .lp-cell {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--lp-sun);
+  flex-shrink: 0;
+}
+
+/* Carimbo de proposta: o estado que o dono vê no papel, não um badge de SaaS. */
+.lp-v2 .lp-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  border: 2px solid currentColor;
+  border-radius: 6px;
+  padding: 0.38em 0.65em;
+  font: 700 11.5px/1 var(--font-geist);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: rotate(-4deg);
+}
+
+/* Aviso que chega no WhatsApp depois da proposta: entra só com transform,
+   o conteúdo nunca fica invisível se a animação não rodar. */
+.lp-v2 .lp-toast {
+  animation: lp-toast-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) 1.1s both;
+}
+@keyframes lp-toast-in {
+  from { transform: translate3d(0, 16px, 0) scale(0.97); }
+  to { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-v2 .lp-mark--draw,
+  .lp-v2 .lp-toast {
+    animation: none;
+  }
 }
 
 /* ── LP.6 (v2) Tipografia editorial escopada na landing v2: Newsreader

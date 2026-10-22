@@ -39,15 +39,21 @@ topo (Raio-X, EVA, placar, rascunho, aprovação A2).
    responde ("Quem responde é o Markus, que criou o Vyzon. Sem compromisso").
    Logo abaixo, a linha de preço de fundador e, por último, um link discreto
    para o Raio-X automático.
+   À direita (abaixo, no celular), a **proposta de exemplo**: capa com módulos
+   sobre telhado de cerâmica, dados de sistema, carimbo "2 dias sem resposta"
+   e o aviso que chega no WhatsApp.
 2. **Números de mercado com fonte** (Greener, Opinion Box e Mobile Time) no
-   lugar de depoimento, porque ainda não há cliente pagante para citar.
+   lugar de depoimento, porque ainda não há cliente pagante para citar. Só
+   número de fora: afirmação do Vyzon não entra vestida de estatística.
 3. **Calculadora**: o dono informa quantos orçamentos ficaram sem resposta
    no último mês e o valor médio. A conta vai na mensagem do WhatsApp para o
-   Markus. É a pergunta que valida o ICP. Evento `calc_use`.
+   Markus. É a pergunta que valida o ICP. Evento `calc_use`. O resultado tem
+   cara de fatura ("Sua conta do último mês").
 4. **Mock do produto**: lista de propostas e a aprovação no WhatsApp, no
    formato real de `_shared/whatsappApproval.ts`.
-5. **Como funciona em 3 passos**: conecta o WhatsApp, manda orçamento como
-   sempre, recebe o aviso no 2º dia.
+5. **Como funciona como linha do tempo da proposta**: uma vez (conecta o
+   WhatsApp), dia 0 (manda orçamento como sempre), dia 1 (cliente visualiza
+   e não responde), dia 2 (chega o aviso, único marcador amarelo).
 6. **Incluso + cartão de preço**: só o que existe no app. Preço de fundador
    R$ 97/mês nos 3 primeiros meses para as 10 primeiras integradoras, depois
    R$ 197/mês. Sem contrato (confirmado pelo Markus em 19/10/2026).
@@ -62,18 +68,35 @@ Conectar o WhatsApp num site recém-conhecido é pedir demais para o primeiro
 contato: na campanha de out/2026 foram 115 visitas, 9 cliques no botão e 0
 cadastros.
 
-## Direção visual
+## Direção visual: "do telhado ao WhatsApp" (LP.7, 22/10/2026)
+
+A página fala a língua do integrador. A personalidade vem de objetos do dia a
+dia dele, não de enfeite de SaaS: a **proposta de energia solar** (com capa
+de módulos e carimbo de estado), a **fatura** e o **sol**. Bloco LP.7 em
+`src/index.css`.
 
 - Títulos em Satoshi 900 (`.lp-bold`), sans direta e grande. Sem serifa nos
-  títulos. A serifa itálica só aparece nas falas da seção de objeções.
+  títulos. A serifa itálica só aparece nas falas da seção de objeções, com as
+  aspas em amarelo.
 - Corpo em Geist/Inter, 15 a 19px, cor `--lp-ink-70`.
 - Botão principal: pill preto, texto branco, ícone do WhatsApp
   (`WhatsAppIcon`) à esquerda. Fundo escuro pede botão claro.
-- Destaque: azul `--lp-blue` (#1556c0) na segunda metade do título e nos
-  rótulos de preço. Verde `--lp-live` só nos checks do incluso. Roxo
-  `#6d28d9` só como micro-acento da EVA.
-- Fundo `--lp-paper` com cards brancos de borda `--lp-line`. Calculadora e
-  objeções em bloco escuro (`--lp-ink` / #0d1421) para quebrar o ritmo.
+- Amarelo de sol (`--lp-sun` #f5b400) só como PREENCHIMENTO: marca-texto no
+  fim do título (`.lp-mark`, `.lp-mark--draw` no topo), no total da
+  calculadora, carimbos (`.lp-stamp`), etiqueta "Fundador", célula que marca
+  cada seção (`.lp-cell` dentro do `Eyebrow`) e faixa da calculadora
+  (`--lp-sun-soft`). Texto amarelo sobre papel não passa em contraste: para
+  texto use `--lp-sun-deep`.
+- Verde `--lp-live` só nos checks do incluso. Roxo `#6d28d9` só como
+  micro-acento da EVA. O azul `--lp-blue` saiu do título.
+- Módulo fotovoltaico desenhado em CSS (`.lp-panel`). Sem foto de banco de
+  telhado ou de "equipe": foto de cliente que não existe é depoimento
+  inventado. Foto real (do Markus, de integradora parceira com autorização)
+  entra quando existir.
+- Todas as seções na mesma grade: `max-w-[1120px]`, `px-4 sm:px-5 md:px-8`,
+  título alinhado à esquerda. Nada de coluna estreita centralizada.
+- Ritmo de fundo: papel, faixa amarela (calculadora), escuro (mock), papel,
+  escuro (objeções), papel. Nunca dois blocos escuros colados.
 - Mobile primeiro: CTA visível na primeira tela, nada de rolagem lateral,
   inputs com 16px ou mais, botão que não cabe vira largura total.
 
