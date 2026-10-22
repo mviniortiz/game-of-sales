@@ -1,10 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { hasLlmKey, llmChat } from "../_shared/llm.ts";
+import { bearerToken, isServiceCall } from "../_shared/serviceAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -161,11 +162,21 @@ async function logEvent(companyId: string | null, platform: string, eventType: s
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const unauthorized = () =>
+    new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
   try {
     const body = await req.json();
+    const isService = isServiceCall(req);
 
     // ─── Modo TESTE (chamado do frontend ao cadastrar o canal) ───
     if (body.test) {
+      // Usuário logado de verdade; a anon key sozinha não basta.
+      if (!isService) {
+        const token = bearerToken(req);
+        const { data: userData } = token ? await supabaseAdmin.auth.getUser(token) : { data: null };
+        if (!userData?.user) return unauthorized();
+      }
       const { platform, webhook_url } = body as { platform: string; webhook_url: string };
       if (!webhook_url) {
         return new Response(JSON.stringify({ error: "webhook_url ausente" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -185,6 +196,9 @@ serve(async (req) => {
     }
 
     // ─── Modo PRODUÇÃO (chamado pelo trigger pg_net) ───
+    // company_id vem do corpo, então só o trigger pode chamar. Aberto, qualquer
+    // um postava "venda fechada" falsa no canal de outra empresa.
+    if (!isService) return unauthorized();
     const companyId: string | null = body.company_id ?? null;
     const sale: SalePayload = body.sale ?? {};
     const goal: GoalPayload | null = body.goal ?? null;

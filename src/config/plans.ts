@@ -14,14 +14,12 @@
  * super admin marca a empresa como paga (AdminCompanyDetail).
  *
  * Ligações e e-mail são ADICIONAIS (decisão 2026-08-21): nenhum plano os
- * inclui. Enquanto não existe cobrança de adicional no checkout, o gate de
- * ligações no backend (deal-call-initiate) continua exigindo plano pago.
+ * inclui. A telefonia (Twilio) foi removida em 22/10/2026.
  *
  * Toda superfície (landing, PlanPicker, Faturamento, TenantContext, edges)
  * deriva daqui ou espelha estes números. As edges que espelham:
  *   - supabase/functions/admin-create-seller (PLAN_MAX_USERS)
  *   - supabase/functions/whatsapp-copilot (limites diários da EVA)
- *   - supabase/functions/deal-call-initiate / deal-call-generate-insights
  */
 
 export type PlanId = "free" | "pro";

@@ -20,10 +20,10 @@ Os endpoints usam um destes modelos (detalhado por endpoint no catálogo):
 
 | Modelo | Como funciona | Usado por |
 |---|---|---|
-| **JWT do usuário** | `Authorization: Bearer <user_jwt>`, validado via `auth.getUser()`; checa role/`company_id` | Endpoints chamados pelo app logado (admin-*, deal-call-*, evolution-whatsapp, report-agent, whatsapp-copilot, mercadopago-create/cancel-subscription, twilio-generate-token) |
+| **JWT do usuário** | `Authorization: Bearer <user_jwt>`, validado via `auth.getUser()`; checa role/`company_id` | Endpoints chamados pelo app logado (admin-*, evolution-whatsapp, report-agent, whatsapp-copilot, mercadopago-create/cancel-subscription) |
 | **Segredo de webhook** | Token em header próprio (`x-<provedor>-token`) validado contra `integration_configs.hottok` | Webhooks de venda (hotmart, kiwify, asaas, braip, cakto, greenn, pagarme, rdstation, zapier, mercadopago-sales) |
 | **HMAC assinado** | Assinatura SHA-256 timing-safe do corpo | kiwify, stripe, mercadopago-webhook, meta-whatsapp-webhook |
-| **Segredo de plataforma** | Env secreta (`EVOLUTION_WEBHOOK_SECRET`, `TWILIO_WEBHOOK_SECRET`, `EVA_CRON_SECRET`) via query/header | Receivers Evolution/Twilio, crons da EVA |
+| **Segredo de plataforma** | Env secreta (`EVOLUTION_WEBHOOK_SECRET`, `EVA_CRON_SECRET`) via query/header | Receivers Evolution, crons da EVA, triggers do banco (`_shared/serviceAuth.ts`) |
 | **State HMAC** | Parâmetro `state` assinado (CSRF) | google-oauth-init / callback |
 | **Token-como-segredo** | Um token opaco na URL é a própria credencial | public-report (`share_token`), lead-webhook (`slug`+`secret`) |
 | **Interno (sem header)** | Sem auth de chamador; protegido por ser invocado por trigger/cron e pela lógica de negócio | admin-lead-digest, calendar-book/slots, create-personalized-demo, sdr-auto-outreach, notify-channel, upload-ads-conversion |

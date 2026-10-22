@@ -86,7 +86,9 @@ serve(async (req) => {
 
     try {
         if (action === "ping") {
-            const userId = String(body.userId || callerUserId || "");
+            // Usuário só consulta o próprio número; userId do corpo vale só para
+            // serviço. Antes devolvia o número do dono de qualquer empresa.
+            const userId = String((isService ? body.userId : null) || callerUserId || "");
             if (!userId) return json(400, { error: "userId obrigatorio" });
             const instanceName = instanceNameFor(userId);
             const ownerNumber = await resolveOwnerNumber(admin, instanceName);

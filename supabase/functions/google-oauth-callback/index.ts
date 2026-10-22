@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { safeEqual } from "../_shared/serviceAuth.ts";
 
 const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID")!;
 const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
@@ -55,7 +56,7 @@ serve(async (req) => {
     const expectedSignatureHex = Array.from(new Uint8Array(signatureBuffer))
       .map(b => b.toString(16).padStart(2, '0')).join('');
 
-    if (signatureHex !== expectedSignatureHex) {
+    if (!safeEqual(signatureHex ?? "", expectedSignatureHex)) {
       console.error("[Google OAuth Callback] Invalid state signature");
       return Response.redirect(`${FRONTEND_URL}/configuracoes/integracoes?error=invalid_state_signature`, 302);
     }

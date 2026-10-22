@@ -17,9 +17,8 @@ export type PlanFeatures = {
     maxProducts: number;
 };
 
-// Ligações são ADICIONAL (decisão 2026-08-21): nenhum plano inclui. Enquanto
-// não existe cobrança de adicional, o backend (deal-call-initiate) continua
-// exigindo plano pago; a UI reflete "não incluso" até o adicional existir.
+// Ligações são ADICIONAL (decisão 2026-08-21): nenhum plano inclui; a UI
+// reflete "não incluso". A telefonia (Twilio) foi removida em 22/10/2026.
 export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     // piso interno: o mínimo pra conta não travar
     free: {

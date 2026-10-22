@@ -11,7 +11,7 @@ const buckets = new Map<string, RateLimitEntry>();
 
 /**
  * Check if an action is rate-limited.
- * @param key - Unique identifier for the action (e.g., "whatsapp-copilot", "deal-call")
+ * @param key - Unique identifier for the action (e.g., "whatsapp-copilot")
  * @param maxRequests - Maximum requests allowed in the window
  * @param windowMs - Time window in milliseconds (default: 60s)
  * @returns { allowed: boolean, retryAfterMs: number }

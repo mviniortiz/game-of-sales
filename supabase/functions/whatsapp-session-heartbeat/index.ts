@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isServiceCall } from "../_shared/serviceAuth.ts";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // whatsapp-session-heartbeat (2026-06-11)
@@ -18,8 +19,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // status dela. Um servidor que não responde não significa que a sessão caiu —
 // só que não conseguimos verificar agora. Mantemos o último estado conhecido.
 //
-// Disparado pelo pg_cron a cada ~5min. Aceita anon Bearer (verify_jwt), escreve
-// com service_role.
+// Disparado pelo pg_cron a cada ~5min. Exige x-cron-secret (ou service_role):
+// só a anon key deixava qualquer um reiniciar instâncias e ver os nomes delas,
+// que carregam o id do usuário. Escreve com service_role.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -32,7 +34,7 @@ const BATCH_SIZE = 5;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -122,6 +124,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
+  if (!isServiceCall(req)) return json(401, { error: "unauthorized" });
   if (!EVOLUTION_API_URL || !EVOLUTION_API_KEY) {
     return json(500, { error: "Evolution API não configurada no servidor" });
   }
