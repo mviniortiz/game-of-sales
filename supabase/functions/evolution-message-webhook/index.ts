@@ -964,11 +964,17 @@ serve(async (req) => {
     return json(200, { ok: true, ignored: "instance_not_mapped", instanceName });
   }
 
-  const messages: any[] = Array.isArray(payload.data)
+  // Whatsmiau v1.6: mensagem editada chega como messages.upsert com
+  // messageType "editedMessage" e id novo (o da original vai em
+  // contextInfo.stanzaId). Tratada como nova, duplicava a conversa e a
+  // prospecção respondia de novo. Até o Vyzon tratar edição, ela é ignorada.
+  const messages: any[] = (Array.isArray(payload.data)
     ? payload.data
     : Array.isArray(payload.data?.messages)
       ? payload.data.messages
-      : [payload.data];
+      : [payload.data]
+  ).filter((m: any) => m?.messageType !== "editedMessage");
+  if (messages.length === 0) return json(200, { ok: true, ignored: "edited_message" });
 
   const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
