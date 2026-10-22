@@ -10,6 +10,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { hasLlmKey, llmChat } from "../_shared/llm.ts";
+import { isServiceCall } from "../_shared/serviceAuth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -408,6 +409,15 @@ async function createDemoAccount(lead: LeadRecord): Promise<{
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Só o trigger de demo_requests chama. Aberto, criava conta confirmada para
+  // qualquer e-mail e gastava LLM/Tavily.
+  if (!isServiceCall(req)) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {

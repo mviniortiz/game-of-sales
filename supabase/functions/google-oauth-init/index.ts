@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -16,15 +17,23 @@ serve(async (req) => {
   }
 
   try {
-    const { userId } = await req.json();
-
-    if (!userId) {
-      throw new Error("User ID is required");
-    }
-
     // Criar state assinado para proteção CSRF
     const secret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     if (!secret) throw new Error("Missing secret key");
+
+    // O state leva o id de quem está logado, nunca o do corpo: com o do corpo,
+    // qualquer um ligava a própria conta Google ao perfil de outra pessoa e
+    // passava a receber os agendamentos dela.
+    const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+    const admin = createClient(SUPABASE_URL, secret);
+    const { data: authData } = token ? await admin.auth.getUser(token) : { data: null };
+    const userId = authData?.user?.id;
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const exp = Date.now() + 1000 * 60 * 15; // 15 minutos
     const payloadStr = JSON.stringify({ userId, exp });
 
