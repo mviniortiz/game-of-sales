@@ -5,7 +5,7 @@
 Ver [modelos de auth e convenções](./README.md).
 
 Índice: [Webhooks de venda](#webhooks-de-venda) · [Assinatura Vyzon](#assinatura-vyzon-mercado-pago) ·
-[WhatsApp](#whatsapp) · [EVA](#eva) · [Calls/Voz](#callsvoz) · [Agenda](#agenda-google-calendar) ·
+[WhatsApp](#whatsapp) · [EVA](#eva) · [Agenda](#agenda-google-calendar) ·
 [Auth](#auth-google-oauth) · [Admin](#admin) · [Demo e Leads](#demo-e-leads) · [Ads](#ads)
 
 ---
@@ -76,22 +76,6 @@ Cobrança da própria assinatura do Vyzon (trial 14 dias, checkout transparente)
   conversas com desfecho → `eva_replay_moments` · `gpt-5.4-nano`.
 - **`notify-channel`** — POST · interno (SSRF allowlist Slack/Discord) · posta venda fechada /
   meta batida no canal do time; copy escrita por `gpt-5.4-mini` (fallback template).
-
-## Calls/Voz
-
-Pipeline de ligação no deal. Detalhe em [`../product/`] e na ideia EVA-no-Meet.
-
-- **`deal-call-initiate`** — POST · JWT + plano plus/pro + add-on calls · body `dealId`,
-  `sellerPhone`, `customerPhone`, `mode` (demo|twilio|webrtc) · cria `deal_calls` e chamadas Twilio.
-- **`deal-call-transcribe`** — POST · service_role **ou** JWT · body `callId` · baixa gravação,
-  transcreve via **OpenAI Whisper** (`whisper-1`), dispara insights.
-- **`deal-call-generate-insights`** — POST · service_role **ou** JWT · body `callId` ·
-  resumo/objeções/próximos passos via `gpt-4o-mini` (fallback heurístico) → `deal_call_insights`.
-- **`twilio-generate-token`** — POST · JWT + plano + add-on · Access Token WebRTC (TTL 3600s).
-- **`twilio-voice-bridge`** — GET/POST · `?secret=` `TWILIO_WEBHOOK_SECRET` · TwiML conference por perna.
-- **`twilio-voice-recording-webhook`** — POST(form) · `?secret=` · salva `recording_url` e dispara transcribe.
-- **`twilio-voice-status-webhook`** — POST(form) · `?secret=` · reconcilia status/duração da ligação.
-- **`twilio-voice-webrtc-handler`** — POST(form) · TwiML App Voice URL para o SDK do navegador.
 
 ## Agenda (Google Calendar)
 

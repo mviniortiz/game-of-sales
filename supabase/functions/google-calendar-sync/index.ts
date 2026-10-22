@@ -17,14 +17,36 @@ serve(async (req) => {
   }
 
   try {
-    const { action, userId, agendamentoData } = await req.json();
-
-    console.log(`[Google Calendar Sync] Starting - Action: ${action}, User: ${userId}`);
+    const { action, userId: requestedUserId, agendamentoData } = await req.json();
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // Quem chama vem do JWT, não do corpo. Antes qualquer um mexia na agenda
+    // Google de qualquer usuário passando o id dele.
+    const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+    const { data: authData } = token ? await supabase.auth.getUser(token) : { data: null };
+    const caller = authData?.user;
+    if (!caller) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Agenda de outro vendedor (admin editando agendamento do time): só admin
+    // da mesma empresa ou super admin.
+    const userId: string = requestedUserId || caller.id;
+    if (userId !== caller.id && !(await canActForUser(supabase, caller.id, userId))) {
+      return new Response(JSON.stringify({ error: "forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    console.log(`[Google Calendar Sync] Starting - Action: ${action}, User: ${userId}`);
 
     // Buscar tokens do usuário
     console.log(`[Google Calendar Sync] Fetching user tokens...`);
@@ -119,6 +141,26 @@ serve(async (req) => {
     });
   }
 });
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function canActForUser(supabase: any, callerId: string, targetId: string): Promise<boolean> {
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, company_id, is_super_admin")
+    .in("id", [callerId, targetId]);
+  const me = profiles?.find((p: { id: string }) => p.id === callerId);
+  const target = profiles?.find((p: { id: string }) => p.id === targetId);
+  if (!me || !target) return false;
+  if (me.is_super_admin === true) return true;
+  if (!me.company_id || me.company_id !== target.company_id) return false;
+  const { data: adminRole } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", callerId)
+    .eq("role", "admin")
+    .maybeSingle();
+  return !!adminRole;
+}
 
 async function refreshGoogleToken(
   refreshToken: string,

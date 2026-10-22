@@ -30,15 +30,6 @@ verify_jwt = false
 [functions.google-calendar-webhook]
 verify_jwt = false
 
-[functions.twilio-voice-bridge]
-verify_jwt = false
-
-[functions.twilio-voice-status-webhook]
-verify_jwt = false
-
-[functions.twilio-voice-recording-webhook]
-verify_jwt = false
-
 [functions.evolution-message-webhook]
 verify_jwt = false
 
@@ -71,9 +62,6 @@ verify_jwt = false
 # Login exigido pelo gateway. Os agendamentos mandam a chave anon ou a de
 # serviço do cofre, as duas em formato JWT, então passam.
 [functions.admin-lead-digest]
-verify_jwt = true
-
-[functions.deal-call-generate-insights]
 verify_jwt = true
 
 [functions.eva-agent-loop]

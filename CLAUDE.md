@@ -68,8 +68,7 @@ está BLOQUEADO por billing; não criar workflows.
    corpo ou estilo anime.
 6. **Fonte de verdade > prosa.** Antes de citar em copy, LER:
    - Preços/planos: `src/config/plans.ts` (limites hardcoded nas edges
-     `admin-create-seller`, `whatsapp-copilot`, `deal-call-initiate`,
-     `deal-call-generate-insights` — mudou plano, redeploya as 4).
+     `admin-create-seller` e `whatsapp-copilot` — mudou plano, redeploya as 2).
    - Integrações: `src/config/integrationsConfig.ts` (não confirmada no
      código = "Em breve" / "Sob consulta"; nunca inventar).
    - Contatos/links: `src/config/contact.ts`.
@@ -138,6 +137,11 @@ está BLOQUEADO por billing; não criar workflows.
   `findMessages` nem `getBase64FromMediaMessage`. API oficial: Kapso.
   Prospecção supervisionada com allowlist fail-closed
   (`validateChatOwnership`).
+- Auth das edges (22/10/2026): `verify_jwt` só prova que o JWT é válido, e a
+  anon key do bundle é um. Edge de bastidor (trigger, cron, outra edge) exige
+  `isServiceCall` de `_shared/serviceAuth.ts` (service_role ou
+  `x-cron-secret`); edge do app pega o usuário do JWT (`auth.getUser`), nunca
+  `userId`/`company_id` do corpo. Telefonia (Twilio) removida no mesmo dia.
 
 ## UI: usar as skills, não improvisar
 

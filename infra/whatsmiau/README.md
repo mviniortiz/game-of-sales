@@ -10,7 +10,7 @@ segue sendo a Kapso (`kapso-whatsapp`, `kapso-webhook`).
 
 ## O que o Vyzon espera do servidor
 
-- Imagem `impedr029/whatsmiau` na versão fixa (hoje `v1.5.0`). Não usar `develop`.
+- Imagem `impedr029/whatsmiau` na versão fixa (hoje `v1.6.0`). Não usar `develop`.
 - Postgres (sessões do WhatsApp) e Redis (instâncias). O modelo do Railway já cria os dois.
 - Volume em `/app/data`, senão cada redeploy pede QR de novo.
 - `API_KEY` forte: é o `EVOLUTION_API_KEY` do Supabase.
@@ -22,7 +22,7 @@ segue sendo a Kapso (`kapso-whatsapp`, `kapso-webhook`).
 
 1. Abrir https://railway.com/deploy/whatsmiau-whatsapp-api e clicar em Deploy.
 2. No serviço WhatsMiau, em Settings > Source, trocar a imagem do modelo
-   (`v0.5.0`) por `impedr029/whatsmiau:v1.5.0`.
+   (`v0.5.0`) por `impedr029/whatsmiau:v1.6.0`.
 3. Em Settings > Networking, gerar o domínio público na porta 8080.
 4. Em Variables, copiar o valor de `API_KEY`.
 5. Gravar no Supabase (na pasta `game-of-sales`):
@@ -48,6 +48,27 @@ mudança com valor vazio deixa o serviço sem imagem.
   últimos 90 dias, logo depois de conectar; não abre rastreio de orçamento).
 - "Puxar mensagens antigas" no Inbox chama `/chat/syncMessages`, que pede ao
   celular mensagens anteriores à mais antiga já gravada de cada conversa.
+
+## Atualizar a versão
+
+Antes de trocar a imagem, ler as notas da versão nova
+(https://github.com/verbeux-ai/whatsmiau/releases) contra o que o Vyzon usa
+(seção abaixo). Publicar primeiro a edge que já aguenta a versão nova, depois
+trocar a imagem pelo lápis do Source Image e conferir em Details que o valor
+não ficou vazio. O volume em `/app/data` mantém as sessões: ninguém precisa
+ler QR de novo.
+
+Notas por versão:
+
+- **v1.6.0** (11/10/2026): mensagem editada chega como `messages.upsert` com
+  `messageType: editedMessage` e id novo. A `evolution-message-webhook` ignora
+  (senão duplica a conversa e a prospecção responde de novo). O caminho some
+  numa versão posterior a 04/11/2026, quando edição passa a vir só em
+  `messages.edited`, que o Vyzon não assina. Também: leitura feita no próprio
+  celular do dono chega como `MESSAGES_UPDATE` `READ` com `fromMe: true` (só
+  marca como lida a mensagem recebida; o contador de não lidas não muda) e o
+  `messageTimestamp` da resposta de envio vem em segundos (o Vyzon já usa o
+  relógio próprio).
 
 ## O que a Whatsmiau não tem
 

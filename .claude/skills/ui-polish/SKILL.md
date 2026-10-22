@@ -27,6 +27,12 @@ Tokens live in `src/index.css`. Always use tokens, never hardcode hex when a tok
 - `--lp-blue: #1556c0` (CTA/acento) · `--lp-blue-deep: #0e3e8a`
 - `--lp-eva: #6d28d9` (IA/EVA) · `--lp-live: #008a52` (status ao vivo)
 - `--lp-line` / `--lp-line-soft` (hairlines) · `--lp-radius: 10px`
+- Home solar (LP.8, design system Vyzon Solar, escopo `.lp-solar`): `--lp-marker`
+  (só marca-texto atrás de `--lp-ink`), `--lp-ink-muted`, `--lp-ink-subtle`,
+  `--lp-blue-tint`, `--lp-whatsapp` (só ícone), `--lp-chat-bg`, `--lp-chat-out`,
+  `--lp-wait`, `--lp-ok`, `--lp-font-display` (Archivo) e `--lp-font-num`
+  (Barlow Condensed). Na home, Archivo e Barlow substituem Satoshi e Sentient.
+  Regras na skill `vyzon-landing-art-director`.
 
 ## Tokens — App (`--vyz-*`)
 
