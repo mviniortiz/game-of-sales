@@ -128,3 +128,8 @@ verify_jwt = true
 
 [functions.raio-x-build]
 verify_jwt = true
+
+# Time de distribuição (OpenBot): sem JWT do Supabase, só o segredo
+# DISTRIBUICAO_SECRET no header, conferido dentro da função.
+[functions.distribuicao-inbox]
+verify_jwt = false

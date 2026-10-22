@@ -9,6 +9,8 @@ import { trackOutboundQuote } from "../_shared/quoteTracking.ts";
 import { ensureConnection, importHistoryMessages } from "../_shared/whatsappHistory.ts";
 import { fillContactNames, isPlaceholderName, knownLidMap, linkLidToPhone } from "../_shared/whatsappContacts.ts";
 import { READ_DELAY_MS, worthReading } from "../_shared/evaRead.ts";
+import { DIST_PREFIX } from "../_shared/distribuicao.ts";
+import { tratarComandoDistribuicao } from "../_shared/distribuicaoAprovacao.ts";
 
 // Receiver do Evolution API (evento messages.upsert).
 //
@@ -27,6 +29,9 @@ import { READ_DELAY_MS, worthReading } from "../_shared/evaRead.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const EVOLUTION_WEBHOOK_SECRET = Deno.env.get("EVOLUTION_WEBHOOK_SECRET") || "";
+// Time interno de distribuição (DIST.0): só o chat deste usuário com ele mesmo
+// aceita "DK4 1". Sem a variável, o gancho fica desligado.
+const DISTRIBUICAO_USER_ID = Deno.env.get("DISTRIBUICAO_USER_ID") || null;
 
 const MEDIA_TYPES = new Set(["image", "video", "sticker", "audio", "document"]);
 
@@ -1176,9 +1181,26 @@ serve(async (req) => {
             skipped.push("prospect_own_notice");
             continue;
           }
+          // DIST.0 — mesmo cuidado com o aviso do time de distribuição.
+          if (commandText.trim().startsWith(DIST_PREFIX)) {
+            skipped.push("dist_own_notice");
+            continue;
+          }
           if (!(await claimOwnerMessage(admin, instanceName, externalId))) {
             skipped.push("owner_command_duplicate");
             continue;
+          }
+          // DIST.0 — "DK4 1" é do time interno; qualquer outro texto devolve
+          // false e segue para lead, prospecção e EVA como sempre.
+          try {
+            if (await tratarComandoDistribuicao(admin, {
+              userId, donoUserId: DISTRIBUICAO_USER_ID, instanceName, ownerNumber, text: commandText,
+            })) {
+              skipped.push("dist_command");
+              continue;
+            }
+          } catch (distErr: any) {
+            console.error("[distribuicao] comando do dono falhou:", distErr?.message);
           }
           try {
             if (await handleLeadCommand(admin, { userId, instanceName, ownerNumber, text: commandText })) {

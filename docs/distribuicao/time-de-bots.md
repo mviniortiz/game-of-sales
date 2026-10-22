@@ -1,7 +1,8 @@
 # Time de bots de distribuição do Vyzon (OpenBot)
 
-> Desenho, não implementação. Escrito em 22/10/2026. Nada aqui foi ligado,
-> publicado ou enviado. Os dados de mercado vêm da pesquisa de 22/10/2026
+> Ferramenta interna para gerir e crescer o Vyzon, não feature para clientes.
+> Escrito em 22/10/2026. A fase 0 (fila, edge, painel) está no código; nada foi
+> ligado, publicado ou enviado. Os dados de mercado vêm da pesquisa de 22/10/2026
 > (Greener 1S2026 e levantamento de canais); os dados do Vyzon vêm do código.
 
 ## 1. Resumo em cinco linhas
@@ -10,9 +11,10 @@
    cuidam de pensar e escrever; o que é tempo real e mexe em WhatsApp continua no
    Supabase, como já está hoje.
 2. Tudo que sai para fora (post, anúncio, mensagem para parceiro, mudança de verba)
-   vira **rascunho na fila única** `agent_suggestions` e chega no WhatsApp do Markus
-   pelo mesmo mecanismo da EVA (`_shared/whatsappApproval.ts`): responde 1, 2 ou o
-   texto corrigido. Nenhum bot publica, posta ou manda mensagem sozinho.
+   vira **rascunho na fila interna** `distribuicao_rascunhos` e chega no WhatsApp do
+   Markus com código próprio (ex.: `DK4`): ele responde `DK4 1`, `DK4 2` ou `DK4` com
+   o texto corrigido. Nenhum bot publica, posta ou manda mensagem sozinho. A fila é
+   separada da fila da EVA: nada do time toca o fluxo dos clientes.
 3. Métrica que manda no time: **conversas marcadas com o Markus por semana**
    (`prospecting_allowlist.status = 'conversa_marcada'` + cliques no WhatsApp da
    landing + `demo_requests`). Tudo o mais é métrica de apoio.
@@ -66,30 +68,34 @@ notas de versão embutidas) o que segue:
   campanha. Usa a assinatura da Claude que o Markus já tem (o provedor do OpenBot é o
   CLI da Claude), então o custo de modelo pode ficar dentro do plano.
 - **Não serve** para o que precisa rodar de minuto em minuto ou mexer no WhatsApp:
-  envio da prospecção, leitura de resposta, aprovação. Isso já roda em edge + pg_cron
-  (`prospect-run` a cada 3 minutos, `eva-approval-notify` a cada 10 minutos) e fica
-  onde está. O Mac pode estar fechado; o Supabase não.
+  envio da prospecção, leitura de resposta, aprovação. Isso roda em edge + pg_cron
+  (`prospect-run` a cada 3 minutos) e no webhook do WhatsApp, e fica onde está. O Mac pode estar fechado; o Supabase não.
 - **Regra de divisão:** tempo real e WhatsApp no Supabase; análise e redação no
   OpenBot; decisão no WhatsApp do Markus.
 
 ### Como o OpenBot fala com o Supabase e com o WhatsApp
 
-O OpenBot nunca recebe a `service_role` nem fala com o WhatsMiau. Ele usa duas portas
-estreitas, a construir (seção 8):
+O OpenBot nunca recebe a `service_role` nem fala com o WhatsMiau. Ele usa uma porta
+estreita, a edge **`distribuicao-inbox`**, com o segredo `DISTRIBUICAO_SECRET` no
+header `x-distribuicao-secret` (detalhes na seção 8):
 
-1. **`distribuicao-inbox`** (edge nova, protegida por segredo próprio): o agente
-   entrega um rascunho; a edge grava em `agent_suggestions` com
-   `kind = 'distribuicao'`, `company_id` da empresa do próprio Vyzon (a mesma da
-   prospecção) e `deal_id` nulo. Na mesma edge, o agente consulta o estado dos
-   rascunhos dele (pendente, aprovado, corrigido, descartado, expirado).
-2. **`distribuicao_painel()`** (RPC SECURITY DEFINER, só leitura, só agregados):
-   funil da landing (`landing_events`), cadastros, `demo_requests`, contagem por status
-   e por variante de `prospecting_allowlist`, trechos de resposta sem nome, telefone
-   e cidade. Nenhum dado pessoal sai do banco para o Mac.
+1. `entregar`: o agente manda o rascunho; a edge valida (campos, https, travessão,
+   emoji, frases proibidas), grava em `distribuicao_rascunhos` e avisa o Markus.
+2. `notificar`: expira o que passou de 48h e avisa o que ficou na fila (teto
+   diário, número caído). As rotinas do OpenBot chamam; não há cron novo.
+3. `estado`: os últimos rascunhos do agente, com o desfecho.
+4. `executado`: o executor (fase 2/3) marca que publicou o que foi aprovado.
+5. `painel`: chama a RPC `distribuicao_painel()` (SECURITY DEFINER, só service_role,
+   só agregados): funil da landing (`landing_events`), cadastros, `demo_requests`,
+   status e variante de `prospecting_allowlist`, trechos de resposta com telefone,
+   e-mail, empresa e cidade trocados por marcador. Nenhum dado pessoal sai do banco
+   para o Mac.
 
-Daí em diante é o caminho que a EVA já usa: o cron `eva-approval-notify` leva o
-rascunho para o WhatsApp do Markus com código curto, e a resposta dele volta pelo
-`evolution-message-webhook` (ou `kapso-webhook`, no número oficial da EVA).
+O aviso sai pelo WhatsApp conectado do usuário `DISTRIBUICAO_USER_ID` (o Markus),
+para ele mesmo, começando com `DISTRIBUIÇÃO`. A resposta volta pelo
+`evolution-message-webhook`, que só tem um gancho pequeno: descarta o eco do aviso
+e, antes dos fluxos de lead, prospecção e EVA, lê comandos com código D. Qualquer
+outro texto segue como sempre.
 
 ## 3. Arquitetura
 
@@ -97,17 +103,17 @@ rascunho para o WhatsApp do Markus com código curto, e a resposta dele volta pe
              OpenBot (Mac do Markus)                         Supabase
   +------------------------------------------+     +-------------------------------+
   | Analista | Operador prosp. | Parcerias   |     | pg_cron: prospect-run (3 min) |
-  | Conteúdo | Criativos       | Mídia paga  |     |          eva-approval-notify  |
+  | Conteúdo | Criativos       | Mídia paga  |     | evolution-message-webhook     |
   |                                          |     |                               |
   | banco compartilhado (pauta, parceiros,   | --> | distribuicao-inbox (edge)     |
-  | criativos, decisões)                     |     |   grava agent_suggestions     |
+  | criativos, decisões)                     |     |   distribuicao_rascunhos      |
   |                                          | <-- | distribuicao_painel() (RPC)   |
   | repositório (worktree própria, PR)       |     |   agregados, sem PII          |
   +------------------------------------------+     +---------------+---------------+
                                                                    |
                                                                    v
                                                    WhatsApp do Markus (aprovação)
-                                                   "Responda A4 1, A4 2 ou a correção"
+                                                   "Responda DK4 1, DK4 2 ou DK4 <texto>"
                                                                    |
                                     +------------------------------+-------------+
                                     | aprovado                                   |
@@ -118,32 +124,31 @@ rascunho para o WhatsApp do Markus com código curto, e a resposta dele volta pe
 
 ### Contrato do rascunho de distribuição
 
-`agent_suggestions.suggestion` (jsonb) para `kind = 'distribuicao'`:
+O que o agente manda em `rascunho` na action `entregar` (vira uma linha de
+`distribuicao_rascunhos`; `message_text` é gravado na coluna `texto`):
 
 | Campo | Exemplo | Para quê |
 |---|---|---|
-| `agente` | `conteudo` | Quem gerou (também em `agent_key = 'dist_conteudo'`). |
+| `agente` | `conteudo` | Quem gerou: `analista`, `prospeccao`, `parcerias`, `conteudo`, `criativos`, `midia`. |
 | `canal` | `instagram`, `blog`, `meta_ads`, `google_ads`, `parceiro`, `prospeccao_copy` | Onde vai sair. |
 | `titulo` | `Carrossel: a proposta que ficou no "vou ver"` | Primeira linha do aviso no WhatsApp. |
-| `message_text` | texto final | Mesmo campo que a aprovação da EVA já lê; a correção do Markus substitui ele. |
+| `message_text` | texto final | O que vai para o público; a correção do Markus vira `texto_final`. |
 | `anexo_url` | link do PNG/MP4 no Storage ou preview da Vercel | O Markus vê antes de aprovar. |
-| `por_que_agora` | `variante "encaminha" respondeu 2x mais esta semana` | Mesmo papel do "Por que agora" da EVA. |
+| `por_que_agora` | `variante "encaminha" respondeu 2x mais esta semana` | Uma linha de motivo no aviso. |
 | `acao_apos_aprovar` | `manual`, `merge_pr`, `ads_apply` | O que acontece depois do 1. |
 | `alvo` | `{ "pr": 123 }` ou `{ "campanha": "...", "mudanca": {...} }` | Dados do executor. |
 
-Estados: o fluxo da EVA já usa `pending`, `agendado`, `sent`, `adjusted`,
-`rejected`, `expired`. Para distribuição, o "1" leva a `accepted` (aprovado, ainda não
-executado); o executor marca o resultado em `applied_payload`. Rascunho com mais de
-48h expira como já acontece hoje: post velho não vale a pena.
+Estados: `pendente` → `aprovado` (`DK4 1`), `corrigido` (`DK4 <texto>`, que vira
+`texto_final`), `descartado` (`DK4 2`) ou `expirado` (48h sem decisão: post velho não
+vale a pena). Aprovar não publica; o executor marca `executado_em` e `resultado`.
 
 ### Travas do time inteiro
 
-- **Atenção do Markus é o recurso escasso.** A fila já tem teto de 5 entregas por
-  empresa a cada 24h (`MAX_NOTIFY_PER_COMPANY_PER_DAY`). O time de distribuição
-  respeita esse teto, com prioridade: parceiro > mudança de anúncio > copy da
-  prospecção > conteúdo. O que não couber fica para o dia seguinte e expira em 48h.
-  As aprovações da própria prospecção (códigos com P) são outro fluxo e não entram
-  nessa conta.
+- **Atenção do Markus é o recurso escasso.** No máximo 3 avisos do time a cada 24h
+  (`DISTRIBUICAO_TETO_DIA`), 3 rascunhos por agente por dia e 10 abertos ao mesmo
+  tempo. Prioridade sugerida nas rotinas: parceiro > mudança de anúncio > copy da
+  prospecção > conteúdo. O que não couber espera o próximo `notificar` e expira em
+  48h. Os avisos da EVA e da prospecção são outros fluxos e não entram nessa conta.
 - **Sem saída automática.** Nenhum agente tem credencial de publicar no Instagram,
   na Meta ou no WhatsApp. Google Ads só é alterado pelo executor depois do 1, e só nos
   campos que o rascunho descreveu.
@@ -164,7 +169,7 @@ executado); o executor marca o resultado em `applied_payload`. Rascunho com mais
 | Norte | Conversas marcadas com o Markus por semana | `prospecting_allowlist.status = 'conversa_marcada'` (mudança na semana) + `landing_events` `whatsapp_click` + `demo_requests` |
 | Resultado | Raio-X gerados; assinaturas `active` | `/raio-x` → `raio-x-build`; `company_is_paid()` |
 | Apoio | Resposta de pessoa por variante; CTR e custo por conversa; parceiros em conversa; alcance e salvamentos do conteúdo | `prospecting_allowlist` (variant, status), Google Ads, Meta, Instagram |
-| Qualidade do time | Aprovado sem edição / corrigido / descartado / expirado, por agente | `agent_suggestions` com `kind = 'distribuicao'` |
+| Qualidade do time | Aprovado sem edição / corrigido / descartado / expirado, por agente | `distribuicao_rascunhos` (e `fila_distribuicao` no painel) |
 
 Linha de base nas duas primeiras semanas, sem meta. Depois disso, cada agente ganha
 meta escrita no prompt. Um agente que passar 4 semanas com mais de 50% de descarte
@@ -536,7 +541,7 @@ depois que a mensagem estiver provada.
 
 | Fase | Quando | Liga | Pré-requisito | Critério para avançar |
 |---|---|---|---|---|
-| 0. Base | Semana 1 | Licença do OpenBot conferida; edge `distribuicao-inbox`; RPC `distribuicao_painel()`; `kind = 'distribuicao'` na fila; worktree do time; bloco de regras comuns | Decisões da seção 9 | Um rascunho de teste chega no WhatsApp, o Markus responde 1 e o estado vira `accepted` |
+| 0. Base | Semana 1 | Licença do OpenBot conferida; migration, edge `distribuicao-inbox` e gancho no webhook no ar (código pronto, ver seção 8); worktree do time; bloco de regras comuns | Decisões da seção 9 | Um rascunho de teste chega no WhatsApp, o Markus responde `DK4 1` e o estado vira `aprovado` |
 | 1. Sinal | Semanas 1 a 3 | Analista de funil; Operador da prospecção; Indicação e parcerias | Fase 0 | Linha de base da métrica norte medida; 1 troca de variante proposta e medida; 5 parceiros abordados |
 | 2. Prova social | Semanas 3 a 6 | Conteúdo (Instagram primeiro, blog depois); executor `merge_pr` | Fase 1 rodando há 2 semanas | 60% dos rascunhos aprovados sem edição; perfil com 8 posts na língua do integrador |
 | 3. Escala paga | Depois da semana 6, e só se houver variante vencedora | Criativos; Mídia paga com teto; executor `ads_apply`; leitura de Meta | Variante com resposta claramente maior que as outras; teto de verba definido | Custo por conversa marcada aceitável por 4 semanas |
@@ -559,27 +564,34 @@ WhatsApp pelo OpenBot, agente que conversa com prospect. A conversa é do Markus
 | **LGPD e regra de dado** | Pesquisa de parceiro | Só empresa e canal comercial público; nada de lista de pessoas. A allowlist da prospecção só cresce pelo caminho que já existe, nunca por este time. |
 | **Dependência de ferramenta nova** | OpenBot é jovem (várias versões por semana) | Prompts e regras versionados neste repo (`docs/distribuicao/`), fila e métricas no Supabase. Trocar de ferramenta é copiar prompts, não refazer o time. |
 
-## 8. O que precisa ser construído (backlog, não implementado)
+## 8. Fase 0: o que está no código e o que falta
 
-1. **Migration aditiva:** incluir `'distribuicao'` no check de `agent_suggestions.kind`
-   (hoje `qualification`, `outbound_message`, `followup`, `objection`, `proposal`);
-   `'accepted'` já existe no check de `status` desde `20261017_agent_suggestions_desfazer.sql`;
-   índice por `(company_id, kind, status)`. GRANT antes de qualquer RLS nova.
-2. **Edge `distribuicao-inbox`:** POST com segredo `DISTRIBUICAO_SECRET`; valida o
-   contrato da seção 3; recusa texto com travessão, emoji ou frase proibida; grava com a
-   empresa do Vyzon fixa no servidor (o agente não escolhe empresa); GET devolve só o
-   estado dos rascunhos do próprio agente.
-3. **Ajuste em `_shared/whatsappApproval.ts`:**
-   `notifyPendingSuggestions` monta o aviso sem deal quando `kind = 'distribuicao'`
-   (título, canal, por que agora, link do anexo, texto); `handleOwnerCommand`, para esse
-   kind, troca "enviar ao lead" por marcar `accepted` com o texto final em
-   `applied_payload`, sem exigir telefone. Testes em vitest para o novo ramo.
-4. **RPC `distribuicao_painel(dias int)`:** SECURITY DEFINER, só para o papel usado pelo
-   OpenBot, só agregados e trechos anonimizados.
-5. **Executores (fase 2 e 3):** rotina no OpenBot que lê `accepted` com
-   `acao_apos_aprovar = 'merge_pr'` e faz o merge; script `scripts/ads/apply.mjs` que
-   aplica só a mudança descrita e só abaixo do teto.
-6. **Pasta de prompts:** `docs/distribuicao/prompts/<agente>.md` com o bloco de regras
+Feito em 22/10/2026 (não aplicado em produção):
+
+| Peça | Arquivo | O que faz |
+|---|---|---|
+| Tabela e RPC | `supabase/migrations/20261022_distribuicao_fila.sql` | `distribuicao_rascunhos` (GRANT antes de RLS; só super admin lê pelo app; escrita só pela service_role) e `distribuicao_painel()` (só service_role). Aditiva. |
+| Regras do rascunho | `supabase/functions/_shared/distribuicao.ts` | Validador do contrato, recusa de travessão, emoji e frases proibidas, código D, leitura de `DK4 1/2/<texto>`, texto do aviso. |
+| Aviso e decisão | `supabase/functions/_shared/distribuicaoAprovacao.ts` | Expira 48h, avisa até o teto, aprova/corrige/descarta. Reaproveita só o transporte da Evolution e a descoberta do número do dono. |
+| Porta do OpenBot | `supabase/functions/distribuicao-inbox/index.ts` | Actions `entregar`, `notificar`, `estado`, `executado`, `painel`. `verify_jwt = false` em `supabase/config.toml`; o segredo é conferido na função. |
+| Gancho no webhook | `supabase/functions/evolution-message-webhook/index.ts` | Descarta o eco do aviso e lê comando D antes dos outros fluxos. Desligado sem `DISTRIBUICAO_USER_ID`. |
+| Testes | `src/__tests__/distribuicao.test.ts` | 15 casos: validador, código, aviso, teto, expiração, número caído, aprovar sem publicar, quem não é o Markus. |
+
+Para ligar (passos do Markus, nesta ordem):
+
+1. Aplicar a migration: `npx supabase db query --linked -f supabase/migrations/20261022_distribuicao_fila.sql`.
+2. Secrets: `DISTRIBUICAO_SECRET` (gerar), `DISTRIBUICAO_USER_ID` (id do usuário do
+   Markus), opcionais `DISTRIBUICAO_TETO_DIA` (padrão 3) e `DISTRIBUICAO_ATIVA`.
+3. Deploy de `distribuicao-inbox` e `evolution-message-webhook`.
+4. Teste: `entregar` um rascunho de teste, responder `DK4 1` no WhatsApp, conferir
+   `estado`.
+
+Falta (fases seguintes):
+
+1. **Executores (fase 2 e 3):** rotina no OpenBot que lê `aprovado`/`corrigido` com
+   `acao_apos_aprovar = 'merge_pr'`, faz o merge e chama `executado`; script
+   `scripts/ads/apply.mjs` que aplica só a mudança descrita e só abaixo do teto.
+2. **Pasta de prompts:** `docs/distribuicao/prompts/<agente>.md` com o bloco de regras
    comuns, para o OpenBot importar e o histórico ficar no git.
 
 ## 9. Decisões que ficam com o Markus
@@ -587,7 +599,7 @@ WhatsApp pelo OpenBot, agente que conversa com prospect. A conversa é do Markus
 1. Licença do OpenBot para uso comercial: paga, ou o time roda em outra ferramenta?
 2. Modelo pela assinatura da Claude (custo fixo, limite de uso) ou por chave de API
    (custo por token, sem disputar limite com o Claude Code)?
-3. Teto de rascunhos de distribuição por dia (sugestão: 3 dos 5 da fila).
+3. Teto de avisos do time por dia (hoje 3, em `DISTRIBUICAO_TETO_DIA`).
 4. Teto mensal de verba de mídia para a fase 3.
 5. O que fazer com `auto_ate` quando o prazo atual vencer.
 6. Se os relatórios internos ficam só no OpenBot ou também vão como aviso no grupo da
