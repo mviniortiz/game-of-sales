@@ -1,6 +1,6 @@
 ---
 name: vyzon-landing-art-director
-description: Use ao criar, refatorar ou polir a home do Vyzon (src/pages/SolarLanding.tsx) e as páginas por ângulo /raio-x/:angulo. Fixa o público (dono de integradora solar que vende pelo WhatsApp), a ordem das seções, a direção visual direta (Satoshi 900, botão preto com WhatsApp) e o que as páginas brasileiras de referência fazem e o Vyzon não copia.
+description: Use ao criar, refatorar ou polir a home do Vyzon (src/pages/SolarLanding.tsx) e as páginas por ângulo /raio-x/:angulo. Fixa o público (dono de integradora solar que vende pelo WhatsApp), a ordem das seções, a direção visual do design system Vyzon Solar (azul de marca, Archivo, números em Barlow Condensed, fatura e conversa) e o que as páginas brasileiras de referência fazem e o Vyzon não copia.
 ---
 
 # Diretor de arte da landing do Vyzon
@@ -39,21 +39,20 @@ topo (Raio-X, EVA, placar, rascunho, aprovação A2).
    responde ("Quem responde é o Markus, que criou o Vyzon. Sem compromisso").
    Logo abaixo, a linha de preço de fundador e, por último, um link discreto
    para o Raio-X automático.
-   À direita (abaixo, no celular), a **proposta de exemplo**: capa com módulos
-   sobre telhado de cerâmica, dados de sistema, carimbo "2 dias sem resposta"
-   e o aviso que chega no WhatsApp.
-2. **Números de mercado com fonte** (Greener, Opinion Box e Mobile Time) no
-   lugar de depoimento, porque ainda não há cliente pagante para citar. Só
-   número de fora: afirmação do Vyzon não entra vestida de estatística.
-3. **Calculadora**: o dono informa quantos orçamentos ficaram sem resposta
-   no último mês e o valor médio. A conta vai na mensagem do WhatsApp para o
-   Markus. É a pergunta que valida o ICP. Evento `calc_use`. O resultado tem
-   cara de fatura ("Sua conta do último mês").
-4. **Mock do produto**: lista de propostas e a aprovação no WhatsApp, no
-   formato real de `_shared/whatsappApproval.ts`.
+   À direita (abaixo, no celular), o **aviso no WhatsApp do dono** (objeto
+   Conversa): mensagem pronta para o Carlos, "Responda 1", o 1 e "Enviada".
+2. **Números de mercado com fonte** (NumeroComFonte): 18% de conversão e 25
+   orçamentos por mês, Greener 1º semestre de 2026, no lugar de depoimento.
+   Só número de fora, com estudo e período.
+3. **Calculadora** em faixa azul: o dono informa quantos orçamentos ficaram
+   sem resposta no último mês e o valor médio; o resultado sai na Fatura
+   ("Sua conta do último mês"). A conta vai na mensagem do WhatsApp para o
+   Markus. É a pergunta que valida o ICP. Evento `calc_use`.
+4. **Mock do produto**, claro: lista de propostas com carimbos de estado e a
+   conversa do Carlos depois da aprovação.
 5. **Como funciona como linha do tempo da proposta**: uma vez (conecta o
    WhatsApp), dia 0 (manda orçamento como sempre), dia 1 (cliente visualiza
-   e não responde), dia 2 (chega o aviso, único marcador amarelo).
+   e não responde), dia 2 (chega o aviso, único marco em azul).
 6. **Incluso + cartão de preço**: só o que existe no app. Preço de fundador
    R$ 97/mês nos 3 primeiros meses para as 10 primeiras integradoras, depois
    R$ 197/mês. Sem contrato (confirmado pelo Markus em 19/10/2026).
@@ -68,35 +67,36 @@ Conectar o WhatsApp num site recém-conhecido é pedir demais para o primeiro
 contato: na campanha de out/2026 foram 115 visitas, 9 cliques no botão e 0
 cadastros.
 
-## Direção visual: "do telhado ao WhatsApp" (LP.7, 22/10/2026)
+## Direção visual: design system "Vyzon Solar" (LP.8, 22/10/2026)
 
-A página fala a língua do integrador. A personalidade vem de objetos do dia a
-dia dele, não de enfeite de SaaS: a **proposta de energia solar** (com capa
-de módulos e carimbo de estado), a **fatura** e o **sol**. Bloco LP.7 em
-`src/index.css`.
+A fonte de verdade é o design system aprovado pelo Markus:
+https://claude.ai/artifact/Rm4n5dnbf8nPTb961BbsA2 (livro da marca, tokens e
+componentes). No código, o bloco LP.8 de `src/index.css` (escopo `.lp-solar`,
+classes `vs-*`) e `src/pages/SolarLanding.tsx`. Base da pesquisa de mercado:
+`docs/pesquisa/reports/Integradores solares e comunicação.md`.
 
-- Títulos em Satoshi 900 (`.lp-bold`), sans direta e grande. Sem serifa nos
-  títulos. A serifa itálica só aparece nas falas da seção de objeções, com as
-  aspas em amarelo.
-- Corpo em Geist/Inter, 15 a 19px, cor `--lp-ink-70`.
-- Botão principal: pill preto, texto branco, ícone do WhatsApp
-  (`WhatsAppIcon`) à esquerda. Fundo escuro pede botão claro.
-- Amarelo de sol (`--lp-sun` #f5b400) só como PREENCHIMENTO: marca-texto no
-  fim do título (`.lp-mark`, `.lp-mark--draw` no topo), no total da
-  calculadora, carimbos (`.lp-stamp`), etiqueta "Fundador", célula que marca
-  cada seção (`.lp-cell` dentro do `Eyebrow`) e faixa da calculadora
-  (`--lp-sun-soft`). Texto amarelo sobre papel não passa em contraste: para
-  texto use `--lp-sun-deep`.
-- Verde `--lp-live` só nos checks do incluso. Roxo `#6d28d9` só como
-  micro-acento da EVA. O azul `--lp-blue` saiu do título.
-- Módulo fotovoltaico desenhado em CSS (`.lp-panel`). Sem foto de banco de
-  telhado ou de "equipe": foto de cliente que não existe é depoimento
-  inventado. Foto real (do Markus, de integradora parceira com autorização)
-  entra quando existir.
+- Azul `--lp-blue` é a cor dona: segunda metade do título de seção
+  (`.vs-azul`), links, faixa da calculadora, Dia 2, anel de foco.
+- Amarelo `--lp-marker` só como marca-texto (`.vs-marca`) atrás de texto
+  `--lp-ink`, uma vez por tela: fim do título do topo, total da Fatura,
+  etiqueta do preço de fundador.
+- Papel neutro frio (`--lp-paper` #f6f7f9 dentro de `.lp-solar`). Nada de
+  creme, âmbar ou Satoshi: papel creme + azul-noite + âmbar + Satoshi é a
+  identidade da SolarMarket, que vende para o mesmo dono.
+- Títulos em Archivo 800 (`.vs-display`), texto em Geist, todo número que o
+  dono lê como número (R$, dias, kWp, %) em Barlow Condensed (`.vs-num`).
+- Objetos gráficos: Fatura (`.vs-fatura`), Conversa (`.vs-conversa`,
+  `.vs-bolha`), LinhaDoTempo (`.vs-tempo`), carimbo de estado
+  (`.vs-carimbo--espera|ok|neutro`, sempre com a palavra).
+- Botão principal `.vs-btn`: pill `--lp-ink`, ícone do WhatsApp em círculo
+  verde, sombra dura azul no hover. Sobre azul, `.vs-btn--claro`.
+- Sem foto de banco, sem telhado com painel, sem sol como ícone: foto de
+  cliente que não existe é depoimento inventado. Foto real (do Markus, de
+  integradora parceira com autorização) entra quando existir.
 - Todas as seções na mesma grade: `max-w-[1120px]`, `px-4 sm:px-5 md:px-8`,
-  título alinhado à esquerda. Nada de coluna estreita centralizada.
-- Ritmo de fundo: papel, faixa amarela (calculadora), escuro (mock), papel,
-  escuro (objeções), papel. Nunca dois blocos escuros colados.
+  título alinhado à esquerda.
+- Ritmo de fundo: papel, faixa azul (calculadora), papel, faixa `--lp-ink`
+  (objeções), papel. Nunca duas faixas escuras coladas.
 - Mobile primeiro: CTA visível na primeira tela, nada de rolagem lateral,
   inputs com 16px ou mais, botão que não cabe vira largura total.
 
