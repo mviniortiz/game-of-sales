@@ -5,9 +5,7 @@ import { trackEvent, trackDemoConversion, FUNNEL_EVENTS } from "@/lib/analytics"
 import { getAttribution } from "@/lib/attribution";
 import { logLandingEvent } from "@/lib/landingFunnel";
 import { whatsappUrl } from "@/config/contact";
-import { ButtonV2 } from "@/components/landing-v2/ButtonV2";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
-import { EvaBot } from "@/components/eva/EvaBot";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 
 // Home de produção: integradores de energia solar. O botão principal é a
@@ -64,17 +62,6 @@ const DESCRIPTION =
 // Tem que conter o prefill da automação de leads (automations, 20261009_automations_ad_leads):
 // é essa frase que faz a conversa virar lead do anúncio, lida pela EVA e avisada no grupo.
 const WHATSAPP_MESSAGE = "Oi, Markus. Vi o site e topo os 20 minutos. Quero ver quanto está parado nos meus orçamentos de energia solar.";
-
-// Tokens do mockup escuro (referência: dashboard denso, Geist 14px, cantos retos).
-const DARK = {
-    bg: "#161616",
-    line: "#232323",
-    text: "#f9fbff",
-    muted: "#7f7f7f",
-    dim: "#676767",
-    green: "#00b562",
-    amber: "#fbbf24",
-} as const;
 
 type FormState = {
     name: string;
@@ -161,7 +148,7 @@ const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
     }, [angle]);
 
     return (
-        <div className="lp-v2 min-h-screen" style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}>
+        <div className="lp-v2 lp-solar min-h-screen">
             <Header onWhatsapp={() => trackWhatsappClick("header")} />
             <main>
                 <Hero copy={copy} onCta={() => trackFormCta("hero")} onWhatsapp={() => trackWhatsappClick("hero")} />
@@ -179,92 +166,160 @@ const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
     );
 };
 
+// Design system "Vyzon Solar" (bloco LP.8 do index.css; referência em
+// https://claude.ai/artifact/Rm4n5dnbf8nPTb961BbsA2): azul é a cor dona,
+// marca-texto amarelo uma vez por tela, números em Barlow Condensed (.vs-num)
+// e a fatura e a conversa de WhatsApp como objetos gráficos.
+
 const Header = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
-    <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between px-5 py-5 md:px-8">
+    <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between px-4 py-5 sm:px-5 md:px-8">
         <Link to="/" aria-label="Vyzon, início">
             <ThemeLogo className="h-[22px] w-auto" />
         </Link>
         <div className="flex items-center gap-4">
-            <Link to="/auth" className="text-sm" style={{ color: "var(--lp-ink-55)" }}>
+            <Link to="/auth" className="text-sm" style={{ color: "var(--lp-ink-muted)" }}>
                 Entrar
             </Link>
-            <a href={whatsappUrl(WHATSAPP_MESSAGE)} target="_blank" rel="noopener noreferrer" className="vz-btn vz-btn--primary vz-btn--sm" onClick={onWhatsapp}>
-                <span>Falar com o Markus</span>
+            <a
+                href={whatsappUrl(WHATSAPP_MESSAGE)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="vs-btn"
+                style={{ minHeight: 40, padding: "0 16px", fontSize: 14 }}
+                onClick={onWhatsapp}
+            >
+                Falar com o Markus
             </a>
         </div>
     </header>
 );
 
+const WaIcon = () => (
+    <span className="vs-btn__wa" aria-hidden="true">
+        <WhatsAppIcon />
+    </span>
+);
+
+// Texto à esquerda e, à direita, o aviso que chega no WhatsApp do dono: o
+// produto inteiro numa olhada. O fim do título leva o marca-texto da tela.
 const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void; onWhatsapp: () => void }) => (
-    <section className="mx-auto w-full max-w-[1120px] px-5 pb-8 pt-4 text-center md:px-8 md:pb-14 md:pt-20" aria-label="Topo">
-        <p className="mx-auto max-w-[620px] text-[15px] font-semibold landing-fade-in-up-lg" style={{ color: "#050505", textWrap: "balance" }}>
-            {copy.kicker}
-        </p>
-        {/* Sans pesada em vez da serifa editorial: as páginas que convertem com
-            integrador (Heliux, Azume, SolarZ, InfinitePay) falam alto e direto. */}
-        <h1
-            className="lp-bold mx-auto mt-3 max-w-[920px] landing-fade-in-up-lg landing-delay-100 md:mt-4"
-            style={{ fontSize: "clamp(2rem, 5.4vw, 4.1rem)", lineHeight: 1.04, color: "#050505", textWrap: "balance" }}
-        >
-            {copy.h1}{" "}
-            <span style={{ color: "var(--lp-blue)" }}>{copy.h1Accent}</span>
-        </h1>
-        <p
-            className="mx-auto mt-5 max-w-[600px] landing-fade-in-up-lg landing-delay-200 md:mt-6"
-            style={{ fontSize: "clamp(1.0625rem, 1.4vw, 1.1875rem)", lineHeight: 1.55, color: "rgba(5,5,5,0.78)" }}
-        >
-            {copy.sub}
-        </p>
-        <div className="mx-auto mt-7 flex max-w-[380px] flex-col items-stretch gap-3 landing-fade-in-up-lg landing-delay-300 md:mt-8">
-            <WhatsappCta placement={onWhatsapp}>Falar com o Markus no WhatsApp</WhatsappCta>
-            <p className="text-[14px]" style={{ color: "rgba(5,5,5,0.68)", textWrap: "balance" }}>
-                Quem responde é o Markus, que criou o Vyzon. Sem compromisso.
+    <section
+        className="mx-auto grid w-full max-w-[1120px] items-center gap-12 px-4 pb-16 pt-4 sm:px-5 md:grid-cols-[1.12fr_0.88fr] md:px-8 md:pb-24 md:pt-14"
+        aria-label="Topo"
+    >
+        <div>
+            <p className="text-[15px] font-semibold landing-fade-in-up-lg">{copy.kicker}</p>
+            {/* Archivo 800 em vez da serifa editorial: as páginas que convertem com
+                integrador (Heliux, Azume, InfinitePay) falam alto e direto. */}
+            <h1
+                className="vs-display mt-4 landing-fade-in-up-lg landing-delay-100"
+                style={{ fontSize: "clamp(2rem, 3.7vw, 3.05rem)", lineHeight: 1.04 }}
+            >
+                {copy.h1} <span className="vs-marca vs-marca--draw">{copy.h1Accent}</span>
+            </h1>
+            <p
+                className="mt-5 max-w-[540px] landing-fade-in-up-lg landing-delay-200 md:mt-6"
+                style={{ fontSize: "clamp(1.0625rem, 1.4vw, 1.1875rem)", lineHeight: 1.55, color: "var(--lp-ink-muted)" }}
+            >
+                {copy.sub}
             </p>
+            <div className="mt-7 flex flex-col items-stretch gap-3 landing-fade-in-up-lg landing-delay-300 sm:items-start md:mt-8">
+                <WhatsappCta placement={onWhatsapp}>Falar com o Markus no WhatsApp</WhatsappCta>
+                <p className="text-[14px]" style={{ color: "var(--lp-ink-subtle)" }}>
+                    Quem responde é o Markus, que criou o Vyzon. Sem compromisso.
+                </p>
+            </div>
+            <PriceLine className="mt-7 max-w-[520px]" />
+            <Link to={RAIO_X_AUTO} className="vs-azul mt-4 inline-block text-[14px] underline underline-offset-4" onClick={onCta}>
+                Prefere ver sozinho? Veja em 3 minutos o que ficou sem resposta
+            </Link>
         </div>
-        <PriceLine className="mx-auto mt-6 max-w-[520px]" />
-        <Link to={RAIO_X_AUTO} className="mt-5 inline-block text-[14px] underline underline-offset-4" style={{ color: "var(--lp-ink-55)" }} onClick={onCta}>
-            Prefere ver sozinho? Veja em 3 minutos o que ficou sem resposta
-        </Link>
+        <AvisoNoWhatsApp />
     </section>
 );
 
 const WhatsappCta = ({ placement, children }: { placement: () => void; children: ReactNode }) => (
-    <a href={whatsappUrl(WHATSAPP_MESSAGE)} target="_blank" rel="noopener noreferrer" className="vz-btn vz-btn--primary justify-center gap-2" onClick={placement}>
-        <WhatsAppIcon className="h-[18px] w-[18px]" />
+    <a href={whatsappUrl(WHATSAPP_MESSAGE)} target="_blank" rel="noopener noreferrer" className="vs-btn" onClick={placement}>
+        <WaIcon />
         <span>{children}</span>
     </a>
 );
 
+// O aviso no WhatsApp do dono, no formato da aprovação real
+// (supabase/functions/_shared/whatsappApproval.ts), simplificado para "responda
+// 1" sem o código curto nem nome interno. Dados de exemplo.
+const AvisoNoWhatsApp = () => (
+    <figure className="mx-auto w-full max-w-[420px] landing-fade-in-up-lg landing-delay-200" aria-label="Exemplo: o aviso que chega no seu WhatsApp no 2º dia">
+        <div className="vs-conversa">
+            <div className="vs-conversa__topo">
+                <span className="vs-conversa__avatar" aria-hidden="true">
+                    V
+                </span>
+                <div className="min-w-0">
+                    <p className="vs-conversa__nome">Aviso do Vyzon</p>
+                    <p className="vs-conversa__status">no seu WhatsApp</p>
+                </div>
+            </div>
+            <div className="vs-conversa__corpo">
+                <span className="vs-conversa__dia">Quarta</span>
+                <div className="vs-bolha">
+                    <p className="font-semibold">Mensagem pronta para o Carlos</p>
+                    <p className="text-[13px]" style={{ color: "var(--lp-ink-muted)" }}>
+                        Residência Oliveira · proposta de <span className="vs-num text-[15px] font-semibold">R$ 24.900</span> sem resposta há 2 dias
+                    </p>
+                    <p className="vs-bolha__rascunho">
+                        Oi, Carlos, conseguiu olhar a proposta? Se ajudar, te mando a simulação com financiamento pra comparar com a sua conta de luz.
+                    </p>
+                    <p style={{ color: "var(--lp-ink-muted)" }}>Responda 1 e ela sai do seu número.</p>
+                    <span className="vs-bolha__hora">09:02</span>
+                </div>
+                <div className="vs-bolha vs-bolha--saida">
+                    1<span className="vs-bolha__hora">09:03</span>
+                </div>
+                <div className="vs-bolha">
+                    Enviada para o Carlos.<span className="vs-bolha__hora">09:03</span>
+                </div>
+            </div>
+        </div>
+        <figcaption className="mt-3 text-right text-[12px]" style={{ color: "var(--lp-ink-subtle)" }}>
+            Exemplo
+        </figcaption>
+    </figure>
+);
+
 // Preço à vista, como na Heliux ("R$ 390 até 90 placas" no topo). Escassez
 // real: o preço de fundador vale para as 10 primeiras integradoras
-// (src/config/plans.ts).
+// (src/config/plans.ts). Carimbo neutro: o marca-texto da tela é o do título.
 const PriceLine = ({ className = "" }: { className?: string }) => (
-    <p className={`rounded-[12px] border px-4 py-3 text-[14.5px] leading-snug ${className}`} style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)", color: "var(--lp-ink-70)" }}>
-        <strong style={{ color: "var(--lp-ink)" }}>R$ 97 por mês</strong> nos 3 primeiros meses para as 10 primeiras integradoras. Depois, R$ 197 por mês. Sem
-        contrato.
+    <p className={`flex items-start gap-3 text-[14.5px] leading-snug ${className}`} style={{ color: "var(--lp-ink-muted)" }}>
+        <span className="vs-carimbo vs-carimbo--neutro mt-[1px]">Fundador</span>
+        <span>
+            <strong className="vs-num text-[17px]" style={{ color: "var(--lp-ink)" }}>
+                R$ 97 por mês
+            </strong>{" "}
+            nos 3 primeiros meses para as 10 primeiras integradoras. Depois, R$ 197 por mês. Sem contrato.
+        </span>
     </p>
 );
 
 // Números de mercado com fonte, no lugar de depoimento: ainda não há cliente
-// pagante para citar, e número inventado é proibido (Claims Policy).
+// pagante para citar, e número inventado é proibido (Claims Policy). Só número
+// de fora, com estudo e período.
 const NUMBERS = [
-    ["22", "orçamentos por mês faz, em média, uma integradora com mais de 2 anos.", "Greener, Estudo Estratégico de Geração Distribuída, 2025."],
-    ["62%", "dos consumidores já desistiram de uma compra por demora na resposta.", "Opinion Box e Mobile Time, Panorama Mensageria 2025."],
-    ["2º dia", "sem resposta é quando o Vyzon te avisa, com a mensagem pronta.", "Como o Vyzon funciona."],
+    ["18%", "dos orçamentos viram venda, em média, numa integradora. Quatro em cada cinco se perdem.", "Greener, Estudo Estratégico de Geração Distribuída, 1º semestre de 2026."],
+    ["25", "orçamentos por mês faz uma integradora típica, com equipe de até 4 pessoas.", "Greener, Estudo Estratégico de Geração Distribuída, 1º semestre de 2026."],
 ] as const;
 
 const Numbers = () => (
-    <section className="mx-auto w-full max-w-[1120px] px-4 pb-14 sm:px-5 md:px-8 md:pb-20" aria-label="Números">
-        <ul className="grid gap-3 md:grid-cols-3 md:gap-4">
+    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-24" aria-label="Números">
+        <ul className="vs-prova">
             {NUMBERS.map(([n, texto, fonte]) => (
-                <li key={n} className="rounded-[12px] border p-5" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
-                    <p className="lp-bold text-[40px] leading-none tabular-nums" style={{ color: "var(--lp-ink)" }}>
-                        {n}
-                    </p>
-                    <p className="mt-2 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
+                <li key={n} className="vs-prova__item">
+                    <p className="vs-num text-[56px] font-bold leading-none md:text-[64px]">{n}</p>
+                    <p className="mt-3 max-w-[440px] text-[16px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
                         {texto}
                     </p>
-                    <p className="mt-2 text-[12.5px]" style={{ color: "var(--lp-ink-40)" }}>
+                    <p className="mt-2 text-[12.5px]" style={{ color: "var(--lp-ink-subtle)" }}>
                         {fonte}
                     </p>
                 </li>
@@ -273,10 +328,10 @@ const Numbers = () => (
     </section>
 );
 
-// A conta que o dono faz sozinho, no lugar do "R$ 101.000" de exemplo: o
-// número é dele, não nosso. É também a pergunta que valida o ICP (quantas
-// propostas ficaram sem resposta no último mês e quanto somam), e a resposta
-// vai junto na mensagem do WhatsApp. Mantém o prefill da automação de leads.
+// A conta que o dono faz sozinho: o número é dele, não nosso. É também a
+// pergunta que valida o ICP (quantas propostas ficaram sem resposta no último
+// mês e quanto somam), e a resposta vai junto na mensagem do WhatsApp. Mantém o
+// prefill da automação de leads.
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const TICKETS = [15000, 25000, 40000, 80000];
 
@@ -296,34 +351,32 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
         setQtd((q) => Math.min(200, Math.max(0, q + d)));
     };
 
+    // Faixa azul de ponta a ponta (a cor dona) e o resultado em forma de fatura:
+    // o dono vive de conta de luz, e aqui a conta é a do dinheiro parado.
     return (
-        <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-24" aria-label="Calculadora">
-            <div className="grid gap-8 rounded-[16px] p-6 md:grid-cols-2 md:gap-12 md:p-10" style={{ background: "var(--lp-ink)", color: "#f9fbff" }}>
+        <section className="py-16 md:py-24" style={{ background: "var(--lp-blue)", color: "var(--lp-white)" }} aria-label="Calculadora">
+            <div className="mx-auto grid w-full max-w-[1120px] items-center gap-10 px-4 sm:px-5 md:grid-cols-2 md:gap-14 md:px-8">
                 <div>
-                    <p className="text-[13px] font-medium uppercase tracking-[0.08em]" style={{ color: "rgba(249,251,255,0.55)" }}>
-                        Faça a conta da sua integradora
-                    </p>
-                    <h2 className="lp-bold mt-2 text-[28px] leading-[1.1] md:text-[38px]" style={{ textWrap: "balance" }}>
-                        Quanto está esperando alguém chamar de volta?
-                    </h2>
-                    <div className="mt-7">
-                        <p className="text-[15px]" style={{ color: "rgba(249,251,255,0.75)" }}>
+                    <Eyebrow light>Faça a conta da sua integradora</Eyebrow>
+                    <SectionTitle light>Quanto está esperando alguém chamar de volta?</SectionTitle>
+                    <div className="mt-8">
+                        <p className="text-[15px]" style={{ color: "rgba(255,255,255,0.85)" }}>
                             Orçamentos que ficaram sem resposta no último mês
                         </p>
                         <div className="mt-2 flex items-center gap-3">
-                            <button type="button" aria-label="Menos um" onClick={() => step(-1)} className="h-11 w-11 rounded-full border text-[20px]" style={{ borderColor: "rgba(249,251,255,0.25)" }}>
+                            <button type="button" aria-label="Menos um" onClick={() => step(-1)} className={stepperCls}>
                                 −
                             </button>
-                            <output className="lp-bold w-16 text-center text-[32px] tabular-nums" aria-live="polite">
+                            <output className="vs-num w-16 text-center text-[34px] font-bold" aria-live="polite">
                                 {qtd}
                             </output>
-                            <button type="button" aria-label="Mais um" onClick={() => step(1)} className="h-11 w-11 rounded-full border text-[20px]" style={{ borderColor: "rgba(249,251,255,0.25)" }}>
+                            <button type="button" aria-label="Mais um" onClick={() => step(1)} className={stepperCls}>
                                 +
                             </button>
                         </div>
                     </div>
                     <div className="mt-6">
-                        <p className="text-[15px]" style={{ color: "rgba(249,251,255,0.75)" }}>
+                        <p className="text-[15px]" style={{ color: "rgba(255,255,255,0.85)" }}>
                             Valor médio de um orçamento
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Valor médio de um orçamento">
@@ -337,11 +390,11 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                                         marcar();
                                         setTicket(t);
                                     }}
-                                    className="h-10 rounded-full border px-4 text-[14.5px] font-medium transition-colors motion-reduce:transition-none"
+                                    className="vs-num h-10 rounded-full border-2 px-4 text-[17px] font-semibold transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transition-none"
                                     style={
                                         ticket === t
-                                            ? { background: "#f9fbff", color: "var(--lp-ink)", borderColor: "#f9fbff" }
-                                            : { borderColor: "rgba(249,251,255,0.25)", color: "#f9fbff" }
+                                            ? { background: "var(--lp-white)", color: "var(--lp-ink)", borderColor: "var(--lp-white)" }
+                                            : { background: "transparent", color: "var(--lp-white)", borderColor: "rgba(255,255,255,0.5)" }
                                     }
                                 >
                                     {brl(t)}
@@ -350,23 +403,34 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                         </div>
                     </div>
                 </div>
-                <div className="flex min-w-0 flex-col justify-center rounded-[12px] p-5 md:p-8" style={{ background: "rgba(249,251,255,0.06)" }}>
-                    <p className="text-[15px]" style={{ color: "rgba(249,251,255,0.7)" }}>
-                        Pela sua conta, no último mês:
-                    </p>
-                    <p className="lp-bold mt-2 text-[44px] leading-none tabular-nums md:text-[56px]">{brl(total)}</p>
-                    <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "rgba(249,251,255,0.75)" }}>
-                        em orçamentos que ninguém chamou de volta. O Vyzon custa R$ 197 por mês.
-                    </p>
-                    <a
-                        href={whatsappUrl(msg)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={onWhatsapp}
-                        className="vz-btn mt-6 justify-center gap-2 self-stretch sm:self-start"
-                        style={{ background: "#f9fbff", color: "var(--lp-ink)" }}
-                    >
-                        <WhatsAppIcon className="h-[18px] w-[18px]" />
+                <div className="vs-fatura flex min-w-0 flex-col">
+                    <div className="vs-fatura__topo">
+                        <span className="vs-fatura__titulo">Sua conta do último mês</span>
+                        <span className="vs-fatura__ref">pela sua conta</span>
+                    </div>
+                    <dl className="mt-3 grid gap-2">
+                        <div className="vs-fatura__linha">
+                            <dt>Orçamentos sem resposta</dt>
+                            <dd className="vs-num">{qtd}</dd>
+                        </div>
+                        <div className="vs-fatura__linha">
+                            <dt>Valor médio de cada um</dt>
+                            <dd className="vs-num">{brl(ticket)}</dd>
+                        </div>
+                    </dl>
+                    <div className="vs-fatura__total mt-4 pt-4">
+                        <p className="text-[14.5px]" style={{ color: "var(--lp-ink-muted)" }}>
+                            Esperando alguém chamar de volta
+                        </p>
+                        <p className="vs-num mt-1 text-[48px] font-bold leading-none md:text-[60px]">
+                            <span className="vs-marca">{brl(total)}</span>
+                        </p>
+                        <p className="mt-3 text-[14.5px]" style={{ color: "var(--lp-ink-muted)" }}>
+                            O Vyzon custa R$ 197 por mês.
+                        </p>
+                    </div>
+                    <a href={whatsappUrl(msg)} target="_blank" rel="noopener noreferrer" onClick={onWhatsapp} className="vs-btn mt-6 self-stretch sm:self-start">
+                        <WaIcon />
                         <span>Mandar essa conta pro Markus</span>
                     </a>
                 </div>
@@ -375,26 +439,35 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
     );
 };
 
+const stepperCls =
+    "h-11 w-11 rounded-full border-2 border-white/60 text-[20px] text-white transition-colors duration-150 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transition-none";
+
+// A vida de um orçamento, do envio ao aviso. O 2º dia é o único marco em azul,
+// porque é ali que o Vyzon entra.
 const HOW = [
-    ["Conecte o seu WhatsApp", "Pelo código no celular, como no WhatsApp Web. O número continua o mesmo."],
-    ["Mande orçamento como sempre", "Cada proposta que sai do seu WhatsApp entra na lista sozinha. Você não cadastra nada."],
-    ["No 2º dia sem resposta, chega o aviso", "Com a mensagem pronta, no seu tom. Você responde 1 e ela sai do seu número."],
+    ["1×", "Uma vez", "Conecte o seu WhatsApp", "Pelo código no celular, como no WhatsApp Web. O número continua o mesmo."],
+    ["0", "Dia 0", "Mande orçamento como sempre", "Cada proposta que sai do seu WhatsApp entra na lista sozinha. Você não cadastra nada."],
+    ["1", "Dia 1", "O cliente visualiza e não responde", "Ficou pensando na parcela, na garantia ou na conversa em casa. Você segue o seu dia."],
+    ["2", "Dia 2", "Chega o aviso com a mensagem pronta", "No seu tom. Você responde 1 e ela sai do seu número."],
 ] as const;
 
 const HowItWorks = () => (
-    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-24" aria-label="Como funciona">
+    <section className="mx-auto w-full max-w-[1120px] px-4 py-16 sm:px-5 md:px-8 md:py-24" aria-label="Como funciona">
         <Eyebrow>Como funciona</Eyebrow>
-        <SectionTitle>Você continua no WhatsApp. O Vyzon lembra por você.</SectionTitle>
-        <ol className="mt-8 grid gap-3 md:mt-10 md:grid-cols-3 md:gap-4">
-            {HOW.map(([titulo, texto], i) => (
-                <li key={titulo} className="rounded-[12px] border p-5 md:p-6" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
-                    <span className="lp-bold flex h-9 w-9 items-center justify-center rounded-full text-[15px]" style={{ background: "var(--lp-ink)", color: "#fff" }} aria-hidden="true">
-                        {i + 1}
+        <SectionTitle>
+            Você continua no WhatsApp. <span className="vs-azul">O Vyzon lembra por você.</span>
+        </SectionTitle>
+        <ol className="vs-tempo mt-10 md:mt-14">
+            {HOW.map(([marco, dia, titulo, texto], i) => (
+                <li key={titulo} className={`vs-tempo__passo${i === HOW.length - 1 ? " vs-tempo__passo--aviso" : ""}`}>
+                    <span className="vs-tempo__dia vs-num" aria-hidden="true">
+                        {marco}
                     </span>
-                    <h3 className="mt-4 text-[18px] font-semibold leading-snug" style={{ color: "var(--lp-ink)" }}>
+                    <p className="vs-label">{dia}</p>
+                    <h3 className="vs-display mt-1.5 text-[19px] font-bold leading-snug" style={{ letterSpacing: "-0.01em" }}>
                         {titulo}
                     </h3>
-                    <p className="mt-2 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
+                    <p className="mt-2 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
                         {texto}
                     </p>
                 </li>
@@ -417,14 +490,16 @@ const INCLUDED = [
 
 const Offer = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
     <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-24" aria-label="O que está incluso">
-        <div className="grid gap-6 md:grid-cols-[1.2fr_1fr] md:gap-10">
+        <div className="grid gap-12 md:grid-cols-[1.2fr_1fr] md:gap-10">
             <div>
                 <Eyebrow>O que está incluso</Eyebrow>
-                <SectionTitle>Tudo liberado, um preço só</SectionTitle>
+                <SectionTitle>
+                    Tudo liberado, <span className="vs-azul">um preço só</span>
+                </SectionTitle>
                 <ul className="mt-7 space-y-3.5">
                     {INCLUDED.map((item) => (
-                        <li key={item} className="flex gap-3 text-[16px] leading-relaxed md:text-[17px]" style={{ color: "var(--lp-ink-90)" }}>
-                            <span aria-hidden="true" className="mt-[3px] flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[12px] font-bold" style={{ background: "var(--lp-live)", color: "#fff" }}>
+                        <li key={item} className="flex gap-3 text-[16px] leading-relaxed md:text-[17px]">
+                            <span aria-hidden="true" className="font-bold" style={{ color: "var(--lp-ok)" }}>
                                 ✓
                             </span>
                             {item}
@@ -432,22 +507,18 @@ const Offer = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
                     ))}
                 </ul>
             </div>
-            <div className="rounded-[16px] border p-6 md:p-8" style={{ borderColor: "var(--lp-ink)", background: "var(--lp-white)" }}>
-                <p className="text-[14px] font-semibold uppercase tracking-[0.06em]" style={{ color: "var(--lp-blue)" }}>
-                    Preço de fundador
-                </p>
-                <p className="mt-3 flex items-baseline gap-2">
-                    <span className="lp-bold text-[52px] leading-none tabular-nums" style={{ color: "var(--lp-ink)" }}>
-                        R$ 97
-                    </span>
-                    <span className="text-[16px]" style={{ color: "var(--lp-ink-55)" }}>
+            <div className="vs-preco self-start">
+                <span className="vs-preco__etiqueta">Preço de fundador</span>
+                <p className="flex items-baseline gap-2">
+                    <span className="vs-num text-[72px] font-bold leading-[0.95]">R$ 97</span>
+                    <span className="text-[16px]" style={{ color: "var(--lp-ink-muted)" }}>
                         por mês
                     </span>
                 </p>
-                <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
+                <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
                     Nos 3 primeiros meses, para as 10 primeiras integradoras. Depois, R$ 197 por mês.
                 </p>
-                <p className="mt-4 border-t pt-4 text-[15px] leading-relaxed" style={{ borderColor: "var(--lp-line)", color: "var(--lp-ink-70)" }}>
+                <p className="mt-4 border-t pt-4 text-[15px] font-semibold leading-relaxed" style={{ borderColor: "var(--lp-line)" }}>
                     Sem contrato: você paga mês a mês e para quando quiser.
                 </p>
                 <div className="mt-6 flex flex-col">
@@ -458,21 +529,22 @@ const Offer = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
     </section>
 );
 
-// Mockup do produto: as propostas acompanhadas e o WhatsApp do dono recebendo
-// a retomada no mesmo formato da aprovação real (buildDraftMessage em
-// supabase/functions/_shared/whatsappApproval.ts). Dados de exemplo. Lista em
-// vez de tabela: no celular a situação de cada proposta precisa caber na tela.
-const PROPOSALS = [
-    { client: "Residência Oliveira", system: "6,2 kWp", value: "R$ 24.900", sent: "há 2 dias", status: "sem resposta", tone: DARK.amber },
-    { client: "Mercado Bom Preço", system: "38 kWp", value: "R$ 118.000", sent: "há 6 h", status: "aguardando", tone: DARK.muted },
-    { client: "Sítio Santa Luzia", system: "15 kWp", value: "R$ 52.300", sent: "há 5 dias", status: "chamou de novo", tone: DARK.green },
-    { client: "Clínica Vida", system: "11 kWp", value: "R$ 39.800", sent: "há 4 dias", status: "sem resposta", tone: DARK.amber },
-    { client: "Casa Fernandes", system: "4,5 kWp", value: "R$ 18.700", sent: "há 9 dias", status: "fechou", tone: DARK.green },
+// Mockup do produto: as propostas acompanhadas e a conversa do Carlos depois
+// da aprovação. Objetos do design system em vez do painel escuro: a conversa é
+// o WhatsApp de verdade, claro. Dados de exemplo. Lista em vez de tabela: no
+// celular a situação de cada proposta precisa caber na tela.
+type Estado = "espera" | "ok" | "neutro";
+const PROPOSALS: { client: string; system: string; value: string; sent: string; status: string; estado: Estado }[] = [
+    { client: "Residência Oliveira", system: "6,2 kWp", value: "R$ 24.900", sent: "há 2 dias", status: "sem resposta", estado: "espera" },
+    { client: "Mercado Bom Preço", system: "38 kWp", value: "R$ 118.000", sent: "há 6 h", status: "aguardando", estado: "neutro" },
+    { client: "Sítio Santa Luzia", system: "15 kWp", value: "R$ 52.300", sent: "há 5 dias", status: "chamou de novo", estado: "ok" },
+    { client: "Clínica Vida", system: "11 kWp", value: "R$ 39.800", sent: "há 4 dias", status: "sem resposta", estado: "espera" },
+    { client: "Casa Fernandes", system: "4,5 kWp", value: "R$ 18.700", sent: "há 9 dias", status: "fechou", estado: "ok" },
 ];
 
-// O total do exemplo sobe até o valor final na primeira tela: mostra o resultado
-// do Raio-X antes de a pessoa rolar. Começa no valor final (prerender e
-// movimento reduzido mostram o número pronto) e só anima no navegador.
+// O total do exemplo sobe até o valor final quando a página abre. Começa no
+// valor final (prerender e movimento reduzido mostram o número pronto) e só
+// anima no navegador.
 const PARADO_EXEMPLO = 64700;
 const CountUp = ({ to, ms = 1100, delay = 450 }: { to: number; ms?: number; delay?: number }) => {
     const [n, setN] = useState(to);
@@ -492,108 +564,64 @@ const CountUp = ({ to, ms = 1100, delay = 450 }: { to: number; ms?: number; dela
     return <>{n.toLocaleString("pt-BR")}</>;
 };
 
-const Dot = ({ color }: { color: string }) => (
-    <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 999, background: color, display: "inline-block", flexShrink: 0 }} />
-);
-
 const ProductMock = () => (
-    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-24" aria-label="Como o Vyzon aparece pra você">
-        <div
-            className="overflow-hidden"
-            style={{
-                background: DARK.bg,
-                color: DARK.text,
-                border: `1px solid ${DARK.line}`,
-                borderRadius: 12,
-                fontFamily: "Geist, Inter, system-ui, sans-serif",
-                fontSize: 14,
-                boxShadow: "0 1px 2px rgba(15,23,42,0.06), 0 30px 60px -30px rgba(15,23,42,0.45)",
-            }}
-        >
-            <div className="grid md:grid-cols-[1.5fr_1fr]">
-                <div className="min-w-0 md:border-r" style={{ borderColor: DARK.line }}>
-                    <div className="flex items-center justify-between gap-3 px-4 py-3" style={{ borderBottom: `1px solid ${DARK.line}` }}>
-                        <span className="font-medium">Propostas acompanhadas</span>
-                        <span className="inline-flex items-center gap-2 tabular-nums" style={{ color: DARK.amber, fontSize: 12.5 }}>
-                            <Dot color={DARK.amber} />
-                            R$ <CountUp to={PARADO_EXEMPLO} /> parados
+    <section className="mx-auto w-full max-w-[1120px] px-4 pt-16 sm:px-5 md:px-8 md:pt-24" aria-label="Como o Vyzon aparece pra você">
+        <Eyebrow>Exemplo</Eyebrow>
+        <SectionTitle>
+            Cada proposta que sai do seu WhatsApp <span className="vs-azul">entra na lista sozinha</span>
+        </SectionTitle>
+        <div className="mt-10 grid items-start gap-6 md:mt-12 md:grid-cols-[1.25fr_1fr]">
+            <div className="vs-conversa">
+                <div className="flex items-center justify-between gap-3 border-b px-4 py-3" style={{ borderColor: "var(--lp-line)" }}>
+                    <span className="font-semibold">Propostas acompanhadas</span>
+                    <span className="vs-carimbo vs-carimbo--espera">
+                        <span className="vs-num text-[14px]">
+                            R$ <CountUp to={PARADO_EXEMPLO} />
                         </span>
-                    </div>
-                    <ul>
-                        {PROPOSALS.map((p, i) => (
-                            <li
-                                key={p.client}
-                                className={`mock-row flex items-center justify-between gap-3 px-4 py-3${p.status === "sem resposta" ? " mock-row--parada" : ""}`}
-                                style={{ borderBottom: `1px solid ${DARK.line}`, animationDelay: p.status === "sem resposta" ? `${200 + i * 110}ms, 1700ms` : `${200 + i * 110}ms` }}
-                            >
-                                <div className="min-w-0">
-                                    <p className="truncate">{p.client}</p>
-                                    <p className="mt-0.5 truncate tabular-nums" style={{ color: DARK.dim, fontSize: 12.5 }}>
-                                        {p.system} · enviada {p.sent}
-                                    </p>
-                                </div>
-                                <div className="shrink-0 text-right">
-                                    <p className="tabular-nums">{p.value}</p>
-                                    <p className="mt-0.5 inline-flex items-center gap-1.5" style={{ color: p.tone === DARK.muted ? DARK.muted : p.tone, fontSize: 12.5 }}>
-                                        <Dot color={p.tone} />
-                                        {p.status}
-                                    </p>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                    <p className="hidden px-4 py-4 md:block" style={{ color: DARK.dim, fontSize: 12.5 }}>
-                        Cada proposta que sai do seu WhatsApp entra nessa lista sozinha. Você não cadastra nada.
-                    </p>
+                        &nbsp;parados
+                    </span>
                 </div>
+                <ul>
+                    {PROPOSALS.map((p) => (
+                        <li key={p.client} className="flex items-center justify-between gap-3 border-b px-4 py-3 last:border-b-0" style={{ borderColor: "var(--lp-line)" }}>
+                            <div className="min-w-0">
+                                <p className="truncate font-medium">{p.client}</p>
+                                <p className="mt-0.5 truncate text-[13px]" style={{ color: "var(--lp-ink-subtle)" }}>
+                                    <span className="vs-num text-[14.5px]">{p.system}</span> · enviada {p.sent}
+                                </p>
+                            </div>
+                            <div className="flex shrink-0 flex-col items-end gap-1">
+                                <p className="vs-num text-[18px] font-semibold">{p.value}</p>
+                                <span className={`vs-carimbo vs-carimbo--${p.estado}`}>{p.status}</span>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            </div>
 
-                {/* Duas conversas do WhatsApp do dono, uma embaixo da outra: a EVA
-                    entrega o rascunho e ele responde 1; a mensagem sai do número dele
-                    para o Carlos. */}
-                <div className="flex flex-col border-t md:border-t-0" style={{ background: WA.bg, borderColor: DARK.line, fontFamily: "Inter, system-ui, sans-serif" }}>
-                    <WaHeader avatar={<EvaBot size={32} />} name="EVA" sub="online" />
-                    <div className="flex flex-col gap-1 px-3 pb-4 pt-3">
-                        <WaDay>Hoje</WaDay>
-                        <WaBubble time="09:02" tail>
-                            <p className="font-semibold">EVA [A2] rascunho pronto</p>
-                            <p className="mt-1" style={{ color: WA.meta }}>
-                                Lead: Carlos · Residência Oliveira
-                                <br />
-                                Por que agora: 2 dias sem resposta depois da proposta
-                            </p>
-                            <p className="mt-1.5">
-                                Oi, Carlos, tudo bem? Conseguiu olhar a proposta do sistema? Se ajudar, te mando a simulação com financiamento pra
-                                comparar com a sua conta de luz de hoje.
-                            </p>
-                            <p className="mt-1.5" style={{ color: WA.meta }}>
-                                Responda A2 1 para enviar, A2 2 para descartar, ou escreva o texto corrigido.
-                            </p>
-                        </WaBubble>
-                        <WaBubble out time="09:03" tail>
-                            A2 1
-                        </WaBubble>
-                        <WaBubble time="09:03" tail>
-                            EVA Enviado para Carlos.
-                        </WaBubble>
+            <div className="vs-conversa">
+                <div className="vs-conversa__topo">
+                    <span className="vs-conversa__avatar vs-conversa__avatar--cliente" aria-hidden="true">
+                        C
+                    </span>
+                    <div className="min-w-0">
+                        <p className="vs-conversa__nome truncate">Carlos · Residência Oliveira</p>
+                        <p className="vs-conversa__status">online</p>
                     </div>
-
-                    <WaHeader
-                        avatar={
-                            <span className="flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-semibold" style={{ background: "#6a7175", color: "#fff" }}>
-                                C
-                            </span>
-                        }
-                        name="Carlos · Residência Oliveira"
-                        sub="online"
-                    />
-                    <div className="flex flex-1 flex-col gap-1 px-3 pb-4 pt-3">
-                        <WaBubble out time="09:03" tail>
-                            Oi, Carlos, tudo bem? Conseguiu olhar a proposta do sistema? Se ajudar, te mando a simulação com financiamento pra comparar com a
-                            sua conta de luz de hoje.
-                        </WaBubble>
-                        <WaBubble time="09:05" tail>
-                            Oi! Consegui sim, pode mandar a simulação.
-                        </WaBubble>
+                </div>
+                <div className="vs-conversa__corpo">
+                    <span className="vs-conversa__dia">Segunda</span>
+                    <div className="vs-bolha vs-bolha--saida">
+                        Carlos, segue a proposta do sistema de <span className="vs-num text-[15.5px]">6,2 kWp</span>. Qualquer dúvida me chama.
+                        <span className="vs-bolha__hora">09:14</span>
+                    </div>
+                    <span className="vs-conversa__dia">Quarta · 2 dias sem resposta</span>
+                    <div className="vs-bolha vs-bolha--saida">
+                        Oi, Carlos, conseguiu olhar a proposta? Se ajudar, te mando a simulação com financiamento pra comparar com a sua conta de luz.
+                        <span className="vs-bolha__hora">09:03</span>
+                    </div>
+                    <div className="vs-bolha">
+                        Oi! Consegui sim, pode mandar a simulação.<span className="vs-bolha__hora">09:05</span>
                     </div>
                 </div>
             </div>
@@ -601,74 +629,14 @@ const ProductMock = () => (
     </section>
 );
 
-// Cores do WhatsApp no modo escuro, para o mockup parecer o app de verdade.
-const WA = {
-    bg: "#0b141a",
-    bar: "#202c33",
-    in: "#202c33",
-    out: "#005c4b",
-    text: "#e9edef",
-    meta: "#8696a0",
-    read: "#53bdeb",
-} as const;
-
-const WaHeader = ({ avatar, name, sub }: { avatar: ReactNode; name: string; sub: string }) => (
-    <div className="flex items-center gap-3 px-3.5 py-2.5" style={{ background: WA.bar }}>
-        {avatar}
-        <div className="min-w-0 leading-tight">
-            <p className="truncate text-[14.5px] font-medium" style={{ color: WA.text }}>
-                {name}
-            </p>
-            <p className="text-[12px]" style={{ color: WA.meta }}>
-                {sub}
-            </p>
-        </div>
-    </div>
-);
-
-const WaDay = ({ children }: { children: ReactNode }) => (
-    <span className="mx-auto mb-1 rounded-md px-2.5 py-1 text-[11.5px]" style={{ background: "#182229", color: WA.meta }}>
-        {children}
-    </span>
-);
-
-// Dois tiques azuis: entregue e lida.
-const WaTicks = () => (
-    <svg width="16" height="11" viewBox="0 0 16 11" aria-label="lida" role="img">
-        <path d="M11.07.66 4.93 8.1 2.2 5.43.97 6.68l3.96 3.9 7.4-9.1zM15.1.66 8.96 8.1l-.76-.75-1.23 1.25 2.06 2.03 7.4-9.1z" fill={WA.read} />
-    </svg>
-);
-
-const WaBubble = ({ out, time, tail, children }: { out?: boolean; time: string; tail?: boolean; children: ReactNode }) => (
-    <div className={`flex ${out ? "justify-end" : "justify-start"}`}>
-        <div
-            className="max-w-[88%] px-2.5 pb-1.5 pt-1.5 text-[13.5px] leading-[1.4]"
-            style={{
-                background: out ? WA.out : WA.in,
-                color: WA.text,
-                borderRadius: 8,
-                borderTopLeftRadius: !out && tail ? 0 : 8,
-                borderTopRightRadius: out && tail ? 0 : 8,
-                boxShadow: "0 1px 0.5px rgba(11,20,26,0.13)",
-            }}
-        >
-            {children}
-            <span className="float-right ml-2.5 mt-1 inline-flex items-center gap-1 text-[11px] leading-none" style={{ color: out ? "rgba(233,237,239,0.6)" : WA.meta }}>
-                {time}
-                {out && <WaTicks />}
-            </span>
-        </div>
-    </div>
-);
-
-const Eyebrow = ({ children }: { children: ReactNode }) => (
-    <p className="text-[13px] font-medium uppercase tracking-[0.08em]" style={{ color: "var(--lp-ink-40)" }}>
+const Eyebrow = ({ children, light }: { children: ReactNode; light?: boolean }) => (
+    <p className="vs-label" style={light ? { color: "rgba(255,255,255,0.8)" } : undefined}>
         {children}
     </p>
 );
 
 const SectionTitle = ({ children, light }: { children: ReactNode; light?: boolean }) => (
-    <h2 className="lp-bold mt-2 text-[30px] leading-[1.08] md:text-[42px]" style={{ color: light ? "#f9fbff" : "#050505", textWrap: "balance" }}>
+    <h2 className="vs-display mt-3 text-[30px] leading-[1.06] md:text-[42px]" style={{ color: light ? "var(--lp-white)" : "var(--lp-ink)" }}>
         {children}
     </h2>
 );
@@ -686,31 +654,31 @@ const OBJECTIONS = [
         "Ótimo, saber que abriu é metade. A outra metade é chamar de volta no dia certo, com a mensagem certa, no meio de duzentas conversas. É isso que o Vyzon faz, pelo seu WhatsApp.",
     ],
     ["Já tenho CRM.", "CRM só funciona se alguém cadastra cada orçamento. No Vyzon, o orçamento que sai do seu WhatsApp entra na lista sozinho."],
-    ["Não tenho tempo pra mais um sistema.", "Você não precisa abrir o Vyzon todo dia. O aviso chega no seu WhatsApp e você responde 1."],
+    ["Não tenho tempo pra mais um sistema.", "Você não precisa abrir o Vyzon todo dia. O aviso chega no seu WhatsApp e você responde 1."],
     [
         "Não quero robô falando com meu cliente.",
-        "Nada sai sem você responder 1. A mensagem vai do seu número, com o seu nome. Se você não responder, em 48 horas ela é descartada.",
+        "Nada sai sem você responder 1. A mensagem vai do seu número, com o seu nome. Se você não responder, em 48 horas ela é descartada.",
     ],
 ] as const;
 
 const Objections = () => (
-    <section className="py-16 md:py-24" style={{ background: "#0d1421" }} aria-label="Objeções">
+    <section className="py-16 md:py-24" style={{ background: "var(--lp-ink)" }} aria-label="Objeções">
         <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-5 md:px-8">
-            <p className="text-[13px] font-medium uppercase tracking-[0.08em]" style={{ color: "rgba(249,251,255,0.5)" }}>
-                Antes que você diga
-            </p>
+            <Eyebrow light>Antes que você diga</Eyebrow>
             <SectionTitle light>O que a gente mais ouve de dono de integradora</SectionTitle>
             <ul className="mt-10 md:mt-12">
                 {OBJECTIONS.map(([fala, resposta]) => (
                     <li
                         key={fala}
-                        className="grid gap-3 border-t py-6 md:grid-cols-[1fr_1.2fr] md:gap-12 md:py-8"
-                        style={{ borderColor: "rgba(249,251,255,0.12)" }}
+                        className="grid gap-3 border-t py-6 md:grid-cols-[1fr_1.25fr] md:gap-12 md:py-8"
+                        style={{ borderColor: "rgba(255,255,255,0.14)" }}
                     >
-                        <p className="lp-serif text-[22px] leading-snug md:text-[26px]" style={{ color: "#f9fbff", textWrap: "balance" }}>
-                            “{fala}”
+                        <p className="vs-display text-[21px] font-bold leading-snug md:text-[24px]" style={{ color: "var(--lp-white)", letterSpacing: "-0.01em" }}>
+                            <span style={{ color: "var(--lp-blue-tint)" }}>“</span>
+                            {fala}
+                            <span style={{ color: "var(--lp-blue-tint)" }}>”</span>
                         </p>
-                        <p className="text-[16px] leading-relaxed md:text-[17px]" style={{ color: "rgba(249,251,255,0.72)" }}>
+                        <p className="text-[16px] leading-relaxed md:text-[17px]" style={{ color: "rgba(255,255,255,0.78)" }}>
                             {resposta}
                         </p>
                     </li>
@@ -744,22 +712,23 @@ const FAQ = [
     },
 ];
 
+// Na mesma grade das outras seções: título à esquerda, perguntas à direita.
 const Faq = () => (
-    <section className="mx-auto w-full max-w-[720px] px-4 pb-16 pt-16 sm:px-5 md:px-8 md:pb-24 md:pt-24">
-        <SectionTitle>O que todo integrador pergunta antes</SectionTitle>
-        <div className="mt-6">
+    <section className="mx-auto grid w-full max-w-[1120px] gap-6 px-4 py-16 sm:px-5 md:grid-cols-[0.8fr_1.2fr] md:gap-14 md:px-8 md:py-24">
+        <div>
+            <Eyebrow>Perguntas</Eyebrow>
+            <SectionTitle>O que todo integrador pergunta antes</SectionTitle>
+        </div>
+        <div>
             {FAQ.map((f) => (
                 <details key={f.q} className="group border-t py-4" style={{ borderColor: "var(--lp-line)" }}>
-                    <summary
-                        className="flex cursor-pointer list-none items-center justify-between gap-4 text-[17px] font-medium [&::-webkit-details-marker]:hidden"
-                        style={{ color: "var(--lp-ink)" }}
-                    >
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[17px] font-medium [&::-webkit-details-marker]:hidden">
                         {f.q}
-                        <span aria-hidden="true" className="transition-transform duration-200 group-open:rotate-45 motion-reduce:transition-none" style={{ color: "var(--lp-ink-40)" }}>
+                        <span aria-hidden="true" className="transition-transform duration-200 group-open:rotate-45 motion-reduce:transition-none" style={{ color: "var(--lp-ink-subtle)" }}>
                             +
                         </span>
                     </summary>
-                    <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
+                    <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
                         {f.a}
                     </p>
                 </details>
@@ -835,109 +804,108 @@ const SignupForm = ({ angle, onWhatsapp, onCta }: { angle: SolarAngle; onWhatsap
     return (
         <section id="raio-x" className="mx-auto w-full max-w-[1120px] scroll-mt-6 px-4 pb-20 sm:px-5 md:px-8 md:pb-28">
             <div
-                className="grid gap-8 rounded-[16px] border p-5 sm:p-7 md:grid-cols-[1fr_1.1fr] md:gap-12 md:p-10"
-                style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)", boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 24px 48px -32px rgba(15,23,42,0.25)" }}
+                className="grid gap-8 rounded-[10px] border p-5 sm:p-7 md:grid-cols-[1fr_1.1fr] md:gap-12 md:p-10"
+                style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)", boxShadow: "0 1px 2px rgba(13,20,33,0.05), 0 14px 32px -18px rgba(13,20,33,0.3)" }}
             >
-            <div>
-                <Eyebrow>Grátis, sem compromisso</Eyebrow>
-                <SectionTitle>20 minutos comigo pelo WhatsApp</SectionTitle>
-                {/* Quem atende, com nome: no lugar de depoimento, que ainda não existe. */}
-                <div className="mt-5 flex items-start gap-3.5">
-                    <span className="lp-bold flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[20px]" style={{ background: "var(--lp-blue)", color: "#fff" }} aria-hidden="true">
-                        M
-                    </span>
-                    <p className="text-[15px] leading-relaxed md:text-[16px]" style={{ color: "var(--lp-ink-70)" }}>
-                        Sou o Markus, de Floripa. Estou construindo o Vyzon junto com as primeiras integradoras, e quem responde no WhatsApp sou eu. Nos 20
-                        minutos eu te mostro funcionando, e você decide depois.
-                    </p>
-                </div>
-                <div className="mt-6 flex flex-col items-stretch gap-3 sm:items-start">
-                    <WhatsappCta placement={() => onWhatsapp("final")}>Falar com o Markus no WhatsApp</WhatsappCta>
-                    <Link to={RAIO_X_AUTO} className="text-[14px] underline underline-offset-4" style={{ color: "var(--lp-ink-55)" }} onClick={() => onCta("final")}>
-                        Prefere ver sozinho? Veja em 3 minutos o que ficou sem resposta
-                    </Link>
-                </div>
-            </div>
-            <div>
-                <p className="mb-4 text-[15px] font-medium" style={{ color: "var(--lp-ink)" }}>
-                    Ou deixe seu número que eu te chamo.
-                </p>
-
-                {done ? (
-                    <div className="rounded-[10px] border p-5" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
-                        <p className="text-lg font-medium" style={{ color: "var(--lp-ink)" }}>
-                            Recebemos, {form.name.trim().split(" ")[0]}.
+                <div>
+                    <Eyebrow>Grátis, sem compromisso</Eyebrow>
+                    <SectionTitle>20 minutos comigo pelo WhatsApp</SectionTitle>
+                    {/* Quem atende, com nome: no lugar de depoimento, que ainda não existe. */}
+                    <div className="mt-5 flex items-start gap-3.5">
+                        <span
+                            className="vs-display flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[20px]"
+                            style={{ background: "var(--lp-blue)", color: "var(--lp-white)" }}
+                            aria-hidden="true"
+                        >
+                            M
+                        </span>
+                        <p className="text-[15px] leading-relaxed md:text-[16px]" style={{ color: "var(--lp-ink-muted)" }}>
+                            Sou o Markus, de Floripa. Estou construindo o Vyzon junto com as primeiras integradoras, e quem responde no WhatsApp sou eu. Nos 20
+                            minutos eu te mostro funcionando, e você decide depois.
                         </p>
-                        <p className="mt-1 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
-                            {"O Markus te chama no WhatsApp pra marcar os 20 minutos. Se não quiser esperar, dá pra ver o seu Raio-X agora mesmo, em 3 minutos."}
-                        </p>
-                        <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
-                            <Link
-                                to={RAIO_X_AUTO}
-                                state={{ nome: form.name.trim(), email: form.email.trim(), whats: form.phone.trim() }}
-                                onClick={() => logLandingEvent(FUNNEL_PAGE, angle, "cta_click", { placement: "form_done" })}
-                                className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--lp-ink)] px-6 text-[15px] font-semibold text-white"
-                            >
-                                Ver meu Raio-X agora →
-                            </Link>
-                            <a
-                                href={whatsappUrl(`Oi Markus, sou ${form.name.trim()}. Acabei de pedir o Raio-X no site.`)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={() => onWhatsapp("form_done")}
-                                className="inline-flex h-12 items-center justify-center rounded-full border px-6 text-[15px] font-semibold"
-                                style={{ borderColor: "var(--lp-line)", color: "var(--lp-ink)" }}
-                            >
-                                Falar com o Markus agora
-                            </a>
-                        </div>
                     </div>
-                ) : (
-                    <form onSubmit={onSubmit} onFocus={markStart} className="grid gap-4" noValidate>
-                        <Field label="Seu nome">
-                            <input className={inputCls} style={inputStyle} value={form.name} onChange={set("name")} autoComplete="name" />
-                        </Field>
-                        <Field label="Seu WhatsApp (com DDD)">
-                            <input
-                                className={inputCls}
-                                style={inputStyle}
-                                value={form.phone}
-                                onChange={set("phone")}
-                                inputMode="tel"
-                                autoComplete="tel"
-                                placeholder="(11) 99999-9999"
-                            />
-                        </Field>
-                        <Field label="Seu e-mail">
-                            <input className={inputCls} style={inputStyle} value={form.email} onChange={set("email")} inputMode="email" autoComplete="email" />
-                        </Field>
-                        {tentou && !valid && (
-                            <p className="text-sm" role="alert" style={{ color: "#b42318" }}>
-                                Falta preencher: {faltando.join(", ")}.
+                    <div className="mt-6 flex flex-col items-stretch gap-3 sm:items-start">
+                        <WhatsappCta placement={() => onWhatsapp("final")}>Falar com o Markus no WhatsApp</WhatsappCta>
+                        <Link to={RAIO_X_AUTO} className="vs-azul text-[14px] underline underline-offset-4" onClick={() => onCta("final")}>
+                            Prefere ver sozinho? Veja em 3 minutos o que ficou sem resposta
+                        </Link>
+                    </div>
+                </div>
+                <div>
+                    <p className="mb-4 text-[15px] font-medium">Ou deixe seu número que eu te chamo.</p>
+
+                    {done ? (
+                        <div className="rounded-[10px] border p-5" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
+                            <p className="text-lg font-medium">Recebemos, {form.name.trim().split(" ")[0]}.</p>
+                            <p className="mt-1 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
+                                O Markus te chama no WhatsApp pra marcar os 20 minutos. Se não quiser esperar, dá pra ver o seu Raio-X agora mesmo, em 3 minutos.
                             </p>
-                        )}
-                        {error && (
-                            <p className="text-sm" role="alert" style={{ color: "#b42318" }}>
-                                {error}{" "}
-                                <a href={whatsappUrl(WHATSAPP_MESSAGE)} target="_blank" rel="noopener noreferrer" className="underline" onClick={() => onWhatsapp("form_error")}>
-                                    Abrir WhatsApp
+                            <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
+                                <Link
+                                    to={RAIO_X_AUTO}
+                                    state={{ nome: form.name.trim(), email: form.email.trim(), whats: form.phone.trim() }}
+                                    onClick={() => logLandingEvent(FUNNEL_PAGE, angle, "cta_click", { placement: "form_done" })}
+                                    className="vs-btn"
+                                >
+                                    Ver meu Raio-X agora
+                                </Link>
+                                <a
+                                    href={whatsappUrl(`Oi Markus, sou ${form.name.trim()}. Acabei de pedir o Raio-X no site.`)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={() => onWhatsapp("form_done")}
+                                    className="vs-btn vs-btn--vazado"
+                                >
+                                    Falar com o Markus agora
                                 </a>
-                            </p>
-                        )}
-                        <div className="mt-2">
-                            <ButtonV2 type="submit" variant="secondary" disabled={submitting}>
-                                {submitting ? "Enviando" : "Quero que o Markus me chame"}
-                            </ButtonV2>
+                            </div>
                         </div>
-                    </form>
-                )}
-            </div>
+                    ) : (
+                        <form onSubmit={onSubmit} onFocus={markStart} className="grid gap-4" noValidate>
+                            <Field label="Seu nome">
+                                <input className={inputCls} style={inputStyle} value={form.name} onChange={set("name")} autoComplete="name" />
+                            </Field>
+                            <Field label="Seu WhatsApp (com DDD)">
+                                <input
+                                    className={inputCls}
+                                    style={inputStyle}
+                                    value={form.phone}
+                                    onChange={set("phone")}
+                                    inputMode="tel"
+                                    autoComplete="tel"
+                                    placeholder="(11) 99999-9999"
+                                />
+                            </Field>
+                            <Field label="Seu e-mail">
+                                <input className={inputCls} style={inputStyle} value={form.email} onChange={set("email")} inputMode="email" autoComplete="email" />
+                            </Field>
+                            {tentou && !valid && (
+                                <p className="text-sm" role="alert" style={{ color: "#b42318" }}>
+                                    Falta preencher: {faltando.join(", ")}.
+                                </p>
+                            )}
+                            {error && (
+                                <p className="text-sm" role="alert" style={{ color: "#b42318" }}>
+                                    {error}{" "}
+                                    <a href={whatsappUrl(WHATSAPP_MESSAGE)} target="_blank" rel="noopener noreferrer" className="underline" onClick={() => onWhatsapp("form_error")}>
+                                        Abrir WhatsApp
+                                    </a>
+                                </p>
+                            )}
+                            <div className="mt-2">
+                                <button type="submit" className="vs-btn vs-btn--vazado" disabled={submitting}>
+                                    {submitting ? "Enviando" : "Quero que o Markus me chame"}
+                                </button>
+                            </div>
+                        </form>
+                    )}
+                </div>
             </div>
         </section>
     );
 };
 
-const inputCls = "h-11 w-full rounded-[10px] border px-3.5 text-[16px] outline-none focus-visible:ring-2";
+const inputCls = "h-11 w-full rounded-[10px] border px-3.5 text-[16px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--lp-blue)]";
 const inputStyle = {
     borderColor: "var(--lp-line)",
     background: "var(--lp-white)",
@@ -945,14 +913,14 @@ const inputStyle = {
 } as const;
 
 const Field = ({ label, children }: { label: string; children: ReactNode }) => (
-    <label className="grid gap-1.5 text-sm" style={{ color: "var(--lp-ink-70)" }}>
+    <label className="grid gap-1.5 text-sm" style={{ color: "var(--lp-ink-muted)" }}>
         <span>{label}</span>
         {children}
     </label>
 );
 
 const Footer = () => (
-    <footer className="mx-auto flex w-full max-w-[1120px] flex-wrap items-center justify-between gap-3 px-5 py-8 text-sm md:px-8" style={{ color: "var(--lp-ink-40)" }}>
+    <footer className="mx-auto flex w-full max-w-[1120px] flex-wrap items-center justify-between gap-3 px-4 py-8 text-sm sm:px-5 md:px-8" style={{ color: "var(--lp-ink-subtle)" }}>
         <span>Vyzon</span>
         <nav className="flex flex-wrap gap-5">
             <Link to="/politica-privacidade">Privacidade</Link>
