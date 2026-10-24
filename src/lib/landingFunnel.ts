@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getAttribution } from "@/lib/attribution";
 
@@ -31,6 +32,35 @@ function sessionId(): string {
         memorySid ??= Math.random().toString(36).slice(2) + Date.now().toString(36);
         return memorySid;
     }
+}
+
+// Visita e rolagem de uma página de conteúdo (blog): uma visita por página e
+// carregamento, e scroll_50/scroll_90 uma vez cada. Mesmo funil da home, para o
+// blog aparecer no mesmo relatório (page='blog', variant=slug).
+const viewedContent = new Set<string>();
+export function useContentFunnel(page: string, variant: string | undefined) {
+    useEffect(() => {
+        if (!variant) return;
+        const key = `${page}:${variant}`;
+        if (!viewedContent.has(key)) {
+            viewedContent.add(key);
+            logLandingEvent(page, variant, "view", { path: window.location.pathname });
+        }
+        const seen = new Set<string>();
+        const onScroll = () => {
+            const max = document.documentElement.scrollHeight - window.innerHeight;
+            if (max <= 0) return;
+            const ratio = window.scrollY / max;
+            for (const [mark, event] of [[0.5, "scroll_50"], [0.9, "scroll_90"]] as const) {
+                if (ratio >= mark && !seen.has(event)) {
+                    seen.add(event);
+                    logLandingEvent(page, variant, event);
+                }
+            }
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+    }, [page, variant]);
 }
 
 export function logLandingEvent(page: string, variant: string, event: FunnelEvent, props: Record<string, string | number> = {}) {

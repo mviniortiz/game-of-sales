@@ -6,6 +6,7 @@ import { BlogCover } from "@/components/landing-v2/BlogCover";
 import { ButtonV2 } from "@/components/landing-v2/ButtonV2";
 import { Rise } from "@/components/landing/animation/Rise";
 import { BLOG_POSTS, getBlogPost, formatBlogDate, readMinutes, type BlogBlock } from "@/data/landing/blogPosts";
+import { logLandingEvent, useContentFunnel } from "@/lib/landingFunnel";
 
 // Post individual do blog (rota /blog/:slug). Conteúdo em blocos (h2/p/ul/quote),
 // barra de progresso de leitura, reveal-on-scroll por bloco (transform-only, com
@@ -102,6 +103,12 @@ const BlogPostV2 = () => {
     const navigate = useNavigate();
     const { slug } = useParams<{ slug: string }>();
     const post = slug ? getBlogPost(slug) : undefined;
+    // Funil do blog no mesmo relatório da home (landing_events, page='blog').
+    useContentFunnel("blog", post?.slug);
+    const irParaRaioX = (placement: string) => {
+        if (post) logLandingEvent("blog", post.slug, "cta_click", { placement });
+        navigate("/criar-conta?segmento=energia_solar");
+    };
 
     useEffect(() => {
         const html = document.documentElement;
@@ -136,7 +143,7 @@ const BlogPostV2 = () => {
         <div className="lp-v2 min-h-screen w-full" style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}>
             <ReadingProgress accent={post.accent} />
             <NavV2
-                onCTAClick={() => navigate("/criar-conta?segmento=energia_solar")}
+                onCTAClick={() => irParaRaioX("nav")}
                 onLoginClick={() => navigate("/auth")}
                 onBlogClick={() => navigate("/blog")}
             />
@@ -174,6 +181,7 @@ const BlogPostV2 = () => {
                         <div className="mt-3 flex flex-wrap gap-2.5">
                             {post.downloads.map((d) => (
                                 <a key={d.href} href={d.href} download
+                                    onClick={() => logLandingEvent("blog", post.slug, "cta_click", { placement: "download", arquivo: d.label })}
                                     className="inline-flex min-h-[44px] items-center rounded-full px-5 text-[14px] font-semibold transition-colors"
                                     style={{ background: "var(--lp-ink)", color: "#fff" }}>
                                     {d.label}
@@ -227,7 +235,7 @@ const BlogPostV2 = () => {
                             O Raio-X grátis lê o seu WhatsApp e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva 3 minutos, e nada é enviado aos seus clientes.
                         </p>
                         <div className="mt-6 flex justify-center">
-                            <ButtonV2 variant="primary" showArrow onClick={() => navigate("/criar-conta?segmento=energia_solar")}>
+                            <ButtonV2 variant="primary" showArrow onClick={() => irParaRaioX("final")}>
                                 Fazer meu Raio-X grátis
                             </ButtonV2>
                         </div>
