@@ -159,7 +159,9 @@ Deno.serve(async (req) => {
       const filaDo = (distribuidora: boolean, n: number) => {
         let q = admin.from("prospecting_allowlist")
           .select("id, agency_name, city, rating_count, first_message, phone_e164, phone_tail, score, fit_score, variant, metadata, signal, niche")
-          .eq("user_id", inst.user_id).eq("is_active", true).eq("status", "mapeado").gte("fit_score", CORTE_ENCAIXE);
+          .eq("user_id", inst.user_id).eq("is_active", true).eq("status", "mapeado").gte("fit_score", CORTE_ENCAIXE)
+          // Reservado para o Markus ligar (lista de ligações): não recebe WhatsApp frio.
+          .is("metadata->>ligacao_em", null);
         q = distribuidora ? q.eq("niche", NICHO_DISTRIBUIDORA) : q.or(`niche.is.null,niche.neq."${NICHO_DISTRIBUIDORA}"`);
         return q.order("fit_score", { ascending: false }).limit(n);
       };

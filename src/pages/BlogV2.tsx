@@ -5,6 +5,7 @@ import { FooterV2 } from "@/components/landing-v2/FooterV2";
 import { BlogCover } from "@/components/landing-v2/BlogCover";
 import { Rise } from "@/components/landing/animation/Rise";
 import { BLOG_POSTS, BLOG_CATEGORIES, formatBlogDate, readMinutes, type BlogPost } from "@/data/landing/blogPosts";
+import { logLandingEvent, useContentFunnel } from "@/lib/landingFunnel";
 
 // Blog da landing (rota /blog) — listagem editorial: título serif, filtro por
 // categoria, post em destaque + grade. Reveal-on-scroll (Rise, transform-only) e
@@ -13,6 +14,8 @@ import { BLOG_POSTS, BLOG_CATEGORIES, formatBlogDate, readMinutes, type BlogPost
 const BlogV2 = () => {
     const navigate = useNavigate();
     const [cat, setCat] = useState<string>("Todos");
+    // Funil do blog no mesmo relatório da home (landing_events, page='blog').
+    useContentFunnel("blog", "index");
 
     useEffect(() => {
         const html = document.documentElement;
@@ -22,7 +25,10 @@ const BlogV2 = () => {
         return () => { if (wasDark) html.classList.add("dark"); };
     }, []);
 
-    const openPost = (p: BlogPost) => navigate(`/blog/${p.slug}`);
+    const openPost = (p: BlogPost) => {
+        logLandingEvent("blog", "index", "cta_click", { placement: "abrir_post", post: p.slug });
+        navigate(`/blog/${p.slug}`);
+    };
 
     const filtered = cat === "Todos" ? BLOG_POSTS : BLOG_POSTS.filter((p) => p.category === cat);
     const featured = cat === "Todos" ? (BLOG_POSTS.find((p) => p.featured) ?? BLOG_POSTS[0]) : null;
@@ -31,7 +37,10 @@ const BlogV2 = () => {
     return (
         <div className="lp-v2 min-h-screen w-full" style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}>
             <NavV2
-                onCTAClick={() => navigate("/criar-conta?segmento=energia_solar")}
+                onCTAClick={() => {
+                    logLandingEvent("blog", "index", "cta_click", { placement: "nav" });
+                    navigate("/criar-conta?segmento=energia_solar");
+                }}
                 onLoginClick={() => navigate("/auth")}
                 onBlogClick={() => navigate("/blog")}
             />
