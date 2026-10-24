@@ -1,5 +1,8 @@
 // PROSPECT.2 — Partes puras da prospecção (sem rede nem banco): textos, códigos e
 // horários. Separadas para teste e para não puxar o SDK de IA quem só precisa do texto.
+// Nicho novo (vidraçaria em diante) tem o próprio texto em prospectNichos.ts.
+
+import { perfilDoNicho, primeiraMensagemDoNicho, respostaPortaDoNicho } from "./prospectNichos.ts";
 
 const CODE_LETTERS = "ABCDEFGHJKLMNQRSTUVWXYZ";
 const CODE_DIGITS = "23456789";
@@ -73,11 +76,14 @@ const RESPOSTA_PORTA_TIME = [
 ].join("\n\n");
 const RESPOSTA_PORTA_ABERTA =
   "Valeu! A pergunta é essa: hoje, o que mais te faz perder venda de energia solar? Preço, cliente que some depois do orçamento, falta de cliente novo, financiamento que não aprova, vendedor... O que pesa mais aí?";
-export const respostaPorta = (niche?: string | null, variant?: string | null) =>
-  ehDistribuidora(niche) ? RESPOSTA_PORTA_DISTRIBUIDORA
+export const respostaPorta = (niche?: string | null, variant?: string | null) => {
+  const perfil = perfilDoNicho(niche);
+  if (perfil) return respostaPortaDoNicho(perfil);
+  return ehDistribuidora(niche) ? RESPOSTA_PORTA_DISTRIBUIDORA
     : variant === "time" ? RESPOSTA_PORTA_TIME
     : variant === "aberta" ? RESPOSTA_PORTA_ABERTA
     : RESPOSTA_PORTA;
+};
 /** A resposta padrão já foi nesta conversa? O print marca a da encaminha; as outras
  *  não têm print, então vale o começo do próprio texto. */
 export const portaJaFoi = (conversa: string | null | undefined, niche?: string | null, variant?: string | null) => {
@@ -114,6 +120,9 @@ export function primeiroNome(nome?: string | null): string | null {
 export function firstMessage(row: ProspectTarget, variant: ProspectVariant = "pergunta", sender = "Markus"): string {
   const nome = row.agency_name || "sua empresa";
   const dono = primeiroNome(row.metadata?.socio);
+  // Nicho novo: um formato só (o da encaminha), no vocabulário dele.
+  const perfil = perfilDoNicho(row.niche);
+  if (perfil) return primeiraMensagemDoNicho(perfil, { nome, dono, redacao: redacao(nome) }, sender);
   if (variant === "numero") {
     return [
       `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis.`,
@@ -231,7 +240,9 @@ const PERGUNTA_ABERTA = "Hoje, o que mais te faz perder venda de energia solar?"
 /** Seguimento do dia 4 para quem não respondeu: a mesma pergunta da dor, sem pedir reunião. */
 export function followupMessage(row?: Pick<ProspectTarget, "metadata" | "niche"> & { variant?: string | null }, sender = "Markus"): string {
   const dono = primeiroNome(row?.metadata?.socio);
-  const pergunta = ehDistribuidora(row?.niche) ? PERGUNTA_DOR_DISTRIBUIDORA
+  const perfil = perfilDoNicho(row?.niche);
+  const pergunta = perfil ? perfil.perguntaDor
+    : ehDistribuidora(row?.niche) ? PERGUNTA_DOR_DISTRIBUIDORA
     : row?.variant === "time" ? PERGUNTA_TIME
     : row?.variant === "aberta" ? PERGUNTA_ABERTA
     : PERGUNTA_DOR;

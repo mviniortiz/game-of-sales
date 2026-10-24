@@ -22,6 +22,12 @@
 // action=vendas_criar      card novo (não duplica telefone já no pipeline).
 // action=vendas_atualizar  move etapa e/ou anota; nunca marca venda ganha.
 //
+// Prospecção de nicho novo (PROSPECT.3, 2026-10-24): o Vendedor traz empresas do
+// Google Maps e elas entram na prospecção do Vyzon (prospecting_allowlist). Quem
+// envia é o prospect-run, depois que o Markus aprova o lote no WhatsApp.
+// action=prospeccao_adicionar  até 20 empresas por chamada; telefone repetido é ignorado.
+// action=prospeccao_status     andamento das empresas de nicho novo na prospecção.
+//
 // O Markus é DISTRIBUICAO_USER_ID (o número dele sai da conexão de WhatsApp
 // desse usuário). DISTRIBUICAO_ATIVA=false recusa novos rascunhos.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -29,7 +35,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { avisarPendentes } from "../_shared/distribuicaoAprovacao.ts";
-import { anexarNota, validarAtualizacao, validarNovoCard } from "../_shared/vendas.ts";
+import { anexarNota, validarAtualizacao, validarEmpresaParaProspectar, validarNovoCard } from "../_shared/vendas.ts";
+import { NICHOS_NOVOS, notaDoVendedor } from "../_shared/prospectNichos.ts";
 import {
     AGENTES,
     MAX_PENDENTES,
@@ -249,6 +256,87 @@ serve(async (req) => {
                 .single();
             if (error || !criado) throw new Error(`criar card falhou: ${error?.message || "sem retorno"}`);
             return json(201, { ok: true, card: criado });
+        }
+
+        if (action === "prospeccao_adicionar") {
+            const lista = Array.isArray(body.empresas) ? body.empresas.slice(0, 20) : [];
+            if (!lista.length) return json(400, { error: "mande empresas: [...] (até 20)" });
+            const companyId = await empresaDoMarkus();
+            if (!companyId) return json(503, { error: "usuario da distribuicao sem empresa" });
+            const agora = new Date().toISOString();
+            const recusadas: Array<{ empresa: unknown; erros: string[] }> = [];
+            const linhas: Record<string, unknown>[] = [];
+            for (const item of lista) {
+                const v = validarEmpresaParaProspectar(item, NICHOS_NOVOS);
+                if (!v.ok) { recusadas.push({ empresa: (item as any)?.empresa ?? null, erros: v.erros }); continue; }
+                const e = v.valor;
+                const nota = notaDoVendedor(e.avaliacoes, e.estrelas);
+                linhas.push({
+                    company_id: companyId,
+                    user_id: DISTRIBUICAO_USER_ID,
+                    created_by: DISTRIBUICAO_USER_ID,
+                    phone_e164: e.telefone,
+                    phone_tail: e.telefone.slice(-10),
+                    agency_name: e.empresa,
+                    city: e.cidade,
+                    niche: e.nicho,
+                    rating: e.estrelas,
+                    rating_count: e.avaliacoes,
+                    source_url: e.maps_url,
+                    score: 2,
+                    fit_score: nota.nota,
+                    // google_buscado true: o prospect-qualify (feito para solar) não requalifica.
+                    metadata: { fonte: "vendedor", qualif: { versao: "vendedor", nota: nota.nota, motivos: nota.motivos, google_buscado: true, em: agora } },
+                    ...(e.ja_contatada
+                        // Já recebeu a primeira à mão: só passa a ouvir a resposta. Sem
+                        // seguimento automático (o lote dela nunca foi aprovado).
+                        ? {
+                            status: "enviado",
+                            // Data real do contato (meio-dia de Brasília); sem data, ontem.
+                            sent_at: e.contatada_em ? `${e.contatada_em}T15:00:00.000Z` : new Date(Date.now() - 86400000).toISOString(),
+                            followup_sent_at: agora,
+                            first_message: "(primeira mensagem enviada à mão pelo Markus)",
+                        }
+                        : { status: "mapeado" }),
+                });
+            }
+            let entraram: any[] = [];
+            if (linhas.length) {
+                const { data, error } = await admin
+                    .from("prospecting_allowlist")
+                    .upsert(linhas, { onConflict: "user_id,phone_tail", ignoreDuplicates: true })
+                    .select("agency_name, status, fit_score");
+                if (error) throw new Error(`adicionar falhou: ${error.message}`);
+                entraram = data || [];
+            }
+            const novos = new Set(entraram.map((r: any) => r.agency_name));
+            const repetidas = linhas.filter((l) => !novos.has(l.agency_name)).map((l) => l.agency_name);
+            return json(200, { ok: true, entraram, repetidas, recusadas });
+        }
+
+        if (action === "prospeccao_status") {
+            const { data, error } = await admin
+                .from("prospecting_allowlist")
+                .select("agency_name, city, niche, phone_e164, status, fit_score, sent_at, replied_at, reply_kind, last_reply, metadata")
+                .eq("user_id", DISTRIBUICAO_USER_ID)
+                .in("niche", NICHOS_NOVOS)
+                .order("updated_at", { ascending: false })
+                .limit(100);
+            if (error) throw new Error(error.message);
+            const empresas = (data || []).map((r: any) => ({
+                empresa: r.agency_name,
+                cidade: r.city,
+                nicho: r.niche,
+                telefone: r.phone_e164,
+                status: r.status,
+                nota: r.fit_score,
+                enviada_em: r.sent_at,
+                respondeu_em: r.replied_at,
+                tipo_resposta: r.reply_kind,
+                ultimas_falas: String(r.last_reply || "").slice(-400),
+                deal_id: r.metadata?.deal_id ?? null,
+            }));
+            return json(200, { ok: true, empresas });
         }
 
         if (action === "vendas_atualizar") {

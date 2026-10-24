@@ -108,3 +108,58 @@ export function anexarNota(notasAtuais: string | null | undefined, nota: string,
     const resto = String(notasAtuais || "").trim();
     return (resto ? `${linha}\n${resto}` : linha).slice(0, 8000);
 }
+
+// ── Entrada na prospecção do Vyzon (PROSPECT.3) ─────────────────────────────
+// O Vendedor traz empresas de nicho novo do Google Maps; elas entram na
+// prospecting_allowlist e seguem o fluxo de sempre: lote do dia aprovado pelo
+// Markus no WhatsApp, rampa do chip, teto com sinal, um envio por vez.
+
+export type EmpresaParaProspectar = {
+    empresa: string;
+    cidade: string | null;
+    telefone: string;
+    nicho: string;
+    avaliacoes: number | null;
+    estrelas: number | null;
+    maps_url: string | null;
+    /** Já recebeu a primeira mensagem à mão (pelo mesmo número): entra como enviada,
+     *  sem seguimento automático, só para a resposta cair no Vyzon. */
+    ja_contatada: boolean;
+    /** Quando foi o contato à mão (aaaa-mm-dd). Sem data, conta como ontem: envio de
+     *  hoje gastaria o teto do chip. */
+    contatada_em: string | null;
+};
+
+export function validarEmpresaParaProspectar(input: unknown, nichosAceitos: string[]): Validado<EmpresaParaProspectar> {
+    const b = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
+    const erros: string[] = [];
+    const empresa = campo(b.empresa, 120);
+    if (empresa.length < 2) erros.push("empresa obrigatória");
+    const telefone = telefoneBR(b.telefone);
+    if (!telefone) erros.push("telefone obrigatório (DDD + número)");
+    // Celular: 55 + DDD + 9 dígitos começando com 9. Fixo não tem WhatsApp, em geral.
+    else if (!(telefone.length === 13 && telefone[4] === "9")) erros.push("só celular entra na prospecção (fixo não tem WhatsApp)");
+    const nicho = campo(b.nicho, 60).toLowerCase();
+    if (!nichosAceitos.includes(nicho)) erros.push(`nicho sem perfil na prospecção (aceitos: ${nichosAceitos.join(", ")})`);
+    const av = b.avaliacoes == null || b.avaliacoes === "" ? null : Number(b.avaliacoes);
+    if (av != null && (!Number.isFinite(av) || av < 0)) erros.push("avaliacoes inválido");
+    const est = b.estrelas == null || b.estrelas === "" ? null : Number(String(b.estrelas).replace(",", "."));
+    if (est != null && (!Number.isFinite(est) || est < 0 || est > 5)) erros.push("estrelas inválido");
+    const url = campo(b.maps_url, 500);
+    const maps_url = /^https:\/\//.test(url) ? url : null;
+    if (erros.length) return { ok: false, erros };
+    return {
+        ok: true,
+        valor: {
+            empresa,
+            cidade: campo(b.cidade, 80) || null,
+            telefone: telefone!,
+            nicho,
+            avaliacoes: av,
+            estrelas: est,
+            maps_url,
+            ja_contatada: b.ja_contatada === true,
+            contatada_em: /^\d{4}-\d{2}-\d{2}$/.test(campo(b.contatada_em, 10)) ? campo(b.contatada_em, 10) : null,
+        },
+    };
+}

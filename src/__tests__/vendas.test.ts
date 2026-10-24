@@ -1,7 +1,7 @@
 // VENDAS.0 — regras do bot de vendas sobre o pipeline do próprio Vyzon: card
 // só com telefone e nota, etapa válida, nunca venda ganha pelo bot.
 import { describe, expect, it } from "vitest";
-import { anexarNota, telefoneBR, validarAtualizacao, validarNovoCard } from "../../supabase/functions/_shared/vendas";
+import { anexarNota, telefoneBR, validarAtualizacao, validarEmpresaParaProspectar, validarNovoCard } from "../../supabase/functions/_shared/vendas";
 
 const errosDe = (v: { ok: boolean }): string[] => ("erros" in v ? (v as { erros: string[] }).erros : []);
 
@@ -70,5 +70,25 @@ describe("anexarNota", () => {
         const n = anexarNota("Cidade: Floripa.", "Pediu o preço.", agora);
         expect(n.split("\n")[0]).toBe("[24/10 bot de vendas] Pediu o preço.");
         expect(n).toContain("Cidade: Floripa.");
+    });
+});
+
+describe("validarEmpresaParaProspectar", () => {
+    const nichos = ["vidraçaria"];
+    const base = { empresa: "Judá Vidros", telefone: "(48) 99821-4712", nicho: "Vidraçaria", avaliacoes: 71, estrelas: "4,9" };
+
+    it("aceita celular de nicho com perfil e normaliza nicho e nota", () => {
+        const v = validarEmpresaParaProspectar(base, nichos);
+        expect(v.ok).toBe(true);
+        if ("valor" in v) {
+            expect(v.valor.nicho).toBe("vidraçaria");
+            expect(v.valor.estrelas).toBe(4.9);
+            expect(v.valor.ja_contatada).toBe(false);
+        }
+    });
+
+    it("recusa fixo e nicho sem perfil", () => {
+        expect(errosDe(validarEmpresaParaProspectar({ ...base, telefone: "(48) 3241-1655" }, nichos)).join()).toContain("celular");
+        expect(errosDe(validarEmpresaParaProspectar({ ...base, nicho: "buffet" }, nichos)).join()).toContain("nicho");
     });
 });

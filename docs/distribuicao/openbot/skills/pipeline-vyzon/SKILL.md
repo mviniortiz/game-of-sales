@@ -1,6 +1,6 @@
 ---
 name: pipeline-vyzon
-description: Lê e atualiza o pipeline de vendas da empresa Vyzon dentro do próprio Vyzon (cards, etapas, notas) pela edge distribuicao-inbox. Use para ver quem está quente, criar card quando um dono responde de verdade, mover etapa ou anotar o que ele disse.
+description: Lê e atualiza o pipeline de vendas da empresa Vyzon dentro do próprio Vyzon (cards, etapas, notas) e coloca empresas na prospecção do Vyzon, pela edge distribuicao-inbox. Use para ver quem está quente, criar card, mover etapa, anotar, adicionar empresas à prospecção ou ver o andamento delas.
 example-prompt: Quais cards do pipeline do Vyzon estão parados há mais de 2 dias?
 ---
 
@@ -39,6 +39,20 @@ Devolve 409 com o card existente se o telefone já estiver no pipeline: aí use
 ```
 Etapas: `lead`, `qualification`, `proposal`, `negotiation`, `closed_lost`
 (exige `motivo_perda`). `closed_won` é recusado: venda ganha só o Markus marca.
+
+`prospeccao_adicionar` com `empresas` (até 20): coloca empresas de nicho com
+perfil (hoje: `vidraçaria`) na prospecção do Vyzon. Só celular. Quem já recebeu
+mensagem à mão vai com `ja_contatada: true` e `contatada_em` (aaaa-mm-dd): entra
+como enviada, sem seguimento automático, só para a resposta cair no Vyzon.
+```json
+{"action":"prospeccao_adicionar","empresas":[{"empresa":"Judá Vidros Temperados","cidade":"São José","telefone":"(48) 99821-4712","nicho":"vidraçaria","avaliacoes":71,"estrelas":4.9,"maps_url":"https://maps.google.com/..."}]}
+```
+Devolve `entraram`, `repetidas` (telefone já na lista) e `recusadas` (com erros).
+Empresa com nota abaixo do corte (poucas avaliações com nota baixa) fica na lista
+mas não entra no lote.
+
+`prospeccao_status`: andamento das empresas de nicho novo (status, quando
+saiu, se respondeu, tipo de resposta, últimas falas, card).
 
 ## Regras
 

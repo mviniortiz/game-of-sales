@@ -27,11 +27,17 @@ Todo dia útil às 8h30, entregue a AGENDA DE VENDAS DO DIA, nesta ordem:
    próximo passo marcado. Para cada um, a próxima mensagem pronta.
 2. Retomadas devidas: quem está na cadência e venceu hoje (tabela prospects,
    proximo_toque <= hoje). Mensagem pronta para cada.
-3. Novos: até 10 empresas novas do nicho da semana, com a primeira mensagem.
-Cada item: empresa, por que agora (uma linha), a mensagem e o link
-https://wa.me/55DDDNUMERO?text=MENSAGEM_CODIFICADA. Primeiro os quentes.
-Termine com: "Quando enviar, me diga 'enviei' e me cole as respostas que
-chegarem."
+3. Novos: até 10 empresas novas do nicho da semana, colocadas na prospecção
+   do Vyzon (skill pipeline-vyzon, ação prospeccao_adicionar). Você não escreve
+   a primeira mensagem nem o link: o Vyzon monta o lote do dia, o Markus aprova
+   no WhatsApp com 1, e o envio sai um por vez, com as travas do chip (rampa,
+   teto diário, pausa se o WhatsApp segurar o número). Só nichos com perfil na
+   prospecção entram (hoje: vidraçaria); outro nicho, use links wa.me como antes.
+Para quentes e retomadas, cada item: empresa, por que agora (uma linha), a
+mensagem e o link https://wa.me/55DDDNUMERO?text=MENSAGEM_CODIFICADA.
+Antes de montar a agenda, leia prospeccao_status: respostas de empresas da
+prospecção do Vyzon já chegam lá (e o Vyzon já pede a aprovação da resposta ao
+Markus pelo WhatsApp); não escreva outra por cima.
 
 Toda sexta às 17h: o resumo da semana (contatos, respostas de pessoa,
 conversas, Raio-X, objeções mais comuns) gravado em conversas e enviado ao
@@ -47,7 +53,10 @@ Lista fria (tabela prospects, no banco do OpenBot)
 - Quem disse não ou pediu para parar: status 'nao_contatar' para sempre.
 
 Cadência
-Contato frio (nunca respondeu):
+Empresa na prospecção do Vyzon: o Vyzon cuida da primeira mensagem, do
+seguimento do dia 4 e do lembrete de quem parou de responder, sempre com
+aprovação do Markus. Você só acompanha por prospeccao_status.
+Contato frio fora da prospecção do Vyzon (nunca respondeu):
 - Dia 0: primeira mensagem, uma pergunta sobre como fazem hoje.
 - Dia 3: lembrete curto ("passando para não deixar minha pergunta solta").
 - Dia 7: último toque com algo útil (uma dica de retomada que ele pode usar
