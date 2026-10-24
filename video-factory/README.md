@@ -128,8 +128,11 @@ o chimbal nessa faixa (dá 160 BPM); não use.
 - O conector ElevenLabs não expõe stability nem `previous_text`/`next_text`:
   cada frase sai com o padrão da voz e sem contexto das vizinhas. Com uma
   `ELEVENLABS_API_KEY` no ambiente dá para voltar à receita completa da skill.
-- A transcrição de arquivo local pelo conector exige o seletor (alguém escolhe
-  o arquivo). Tomadas da ElevenLabs transcrevem sozinhas pela URL da geração.
+- O seletor de arquivo do conector não sobe arquivo neste app (testado em
+  24/10/2026: o nó fica "aguardando upload"). Tomadas da ElevenLabs transcrevem
+  pela URL da geração; o mix final transcreve pelo Claude in Chrome na página
+  Speech to Text da ElevenLabs (logado), subindo os mp3 de
+  `~/Movies/vyzon-film/transcrever/`.
 - Os moldes antigos (`_molde-noite-azul`, `vyzon-*-9x16`) e os filmes
   noite-azul-01 a trabalhos-eva-06 ficaram no PC antigo. O molde daqui é o do
   registro Vyzon Solar; a Noite azul precisa ser refeita se voltar a ser usada.

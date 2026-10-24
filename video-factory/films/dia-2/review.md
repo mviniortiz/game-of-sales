@@ -17,9 +17,13 @@ Lanczos 1080). Revisão: `dia-2-rev.mp4` (tempo e batida no canto).
 - Mix: voz 11,3 dB acima da trilha durante a fala; nenhuma frase empurrada.
 - Transcrição ElevenLabs `scribe_v1` de cada tomada usada: texto idêntico ao
   roteiro nas 6 frases ("Marcos" no lugar de "Markus" é o mesmo som em
-  português, a tela mostra Markus). **Transcrição do mix final: pendente**
-  (o conector só aceita arquivo local pelo seletor; o arquivo está em
-  `~/Movies/vyzon-film/transcrever/dia-2-final-mix.mp3`).
+  português, a tela mostra Markus).
+- Transcrição do mix final (voz + trilha + efeitos), ElevenLabs Speech to Text
+  em 24/10/2026: "Mandou a proposta e o cliente sumiu? Ele visualizou e não
+  respondeu. No segundo dia, a mensagem pra chamar de volta chega pronta no seu
+  WhatsApp. Você responde um e ela sai do seu número. Nada vai pro cliente sem
+  você aprovar. Fale com o Marcos no WhatsApp." Idêntica ao roteiro; nenhuma
+  palavra perdida sob a trilha.
 
 ## Nota (0–2; † precisa de 2)
 
@@ -33,7 +37,7 @@ Lanczos 1080). Revisão: `dia-2-rev.mp4` (tempo e batida no canto).
 | 6 | Leitura mobile | 1 | Todo texto ≥ 30 px no 1080 e legenda da narração na faixa segura; mas o aviso tem 9 linhas para ler em ~4 s. Quem para lê o título e o rascunho; o resto é textura de prova. |
 | 7 | Ritmo nativo | 2 | 23 s, troca de cena a cada 3–4 s, tudo na batida, câmera empurra uma vez na virada, um overshoot só (entrada do aviso). |
 | 8 | Ausência de sinais de IA genérica † | 2 | Sem orbe, partícula, gradiente, rosto ou stock; nenhuma promessa de envio automático. |
-| 9 | Som e voz | 2 | Voz inteligível (tomadas transcritas sem erro), trilha 11 dB abaixo da voz, abafada no silêncio do cliente e aberta na virada; um efeito por gesto. Rebaixar para 1 se a transcrição do mix final acusar palavra perdida. |
+| 9 | Som e voz | 2 | Voz inteligível (tomadas transcritas sem erro), trilha 11 dB abaixo da voz, abafada no silêncio do cliente e aberta na virada; um efeito por gesto. Mix final transcrito sem erro. |
 | 10 | Acabamento técnico | 2 | 1080×1920, 60 qps, 4K → Lanczos, -14 LUFS, pico real < -1,5 dBTP, safe zones (nada acima de 220 px nem abaixo de 1600 px; legenda a 150 px das laterais), check limpo. |
 | | **Total** | **19/20** | |
 
@@ -65,6 +69,5 @@ cortando a cena 4 (prova) se o custo por visualização completa ficar alto.
 
 ## Riscos e próximos passos
 
-- Fechar a transcrição do mix final (seletor da ElevenLabs).
 - O "1" sem código só vale com um rascunho aberto; com vários, a EVA pede "A2 1".
   O filme mostra o caso de um rascunho, que é o do aviso no 2º dia.

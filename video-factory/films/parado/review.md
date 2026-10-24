@@ -16,7 +16,13 @@ Lanczos 1080). Revisão: `parado-rev.mp4`.
 - Mix: voz 11,2 dB acima da trilha; nenhuma frase empurrada.
 - Transcrição `scribe_v1` das tomadas: idêntica ao roteiro ("R$300.000" e
   "R$ 97" são o scribe escrevendo os números; "Marcos" = "Markus").
-  **Transcrição do mix final: pendente** (`~/Movies/vyzon-film/transcrever/parado-final-mix.mp3`).
+- Transcrição do mix final (voz + trilha + efeitos), ElevenLabs Speech to Text
+  em 24/10/2026: "[música eletrônica] Quanto dinheiro está parado no seu
+  WhatsApp agora? Doze propostas sem resposta, trezentos mil reais parados. No
+  segundo dia, a mensagem pra chamar de volta chega pronta no seu WhatsApp.
+  Preço de fundador: noventa e sete reais por mês nos três primeiros meses.
+  Fale com o Marcos no WhatsApp." Idêntica ao roteiro; a trilha aparece como
+  evento, sem cobrir palavra.
 
 ## Nota (0–2; † precisa de 2)
 
@@ -30,7 +36,7 @@ Lanczos 1080). Revisão: `parado-rev.mp4`.
 | 6 | Leitura mobile | 1 | Números grandes e preço muito legíveis; a fatura tem 6 linhas de 38 px que passam em ~5 s e o aviso tem a mesma densidade do `dia-2`. |
 | 7 | Ritmo nativo | 2 | 24 s, linhas da fatura em meia batida, contagem sincronizada com "trezentos mil", pulso do preço quando a voz diz o número. |
 | 8 | Ausência de sinais de IA genérica † | 2 | Nada de orbe, partícula, gradiente, stock ou promessa de automação. |
-| 9 | Som e voz | 2 | Tomadas transcritas sem erro, voz 11 dB acima da trilha, trilha abafada na fatura e aberta na virada. Rebaixar para 1 se o mix final acusar palavra perdida. |
+| 9 | Som e voz | 2 | Tomadas transcritas sem erro, voz 11 dB acima da trilha, trilha abafada na fatura e aberta na virada. Mix final transcrito sem erro. |
 | 10 | Acabamento técnico | 2 | Mesmo padrão do `dia-2`: 60 qps, 4K → Lanczos, -14 LUFS, pico < -1,5 dBTP, safe zones, check limpo. |
 | | **Total** | **19/20** | |
 
@@ -59,6 +65,5 @@ explica melhor o produto; este vende melhor para quem já entendeu.
 
 ## Riscos e próximos passos
 
-- Fechar a transcrição do mix final.
 - O preço de fundador vale para as 10 primeiras integradoras: quando acabar,
   a cena 4 sai ou troca para R$ 197 (só `index.html` da cena 4 e a frase P5).
