@@ -1,0 +1,7 @@
+#!/bin/bash
+# ffmpeg do Remotion (já vem no repo). Build enxuta: sem drawtext, sidechain e
+# lowpass; o que faltar a gente faz em Node (scripts/).
+R="${REMOTION_FF_DIR:-$(cd "$(dirname "$0")/../.." && pwd)/node_modules/@remotion/compositor-darwin-arm64}"
+[ -x "$R/ffprobe" ] || R="/Users/mviniortiz/code/vyzon/node_modules/@remotion/compositor-darwin-arm64"
+export DYLD_LIBRARY_PATH="$R"
+exec "$R/ffprobe" "$@"

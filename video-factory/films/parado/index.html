@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Vyzon · Parado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=Barlow+Condensed:wght@600;700&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/CustomEase.min.js"></script>
+<link rel="stylesheet" href="base.css">
+<style>
+  /* Cena 1: gancho */
+  #c1 .bloco { position: absolute; left: 90px; right: 90px; top: 520px; }
+  #c1 .kicker { margin-bottom: 40px; }
+  #c1 .hl--hook { font-size: 128px; }
+  #c1 .fichas { display: flex; gap: 18px; margin-top: 60px; }
+  #c1 .ficha { padding: 12px 22px; border-radius: 14px; background: var(--white); border: 2px solid var(--line); font-size: 52px; color: var(--muted); }
+  /* Cena 2: a fatura do dinheiro parado */
+  #c2 .fatura { top: 250px; }
+  #c2 .selo { position: absolute; right: 44px; top: -30px; transform: rotate(-4deg); font-size: 34px; background: var(--white); }
+  .fatura__linha--alvo { position: relative; }
+  #c2-alvo-borda { position: absolute; left: -26px; top: 6px; bottom: 6px; width: 8px; border-radius: 4px; background: var(--blue); }
+  /* Cena 3: o aviso da EVA no WhatsApp do dono */
+  #c3 .conversa { top: 300px; }
+  #c3 .conversa__corpo { overflow: hidden; }
+  #c3 .rolo { display: flex; flex-direction: column; gap: 18px; }
+  #c3 .bolha--aviso { font-size: 37px; max-width: 92%; }
+  #c3 .bolha--aviso .bolha__meta { font-size: 33px; }
+  /* Cena 4: preço de fundador */
+  #c4 .preco { top: 470px; }
+  #c4 .valor { display: flex; align-items: flex-end; gap: 14px; }
+  #c4 .valor .num { font-size: 230px; line-height: .8; color: var(--ink); white-space: nowrap; }
+  #c4 .valor .mes { font: 800 64px/1 var(--f-display); padding-bottom: 18px; color: var(--muted); }
+  #c4 .cond { margin-top: 48px; font-size: 48px; line-height: 1.3; font-weight: 600; }
+  #c4 .depois { margin-top: 36px; padding-top: 30px; border-top: 3px dashed var(--line); font-size: 40px; color: var(--muted); }
+  #c5 .cta { position: absolute; left: 90px; right: 90px; top: 600px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  #c5 .logo { display: flex; align-items: center; gap: 22px; }
+  #c5 .logo span { font: 600 104px var(--f-ui); letter-spacing: -.035em; color: var(--ink); }
+  #c5 .sub { margin: 44px 0 64px; font-size: 42px; }
+  #c5 .url { margin-top: 40px; font: 700 64px var(--f-num); letter-spacing: .01em; color: var(--ink); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="root" data-start="0" data-duration="24" data-width="1080" data-height="1920">
+ <div id="tc"></div>
+ <div id="camera">
+
+  <!-- 1 · GANCHO (B0) -->
+  <section class="cena" id="c1">
+    <div class="bloco">
+      <p class="kicker ln"><span>Para integrador de energia solar</span></p>
+      <h1 class="hl hl--hook"><span class="ln"><span>Quanto dinheiro</span></span><span class="ln"><span>está <span class="marca" id="c1-marca">parado</span></span></span><span class="ln"><span>no seu WhatsApp?</span></span></h1>
+      <div class="fichas depois"><span class="ficha num">R$ 24.900</span><span class="ficha num">R$ 61.300</span><span class="ficha num">R$ 19.800</span></div>
+    </div>
+  </section>
+
+  <!-- 2 · DOR (B7): a fatura do que está parado -->
+  <section class="cena" id="c2">
+    <div class="fatura" id="c2-fatura">
+      <span class="carimbo carimbo--espera selo" id="c2-selo">Parado</span>
+      <div class="fatura__topo"><p class="fatura__titulo">Propostas sem resposta</p><p class="fatura__ref">Outubro</p></div>
+      <div class="fatura__linha fatura__linha--alvo"><span id="c2-alvo-borda"></span><p class="fatura__quem">Carlos<small>8,4 kWp · há 2 dias</small></p><p class="fatura__valor num">R$ 24.900</p></div>
+      <div class="fatura__linha"><p class="fatura__quem">Fernanda<small>6,1 kWp · há 4 dias</small></p><p class="fatura__valor num">R$ 19.800</p></div>
+      <div class="fatura__linha"><p class="fatura__quem">Padaria Sol Nascente<small>22 kWp · há 6 dias</small></p><p class="fatura__valor num">R$ 61.300</p></div>
+      <div class="fatura__linha"><p class="fatura__quem">Joana<small>5,5 kWp · há 9 dias</small></p><p class="fatura__valor num">R$ 17.900</p></div>
+      <div class="fatura__linha"><p class="fatura__quem">Sítio Boa Vista<small>12 kWp · há 12 dias</small></p><p class="fatura__valor num">R$ 34.600</p></div>
+      <div class="fatura__linha"><p class="fatura__quem">Mais 7 propostas</p><p class="fatura__valor num">R$ 141.500</p></div>
+      <div class="fatura__total"><p class="fatura__total-rotulo">12 propostas<br>paradas</p><p class="fatura__total-valor num">R$ <span id="c2-total">0</span> mil</p></div>
+    </div>
+  </section>
+
+  <!-- 3 · PRODUTO (B18): o aviso da EVA chega no WhatsApp do dono -->
+  <section class="cena" id="c3">
+    <div class="conversa" id="c3-conv">
+      <div class="conversa__topo">
+        <div class="eva" id="c3-eva"><div class="eva__corpo"></div><div class="eva__olhos"><i class="eva__olho"></i><i class="eva__olho"></i></div><div class="eva__ponto"></div></div>
+        <div><p class="conversa__nome">Aviso do Vyzon</p><p class="conversa__status">no seu WhatsApp</p></div>
+      </div>
+      <div class="conversa__corpo">
+        <div class="rolo" id="c3-rolo">
+          <span class="conversa__dia" style="align-self:center">Quarta</span>
+          <div class="bolha bolha--aviso" id="c3-aviso">
+            <p class="av"><strong>EVA [A2] rascunho pronto</strong></p>
+            <p class="av" style="margin-top:10px">Lead: Carlos</p>
+            <p class="av">Por que agora: proposta de <span class="num" style="font-size:42px">R$ 24.900</span> sem resposta há 2 dias</p>
+            <p class="av bolha__rascunho">Oi, Carlos, conseguiu olhar a proposta? Se ajudar, te mando a simulação com financiamento pra comparar com a sua conta de luz.</p>
+            <p class="av bolha__meta">Responda A2 1 para enviar, A2 2 para descartar, ou escreva o texto corrigido.</p>
+            <span class="bolha__hora">09:02</span>
+          </div>
+          <div class="bolha bolha--saida" id="c3-um" style="font-size:52px;font-weight:600;padding:12px 26px 8px">1<span class="bolha__hora" style="font-weight:400">09:03</span></div>
+          <div class="bolha" id="c3-resp">Sai em 20 segundos para Carlos. Mande "desfazer" para cancelar.<span class="bolha__hora">09:03</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · PREÇO (B32): preço de fundador, de src/config/plans.ts -->
+  <section class="cena" id="c4">
+    <div class="preco" id="c4-preco">
+      <span class="preco__etiqueta">Preço de fundador</span>
+      <div class="valor" id="c4-valor"><span class="num">R$ 97</span><span class="mes">/mês</span></div>
+      <p class="cond" id="c4-c1">nos 3 primeiros meses</p>
+      <p class="cond" id="c4-c2" style="margin-top:8px">para as <span class="marca" id="c4-marca">10 primeiras integradoras</span></p>
+      <p class="depois" id="c4-depois">Depois, <span class="num" style="font-size:52px;color:var(--ink)">R$ 197</span> por mês. Sem contrato.</p>
+    </div>
+  </section>
+
+  <!-- 5 · CTA (B44): logo só aqui -->
+  <section class="cena" id="c5">
+    <div class="cta">
+      <div class="logo" id="c5-logo">
+        <svg width="112" height="114" viewBox="16 14.5 68 69"><defs><mask id="gap" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><rect x="25" y="13" width="26" height="72" rx="13" transform="rotate(-22 38 49)" fill="#000" stroke="#000" stroke-width="9"/></mask></defs><rect x="49" y="13" width="26" height="72" rx="13" transform="rotate(22 62 49)" fill="#2563EB" mask="url(#gap)"/><rect x="25" y="13" width="26" height="72" rx="13" transform="rotate(-22 38 49)" fill="#0d1421"/></svg>
+        <span>vyzon</span>
+      </div>
+      <p class="sub" id="c5-sub">Para integrador de energia solar<br>que vende pelo WhatsApp.</p>
+      <div class="btn" id="c5-btn"><span class="btn__wa"><svg width="34" height="34" viewBox="0 0 24 24"><path fill="#0d1421" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3Z"/></svg></span>Fale com o Markus no WhatsApp</div>
+      <p class="url" id="c5-url">vyzon.com.br</p>
+    </div>
+  </section>
+
+ </div>
+ <div id="legenda"></div>
+</div>
+<script src="legendas.js"></script>
+<script src="base.js"></script>
+<script>
+// Batidas (House 02, 122,99 BPM): B(k) = 0,017 + k · 0,4879 s. Âncoras de voz em roteiro.json.
+window.__timelines = window.__timelines || {}; // o lint do HyperFrames procura esta linha
+const { B } = VF;
+const DUR = 24;
+const tl = VF.montar();
+VF.respira(tl, DUR);
+VF.tempo(tl, DUR);
+VF.legendas(tl);
+
+// 1 · GANCHO: título inteiro no quadro 0; valores parados aparecem na batida.
+VF.cena(tl, "#c1", 0, B(7));
+tl.fromTo("#c1 .bloco", { y: 0 }, { y: -36, duration: B(7), ease: "drift" }, 0);
+VF.marca(tl, "#c1-marca", B(1));
+tl.set("#c1 .fichas", { visibility: "visible" }, B(3));
+VF.antes(tl, "#c1 .ficha", { autoAlpha: 0 });
+tl.fromTo("#c1 .ficha", { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.4, stagger: VF.BEAT, ease: "settle", immediateRender: false }, B(3));
+VF.lineOut(tl, "#c1 .ln", B(7) - 0.34);
+VF.sai(tl, "#c1 .fichas", B(7) - 0.3);
+
+// 2 · FATURA: uma linha por meia batida, o total conta junto com a voz.
+VF.cena(tl, "#c2", B(7), B(18));
+VF.entra(tl, "#c2-fatura", B(7), { y: 120 });
+VF.antes(tl, ["#c2 .fatura__linha", "#c2 .fatura__total", "#c2-selo"], { autoAlpha: 0 });
+tl.fromTo("#c2 .fatura__linha", { autoAlpha: 0, x: -24 }, { autoAlpha: 1, x: 0, duration: 0.3, stagger: VF.BEAT / 2, ease: "settle", immediateRender: false }, B(8));
+tl.fromTo("#c2 .fatura__total", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.25, immediateRender: false }, B(11.5));
+tl.fromTo("#c2-total", { textContent: 0 }, { textContent: 300, duration: B(14) - B(12), ease: "settle", snap: { textContent: 5 }, immediateRender: false }, B(12));
+tl.fromTo("#c2-selo", { autoAlpha: 0, scale: 1.4 }, { autoAlpha: 1, scale: 1, duration: 0.22, ease: "snap", immediateRender: false }, B(15.5));
+tl.set("#c2-alvo-borda", { autoAlpha: 0 }, 0);
+tl.fromTo("#c2-alvo-borda", { autoAlpha: 0, scaleY: 0 }, { autoAlpha: 1, scaleY: 1, duration: 0.3, ease: "snap", immediateRender: false }, B(17));
+tl.to("#c2 .fatura__linha:not(.fatura__linha--alvo), #c2 .fatura__total, #c2 .fatura__topo, #c2-selo", { opacity: 0.25, duration: 0.3 }, B(17));
+tl.to("#c2-fatura", { autoAlpha: 0, scale: 0.97, duration: 0.14, ease: "throw" }, B(18) - 0.14);
+
+// 3 · PRODUTO (virada): o aviso chega, o dono responde 1.
+VF.cena(tl, "#c3", B(18), B(32));
+tl.fromTo("#camera", { scale: 1.0 }, { scale: 1.03, duration: 0.7, ease: "heavy", immediateRender: false }, B(18));
+VF.entra(tl, "#c3-conv", B(18), { y: 140, dur: 0.75, ease: "virada" });
+VF.evaLendo(tl, "#c3-eva", B(18), 0.9);
+VF.evaAlerta(tl, "#c3-eva", B(19));
+VF.antes(tl, ["#c3-aviso", "#c3-aviso .av", "#c3-aviso .bolha__hora"], { autoAlpha: 0 });
+// o aviso nasce inteiro na batida da notificação; as linhas assentam em sequência curta
+VF.bolha(tl, "#c3-aviso", B(19), { dur: 0.45 });
+tl.fromTo("#c3-aviso .av", { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.3, stagger: 0.07, ease: "settle", immediateRender: false }, B(19) + 0.08);
+tl.fromTo("#c3-aviso .bolha__hora", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.2, immediateRender: false }, B(19) + 0.5);
+tl.set(["#c3-um", "#c3-resp"], { autoAlpha: 0 }, 0);
+const corpo = document.querySelector("#c3 .conversa__corpo");
+const fundo = (id) => { const el = document.getElementById(id); return el.offsetTop + el.offsetHeight; };
+const H = fundo("c3-aviso") + 34;
+corpo.style.height = H + "px";
+document.getElementById("c3-conv").style.top = Math.round((1920 - (H + 124)) / 2 - 40) + "px";
+const sobe = (id) => Math.min(0, H - 34 - fundo(id));
+tl.to("#c3-rolo", { y: sobe("c3-um"), duration: 0.45, ease: "settle" }, B(28) - 0.15);
+VF.bolha(tl, "#c3-um", B(28));
+tl.to("#c3-rolo", { y: sobe("c3-resp"), duration: 0.45, ease: "settle" }, B(29.5) - 0.15);
+VF.bolha(tl, "#c3-resp", B(29.5));
+tl.to("#c3-conv", { autoAlpha: 0, y: "-=50", duration: 0.3, ease: "throw" }, B(32) - 0.3);
+
+// 4 · PREÇO: cada condição entra quando a voz chega nela.
+VF.cena(tl, "#c4", B(32), B(44));
+tl.set("#camera", { scale: 1.0 }, B(32));
+VF.entra(tl, "#c4-preco", B(32), { y: 100 });
+VF.entra(tl, "#c4-valor", B(33), { y: 50, dur: 0.6, ease: "settle" });
+// quando a voz diz "noventa e sete": o número assenta com um pulso curto
+tl.to("#c4-valor .num", { scale: 1.06, duration: 0.16, ease: "snap", transformOrigin: "0% 100%" }, B(35));
+tl.to("#c4-valor .num", { scale: 1, duration: 0.5, ease: "settle" }, B(35) + 0.16);
+tl.fromTo("#c4-valor .num", { color: "#0d1421" }, { color: "#1556c0", duration: 0.3, ease: "settle", immediateRender: false }, B(35));
+VF.entra(tl, "#c4-c1", B(37.5), { y: 30, dur: 0.5, ease: "settle" });
+VF.entra(tl, "#c4-c2", B(38.5), { y: 30, dur: 0.5, ease: "settle" });
+VF.marca(tl, "#c4-marca", B(39));
+VF.entra(tl, "#c4-depois", B(39.5), { y: 30, dur: 0.5, ease: "settle" });
+tl.to("#c4-preco", { autoAlpha: 0, y: "-=50", duration: 0.3, ease: "throw" }, B(44) - 0.3);
+
+// 5 · CTA: pequeno, falado, logo só aqui.
+VF.cena(tl, "#c5", B(44));
+VF.entra(tl, "#c5-logo", B(44), { y: 40, dur: 0.6, ease: "settle" });
+VF.entra(tl, "#c5-sub", B(44) + 0.12, { y: 30, dur: 0.6, ease: "settle" });
+VF.entra(tl, "#c5-btn", B(45), { y: 40, dur: 0.6, ease: "settle" });
+VF.entra(tl, "#c5-url", B(45) + 0.15, { y: 30, dur: 0.6, ease: "settle" });
+tl.to("#tc", { opacity: 1, duration: 0.01 }, DUR - 0.01); // fixa a duração da timeline
+VF.registrar("root", tl);
+</script>
+</body>
+</html>

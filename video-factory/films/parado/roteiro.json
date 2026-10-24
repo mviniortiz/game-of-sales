@@ -1,0 +1,47 @@
+{
+  "slug": "parado",
+  "duracao": 24,
+  "trilha": {
+    "arquivo": "~/Movies/vyzon-film/trilha/house-02-lily-j-mixkit-744.mp3",
+    "bpm": 122.99, "fase": 0.017, "inicio": 0,
+    "ganho_db": -11, "ducking_db": -12, "fade_out": 1.2,
+    "automacao": [
+      { "beat": 0, "lp_hz": 20000, "ganho_db": 0 },
+      { "beat": 6.6, "lp_hz": 20000, "ganho_db": 0 },
+      { "beat": 7, "lp_hz": 1100, "ganho_db": -2 },
+      { "beat": 17.4, "lp_hz": 1100, "ganho_db": -2 },
+      { "beat": 18, "lp_hz": 20000, "ganho_db": 1 }
+    ]
+  },
+  "vozDir": "~/Movies/vyzon-film/voz/aparadas",
+  "sfxDir": "~/Movies/vyzon-film/sfx",
+  "voz": { "nome": "Nassif ulzsiMeCbfKyTPCNhCD5", "modelo": "eleven_v4", "ganho_db": 0 },
+  "falas": [
+    { "id": "P1", "arquivo": "P1-t2.wav", "beat": 0, "offset": 0.1, "texto": "Quanto dinheiro está parado no seu WhatsApp agora?", "semLegenda": true },
+    { "id": "P2", "arquivo": "P2b-t2.wav", "beat": 7, "offset": 0.1, "texto": "Doze propostas sem resposta: trezentos mil reais parados.",
+      "legenda": [[0.12, "12 propostas sem resposta:"], [2.42, "R$ 300 mil parados."]], "fim_palavras": 4.56 },
+    { "id": "L3", "arquivo": "L3-t1.wav", "beat": 18, "offset": 0.15, "texto": "No segundo dia, a mensagem pra chamar de volta chega pronta no seu WhatsApp.",
+      "legenda": [[0.08, "No 2º dia,"], [1.18, "a mensagem pra chamar de volta"], [2.8, "chega pronta no seu WhatsApp."]], "fim_palavras": 4.34 },
+    { "id": "P5", "arquivo": "P5b-t1.wav", "beat": 32, "offset": 0.1, "texto": "Preço de fundador: noventa e sete reais por mês nos três primeiros meses.", "semLegenda": true },
+    { "id": "L6", "arquivo": "L6-t1.wav", "beat": 44, "offset": 0.1, "texto": "Fale com o Markus no WhatsApp.", "semLegenda": true }
+  ],
+  "sfx": [
+    { "arquivo": "hook-thud-v1.mp3", "beat": 0, "offset": -0.017, "ganho_db": -6 },
+    { "arquivo": "pop-light-v1.mp3", "beat": 3, "offset": -0.01, "ganho_db": -15 },
+    { "arquivo": "pop-light-v1.mp3", "beat": 4, "offset": -0.01, "ganho_db": -15 },
+    { "arquivo": "pop-light-v1.mp3", "beat": 5, "offset": -0.01, "ganho_db": -15 },
+    { "arquivo": "zoom-air-v1.mp3", "beat": 7, "offset": -0.19, "ganho_db": -13 },
+    { "arquivo": "tick-v2.mp3", "beat": 8, "offset": -0.14, "ganho_db": -13 },
+    { "arquivo": "tick-v2.mp3", "beat": 9, "offset": -0.14, "ganho_db": -13 },
+    { "arquivo": "tick-v2.mp3", "beat": 10, "offset": -0.14, "ganho_db": -13 },
+    { "arquivo": "hook-thud-v1.mp3", "beat": 15.5, "offset": -0.03, "ganho_db": -11 },
+    { "arquivo": "riser-chargeup-v1.mp3", "beat": 19, "offset": -1.04, "ganho_db": -12 },
+    { "arquivo": "notify-v1.mp3", "beat": 19, "offset": 0, "ganho_db": -7 },
+    { "arquivo": "approve-click-v1.mp3", "beat": 28, "offset": -0.025, "ganho_db": -6 },
+    { "arquivo": "pop-light-v1.mp3", "beat": 29.5, "offset": -0.01, "ganho_db": -12 },
+    { "arquivo": "zoom-air-v1.mp3", "beat": 32, "offset": -0.19, "ganho_db": -14 },
+    { "arquivo": "payoff-v1.mp3", "beat": 35, "offset": -0.015, "ganho_db": -9 },
+    { "arquivo": "zoom-air-v1.mp3", "beat": 44, "offset": -0.19, "ganho_db": -14 }
+  ],
+  "master": { "lufs": -14, "true_peak": -1.5 }
+}

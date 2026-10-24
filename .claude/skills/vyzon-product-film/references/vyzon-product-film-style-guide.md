@@ -14,16 +14,28 @@ A tela do produto é a heroína. Tipografia é a coadjuvante. O resto desaparece
 
 ## 2. Registros visuais (um por filme)
 
-### Papel (padrão da landing; filme "Um toque", `videos/vyzon-solar-launch-9x16`)
+### Vyzon Solar (padrão desde 23/10/2026; `video-factory/molde-vyzon-solar`)
 
-| Papel | Cor | Uso |
+O mesmo design system da home (bloco LP.8 de `src/index.css`, referência
+https://claude.ai/artifact/Rm4n5dnbf8nPTb961BbsA2). Substitui o antigo Papel
+creme (`#FAF9F5`): creme + azul-noite + âmbar é a identidade da SolarMarket.
+
+| Papel | Valor | Uso |
 |---|---|---|
-| Fundo | `#FAF9F5` | todas as cenas editoriais |
-| Texto | `#0D1421` | headlines e corpo |
-| Primário | `#1556C0` | destaque de palavra |
-| EVA | `#6D28D9` | micro-acento, nunca área grande |
+| Fundo | `#F6F7F9` (papel frio) | todas as cenas |
+| Texto | `#0D1421`; secundário `#4A5363`, `#5F6776` | títulos e corpo |
+| Azul dono | `#1556C0` | número que importa, dia 2, barra do rascunho |
+| Marca-texto | `#FFD84A` | só atrás de texto `#0D1421`, uma vez por cena, desenhado da esquerda |
+| Conversa | `#EFEAE2` fundo, `#D9FDD3` saída, branco entrada, ✓✓ `#53BDEB` | o WhatsApp como objeto |
+| Carimbos | espera `#A14A07`, ok `#0F7B4F` | estado, sempre com a palavra |
+| EVA | EvaBot (cores de `src/components/eva/evaBot.css`), ponto `#A78BFA` | nunca área grande |
 
-### Noite azul (aprovado em 17/10/2026; `videos/vyzon-noite-azul-9x16`)
+Fontes: Archivo 800 nos títulos (118–132 px, tracking -0.035em), Barlow
+Condensed 700 nos números, Geist na UI e no corpo. Objetos: a conversa de
+WhatsApp (`.conversa`) e a fatura (`.fatura`, no molde da conta de luz). Sem
+gradiente, sem brilho, sombra suave de papel.
+
+### Noite azul (aprovado em 17/10/2026; molde ficou no PC antigo)
 
 Estrutura e ritmo de reel da ElevenLabs com a pele do Vyzon.
 
@@ -42,11 +54,14 @@ nada de neon, partícula ou orbe.
 
 ## 3. Tipografia
 
-- **Headlines:** Satoshi 900, tracking -0.045em, line-height ~1.02, 112–128 px.
-  Máx ~6 palavras por beat. Entram por máscara (linha sobe de baixo).
-- **Kicker:** Satoshi 700, 64 px, com a palavra que importa em 900.
-- **UI dos cartões:** Inter 500/600, 42–50 px no texto de mensagem, ≥ 34 px no
+- **Headlines:** Archivo 800 (Vyzon Solar; Satoshi 900 só na Noite azul),
+  tracking -0.035em, line-height ~1.02, 118–132 px. Máx ~6 palavras por beat.
+  Entram por máscara (linha sobe de baixo); o gancho já está na tela no quadro 0.
+- **Kicker:** Geist 600, 34 px, caixa alta, tracking .08em.
+- **Números:** Barlow Condensed 700 (valores, dias, preço).
+- **UI dos cartões:** Geist 400/600, 37–46 px no texto de mensagem, ≥ 30 px no
   resto. Linha que corta no celular é defeito: quebre em duas.
+- **Legenda da narração:** Archivo 800, 54 px, centrada, faixa 1460–1600 px.
 - Nada de fonte nova por vídeo.
 
 ## 4. Produto em cena
@@ -59,8 +74,9 @@ nada de neon, partícula ou orbe.
     orçamento em PDF enviado há 2 dias", "Em conversa · cliente falou hoje",
     "Retomada pronta no seu WhatsApp, esperando o seu ok", "Retomada enviada hoje").
 - "Recuperado pela EVA" é número da tela Resultados, não selo de orçamento.
-- No registro Papel, cenas de produto usam os tokens do APP (`--vyz-*`, `--ibx-*`,
-  azul `#2563EB → #4A8CE8`), nunca a paleta da landing dentro do mockup.
+- No registro Vyzon Solar o produto aparece onde o dono o vê de verdade: no
+  WhatsApp dele (aviso "Aviso do Vyzon · no seu WhatsApp", como na home). A
+  fatura é objeto gráfico do design system, não print do app.
 - Dados fictícios coerentes de integrador: cliente pessoa física, proposta em PDF
   ("Proposta_8,4kWp.pdf", R$ 38.400), conversa curta.
 
