@@ -101,3 +101,27 @@ INSERT OR IGNORE INTO conversas (empresa, nicho, cidade, canal, data, tipo, fras
 
 INSERT OR IGNORE INTO decisoes (data, recomendacao, criterio, evidencia, decisao_markus) VALUES
   ('2026-10-22', 'Pausar o time de 6 bots de distribuição e, antes de escalar, descobrir um nicho que pague, com conversas.', 'Nenhum cliente pagante e nenhuma conversa marcada no nicho solar.', '50 respostas da prospecção e leitura de cerca de 3.450 avaliações do Google em 3 nichos.', 'Testar vidraçaria pelo WhatsApp e começar com um bot de marketing e depois um de produto.');
+
+-- ── Bot de vendas (24/10/2026) ─────────────────────────────────────────────
+
+-- Lista fria do bot de vendas. Quem responde de verdade vira card no pipeline
+-- do Vyzon (deal_id); o resto fica aqui.
+CREATE TABLE IF NOT EXISTS prospects (
+  id INTEGER PRIMARY KEY,
+  empresa TEXT NOT NULL,
+  nicho TEXT NOT NULL,
+  cidade TEXT,
+  avaliacoes INTEGER,
+  telefone TEXT NOT NULL UNIQUE,
+  fonte_url TEXT,
+  status TEXT NOT NULL DEFAULT 'listada' CHECK (status IN ('listada','enviada','respondeu','card','sem_resposta','nao_contatar')),
+  toques INTEGER NOT NULL DEFAULT 0,
+  ultimo_toque TEXT,
+  proximo_toque TEXT,
+  deal_id TEXT,
+  notas TEXT,
+  criado_em TEXT NOT NULL DEFAULT (date('now'))
+);
+
+-- A lista inicial com telefones (as 10 vidraçarias de 22/10) não fica no
+-- repositório: vai direto para a pasta do bot de vendas no Mac do Markus.

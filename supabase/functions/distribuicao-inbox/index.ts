@@ -15,6 +15,13 @@
 // action=executado  o executor (fase 2/3) marca que publicou o que foi aprovado.
 // action=painel     números agregados da distribuicao_painel(), sem dado pessoal.
 //
+// Bot de vendas (VENDAS.0, 2026-10-24): o pipeline do próprio Vyzon é o CRM das
+// vendas do Vyzon. Só quem respondeu de verdade vira card (ver _shared/vendas.ts).
+// action=vendas_pipeline   cards abertos da empresa Vyzon, com dias parado e se
+//                          a EVA já tem retomada esperando aprovação.
+// action=vendas_criar      card novo (não duplica telefone já no pipeline).
+// action=vendas_atualizar  move etapa e/ou anota; nunca marca venda ganha.
+//
 // O Markus é DISTRIBUICAO_USER_ID (o número dele sai da conexão de WhatsApp
 // desse usuário). DISTRIBUICAO_ATIVA=false recusa novos rascunhos.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -22,6 +29,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { avisarPendentes } from "../_shared/distribuicaoAprovacao.ts";
+import { anexarNota, validarAtualizacao, validarNovoCard } from "../_shared/vendas.ts";
 import {
     AGENTES,
     MAX_PENDENTES,
@@ -146,19 +154,142 @@ serve(async (req) => {
             return json(200, { ok: true });
         }
 
-        if (action === "painel") {
+        // Empresa do Markus: a do usuário da distribuição, nunca do payload.
+        const empresaDoMarkus = async (): Promise<string | null> => {
             const { data: profile } = await admin
                 .from("profiles")
                 .select("company_id")
                 .eq("id", DISTRIBUICAO_USER_ID)
                 .maybeSingle();
-            if (!profile?.company_id) return json(503, { error: "usuario da distribuicao sem empresa" });
+            return profile?.company_id ?? null;
+        };
+
+        if (action === "painel") {
+            const companyId = await empresaDoMarkus();
+            if (!companyId) return json(503, { error: "usuario da distribuicao sem empresa" });
             const { data, error } = await admin.rpc("distribuicao_painel", {
-                p_company_id: profile.company_id,
+                p_company_id: companyId,
                 p_dias: Number(body.dias) || 7,
             });
             if (error) throw new Error(error.message);
             return json(200, { ok: true, painel: data });
+        }
+
+        if (action === "vendas_pipeline") {
+            const companyId = await empresaDoMarkus();
+            if (!companyId) return json(503, { error: "usuario da distribuicao sem empresa" });
+            const { data: deals, error } = await admin
+                .from("deals")
+                .select("id, title, account_name, customer_name, customer_phone, stage, value, source, notes, created_at, updated_at")
+                .eq("company_id", companyId)
+                .eq("is_active", true)
+                .not("stage", "in", "(closed_won,closed_lost)")
+                .order("updated_at", { ascending: true })
+                .limit(100);
+            if (error) throw new Error(error.message);
+            const ids = (deals || []).map((d: any) => d.id);
+            const pendentes = new Set<string>();
+            if (ids.length) {
+                const { data: sug } = await admin
+                    .from("agent_suggestions")
+                    .select("deal_id")
+                    .in("deal_id", ids)
+                    .in("status", ["pending", "agendado"]);
+                for (const s of sug || []) if (s.deal_id) pendentes.add(s.deal_id);
+            }
+            const agora = Date.now();
+            const cards = (deals || []).map((d: any) => ({
+                deal_id: d.id,
+                titulo: d.title,
+                empresa: d.account_name,
+                contato: d.customer_name,
+                telefone: d.customer_phone,
+                etapa: d.stage,
+                valor: d.value,
+                origem: d.source,
+                dias_parado: Math.floor((agora - new Date(d.updated_at || d.created_at).getTime()) / 86400000),
+                eva_retomada_pendente: pendentes.has(d.id),
+                notas: String(d.notes || "").slice(0, 600),
+            }));
+            return json(200, { ok: true, cards });
+        }
+
+        if (action === "vendas_criar") {
+            const v = validarNovoCard(body.card);
+            if (!v.ok) return json(422, { error: "card recusado", erros: v.erros });
+            const c = v.valor;
+            const companyId = await empresaDoMarkus();
+            if (!companyId) return json(503, { error: "usuario da distribuicao sem empresa" });
+            // Mesmo número já no pipeline (aberto ou não): não duplica, devolve o existente.
+            const final8 = c.telefone.slice(-8);
+            const { data: existente } = await admin
+                .from("deals")
+                .select("id, title, stage")
+                .eq("company_id", companyId)
+                .like("customer_phone", `%${final8}`)
+                .limit(1)
+                .maybeSingle();
+            if (existente) return json(409, { error: "ja existe card para este telefone", card: existente });
+            const { data: criado, error } = await admin
+                .from("deals")
+                .insert({
+                    title: `${c.empresa} · ${c.nicho}`,
+                    customer_name: c.contato || c.empresa,
+                    customer_phone: c.telefone,
+                    account_name: c.empresa,
+                    stage: c.etapa,
+                    user_id: DISTRIBUICAO_USER_ID,
+                    company_id: companyId,
+                    additional_contacts: [{ phone: c.telefone }],
+                    lead_source: "bot_vendas",
+                    source: "prospeccao",
+                    notes: anexarNota(c.cidade ? `Cidade: ${c.cidade}.` : null, c.nota),
+                })
+                .select("id, title, stage")
+                .single();
+            if (error || !criado) throw new Error(`criar card falhou: ${error?.message || "sem retorno"}`);
+            return json(201, { ok: true, card: criado });
+        }
+
+        if (action === "vendas_atualizar") {
+            const v = validarAtualizacao(body.atualizacao);
+            if (!v.ok) return json(422, { error: "atualizacao recusada", erros: v.erros });
+            const a = v.valor;
+            const companyId = await empresaDoMarkus();
+            if (!companyId) return json(503, { error: "usuario da distribuicao sem empresa" });
+            const { data: deal } = await admin
+                .from("deals")
+                .select("id, stage, notes, pipeline_id")
+                .eq("id", a.deal_id)
+                .eq("company_id", companyId)
+                .maybeSingle();
+            if (!deal) return json(404, { error: "card nao encontrado no pipeline do Vyzon" });
+            if (deal.stage === "closed_won") return json(409, { error: "venda ganha so o Markus altera" });
+            const patch: Record<string, unknown> = {};
+            if (a.etapa) {
+                // O trigger do banco só casa stage_id no insert; no update a coluna
+                // do quadro tem de andar junto, senão o card fica na coluna antiga.
+                const { data: coluna } = await admin
+                    .from("pipeline_stages")
+                    .select("id")
+                    .eq("pipeline_id", deal.pipeline_id)
+                    .eq("legacy_key", a.etapa)
+                    .maybeSingle();
+                if (!coluna) return json(409, { error: `o funil deste card nao tem a etapa ${a.etapa}` });
+                patch.stage = a.etapa;
+                patch.stage_id = coluna.id;
+            }
+            if (a.motivo_perda) patch.loss_reason = a.motivo_perda;
+            const notaFinal = a.nota || (a.etapa ? `Etapa: ${deal.stage} -> ${a.etapa}.` : null);
+            if (notaFinal) patch.notes = anexarNota(deal.notes, notaFinal);
+            const { data: atualizado, error } = await admin
+                .from("deals")
+                .update(patch)
+                .eq("id", deal.id)
+                .select("id, title, stage")
+                .single();
+            if (error) throw new Error(error.message);
+            return json(200, { ok: true, card: atualizado });
         }
 
         return json(400, { error: `action desconhecida: ${action}` });

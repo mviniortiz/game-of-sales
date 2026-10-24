@@ -7,6 +7,13 @@ cliente. Começa com um bot e cresce para dois:
 |---|---|---|---|
 | 1º | Assistente de marketing | Ajudar a criar conteúdo do Vyzon (posts, carrosséis, roteiros de reel, artigos) e usar o conteúdo para puxar conversa com quem sente a dor | `01-assistente-de-marketing.md` |
 | 2º | Especialista de produto | Entender como melhorar o Vyzon e para onde ir: qual problema, qual nicho, o que construir e o que parar | `02-especialista-de-produto.md` |
+| 3º | Vendedor (SDR) | Prospectar, montar a agenda de vendas do dia com mensagens prontas, cuidar da cadência e usar o pipeline do próprio Vyzon como CRM | `03-vendedor.md` |
+
+O Vendedor usa o Vyzon como CRM das vendas do Vyzon: quem responde de verdade
+vira card no pipeline da empresa Vyzon (skill `pipeline-vyzon`, ações
+`vendas_*` da edge `distribuicao-inbox`), e a EVA acompanha esse card como faria
+para um cliente. Lista fria fica na tabela `prospects` do banco do OpenBot, para
+não encher o Markus de aprovações da EVA.
 
 Nenhum dos dois publica, envia mensagem ou fala com ninguém. Eles entregam
 rascunho e recomendação; quem publica, envia e decide é o Markus.
