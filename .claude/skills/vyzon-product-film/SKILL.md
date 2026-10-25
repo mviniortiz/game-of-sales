@@ -58,6 +58,10 @@ video-factory/scripts/        audiomap.mjs · apara-frases.mjs · gera-legendas.
 ~/Movies/vyzon-film/          trilha/ · sfx/ · voz/ · transcrever/
 ```
 Filmes no Mac: `dia-2` (virada, 23 s) e `parado` (Raio-X + preço, 24 s).
+Reel com o Markus falando para a câmera (faixa da pergunta de 0 a 4 s, legenda
+palavra por palavra, corte de silêncio): `video-factory/molde-rosto` e
+`scripts/rosto/`, passo a passo no README ("Reel com rosto"). Rosto real
+sempre; rosto gerado por IA é proibido.
 Os antigos (noite-azul-01 a trabalhos-eva-06) ficaram no PC.
 
 ## 1. Pré-produção (obrigatória)

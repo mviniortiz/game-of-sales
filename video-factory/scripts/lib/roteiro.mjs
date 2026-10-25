@@ -9,11 +9,12 @@ export function carregar(arquivo) {
     r._dir = dirname(resolve(arquivo));
     const home = process.env.HOME;
     const abs = (p) => (p.startsWith("~/") ? join(home, p.slice(2)) : resolve(r._dir, p));
-    r.trilha.arquivo = abs(r.trilha.arquivo);
-    r.vozDir = abs(r.vozDir);
-    r.sfxDir = abs(r.sfxDir);
-    const durs = join(r.vozDir, "duracoes.json");
-    r._duracoes = existsSync(durs) ? JSON.parse(readFileSync(durs, "utf8")) : {};
+    if (r.trilha?.arquivo) r.trilha.arquivo = abs(r.trilha.arquivo);
+    if (r.vozDir) r.vozDir = abs(r.vozDir);
+    if (r.sfxDir) r.sfxDir = abs(r.sfxDir);
+    if (r.bruto) r.bruto = abs(r.bruto);
+    const durs = r.vozDir ? join(r.vozDir, "duracoes.json") : null;
+    r._duracoes = durs && existsSync(durs) ? JSON.parse(readFileSync(durs, "utf8")) : {};
     return r;
 }
 
@@ -22,6 +23,7 @@ export const tempo = (r, beat, offset = 0) => +(r.trilha.fase + beat * (60 / r.t
 /** Posiciona as frases: cada uma entra na sua batida; se a anterior ainda fala,
  *  empurra +80 ms depois do fim dela. Nunca acelera a voz. */
 export function posicionarFalas(r) {
+    if (!r.falas) return [];
     let fimAnterior = -Infinity;
     return r.falas.map((f) => {
         const d = r._duracoes[f.arquivo];

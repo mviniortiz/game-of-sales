@@ -16,7 +16,10 @@ video-factory/
   package.json            só o hyperframes@0.8.92
   molde-vyzon-solar/      base.css (tokens LP.8, conversa, fatura, preço, EvaBot, legenda)
                           base.js (batidas, curvas, atalhos de movimento seek-safe)
+  molde-rosto/            index.html, rosto.css, rosto.js (reel com rosto: faixa + legenda)
   scripts/
+    rosto/                prepara, importa-palavras, corta, mixa-rosto, render-rosto.sh,
+                          gera-bruto-teste (ver "Reel com rosto")
     audiomap.mjs          batidas e energia por compasso da trilha (era audiomap.py)
     apara-frases.mjs      corta o silêncio das pontas de cada frase de voz
     analisa-sfx.mjs       mede ataque, cauda e brilho dos efeitos para escolher variação
@@ -28,6 +31,7 @@ video-factory/
     render-filme.sh       faz tudo de um filme, do render à folha
     lib/audio.mjs         decodificar/gravar WAV, envelope, medição de loudness
     lib/roteiro.mjs       lê roteiro.json e posiciona as frases (empurrão de +80 ms, nunca acelera)
+    lib/master.mjs        master comum: ganho até -14 LUFS e limitador para pico real < -1,5 dBTP
   films/<slug>/           index.html (projeto HyperFrames), roteiro.json, legendas.js,
                           base.css/base.js (cópia do molde), edl.md, review.md
                           <slug>-final.mp4 e <slug>-rev.mp4 (ignorados pelo git)
@@ -45,6 +49,7 @@ sfx/<nome>-v1|v2.mp3                    paleta gerada na ElevenLabs (Sound Effec
 voz/<frase>-t1|t2.mp3                   tomadas da ElevenLabs, tomadas.json (texto, duração, URL)
 voz/aparadas/*.wav + duracoes.json      frases aparadas que o mix usa
 transcrever/<slug>-final-mix.mp3        áudio final para a transcrição de checagem
+brutos/<slug>.mov                       gravações do Markus para os reels com rosto
 ```
 
 ## Instalação (uma vez por máquina)
@@ -54,13 +59,16 @@ O Mac não tem Homebrew, Python de usuário nem ffmpeg completo, e não precisa:
 1. Node 22+ via nvm (`~/.nvm`). `env.sh` carrega.
 2. `cd video-factory && npm install` instala só o `hyperframes@0.8.92`
    (~120 MB em `node_modules`, inclui sharp e esbuild nativos).
-3. ffmpeg: os wrappers em `bin/` usam o ffmpeg 7.1 do Remotion
-   (`node_modules/@remotion/compositor-darwin-arm64`, já instalado pelo app).
-   Ele é enxuto: tem libx264, aac, mp3, `scale` (Lanczos) e `loudnorm`; **não**
-   tem drawtext, sidechaincompress, lowpass, ebur128 nem o muxer f32le. Por isso
-   mix, ducking, passa-baixa, limitador e tempo queimado são feitos em Node e
-   no HTML. O HyperFrames avisa que o "fast capture" fica desligado sem o filtro
-   psnr; o render cai para screenshot e funciona (~1,5 min por filme em 4K/60).
+3. ffmpeg: os wrappers em `bin/` preferem `bin/full/` (ffmpeg e ffprobe 9.0.2
+   estáticos para Mac arm64 de https://ffmpeg.martin-riedl.de, assinados com
+   Developer ID, ~57 MB de zip, baixados com OK do Markus em 24/10/2026; fora
+   do git). Para instalar de novo: baixe `macos/arm64/<versão>/ffmpeg.zip` e
+   `ffprobe.zip`, confira o `.sha256` publicado e descompacte em `bin/full/`.
+   Sem eles, os wrappers caem no ffmpeg 7.1 do Remotion
+   (`node_modules/@remotion/compositor-darwin-arm64`), que basta para os filmes
+   de produto (mix, ducking, passa-baixa e limitador são em Node) mas **não**
+   para vídeo dentro do HyperFrames: a extração de quadros usa os filtros
+   `fps`, `format`, `setpts` e `settb`, que essa build não tem.
 4. Navegador: `HYPERFRAMES_BROWSER_PATH` aponta para o Brave
    (`/Applications/Brave Browser.app`). Não foi preciso baixar o
    chrome-headless-shell.
@@ -102,6 +110,47 @@ source video-factory/env.sh
    screening, transcrição do mix final (`~/Movies/vyzon-film/transcrever/`), e
    `review.md` a partir de `templates/review.md`. Aprovado com ≥ 16/20 e 2 em
    todos os critérios †.
+
+## Reel com rosto (o Markus falando para a câmera)
+
+Formato que mais rende no setor (ver `docs/conteudo/instagram/2026-10-26/reels.md`):
+pessoa real, um plano só, a pergunta polêmica numa faixa de 0 a 4 s e legenda
+palavra por palavra em caixa alta. Nada de rosto gerado por IA. Molde em
+`molde-rosto/` (faixa no marca-texto, legenda com contorno escuro e a palavra
+falada acesa no marca-texto, sombra suave em cima e embaixo, sem logo).
+
+1. Grave no celular, vertical. Copie o arquivo para
+   `~/Movies/vyzon-film/brutos/<slug>.mov` (pode ser HEVC e girado; o preparo
+   aplica a rotação).
+2. `films/<slug>/rosto.json` (copie de `films/teste-rosto`): `bruto`, `faixa.texto`,
+   `cortar` (vazio na primeira passada), `troca` (grafias que o scribe erra,
+   como "Marcos" → "Markus"), `legenda.max_palavras`.
+3. `node scripts/rosto/prepara.mjs films/<slug>/rosto.json` → proxy em pé
+   1080x1920 com keyframe a cada segundo, WAV para o mix e
+   `~/Movies/vyzon-film/transcrever/<slug>-bruto.mp3`.
+4. Transcreva o MP3 em https://elevenlabs.io/app/speech-to-text (Claude in
+   Chrome, logado): Transcribe files → Upload, abra a transcrição, Export →
+   JSON com timestamps. Copie o JSON para `films/<slug>/transcricao/` e rode
+   `node scripts/rosto/importa-palavras.mjs films/<slug>/transcricao/<arquivo>.json films/<slug>/palavras.json`.
+   (O seletor de arquivo do conector ElevenLabs não sobe arquivo neste app.)
+5. `node scripts/rosto/corta.mjs films/<slug>/rosto.json` imprime os trechos
+   mantidos e todas as palavras com o tempo do bruto. Erro e frase regravada:
+   ponha o intervalo em `cortar` (tempos do bruto) e rode de novo. Silêncio
+   maior que `silencio.min` (0,35 s) sai sozinho; nenhum corte cai no meio de
+   palavra.
+6. `bash scripts/rosto/render-rosto.sh <slug> --rascunho`, olhe a folha, e sem a
+   flag para o final (`<slug>-final.mp4`, `<slug>-rev.mp4`). A voz é a do
+   próprio bruto, emendada sem clique, passa-alta 80 Hz, master -14 LUFS.
+   Trilha só se `rosto.json` tiver `trilha` (baixa, com ducking).
+
+`films/teste-rosto` é a prova do molde com uma gravação sintética
+(`scripts/rosto/gera-bruto-teste.mjs`: cartela com cronômetro e frases do
+Nassif com pausas e uma frase repetida). 21,1 s de bruto viram 12,2 s.
+
+Armadilha: com `<video>` na composição, os workers paralelos do HyperFrames no
+Brave deixavam os 80 px de baixo sem o vídeo. O `render-rosto.sh` usa
+`--workers 1` (12 s em 4K/60 renderizam em ~50 s). Os filmes de produto não
+têm o problema (o fundo do `#root` cobre a tela toda).
 
 ## Batidas da trilha
 

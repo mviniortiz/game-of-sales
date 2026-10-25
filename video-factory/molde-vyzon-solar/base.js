@@ -33,7 +33,7 @@
     function montar() {
         const tl = gsap.timeline({ paused: true, defaults: { ease: "settle" } });
         // Estado inicial de tudo que entra depois (seek-safe: set na posição 0).
-        tl.set(".cena:not(#c1)", { autoAlpha: 0 }, 0);
+        if (document.querySelector(".cena:not(#c1)")) tl.set(".cena:not(#c1)", { autoAlpha: 0 }, 0);
         if (document.querySelector(".cena:not(#c1) .ln > span")) tl.set(".cena:not(#c1) .ln > span", { yPercent: 115 }, 0);
         return tl;
     }

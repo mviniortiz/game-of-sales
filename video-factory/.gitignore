@@ -10,3 +10,6 @@ renders/
 *.mp3
 *.png
 *.jpg
+bin/full/
+films/*/transcricao/
+films/*/midia/
