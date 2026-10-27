@@ -79,7 +79,7 @@ const RESPOSTA_PORTA_TIME = [
   "Hoje você consegue ver isso ou depende de perguntar pra cada um?",
 ].join("\n\n");
 const RESPOSTA_PORTA_ABERTA =
-  "Valeu! Qual foi a última venda de energia solar que vocês perderam, e o que aconteceu?";
+  "Valeu! Hoje, o que mais te dá dor de cabeça na integradora?";
 export const respostaPorta = (niche?: string | null, variant?: string | null) => {
   const perfil = perfilDoNicho(niche);
   if (perfil) return respostaPortaDoNicho(perfil);
@@ -180,17 +180,19 @@ export function firstMessage(row: ProspectTarget, variant: ProspectVariant = "pe
       `Olá, tudo certo? Aqui é o ${sender}, de Floripa. Tô montando uma ferramenta pra integradora solar com time de venda e queria fazer uma pergunta rápida sobre como o dono acompanha as propostas dos vendedores no WhatsApp. Quem cuida disso aí na ${nome}?`,
     ][i];
   }
+  // Desde 27/10/2026: pergunta pelo maior problema da integradora, não só de venda
+  // (gestão, instalação, equipe). Sem listar áreas: a pessoa diz com as palavras dela.
   if (variant === "aberta") {
     const i = redacao(nome);
     if (dono) return [
-      `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô conversando com donos de integradora solar pra entender o que mais faz perder venda hoje, antes de terminar uma ferramenta. Posso te fazer uma pergunta rápida? É você que cuida do comercial na ${nome}?`,
-      `Oi, ${dono}, tudo bem? Sou o ${sender}, de Florianópolis. Estou conversando com donos de integradoras de energia solar para entender o que mais faz perder venda hoje, antes de terminar uma ferramenta. Posso te fazer uma pergunta rápida? Quem cuida do comercial na ${nome} é você?`,
-      `Oi, ${dono}! Aqui é o ${sender}, de Floripa. Tô ouvindo dono de integradora solar pra entender o que mais trava venda hoje, antes de fechar uma ferramenta. Posso te fazer uma pergunta rápida? Você que cuida do comercial na ${nome}?`,
+      `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar e, antes de terminar, quero entender qual é o maior problema de vocês hoje. Posso te fazer uma pergunta rápida? É você que toca a ${nome}?`,
+      `Oi, ${dono}, tudo bem? Sou o ${sender}, de Florianópolis. Estou desenvolvendo uma ferramenta para integradoras de energia solar e quero entender, com quem está no dia a dia, qual é hoje o maior problema de uma integradora. Posso te fazer uma pergunta rápida? Você é o responsável pela ${nome}?`,
+      `Oi, ${dono}! Aqui é o ${sender}, de Floripa. Tô ouvindo dono de integradora solar pra entender qual é o maior problema hoje, antes de fechar uma ferramenta. Posso te fazer uma pergunta rápida? Você que toca a ${nome}?`,
     ][i];
     return [
-      `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô conversando com donos de integradora solar pra entender o que mais faz perder venda hoje, antes de terminar uma ferramenta. Consegue me passar pra quem cuida do comercial na ${nome}?`,
-      `Oi, tudo bem? Sou o ${sender}, de Florianópolis. Estou conversando com donos de integradoras de energia solar para entender o que mais faz perder venda hoje, antes de terminar uma ferramenta. Pode me passar para quem cuida do comercial na ${nome}?`,
-      `Olá, tudo certo? Aqui é o ${sender}, de Floripa. Tô ouvindo dono de integradora solar pra entender o que mais trava venda hoje, antes de fechar uma ferramenta. Quem cuida do comercial aí na ${nome}?`,
+      `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar e, antes de terminar, quero entender qual é o maior problema de vocês hoje. Consegue me passar pro dono ou pra quem toca a ${nome}?`,
+      `Oi, tudo bem? Sou o ${sender}, de Florianópolis. Estou desenvolvendo uma ferramenta para integradoras de energia solar e quero entender qual é hoje o maior problema de uma integradora. Pode me passar para o dono ou responsável pela ${nome}?`,
+      `Olá, tudo certo? Aqui é o ${sender}, de Floripa. Tô ouvindo dono de integradora solar pra entender qual é o maior problema hoje, antes de fechar uma ferramenta. Quem é o dono aí na ${nome}?`,
     ][i];
   }
   // Em vez de pedir 20 minutos, oferece ver o próprio número; o link só vai se ele quiser.
@@ -239,7 +241,7 @@ export function dividirMensagens(texto: string): string[] {
 
 const PERGUNTA_TIME =
   "Hoje você consegue ver as propostas que cada vendedor mandou e quais o cliente não respondeu, ou depende de perguntar pra cada um?";
-const PERGUNTA_ABERTA = "Qual foi a última venda de energia solar que vocês perderam, e o que aconteceu?";
+const PERGUNTA_ABERTA = "Hoje, o que mais te dá dor de cabeça na integradora?";
 
 /** Seguimento do dia 4 para quem não respondeu: a mesma pergunta da dor, sem pedir reunião. */
 export function followupMessage(row?: Pick<ProspectTarget, "metadata" | "niche"> & { variant?: string | null }, sender = "Markus"): string {

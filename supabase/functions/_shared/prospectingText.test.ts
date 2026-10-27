@@ -30,9 +30,9 @@ Markus: ${porta}`, null, v), `${v} não reconhece a própria resposta`);
     assert(!portaJaFoi("Eles: pode falar", null, v));
   }
   assert(respostaPorta(null, "time").includes("vendedor"));
-  assert(respostaPorta(null, "aberta").includes("última venda"));
+  assert(respostaPorta(null, "aberta").includes("dor de cabeça"));
   assert(followupMessage({ variant: "time" }).includes("vendedor"));
-  assert(followupMessage({ variant: "aberta" }).includes("última venda"));
+  assert(followupMessage({ variant: "aberta" }).includes("dor de cabeça"));
   assert(followupMessage({ variant: "encaminha" }).includes("visualiza a proposta"));
 });
 
