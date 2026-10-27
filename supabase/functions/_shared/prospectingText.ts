@@ -79,7 +79,7 @@ const RESPOSTA_PORTA_TIME = [
   "Hoje você consegue ver isso ou depende de perguntar pra cada um?",
 ].join("\n\n");
 const RESPOSTA_PORTA_ABERTA =
-  "Valeu! A pergunta é essa: qual foi a última venda de energia solar que vocês perderam, e o que aconteceu?";
+  "Valeu! Qual foi a última venda de energia solar que vocês perderam, e o que aconteceu?";
 export const respostaPorta = (niche?: string | null, variant?: string | null) => {
   const perfil = perfilDoNicho(niche);
   if (perfil) return respostaPortaDoNicho(perfil);
