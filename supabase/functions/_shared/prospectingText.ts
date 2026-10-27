@@ -20,7 +20,11 @@ export type ProspectVariant = "pergunta" | "numero" | "curta" | "encaminha" | "r
  *  a curta em 1 de 16 (9 robôs) e a raiox em 1 de 15; ficou só a encaminha. As outras
  *  continuam em firstMessage/readProspectReply para as conversas que já começaram com elas.
  *  Sem "Não é venda": a resposta seguinte mostra a ferramenta, e a frase viraria mentira. */
-export const VARIANTS: ProspectVariant[] = ["encaminha", "time", "aberta"];
+export const VARIANTS: ProspectVariant[] = ["aberta"];
+/** Desde 27/10/2026 (decisão do Markus) só a aberta: em 29 respostas de pessoa às outras
+ *  versões, nenhuma confirmou que perde proposta parada. Antes de mostrar produto, ouvir
+ *  o que de fato faz a integradora perder venda. A distribuidora segue na encaminha: o
+ *  texto dela só existe nessa versão. */
 
 /** Teste de dores até 30/10/2026 (decisão do Markus em 19/10): o formato da encaminha,
  *  que é o que faz pessoa responder, com três assuntos. encaminha = proposta parada,
@@ -75,7 +79,7 @@ const RESPOSTA_PORTA_TIME = [
   "Hoje você consegue ver isso ou depende de perguntar pra cada um?",
 ].join("\n\n");
 const RESPOSTA_PORTA_ABERTA =
-  "Valeu! A pergunta é essa: hoje, o que mais te faz perder venda de energia solar? Preço, cliente que some depois do orçamento, falta de cliente novo, financiamento que não aprova, vendedor... O que pesa mais aí?";
+  "Valeu! A pergunta é essa: qual foi a última venda de energia solar que vocês perderam, e o que aconteceu?";
 export const respostaPorta = (niche?: string | null, variant?: string | null) => {
   const perfil = perfilDoNicho(niche);
   if (perfil) return respostaPortaDoNicho(perfil);
@@ -235,7 +239,7 @@ export function dividirMensagens(texto: string): string[] {
 
 const PERGUNTA_TIME =
   "Hoje você consegue ver as propostas que cada vendedor mandou e quais o cliente não respondeu, ou depende de perguntar pra cada um?";
-const PERGUNTA_ABERTA = "Hoje, o que mais te faz perder venda de energia solar?";
+const PERGUNTA_ABERTA = "Qual foi a última venda de energia solar que vocês perderam, e o que aconteceu?";
 
 /** Seguimento do dia 4 para quem não respondeu: a mesma pergunta da dor, sem pedir reunião. */
 export function followupMessage(row?: Pick<ProspectTarget, "metadata" | "niche"> & { variant?: string | null }, sender = "Markus"): string {

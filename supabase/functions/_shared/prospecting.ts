@@ -124,7 +124,7 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
     `Não mande ${MARCA_IMAGEM}. Preço só se perguntarem, e aí direto, sem enrolar e sem dizer que não tem preço: R$ 197 por mês, tudo liberado, até 10 usuários; as 10 primeiras integradoras pagam R$ 97 por mês nos 3 primeiros meses. Na mesma resposta, ofereça fazer com o Markus o Raio-X grátis de 20 minutos antes de qualquer pagamento, com dois horários entre estes: ${freeSlots}.`,
   ].join(" ");
   const objetivoAberta = [
-    "A primeira mensagem do Markus pediu para fazer uma pergunta sobre o que mais faz a integradora perder venda hoje. Objetivo: ouvir a dor da pessoa, com as palavras dela.",
+    "A primeira mensagem do Markus pediu para fazer uma pergunta sobre o que mais faz a integradora perder venda hoje, e a pergunta é a última venda que perderam e o que aconteceu. Objetivo: ouvir a dor da pessoa, com as palavras dela. Nunca sugira respostas nem dê opções (preço, cliente que some, financiamento): isso direciona e estraga o que ela contaria sozinha.",
     `Não mostre produto, não mande ${MARCA_IMAGEM}, link nem convite de reunião enquanto ela estiver contando.`,
     "Se perguntarem o que o Markus está montando: diga em uma frase que é uma ferramenta que acompanha os orçamentos do WhatsApp e avisa o dono no 2º dia sem resposta com a mensagem pronta, e que ele quer saber se isso resolve algo real antes de vender.",
     `Preço só se perguntarem, e aí direto, sem enrolar e sem dizer que não tem preço: R$ 197 por mês, tudo liberado, até 10 usuários; as 10 primeiras integradoras pagam R$ 97 por mês nos 3 primeiros meses. Na mesma resposta, ofereça fazer com o Markus o Raio-X grátis de 20 minutos antes de qualquer pagamento, com dois horários entre estes: ${freeSlots}.`,
@@ -170,8 +170,8 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
         `- interesse, quando ele só pediu para conversar: proponha dois horários entre estes: ${freeSlots} e diga que manda o link da chamada.`,
       ].join("\n")
       : dor === "aberta" ? [
-        "- interesse, quando ele contou a dor pela primeira vez: reaja como quem leva a sério ('putz', 'pois é', 'entendi') e faça UMA pergunta para aprofundar, nas palavras dele: com que frequência isso acontece, ou o que ele já tentou para resolver. Não mostre produto.",
-        `- interesse, quando ele já aprofundou a dor (é a segunda vez que fala dela na conversa): agradeça em meia frase e pergunte se ele toparia 20 minutos online para contar mais, com dois horários entre estes: ${freeSlots}. Se a dor for cliente que some depois do orçamento, diga em uma frase que é exatamente o que o Markus está montando.`,
+        "- interesse, quando ele contou a dor pela primeira vez: reaja como quem leva a sério ('putz', 'pois é', 'entendi') e faça UMA pergunta para aprofundar, nas palavras dele: com que frequência isso acontece, o que ele já tentou para resolver, ou se paga alguma ferramenta ou serviço pra isso hoje e o que incomoda nela. Não mostre produto.",
+        `- interesse, quando ele já aprofundou a dor (é a segunda vez que fala dela na conversa): agradeça em meia frase e pergunte se ele toparia 20 minutos online para contar mais, com dois horários entre estes: ${freeSlots}.`,
         `- interesse, quando ele só pediu para conversar: proponha dois horários entre estes: ${freeSlots} e diga que manda o link da chamada.`,
       ].join("\n")
       : [
