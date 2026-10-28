@@ -60,7 +60,7 @@ if (mode === "rest") {
     const ids = process.argv.slice(3);
     for (const id of ids) {
         const dir = id.startsWith("L") ? "cine" : "film";
-        const outDir = path.join(ROOT, "public", "audio", "vo", dir);
+        const outDir = path.join(ROOT, "media", "audio", "vo", dir);
         await fs.mkdir(outDir, { recursive: true });
         try { const b = await tts(TX[id]); await fs.writeFile(path.join(outDir, `${id}.wav`), b); console.log(`${dir}/${id} OK ${(b.length / 1024).toFixed(0)}kb`); }
         catch (e) { console.log(`${dir}/${id} FAIL ${e.message.slice(0, 80)}`); }
@@ -70,7 +70,7 @@ if (mode === "rest") {
 }
 
 if (mode === "test") {
-    const OUT = path.join(ROOT, "public", "audio", "vo", "samples");
+    const OUT = path.join(ROOT, "media", "audio", "vo", "samples");
     await fs.mkdir(OUT, { recursive: true });
     const buf = await tts("Ela lê cada conversa, e entende o que importa. Num clique, você sabe quem está pronto pra fechar.");
     const p = path.join(OUT, `Gemini_${VOICE}.wav`);
@@ -94,8 +94,8 @@ if (mode === "test") {
         { id: "A7", text: "A EVA organiza. Seu time fecha." },
         { id: "A8", text: "Vyzon. A EVA sugere, você aprova." },
     ];
-    const cineDir = path.join(ROOT, "public", "audio", "vo", "cine");
-    const filmDir = path.join(ROOT, "public", "audio", "vo", "film");
+    const cineDir = path.join(ROOT, "media", "audio", "vo", "cine");
+    const filmDir = path.join(ROOT, "media", "audio", "vo", "film");
     await fs.mkdir(cineDir, { recursive: true });
     await fs.mkdir(filmDir, { recursive: true });
     for (const l of HOOK) {

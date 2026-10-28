@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Gera 4 variações de "founder photo" via HeyGen Photo Avatar Generate API
-// Salva em public/avatar/founder/
+// Salva em media/avatar/founder/
 // Uso: node scripts/generate-founder-photo.mjs
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
@@ -24,7 +24,7 @@ if (!KEY) {
     process.exit(1);
 }
 
-const OUT_DIR = resolve("public/avatar/founder");
+const OUT_DIR = resolve("media/avatar/founder");
 if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
 
 const PROMPT =

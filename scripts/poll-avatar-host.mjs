@@ -25,7 +25,7 @@ await loadEnv();
 const API_KEY = process.env.HEYGEN_API_KEY;
 const VIDEO_ID = process.argv[2] || "0d6a623cf14040e390d094afac2f880a";
 
-const OUT = path.join(ROOT, "public", "avatar", "matilda-host.mp4");
+const OUT = path.join(ROOT, "media", "avatar", "matilda-host.mp4");
 
 console.log(`⏳ Polling ${VIDEO_ID} (timeout 30min)...`);
 const start = Date.now();

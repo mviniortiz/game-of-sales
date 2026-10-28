@@ -55,7 +55,7 @@ async function tts(text) {
 // gera com retry em 429 (espera 65s) — robusto contra rate-limit residual
 async function genWithRetry(id, tries = 5) {
     const dir = id.startsWith("L") ? "cine" : "film";
-    const outDir = path.join(ROOT, "public", "audio", "vo", dir);
+    const outDir = path.join(ROOT, "media", "audio", "vo", dir);
     await fs.mkdir(outDir, { recursive: true });
     for (let t = 1; t <= tries; t++) {
         try {
@@ -90,7 +90,7 @@ if (ok < IDS.length) { await log("ABORT: nem todas as narrações geraram (cota?
 // converte WAV->MP3 (loudnorm) substituindo as atuais
 for (const id of IDS) {
     const dir = id.startsWith("L") ? "cine" : "film";
-    const w = path.join(ROOT, "public", "audio", "vo", dir, `${id}.wav`);
+    const w = path.join(ROOT, "media", "audio", "vo", dir, `${id}.wav`);
     const mp3 = w.replace(/\.wav$/, ".mp3");
     if (!existsSync(w)) continue;
     const r = run("ffmpeg", ["-loglevel", "error", "-y", "-i", `"${w}"`, "-af", "loudnorm=I=-17:TP=-2,afade=t=in:d=0.06", "-c:a", "libmp3lame", "-b:a", "192k", `"${mp3}"`]);

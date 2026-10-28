@@ -11,7 +11,7 @@ import { RankingScene } from "./sales/RankingScene";
 import { IntegrationsScene } from "./sales/IntegrationsScene";
 import { OutroScene } from "./sales/OutroScene";
 
-// Background music — royalty-free corporate track already in public/audio
+// Background music — royalty-free corporate track already in media/audio
 const BG_MUSIC = staticFile("audio/corporate-music.mp3");
 
 // ============================================

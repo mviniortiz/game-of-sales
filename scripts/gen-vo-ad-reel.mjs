@@ -1,5 +1,5 @@
 // Locução do reel de anúncio (ad-eva-reel) — Gemini TTS voz Achernar.
-// Uso: node scripts/gen-vo-ad-reel.mjs   → grava public/audio/vo/adreel/V1..V6.wav
+// Uso: node scripts/gen-vo-ad-reel.mjs   → grava media/audio/vo/adreel/V1..V6.wav
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -36,7 +36,7 @@ async function tts(text) {
     return Buffer.from(await r.arrayBuffer());
 }
 
-const OUT = path.join(ROOT, "public", "audio", "vo", "adreel");
+const OUT = path.join(ROOT, "media", "audio", "vo", "adreel");
 await fs.mkdir(OUT, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 for (const [id, text] of Object.entries(LINES)) {

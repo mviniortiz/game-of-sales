@@ -1,5 +1,5 @@
 // Generates ONE continuous HeyGen talking-head video in 9:16 portrait.
-// Saída: public/avatar/matilda-host.mp4 — pronto pra subir direto no TikTok/Reels.
+// Saída: media/avatar/matilda-host.mp4 — pronto pra subir direto no TikTok/Reels.
 //
 // Usage:
 //   node scripts/generate-avatar-host.mjs [avatar_id] [voice_id]
@@ -117,7 +117,7 @@ async function downloadTo(url, dest) {
     return stat.size;
 }
 
-const OUT_DIR = path.join(ROOT, "public", "avatar");
+const OUT_DIR = path.join(ROOT, "media", "avatar");
 await fs.mkdir(OUT_DIR, { recursive: true });
 const OUT_PATH = path.join(OUT_DIR, "matilda-host.mp4");
 
@@ -125,7 +125,7 @@ console.log(`🎭 HeyGen Host Video`);
 console.log(`   Avatar:   ${AVATAR_ID}`);
 console.log(`   Voice:    ${VOICE_ID}`);
 console.log(`   Script:   ${FULL_SCRIPT.replace(/\s+/g, " ").slice(0, 80)}...`);
-console.log(`   Output:   public/avatar/matilda-host.mp4\n`);
+console.log(`   Output:   media/avatar/matilda-host.mp4\n`);
 
 process.stdout.write(`Generating...`);
 try {

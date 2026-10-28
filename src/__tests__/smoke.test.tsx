@@ -85,9 +85,6 @@ vi.mock('@vercel/analytics/react', () => ({
     Analytics: () => null,
 }));
 
-// Mock video/image assets
-vi.mock('/videos/sales-video.mp4', () => ({ default: '' }));
-
 // Mock Lenis (scroll suave) — LandingV2 importa dinamicamente e inicia um loop
 // contínuo de requestAnimationFrame (lenis.raf); em jsdom isso nunca "assenta"
 // e trava o teste até o timeout. O mock preserva a API usada sem o loop real.

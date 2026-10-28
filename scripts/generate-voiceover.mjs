@@ -5,7 +5,7 @@
 //   2. (Optional) set ELEVENLABS_VOICE_ID to override default (Brian, pt-BR via multilingual_v2)
 //   3. Run:  node scripts/generate-voiceover.mjs
 //
-// Output: public/audio/vo/scene-{1..7}.mp3  (1=Hook, 2=Transition, ..., 7=CTA)
+// Output: media/audio/vo/scene-{1..7}.mp3  (1=Hook, 2=Transition, ..., 7=CTA)
 // Transition é silêncio (2s), não gera áudio.
 
 import fs from "node:fs/promises";
@@ -119,7 +119,7 @@ const SCENES = SCRIPTS[variantArg].map((s) => ({
 
 // --- Generation -----------------------------------------------------------
 
-const OUT_DIR = path.join(ROOT, "public", "audio", "vo", VOICE_NAME);
+const OUT_DIR = path.join(ROOT, "media", "audio", "vo", VOICE_NAME);
 await fs.mkdir(OUT_DIR, { recursive: true });
 
 async function synthesize(scene) {
@@ -156,7 +156,7 @@ async function synthesize(scene) {
     return { outPath, bytes: buf.length };
 }
 
-console.log(`🎙  Gerando voz "${VOICE_NAME}" — ${VOICES[variantArg].label}\n    Model: ${MODEL} / ID: ${VOICE_ID}\n    Output: public/audio/vo/${VOICE_NAME}/\n`);
+console.log(`🎙  Gerando voz "${VOICE_NAME}" — ${VOICES[variantArg].label}\n    Model: ${MODEL} / ID: ${VOICE_ID}\n    Output: media/audio/vo/${VOICE_NAME}/\n`);
 
 for (const scene of SCENES) {
     process.stdout.write(`  [${scene.id}] ${scene.name.padEnd(18)} "${scene.text.slice(0, 48)}..." `);

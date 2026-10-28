@@ -1,5 +1,5 @@
 // Generates HeyGen talking-avatar videos per scene using the same scripts
-// used by ElevenLabs voiceover. Output: public/avatar/{variant}/scene-{N}.mp4
+// used by ElevenLabs voiceover. Output: media/avatar/{variant}/scene-{N}.mp4
 //
 // Usage:
 //   node scripts/generate-avatar.mjs [variant] [avatar_id] [voice_id]
@@ -82,7 +82,7 @@ if (!SCRIPTS[VARIANT]) {
 
 const SCENE_NAMES = { 1: "Hook", 3: "Pulse", 4: "PipelineRanking", 5: "Eva", 6: "Dashboard", 7: "CTA" };
 
-const OUT_DIR = path.join(ROOT, "public", "avatar", VARIANT);
+const OUT_DIR = path.join(ROOT, "media", "avatar", VARIANT);
 await fs.mkdir(OUT_DIR, { recursive: true });
 
 // -- API helpers -----------------------------------------------------------
@@ -166,7 +166,7 @@ console.log(`🎭  Gerando avatar HeyGen`);
 console.log(`    Variant:  ${VARIANT}`);
 console.log(`    Avatar:   ${AVATAR_ID}`);
 console.log(`    Voice:    ${VOICE_ID}`);
-console.log(`    Output:   public/avatar/${VARIANT}/\n`);
+console.log(`    Output:   media/avatar/${VARIANT}/\n`);
 
 for (const scene of SCRIPTS[VARIANT]) {
     const sceneName = (SCENE_NAMES[scene.id] || `Scene${scene.id}`).padEnd(18);
@@ -183,5 +183,5 @@ for (const scene of SCRIPTS[VARIANT]) {
     }
 }
 
-console.log(`\n✓ Concluído. Arquivos em public/avatar/${VARIANT}/`);
+console.log(`\n✓ Concluído. Arquivos em media/avatar/${VARIANT}/`);
 console.log(`  Composition SalesVideoV2Reels-${VARIANT.charAt(0).toUpperCase() + VARIANT.slice(1)}-Avatar agora pode ser renderizada.`);

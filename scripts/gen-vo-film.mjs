@@ -1,5 +1,5 @@
 // Narração do FILME completo (ElevenLabs · Bella calma), por cena.
-// Saída: public/audio/vo/film/A{1..8}.mp3  (Hook usa public/audio/vo/cine/L1-4)
+// Saída: media/audio/vo/film/A{1..8}.mp3  (Hook usa media/audio/vo/cine/L1-4)
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -32,7 +32,7 @@ const LINES = [
     { id: 8, scene: "CTA", text: "Vyzon. A EVA sugere, você aprova." },
 ];
 
-const OUT = path.join(ROOT, "public", "audio", "vo", "film");
+const OUT = path.join(ROOT, "media", "audio", "vo", "film");
 await fs.mkdir(OUT, { recursive: true });
 
 async function tts(line) {

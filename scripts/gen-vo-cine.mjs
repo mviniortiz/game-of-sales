@@ -1,6 +1,6 @@
 // Gera narração (ElevenLabs) da cena cinemática de abertura, por FRASE,
 // pra sincronizar cada linha com o beat visual.
-// Saída: public/audio/vo/cine/L{1..4}.mp3
+// Saída: media/audio/vo/cine/L{1..4}.mp3
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -30,7 +30,7 @@ const LINES = [
     { id: 4, text: "E mais um lead esfria no WhatsApp." },
 ];
 
-const OUT = path.join(ROOT, "public", "audio", "vo", "cine");
+const OUT = path.join(ROOT, "media", "audio", "vo", "cine");
 await fs.mkdir(OUT, { recursive: true });
 
 async function tts(line) {

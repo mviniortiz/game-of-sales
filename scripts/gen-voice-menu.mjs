@@ -1,5 +1,5 @@
 // Lista as vozes da conta ElevenLabs e gera amostras das femininas
-// pra escolher a mais suave/natural. Saída: public/audio/vo/samples/<nome>.mp3
+// pra escolher a mais suave/natural. Saída: media/audio/vo/samples/<nome>.mp3
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -35,7 +35,7 @@ const FEMALES = [
     { name: "Aria", id: "9BWtsMINqrJLrRacOk9x" },      // natural, expressiva
 ];
 
-const OUT = path.join(ROOT, "public", "audio", "vo", "samples");
+const OUT = path.join(ROOT, "media", "audio", "vo", "samples");
 await fs.mkdir(OUT, { recursive: true });
 async function tts(voiceId, text) {
     const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {
@@ -54,4 +54,4 @@ for (const v of FEMALES) {
         console.log(`  ${v.name.padEnd(12)} OK (${(buf.length / 1024).toFixed(0)}kb)`);
     } catch (e) { console.log(`  ${v.name.padEnd(12)} FAIL ${e.message}`); }
 }
-console.log(`\n→ ouça em public/audio/vo/samples/`);
+console.log(`\n→ ouça em media/audio/vo/samples/`);

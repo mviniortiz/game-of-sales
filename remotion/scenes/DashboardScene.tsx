@@ -1,6 +1,6 @@
 import { AbsoluteFill, Img, interpolate, useCurrentFrame, staticFile, spring, useVideoConfig } from "remotion";
 
-// Screenshot paths - place your screenshots in public/screenshots/
+// Screenshot paths - place your screenshots in media/screenshots/
 const DASHBOARD_IMG = staticFile("screenshots/dashboard.png");
 
 export const DashboardScene: React.FC = () => {
