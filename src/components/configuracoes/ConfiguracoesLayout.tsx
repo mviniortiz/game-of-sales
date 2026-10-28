@@ -1,9 +1,11 @@
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   Buildings,
   ChatCircleText,
   CheckCircle,
+  CalendarCheck,
   CreditCard,
   DownloadSimple,
   ShieldCheck,
@@ -14,6 +16,8 @@ import {
   type Icon,
 } from "@phosphor-icons/react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenant } from "@/contexts/TenantContext";
+import { supabase } from "@/integrations/supabase/client";
 
 type NavItem = {
   id: string;
@@ -21,6 +25,8 @@ type NavItem = {
   path: string;
   icon: Icon;
   adminOnly?: boolean;
+  /** Módulo ligado por empresa: só aparece com atendente_config ou para super admin. */
+  atendente?: boolean;
 };
 
 type NavGroup = { label: string; items: NavItem[] };
@@ -51,6 +57,10 @@ const GROUPS: NavGroup[] = [
     items: [{ id: "aprovacao", label: "Aprovação no WhatsApp", path: "/configuracoes/aprovacao", icon: CheckCircle, adminOnly: true }],
   },
   {
+    label: "Atendimento",
+    items: [{ id: "atendente", label: "Atendente no WhatsApp", path: "/configuracoes/atendente", icon: CalendarCheck, adminOnly: true, atendente: true }],
+  },
+  {
     label: "Leads",
     items: [
       { id: "webhooks-leads", label: "Receber leads", path: "/configuracoes/webhooks-leads", icon: WebhooksLogo, adminOnly: true },
@@ -66,6 +76,7 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
   organizacao: { title: "Organização", subtitle: "Dados da empresa e o segmento que a EVA usa" },
   faturamento: { title: "Plano e faturamento", subtitle: "Seu plano, o uso e as cobranças" },
   aprovacao: { title: "Aprovação no WhatsApp", subtitle: "Como os rascunhos da EVA chegam até você" },
+  atendente: { title: "Atendente no WhatsApp", subtitle: "Responde dúvidas e marca horário sozinho; o resto passa para você" },
   integracoes: { title: "Integrações", subtitle: "Conecte as ferramentas que você já usa" },
   "webhooks-leads": { title: "Receber leads", subtitle: "Leads do seu site e dos anúncios entram direto no funil" },
   tags: { title: "Tags", subtitle: "Marcadores para oportunidades, conversas e contatos" },
@@ -74,14 +85,26 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
 
 export default function ConfiguracoesLayout() {
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { isAdmin, companyId } = useAuth();
+  const { activeCompanyId, isSuperAdmin } = useTenant();
+  const company = activeCompanyId || companyId;
+  const atendenteQ = useQuery({
+    queryKey: ["atendente-config-existe", company],
+    enabled: !!company && isAdmin,
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any).from("atendente_config").select("company_id").eq("company_id", company).maybeSingle();
+      return Boolean(data);
+    },
+  });
+  const temAtendente = isSuperAdmin || atendenteQ.data === true;
   const currentSection = location.pathname.split("/")[2] || "perfil";
   const header = TITLES[currentSection] || TITLES.perfil;
 
   const visibleGroups = useMemo(
     () =>
-      GROUPS.map((g) => ({ ...g, items: g.items.filter((it) => !it.adminOnly || isAdmin) })).filter((g) => g.items.length > 0),
-    [isAdmin],
+      GROUPS.map((g) => ({ ...g, items: g.items.filter((it) => (!it.adminOnly || isAdmin) && (!it.atendente || temAtendente)) })).filter((g) => g.items.length > 0),
+    [isAdmin, temAtendente],
   );
 
   const itemClass = (active: boolean) =>

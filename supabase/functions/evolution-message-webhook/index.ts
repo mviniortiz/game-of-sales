@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { handleOwnerCommand, isEvaOfficialNumber, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
+import { atendenteNaMensagem } from "../_shared/atendenteHook.ts";
 import { PROSPECT_PREFIX, brKey, handleProspectCommand, notifyOwner, onProspectInbound } from "../_shared/prospecting.ts";
 import { commandFromNotice, groupTopics, reactOk } from "../_shared/ownerGroups.ts";
 import { textoDoAudio } from "../_shared/transcribe.ts";
@@ -354,6 +355,21 @@ async function dualWriteChannel(
       sentAt: n.messageTimestamp,
       chatPhone: n.chatPhone || null,
     }));
+    try { (globalThis as any).EdgeRuntime?.waitUntil?.(task); } catch { /* noop */ }
+  }
+
+  // Modo atendente (segunda opção, conexão por QR no Whatsmiau): só em empresa com a flag.
+  // O chat do dono com ele mesmo nunca entra.
+  if (result.isNewMessage && n.companyId && result.conversationId && result.messageId && !n.isGroup && !n.isOwnerChat) {
+    const task = atendenteNaMensagem(admin, {
+      companyId: n.companyId,
+      conversationId: result.conversationId,
+      messageId: result.messageId,
+      providerMessageId: n.externalId,
+      direction: n.direction,
+      isGroup: n.isGroup,
+      origin: null,
+    }).catch((e) => console.warn("[atendente] hook falhou:", e?.message));
     try { (globalThis as any).EdgeRuntime?.waitUntil?.(task); } catch { /* noop */ }
   }
 

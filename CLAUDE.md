@@ -29,6 +29,23 @@
   digita o endereço na configuração da EVA (`eva-site-context`), e nada é
   gravado sem ele confirmar o resumo. Slogan segue válido pra saída:
   **"A EVA sugere, seu time aprova."**
+- **Exceção única à aprovação: modo atendente (28/10/2026).** Módulo de
+  freela (pet shops, fisios, salões), não é a EVA nem o produto solar. Liga
+  só em empresa com `atendente_config.enabled`, que só service_role e super
+  admin mudam (`guard_atendente_enabled`). Ali a edge `atendente-responder`
+  responde sozinha, no WhatsApp da própria empresa, **só quem escreveu
+  primeiro e só sobre dúvidas e agendamento**. Nunca inicia conversa, nunca
+  prospecção, follow-up de venda ou retomada de proposta: isso continua na
+  aprovação. Cliente que já conversa com o dono (saída dele nas últimas
+  `resume_after_hours`) fica com o dono. Pedido fora do padrão, dúvida que
+  não sabe, reclamação, áudio repetido ou "quero falar com alguém" →
+  `passar_para_dono`: avisa o dono e a conversa pausa
+  (`atendente_conversas.estado='com_dono'`). Resposta à mão do dono também
+  pausa (eco do próprio atendente é reconhecido por `bot_message_ids` e
+  `enviando_ate`; na Kapso, `origin='business_app'` é sempre o dono). Modelo
+  só Claude, sem fallback (dado de saúde). Cada cliente usa o próprio número
+  (Kapso em coexistência; QR no Whatsmiau é a segunda opção), nunca o
+  número da EVA. Execuções em `atendente_runs`, separado de `agent_runs`.
 
 ## Comandos
 
@@ -137,6 +154,19 @@ está BLOQUEADO por billing; não criar workflows.
   `findMessages` nem `getBase64FromMediaMessage`. API oficial: Kapso.
   Prospecção supervisionada com allowlist fail-closed
   (`validateChatOwnership`).
+- Modo atendente (28/10/2026): config, agenda e pausa em `atendente_*`
+  (`20261028_modo_atendente.sql`); parte pura e testada em
+  `_shared/atendente.ts`; gancho nos webhooks em `_shared/atendenteHook.ts`
+  (kapso-webhook e evolution-message-webhook). Agenda = horário de
+  funcionamento menos `atendente_agendamentos` confirmados; reserva só pela
+  RPC `atendente_reservar` (trava por empresa, capacidade da config). Google
+  Agenda entra em `ocupadosDoDia` quando `calendar_provider='google'`. Tela em
+  `/configuracoes/atendente` (aparece com config ou para super admin), com
+  teste como cliente (action `simular`, agenda com source='teste'). Aviso ao
+  dono sai pelo número da EVA para `owner_alert_phone`: texto na janela de
+  24h, senão template `atendente_passou_pra_voce` (criado pelo `setup_eva`,
+  precisa de aprovação da Meta). Não depende de `company_is_paid()`: o
+  cliente paga o freela à parte.
 - Auth das edges (22/10/2026): `verify_jwt` só prova que o JWT é válido, e a
   anon key do bundle é um. Edge de bastidor (trigger, cron, outra edge) exige
   `isServiceCall` de `_shared/serviceAuth.ts` (service_role ou

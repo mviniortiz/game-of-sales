@@ -42,6 +42,7 @@ const ConfTags = lazy(() => import("./pages/configuracoes/Tags"));
 const ConfImportar = lazy(() => import("./pages/configuracoes/Importar"));
 const ConfWebhooksLeads = lazy(() => import("./pages/configuracoes/WebhooksLeads"));
 const ConfAprovacao = lazy(() => import("./pages/configuracoes/Aprovacao"));
+const ConfAtendente = lazy(() => import("./pages/configuracoes/Atendente"));
 const Calendario = lazy(() => import("./pages/Calendario"));
 const CRM = lazy(() => import("./pages/CRM"));
 const DealCommandCenter = lazy(() => import("./pages/DealCommandCenter"));
@@ -327,6 +328,15 @@ const AppShell = () => (
                   element={
                     <AdminRoute>
                       <ConfAprovacao />
+                    </AdminRoute>
+                  }
+                />
+                {/* Modo atendente: só aparece no menu de quem tem atendente_config ou é super admin. */}
+                <Route
+                  path="atendente"
+                  element={
+                    <AdminRoute>
+                      <ConfAtendente />
                     </AdminRoute>
                   }
                 />

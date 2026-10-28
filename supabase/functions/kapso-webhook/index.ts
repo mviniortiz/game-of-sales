@@ -32,6 +32,7 @@ import {
 } from "../_shared/kapso.ts";
 import { trackOutboundQuote } from "../_shared/quoteTracking.ts";
 import { evaPhoneNumberId, handleEvaInbound } from "../_shared/whatsappApproval.ts";
+import { atendenteNaMensagem } from "../_shared/atendenteHook.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -193,6 +194,19 @@ async function handleMessage(ev: KapsoMessageEvent, cache: Map<string, Connectio
     if (error) {
         console.warn("[kapso] ingest falhou:", error.message?.slice(0, 200));
         return;
+    }
+
+    // Modo atendente: só em empresa com a flag; a consulta da flag é a primeira coisa lá dentro.
+    if (data?.is_new_message === true && data?.conversation_id && data?.message_id) {
+        waitUntil(atendenteNaMensagem(admin, {
+            companyId: conn.company_id,
+            conversationId: data.conversation_id,
+            messageId: data.message_id,
+            providerMessageId: n.providerMessageId,
+            direction: n.direction,
+            isGroup: false,
+            origin: n.origin,
+        }).catch((e) => console.warn("[atendente] hook falhou:", (e as Error).message)));
     }
 
     if (n.direction === "outbound" && data?.is_new_message === true && data?.conversation_id && data?.message_id) {

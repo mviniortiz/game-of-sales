@@ -17,6 +17,7 @@
 //                   EVA (EVA_WHATSAPP_PHONE_NUMBER_ID): registra este webhook
 //                   no número, cria o template do aviso de rascunho e devolve o
 //                   número exibido, para gravar em EVA_WHATSAPP_NUMBER.
+//                   Também cria o template do aviso do modo atendente.
 //                   Pode rodar de novo: só cria o que falta.
 //
 // Env: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, KAPSO_API_KEY.
@@ -33,6 +34,7 @@ import {
     type KapsoMessage,
 } from "../_shared/kapso.ts";
 import { EVA_TEMPLATE, EVA_TEMPLATE_DEFINITION, evaPhoneNumberId } from "../_shared/whatsappApproval.ts";
+import { ATENDENTE_TEMPLATE, ATENDENTE_TEMPLATE_DEFINITION } from "../_shared/atendente.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -125,6 +127,19 @@ async function setupEva(): Promise<Response> {
             body: JSON.stringify(EVA_TEMPLATE_DEFINITION),
         });
         passos.template = `criado, status ${criado?.status || "enviado para análise"}`;
+    }
+
+    // Aviso do modo atendente ("passei uma conversa pra você") fora da janela de 24h.
+    const listaAtendente = await kapsoFetch(`${KAPSO_WHATSAPP}/${wabaId}/message_templates?name=${ATENDENTE_TEMPLATE}`).catch(() => null);
+    const atendenteExistente = (listaAtendente?.data || []).find((t: { name?: string }) => t.name === ATENDENTE_TEMPLATE);
+    if (atendenteExistente) {
+        passos.template_atendente = `já existe, status ${atendenteExistente.status}`;
+    } else {
+        const criado = await kapsoFetch(`${KAPSO_WHATSAPP}/${wabaId}/message_templates`, {
+            method: "POST",
+            body: JSON.stringify(ATENDENTE_TEMPLATE_DEFINITION),
+        });
+        passos.template_atendente = `criado, status ${criado?.status || "enviado para análise"}`;
     }
 
     return json(200, {
