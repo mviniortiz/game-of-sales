@@ -83,6 +83,19 @@ describe("parseOwnerCommand", () => {
         expect(parseOwnerCommand("EVA Enviado para João Silva.").intent).toBe("none");
         expect(parseOwnerCommand("EVA [A2] rascunho pronto\n\nLead: João").intent).toBe("none");
     });
+
+    it("ignora aviso automático de outra ferramenta no mesmo chat", () => {
+        const aviso = "📤 Prospecção: enviei a mensagem para corrego-grande-odontologia às 09:12. Se responder, a apresentação (vídeo + link) vai por você.";
+        expect(parseOwnerCommand(aviso)).toEqual({ code: null, intent: "none" });
+        expect(parseOwnerCommand("🔔 odonto-art respondeu: \"Oi, quem fala?\"").intent).toBe("none");
+        expect(parseOwnerCommand("⚠️ Prospecção: não consegui enviar para lux-clinic").intent).toBe("none");
+        expect(parseOwnerCommand("✅ red respondeu: \"pode\"").intent).toBe("none");
+    });
+
+    it("texto corrigido sem emoji na frente continua valendo", () => {
+        expect(parseOwnerCommand("Oi João, tudo bem? Segue a proposta atualizada.").intent).toBe("replace");
+        expect(parseOwnerCommand("A2 Oi João, segue a proposta 😊").intent).toBe("replace");
+    });
 });
 
 describe("normalizeNumber", () => {

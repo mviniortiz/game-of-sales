@@ -592,6 +592,12 @@ export function parseOwnerCommand(rawText: string): ParsedCommand {
     if (inicio.startsWith(EVA_PREFIX.toLowerCase()) || inicio.startsWith(PREFIXO_ANTIGO.toLowerCase())) {
         return { code: null, intent: "none" };
     }
+    // Aviso automático de outra ferramenta no mesmo chat ("📤 Prospecção: enviei...",
+    // "🔔 ... respondeu"): começa com emoji. Sem isso, com um rascunho só aberto, o
+    // aviso virava "texto corrigido" e saía para o lead.
+    if (/^\p{Extended_Pictographic}/u.test(raw)) {
+        return { code: null, intent: "none" };
+    }
 
     let rest = raw;
     let code: string | null = null;
