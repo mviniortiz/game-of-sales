@@ -166,7 +166,9 @@ está BLOQUEADO por billing; não criar workflows.
   dono sai pelo número da EVA para `owner_alert_phone`: texto na janela de
   24h, senão template `atendente_passou_pra_voce` (criado pelo `setup_eva`,
   precisa de aprovação da Meta). Não depende de `company_is_paid()`: o
-  cliente paga o freela à parte.
+  cliente paga o freela à parte. `atendente-responder` tem `verify_jwt = false`
+  de propósito: a service_role das edges virou `sb_secret_` (não é JWT) em
+  28/10/2026 e o gateway barraria o webhook; a auth está no código.
 - Auth das edges (22/10/2026): `verify_jwt` só prova que o JWT é válido, e a
   anon key do bundle é um. Edge de bastidor (trigger, cron, outra edge) exige
   `isServiceCall` de `_shared/serviceAuth.ts` (service_role ou

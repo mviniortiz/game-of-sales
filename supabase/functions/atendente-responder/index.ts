@@ -15,7 +15,8 @@
 //              conversa (Kapso, ou QR no Whatsmiau, que fala as rotas da
 //              Evolution). Ao passar para o dono, avisa o
 //              dono e pausa a conversa.
-//   simular    (usuário da empresa) { companyId?, history, text } Mesmo motor,
+//   simular    (usuário da empresa, ou service_role para script de teste)
+//              { companyId?, history, text } Mesmo motor,
 //              sem WhatsApp: a tela de configuração usa para testar. Agenda de
 //              verdade, com source='teste'. Funciona com a flag desligada.
 //
@@ -41,6 +42,7 @@ import {
     localParaUtc,
     promptDoAtendente,
     utcParaLocal,
+    type Agendado,
     type AtendenteConfig,
     type Ocupado,
 } from "../_shared/atendente.ts";
@@ -114,10 +116,12 @@ type Evento =
 
 type Resultado = { reply: string; handoff: { motivo: string; resumo: string } | null; eventos: Evento[]; tools: string[]; usage: { input: number; output: number } };
 
-/** Filtro dos agendamentos "desta pessoa": a conversa, ou na simulação os de teste. */
+/** Filtro dos agendamentos "desta pessoa": a conversa, ou na simulação os de
+ *  teste das últimas 2 horas (teste de ontem não é desta conversa). */
 // deno-lint-ignore no-explicit-any
 function dessaPessoa(q: any, ctx: Contexto) {
-    return ctx.simulacao ? q.eq("source", "teste") : q.eq("conversation_id", ctx.conversationId);
+    if (!ctx.simulacao) return q.eq("conversation_id", ctx.conversationId);
+    return q.eq("source", "teste").gt("created_at", new Date(Date.now() - 2 * 3_600_000).toISOString());
 }
 
 async function executar(ctx: Contexto, nome: string, args: Record<string, unknown>): Promise<{ result: unknown; evento?: Evento }> {
@@ -208,9 +212,11 @@ async function rodarAtendente(ctx: Contexto, historico: { role: "user" | "assist
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY") || "";
     if (!apiKey) throw new Error("ANTHROPIC_API_KEY não configurada");
     const tools = ferramentasDoAtendente(ctx.cfg);
+    const { result: atuais } = await executar(ctx, "meus_agendamentos", {});
+    const agendados = (atuais as { agendamentos: Agendado[] }).agendamentos;
     // deno-lint-ignore no-explicit-any
     const messages: any[] = [
-        { role: "system", content: promptDoAtendente(ctx.cfg, { nomeContato: ctx.contactName, simulacao: ctx.simulacao }) },
+        { role: "system", content: promptDoAtendente(ctx.cfg, { nomeContato: ctx.contactName, simulacao: ctx.simulacao, agendados }) },
         ...historico,
     ];
     const eventos: Evento[] = [];
@@ -562,15 +568,22 @@ async function responder(messageId: string): Promise<Response> {
 
 // ── simular ─────────────────────────────────────────────────────────────────
 
-async function simular(req: Request, body: { companyId?: string; history?: unknown; text?: string }): Promise<Response> {
+/** Empresa de quem chama: service_role (script de teste) escolhe; usuário só a própria, super admin qualquer uma. */
+async function empresaDoSimulador(req: Request, companyId?: string): Promise<string | Response> {
+    if (isServiceCall(req)) return companyId || json(400, { error: "companyId is required" });
     const authHeader = req.headers.get("Authorization") || "";
     const userClient = createClient(SUPABASE_URL, ANON_KEY, { global: { headers: { Authorization: authHeader } } });
     const { data: { user } } = await userClient.auth.getUser();
     if (!user) return json(401, { error: "Unauthorized" });
     const { data: profile } = await admin.from("profiles").select("company_id, is_super_admin").eq("id", user.id).maybeSingle();
     if (!profile) return json(403, { error: "Profile not found" });
-    const companyId = profile.is_super_admin ? body.companyId || profile.company_id : profile.company_id;
-    if (!companyId) return json(400, { error: "companyId is required" });
+    const id = profile.is_super_admin ? companyId || profile.company_id : profile.company_id;
+    return id || json(400, { error: "companyId is required" });
+}
+
+async function simular(req: Request, body: { companyId?: string; history?: unknown; text?: string }): Promise<Response> {
+    const companyId = await empresaDoSimulador(req, body.companyId);
+    if (companyId instanceof Response) return companyId;
 
     const { data: cfgRow } = await admin.from("atendente_config").select("*").eq("company_id", companyId).maybeSingle();
     if (!cfgRow) return json(404, { error: "Configure o atendente antes de testar." });

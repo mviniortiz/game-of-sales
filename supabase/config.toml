@@ -117,5 +117,7 @@ verify_jwt = true
 [functions.raio-x-build]
 verify_jwt = true
 
+# Auth no código: responder exige isServiceCall, simular pega o usuário do JWT.
+# A service_role das edges é sb_secret_ (não é JWT) e o gateway barraria.
 [functions.atendente-responder]
-verify_jwt = true
+verify_jwt = false

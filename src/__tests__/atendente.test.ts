@@ -162,6 +162,13 @@ describe("prompt e texto", () => {
         expect(p).toContain("Hoje é terça, 2026-10-27, 21:30");
     });
 
+    it("o prompt leva o que a pessoa já marcou, para não marcar de novo", () => {
+        const p = promptDoAtendente(cfg, { agora: terçaNoite, agendados: [{ id: "abc", servico: "Banho", data: "2026-10-29", diaDaSemana: "quinta", hora: "09:00" }] });
+        expect(p).toContain("JÁ TEM marcados");
+        expect(p).toContain("- Banho, quinta 2026-10-29 às 09:00 [id: abc]");
+        expect(promptDoAtendente(cfg, { agora: terçaNoite })).toContain("Esta pessoa não tem horário marcado.");
+    });
+
     it("limparResposta tira markdown e HTML", () => {
         expect(limparResposta("Tenho <b>10:00</b>.<br/>**Reservado**")).toBe("Tenho 10:00.\nReservado");
     });
