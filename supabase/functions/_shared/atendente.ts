@@ -38,8 +38,9 @@ const DIAS_SEMANA_PT = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sába
 
 /** Antecedência mínima para marcar no mesmo dia. */
 export const ANTECEDENCIA_MIN = 30;
-/** Teto de horários devolvidos por dia: o modelo oferece poucos, e lista longa vira texto longo. */
-const MAX_HORARIOS = 16;
+/** Teto de horários devolvidos ao modelo por dia: cobre um dia inteiro com
+ *  passo de 30 min. Quem valida a reserva usa a lista sem teto. */
+export const MAX_HORARIOS = 24;
 /** Mensagem recebida há mais que isso não ganha resposta (lote atrasado, reenvio). */
 export const IDADE_MAX_MS = 10 * 60_000;
 
@@ -131,6 +132,7 @@ export function horariosLivres(
     servicoId: string,
     ocupados: Ocupado[],
     agora = new Date(),
+    limite = MAX_HORARIOS,
 ): ResultadoHorarios {
     if (!DATA_RE.test(iso)) return { ok: false, erro: "Data inválida. Use AAAA-MM-DD." };
     const servico = acharServico(cfg, servicoId);
@@ -158,7 +160,7 @@ export function horariosLivres(
             if (conflitos < capacidade) horarios.push(rotuloHora(s));
         }
     }
-    return { ok: true, data: iso, diaDaSemana: DIAS[diaDaSemana(iso)], servico: servico[1], horarios: horarios.slice(0, MAX_HORARIOS) };
+    return { ok: true, data: iso, diaDaSemana: DIAS[diaDaSemana(iso)], servico: servico[1], horarios: horarios.slice(0, limite) };
 }
 
 /** Intervalo UTC de um horário escolhido, ou null se data/hora/serviço não fecham. */

@@ -101,6 +101,8 @@ create table if not exists public.atendente_runs (
                       check (status in ('running', 'replied', 'handoff', 'skipped', 'error')),
   skip_reason         text,
   tools_used          text[] not null default '{}',
+  -- Mensagens recebidas que esta resposta leu: a rajada seguinte não responde de novo.
+  covered_inbound_ids uuid[] not null default '{}',
   model               text,
   input_tokens        integer,
   output_tokens       integer,
@@ -110,6 +112,8 @@ create table if not exists public.atendente_runs (
 );
 create index if not exists atendente_runs_company_started on public.atendente_runs (company_id, started_at desc);
 create index if not exists atendente_runs_conversation_started on public.atendente_runs (conversation_id, started_at desc);
+-- Banco que já tinha a tabela antes desta coluna.
+alter table public.atendente_runs add column if not exists covered_inbound_ids uuid[] not null default '{}';
 
 -- ── GRANT antes de RLS ───────────────────────────────────────────────────────
 grant select, insert, update, delete on public.atendente_config to authenticated, service_role;

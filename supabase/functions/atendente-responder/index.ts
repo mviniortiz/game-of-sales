@@ -136,7 +136,7 @@ async function executar(ctx: Contexto, nome: string, args: Record<string, unknow
             if (!nomeCliente) return { result: { erro: "Falta o nome para agendar." } };
             const intervalo = intervaloDoHorario(cfg, data, hora, servicoId);
             if (!intervalo) return { result: { erro: "Data, hora ou serviço inválido." } };
-            const livres = horariosLivres(cfg, data, servicoId, await ocupadosDoDia(companyId, cfg, data));
+            const livres = horariosLivres(cfg, data, servicoId, await ocupadosDoDia(companyId, cfg, data), new Date(), Infinity);
             if (!livres.ok) return { result: livres };
             if (!livres.horarios.includes(hora)) return { result: { erro: "Esse horário não está livre.", horariosLivres: livres.horarios } };
             const { data: r, error } = await admin.rpc("atendente_reservar", {
@@ -221,7 +221,9 @@ async function rodarAtendente(ctx: Contexto, historico: { role: "user" | "assist
         const { status, text } = await anthropicChat(
             { messages, tools, max_tokens: 700 },
             MODEL,
-            { apiKey, timeoutMs: 45_000, effort: "low", wantsJson: false },
+            // 20 s por chamada: com a espera da rajada e até 6 passos, a edge
+            // ainda cabe no limite de execução. O normal é responder em poucos segundos.
+            { apiKey, timeoutMs: 20_000, effort: "low", wantsJson: false },
         );
         if (status < 200 || status >= 300) throw new Error(`claude ${status}: ${text.slice(0, 200)}`);
         const completion = JSON.parse(text);
@@ -385,7 +387,7 @@ async function responder(messageId: string): Promise<Response> {
     const { data: run, error: runErr } = await admin
         .from("atendente_runs")
         .insert({ company_id: msg.company_id, conversation_id: msg.conversation_id, inbound_message_id: msg.id, model: MODEL })
-        .select("id")
+        .select("id, started_at")
         .single();
     // unique em inbound_message_id: reenvio do webhook não responde duas vezes.
     if (runErr || !run) return json(200, { skipped: "duplicado" });
@@ -398,6 +400,8 @@ async function responder(messageId: string): Promise<Response> {
             .eq("conversation_id", msg.conversation_id)
             .eq("direction", "inbound")
             .order("message_timestamp", { ascending: false })
+            // A Kapso manda o horário em segundos: rajada no mesmo segundo desempata pela gravação.
+            .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();
         if (ultima && ultima.id !== msg.id) {
@@ -405,7 +409,9 @@ async function responder(messageId: string): Promise<Response> {
             return json(200, { skipped: "mensagem_mais_nova" });
         }
 
-        // Outra resposta em andamento na mesma conversa: espera ela sair para ler o histórico com ela.
+        // Resposta mais antiga em andamento na mesma conversa: espera ela sair
+        // para ler o histórico com ela. Só a mais nova espera, então duas
+        // nunca ficam esperando uma pela outra.
         const limite = Date.now() + ESPERA_OUTRA_RUN_MS;
         while (Date.now() < limite) {
             const { data: outra } = await admin
@@ -414,11 +420,26 @@ async function responder(messageId: string): Promise<Response> {
                 .eq("conversation_id", msg.conversation_id)
                 .eq("status", "running")
                 .neq("id", run.id)
+                .lt("started_at", run.started_at)
                 .gt("started_at", new Date(Date.now() - 2 * ESPERA_OUTRA_RUN_MS).toISOString())
                 .limit(1)
                 .maybeSingle();
             if (!outra) break;
             await dormir(2000);
+        }
+
+        // A resposta anterior já leu esta mensagem no histórico e respondeu as duas.
+        const { data: coberta } = await admin
+            .from("atendente_runs")
+            .select("id")
+            .eq("conversation_id", msg.conversation_id)
+            .in("status", ["replied", "handoff"])
+            .contains("covered_inbound_ids", [msg.id])
+            .limit(1)
+            .maybeSingle();
+        if (coberta) {
+            await fecharRun(run.id, { status: "skipped", skip_reason: "ja_respondida" });
+            return json(200, { skipped: "ja_respondida" });
         }
 
         const [{ data: conn }, { data: contato }, { data: conversa }, { data: canal }] = await Promise.all([
@@ -476,6 +497,7 @@ async function responder(messageId: string): Promise<Response> {
         }
 
         let resultado: Resultado;
+        let lidas: string[] = [msg.id];
         const negocio = cfg.business_name || "a equipe";
         if ((daConversa || 0) >= TETO_POR_CONVERSA_24H) {
             resultado = { reply: `Vou passar sua conversa para ${negocio}, que continua com você por aqui.`, handoff: { motivo: "conversa longa demais para o atendente", resumo: "Passou do limite de respostas automáticas em 24h." }, eventos: [], tools: [], usage: { input: 0, output: 0 } };
@@ -487,12 +509,14 @@ async function responder(messageId: string): Promise<Response> {
         } else {
             const { data: msgs } = await admin
                 .from("channel_messages")
-                .select("direction, body, message_type, message_timestamp")
+                .select("id, direction, body, message_type, message_timestamp")
                 .eq("conversation_id", msg.conversation_id)
                 .gt("message_timestamp", desde)
                 .order("message_timestamp", { ascending: false })
                 .limit(MAX_HISTORICO);
-            resultado = await rodarAtendente(ctx, historicoParaChat((msgs || []).reverse()));
+            const ordenadas = (msgs || []).reverse();
+            lidas = ordenadas.filter((m: { direction: string }) => m.direction === "inbound").map((m: { id: string }) => m.id);
+            resultado = await rodarAtendente(ctx, historicoParaChat(ordenadas));
         }
 
         const reply = resultado.reply || (resultado.handoff ? `Vou passar sua conversa para ${negocio}, que continua com você por aqui.` : "");
@@ -523,6 +547,7 @@ async function responder(messageId: string): Promise<Response> {
             status: resultado.handoff ? "handoff" : enviadoId ? "replied" : "skipped",
             skip_reason: resultado.handoff || enviadoId ? null : "sem_resposta",
             tools_used: resultado.tools,
+            covered_inbound_ids: lidas,
             input_tokens: resultado.usage.input,
             output_tokens: resultado.usage.output,
         });

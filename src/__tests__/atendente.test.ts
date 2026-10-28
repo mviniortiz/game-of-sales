@@ -48,8 +48,9 @@ describe("horariosLivres", () => {
         if (!r.ok) return;
         expect(r.diaDaSemana).toBe("quarta");
         expect(r.horarios[0]).toBe("08:00");
-        // banho de 60 min: o último começa 17:00, mas o teto é 16 horários
-        expect(r.horarios).toHaveLength(16);
+        // banho de 60 min, passo de 30: 19 inícios, de 08:00 até 17:00
+        expect(r.horarios).toHaveLength(19);
+        expect(r.horarios.at(-1)).toBe("17:00");
         expect(r.horarios).not.toContain("17:30");
     });
 
@@ -89,6 +90,14 @@ describe("horariosLivres", () => {
         const r = horariosLivres(cfg, "2026-10-31", "banho-tosa", [], terçaNoite);
         if (r.ok !== true) throw new Error("sem horários");
         expect(r.horarios.at(-1)).toBe("12:30");
+    });
+
+    it("o teto vale só para a lista; com limite infinito nada some", () => {
+        const curto = { ...cfg, slot_step_min: 15 };
+        const r = horariosLivres(curto, "2026-10-28", "banho", [], terçaNoite, Infinity);
+        if (r.ok !== true) throw new Error("sem horários");
+        expect(r.horarios).toHaveLength(37);
+        expect(r.horarios).toContain("17:00");
     });
 
     it("intervaloDoHorario usa a duração do serviço", () => {
