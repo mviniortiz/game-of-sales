@@ -69,7 +69,17 @@ export const SAMPLE_DIARY: EvaDiary = {
         { id: "e4", quando: at(1, 16, 30), texto: "Moveu Condomínio Vila Verde de etapa", rascunho: false },
         { id: "e5", quando: at(1, 15, 2), texto: "Leu 6 conversas", rascunho: false },
     ],
-    rascunhos: [{ id: "r1", codigo: "B7", quem: "Padaria Trigo Bom", noWhatsapp: true }],
+    rascunhos: [
+        {
+            id: "r1",
+            codigo: "B7",
+            quem: "Padaria Trigo Bom",
+            noWhatsapp: true,
+            porque: "Orçamento enviado há 3 dias sem resposta",
+            texto: "Oi, Luciana. Ficou alguma dúvida na proposta da padaria? Posso te explicar em dois minutos por áudio.",
+        },
+    ],
+    enviados: [],
     traces: [
         {
             runId: "t1",

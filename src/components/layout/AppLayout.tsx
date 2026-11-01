@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { AbasCelular } from "./AbasCelular";
+import "./tela.css";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { ConectarSemPlano, FaixaPlanoGratis, TelaDoPlano } from "./PlanoGratis";
 import { EvaHelpDock } from "@/components/help/EvaHelpDock";

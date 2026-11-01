@@ -5040,12 +5040,23 @@ html.lenis, html.lenis body { height: auto; }
 /* ── Página full-height do app (Inbox/Pipeline/Pulse/Agenda) ──────────────
    Desconta o header real do AppLayout (h-14 = 3.5rem). dvh corrige o Safari
    iOS (100vh assume a toolbar recolhida e corta o composer). */
+/* No celular descontam o topo e as abas de baixo; no computador é a tela toda. */
 .vz-page-full {
-  height: calc(100vh - 3.5rem);
+  height: calc(100vh - 3.5rem - 66px);
 }
 @supports (height: 100dvh) {
   .vz-page-full {
-    height: calc(100dvh - 3.5rem);
+    height: calc(100dvh - 3.5rem - 66px - env(safe-area-inset-bottom));
+  }
+}
+@media (min-width: 768px) {
+  .vz-page-full {
+    height: 100vh;
+  }
+  @supports (height: 100dvh) {
+    .vz-page-full {
+      height: 100dvh;
+    }
   }
 }
 

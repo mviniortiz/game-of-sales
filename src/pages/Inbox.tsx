@@ -542,7 +542,7 @@ const Inbox = () => {
 
     return (
         <div
-            className="vz-inbox vz-page-full flex overflow-hidden -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6"
+            className="vz-inbox vz-page-full flex overflow-hidden -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-9 md:-my-8"
             style={{
                 background: "var(--ibx-paper)",
             }}

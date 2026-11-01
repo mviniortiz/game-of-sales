@@ -4,9 +4,10 @@
 // você...) é calculado no banco (view quote_tracking_live); a tela só agrupa e mostra.
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowUpDown, ArrowUpRight, Check, FileText, MessageCircle, MoreHorizontal, RotateCcw, Search, X } from "lucide-react";
+import { WhatsappLogo } from "@phosphor-icons/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +20,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { quoteRpc, useQuoteBoard, type QuoteBoard, type QuoteItem, type QuoteOutcome, type QuoteState } from "@/hooks/useQuoteBoard";
 import { brl, evaLine, OPEN_QUOTE_STATES, plural, quoteName, stateLine } from "@/lib/quoteText";
-import { DayTicks } from "@/components/quotes/DayTicks";
+import { EvaBot } from "@/components/eva/EvaBot";
+import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/contexts/TenantContext";
+import { Count } from "@/vendor/stageshow/motion/Count";
+import { Swap } from "@/vendor/stageshow/motion/Swap";
 import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
 import { useAuth } from "@/contexts/AuthContext";
 import { EVA_SETUP_PATH, raioXDismissKey, setupDismissKey, useEvaSetup } from "@/hooks/useEvaSetup";
@@ -60,8 +65,8 @@ const TAB_STATES: Record<Tab, QuoteState[]> = {
 
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 const FOCUS =
-  "outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F6F4EF]";
-const SURFACE_SHADOW = "0 1px 2px rgba(15,23,42,0.04), 0 12px 32px -18px rgba(15,23,42,0.14)";
+  "outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--vyz-bg)]";
+const SURFACE_SHADOW = "0 1px 2px rgba(15,23,42,0.04)";
 
 // ─── Página ────────────────────────────────────────────────────────────────
 export default function Orcamentos() {
@@ -156,9 +161,26 @@ export default function Orcamentos() {
   const activeTab: Tab = tab ?? (data && data.totals.parked_count === 0 && data.totals.your_turn_count > 0 ? "your_turn" : "parked");
 
   return (
-    <div className="mx-auto w-full max-w-4xl pb-16">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-[15px] font-semibold text-[var(--vyz-text-primary)]">Orçamentos</h1>
+    <div className="vp-tela pb-16">
+      <header className="vp-cabeca">
+        <div>
+          <h1 className="vp-titulo">
+            {data ? (
+              <>
+                <span className="vp-valor"><Count value={data.totals.parked_amount} format={brl} /></span> parados
+              </>
+            ) : (
+              "Orçamentos"
+            )}
+          </h1>
+          <p className="vp-sub">
+            {!data
+              ? `Últimos ${days} dias`
+              : data.totals.parked_count === 0
+                ? "Nenhum orçamento parado agora"
+                : `${plural(data.totals.parked_count, "orçamento", "orçamentos")} sem resposta nos últimos ${days} dias`}
+          </p>
+        </div>
         <PeriodFilter value={days} onChange={setDays} />
       </header>
 
@@ -190,7 +212,7 @@ export default function Orcamentos() {
         <EmptyState days={days} connected={wa.connected} checking={wa.loading} />
       ) : data ? (
         <>
-          <Scoreboard totals={data.totals} onPick={setTab} />
+          <Resumo totals={data.totals} onPick={setTab} />
           <QuoteList
             items={data.items}
             totals={data.totals}
@@ -213,98 +235,32 @@ export default function Orcamentos() {
 // ─── Blocos ────────────────────────────────────────────────────────────────
 function PeriodFilter({ value, onChange }: { value: Period; onChange: (p: Period) => void }) {
   return (
-    <div role="radiogroup" aria-label="Período" className="inline-flex rounded-full border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-0.5">
-      {PERIODS.map((p) => {
-        const active = p === value;
-        return (
-          <button
-            key={p}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            onClick={() => onChange(p)}
-            className={`h-8 min-w-[52px] rounded-full px-3 text-[13px] font-medium transition-colors duration-150 ${EASE} ${FOCUS} ${
-              active ? "bg-[#0B1220] text-white" : "text-[var(--vyz-text-muted)] hover:text-[var(--vyz-text-primary)]"
-            }`}
-          >
-            {p} dias
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function Scoreboard({ totals, onPick }: { totals: QuoteBoard["totals"]; onPick: (t: Tab) => void }) {
-  const parts = [
-    totals.no_reply_count > 0 && plural(totals.no_reply_count, "nunca respondeu", "nunca responderam"),
-    totals.went_quiet_count > 0 && plural(totals.went_quiet_count, "respondeu e sumiu", "responderam e sumiram"),
-  ].filter(Boolean);
-
-  return (
-    <section aria-label="Placar" className="mt-6">
-      <p className="font-satoshi text-[44px] font-black leading-[1.0] tracking-[-0.04em] text-[var(--vyz-text-primary)] sm:text-[64px]">
-        {brl(totals.parked_amount)} <span className="text-[0.5em] font-bold tracking-[-0.02em] text-[var(--vyz-text-muted)]">parados</span>
-      </p>
-      <p className="mt-2 text-[15px] text-[var(--vyz-text)]">
-        {totals.parked_count === 0
-          ? "Nenhum orçamento parado agora."
-          : `${plural(totals.parked_count, "orçamento", "orçamentos")}: ${parts.join(", ")}.`}
-      </p>
-
-      <dl className="mt-6 grid grid-cols-2 gap-y-4 border-y border-[var(--vyz-border)] py-4 sm:grid-cols-4 sm:gap-y-0 sm:divide-x sm:divide-[var(--vyz-border)]">
-        <Figure
-          label="Esperando você"
-          value={totals.your_turn_count > 0 ? plural(totals.your_turn_count, "cliente", "clientes") : "ninguém"}
-          sub={totals.your_turn_count > 0 ? brl(totals.your_turn_amount) : "todos respondidos"}
-          alert={totals.your_turn_count > 0}
-          onClick={() => onPick("your_turn")}
-        />
-        <Figure
-          label="Voltaram com retomada"
-          value={brl(totals.recovered_amount)}
-          sub={plural(totals.recovered_count, "fechou depois da EVA", "fecharam depois da EVA")}
-          eva
-          onClick={() => onPick("closed")}
-        />
-        <Figure
-          label="Fechados"
-          value={brl(totals.won_amount)}
-          sub={plural(totals.won_count, "orçamento", "orçamentos")}
-          onClick={() => onPick("closed")}
-        />
-        <Figure
-          label="Perdidos"
-          value={String(totals.lost_count + totals.expired_count)}
-          sub={`${totals.lost_count} disseram não, ${totals.expired_count} morreram`}
-          onClick={() => onPick("closed")}
-        />
-      </dl>
-    </section>
-  );
-}
-
-function Figure({
-  label, value, sub, eva, alert, onClick,
-}: { label: string; value: string; sub: string; eva?: boolean; alert?: boolean; onClick: () => void }) {
-  return (
-    <div className="min-w-0 px-0 sm:px-4 sm:first:pl-0">
-      <dt className="flex items-center gap-1.5 text-[12.5px] font-medium text-[var(--vyz-text-muted)]">
-        {eva && <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-[#6d28d9]" />}
-        {alert && <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
-        {label}
-      </dt>
-      <dd className="mt-0.5">
-        <button
-          type="button"
-          onClick={onClick}
-          className={`rounded text-left text-[19px] font-semibold tabular-nums tracking-[-0.02em] text-[var(--vyz-text-primary)] underline-offset-4 hover:underline ${FOCUS}`}
-        >
-          {value}
+    <div role="radiogroup" aria-label="Período" className="vp-segmento">
+      {PERIODS.map((p) => (
+        <button key={p} type="button" role="radio" aria-checked={p === value} onClick={() => onChange(p)}>
+          {p} dias
         </button>
-      </dd>
-      <dd className="truncate text-[12.5px] text-[var(--vyz-text-soft)]">{sub}</dd>
+      ))}
     </div>
+  );
+}
+
+function Resumo({ totals, onPick }: { totals: QuoteBoard["totals"]; onPick: (t: Tab) => void }) {
+  const tiles: Array<{ rotulo: string; valor: string; aba: Tab }> = [
+    { rotulo: "Esperando você", valor: String(totals.your_turn_count), aba: "your_turn" },
+    { rotulo: "Voltaram com retomada", valor: String(totals.recovered_count), aba: "closed" },
+    { rotulo: "Fechados", valor: String(totals.won_count), aba: "closed" },
+    { rotulo: "Perdidos", valor: String(totals.lost_count + totals.expired_count), aba: "closed" },
+  ];
+  return (
+    <section aria-label="Placar" className="vp-resumo">
+      {tiles.map((t) => (
+        <button key={t.rotulo} type="button" className="vp-tile" onClick={() => onPick(t.aba)}>
+          {t.rotulo}
+          <b>{t.valor}</b>
+        </button>
+      ))}
+    </section>
   );
 }
 
@@ -342,123 +298,102 @@ function QuoteList({
     .filter((q) => !needle || fold(`${q.contact_name ?? ""} ${q.contact_phone ?? ""}`).includes(needle))
     .sort(SORTERS[sort]);
 
-  // Parados vêm em duas pilhas: cada uma pede uma retomada diferente.
-  const groups: Array<{ title: string | null; rows: QuoteItem[] }> =
-    tab === "parked"
-      ? [
-          { title: "Nunca responderam", rows: visible.filter((q) => q.state === "no_reply") },
-          { title: "Responderam e sumiram", rows: visible.filter((q) => q.state === "went_quiet") },
-        ]
-          .filter((g) => g.rows.length > 0)
-          .sort((a, b) => sum(b.rows) - sum(a.rows))
-      : [{ title: null, rows: visible }];
+  const [abertoId, setAbertoId] = useState<string | null>(null);
+  const aberto = visible.find((q) => q.id === abertoId) ?? visible[0] ?? null;
 
   return (
-    <section aria-label="Orçamentos por situação" className="mt-8">
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-      <div role="tablist" aria-label="Situação" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-px">
-        {tabs.map((t) => {
-          const active = t.key === tab;
-          return (
-            <button
-              key={t.key}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => onTab(t.key)}
-              className={`relative flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[13.5px] font-medium transition-colors duration-150 ${EASE} ${FOCUS} ${
-                active
-                  ? "bg-[var(--vyz-surface-1)] text-[var(--vyz-text-primary)] shadow-[0_0_0_1px_var(--vyz-border-strong)]"
-                  : "text-[var(--vyz-text-muted)] hover:text-[var(--vyz-text-primary)]"
-              }`}
-            >
+    <section aria-label="Orçamentos por situação">
+      <div className="vp-barra">
+        <div role="tablist" aria-label="Situação" className="vp-segmento">
+          {tabs.map((t) => (
+            <button key={t.key} type="button" role="tab" aria-selected={t.key === tab} onClick={() => onTab(t.key)}>
               {t.label}
-              <span className={`tabular-nums ${active ? "text-[var(--vyz-text-muted)]" : "text-[var(--vyz-text-soft)]"}`}>{t.count}</span>
+              <em>{t.count}</em>
             </button>
-          );
-        })}
-      </div>
-      <div className="flex w-full items-center gap-2 sm:w-auto">
-        <label className="relative flex h-9 min-w-0 flex-1 items-center sm:w-60 sm:flex-none">
-          <span className="sr-only">Buscar cliente ou telefone</span>
-          <Search aria-hidden className="pointer-events-none absolute left-3 h-4 w-4 text-[var(--vyz-text-soft)]" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => onQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Escape") onQuery(""); }}
-            placeholder="Buscar cliente ou telefone"
-            className={`h-9 w-full rounded-full border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] pl-9 pr-8 text-[13.5px] text-[var(--vyz-text-primary)] placeholder:text-[var(--vyz-text-soft)] transition-[border-color,box-shadow] duration-150 ${EASE} hover:border-[var(--vyz-border-strong)] focus:border-[var(--vyz-accent)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] [&::-webkit-search-cancel-button]:hidden`}
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => onQuery("")}
-              aria-label="Limpar busca"
-              className={`absolute right-1.5 flex h-6 w-6 items-center justify-center rounded-full text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-3)] hover:text-[var(--vyz-text-primary)] ${FOCUS}`}
+          ))}
+        </div>
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <label className="relative flex h-9 min-w-0 flex-1 items-center sm:w-56 sm:flex-none">
+            <span className="sr-only">Buscar cliente ou telefone</span>
+            <Search aria-hidden className="pointer-events-none absolute left-3 h-4 w-4 text-[var(--vyz-text-soft)]" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => onQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Escape") onQuery(""); }}
+              placeholder="Buscar cliente ou telefone"
+              className={`h-9 w-full rounded-full border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] pl-9 pr-8 text-[16px] sm:text-[13.5px] text-[var(--vyz-text-primary)] placeholder:text-[var(--vyz-text-soft)] transition-[border-color,box-shadow] duration-150 ${EASE} hover:border-[var(--vyz-border-strong)] focus:border-[var(--vyz-accent)] focus:outline-none focus:shadow-[0_0_0_3px_var(--vyz-accent-soft-12)] [&::-webkit-search-cancel-button]:hidden`}
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => onQuery("")}
+                aria-label="Limpar busca"
+                className={`absolute right-1.5 flex h-6 w-6 items-center justify-center rounded-full text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-3)] hover:text-[var(--vyz-text-primary)] ${FOCUS}`}
+              >
+                <X className="h-3.5 w-3.5" aria-hidden />
+              </button>
+            )}
+          </label>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-3.5 text-[13px] font-medium text-[var(--vyz-text)] transition-colors duration-150 ${EASE} hover:border-[var(--vyz-border-strong)] hover:text-[var(--vyz-text-primary)] data-[state=open]:border-[var(--vyz-border-strong)] ${FOCUS}`}
             >
-              <X className="h-3.5 w-3.5" aria-hidden />
-            </button>
-          )}
-        </label>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-3.5 text-[13px] font-medium text-[var(--vyz-text)] transition-colors duration-150 ${EASE} hover:border-[var(--vyz-border-strong)] hover:text-[var(--vyz-text-primary)] data-[state=open]:border-[var(--vyz-border-strong)] ${FOCUS}`}
-          >
-            <ArrowUpDown className="h-3.5 w-3.5" aria-hidden />
-            {SORTS.find((o) => o.key === sort)?.label}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuLabel className="text-[12px] font-medium text-[var(--vyz-text-muted)]">Ordenar por</DropdownMenuLabel>
-            <DropdownMenuRadioGroup value={sort} onValueChange={(v) => onSort(v as Sort)}>
-              {SORTS.map((o) => (
-                <DropdownMenuRadioItem key={o.key} value={o.key}>{o.label}</DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+              <ArrowUpDown className="h-3.5 w-3.5" aria-hidden />
+              {SORTS.find((o) => o.key === sort)?.label}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuLabel className="text-[12px] font-medium text-[var(--vyz-text-muted)]">Ordenar por</DropdownMenuLabel>
+              <DropdownMenuRadioGroup value={sort} onValueChange={(v) => onSort(v as Sort)}>
+                {SORTS.map((o) => (
+                  <DropdownMenuRadioItem key={o.key} value={o.key}>{o.label}</DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
-      <div className="mt-3 overflow-hidden rounded-[12px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)]" style={{ boxShadow: SURFACE_SHADOW }}>
-        {visible.length === 0 && needle && inTab.length > 0 ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-6">
-            <p className="text-[14px] text-[var(--vyz-text-muted)]">Nenhum orçamento com “{query.trim()}” nesta aba.</p>
-            <button
-              type="button"
-              onClick={() => onQuery("")}
-              className={`h-8 rounded-full border border-[var(--vyz-border-strong)] px-3.5 text-[13px] font-medium text-[var(--vyz-text-primary)] transition-colors duration-150 ${EASE} hover:bg-[var(--vyz-surface-2)] ${FOCUS}`}
-            >
-              Limpar busca
-            </button>
-          </div>
-        ) : visible.length === 0 ? (
-          <p className="px-5 py-8 text-[14px] leading-relaxed text-[var(--vyz-text-muted)]">{emptyTabText(tab, days)}</p>
-        ) : (
-          groups.map((g) => (
-            <div key={g.title ?? "all"}>
-              {g.title && (
-                <div className="flex items-baseline justify-between gap-3 border-b border-[var(--vyz-border-subtle)] bg-[var(--vyz-surface-2)] px-4 py-2 sm:px-5">
-                  <h2 className="text-[12.5px] font-semibold text-[var(--vyz-text-strong)]">{g.title}</h2>
-                  <span className="text-[12.5px] tabular-nums text-[var(--vyz-text-muted)]">
-                    {plural(g.rows.length, "orçamento", "orçamentos")} · {brl(sum(g.rows))}
-                  </span>
-                </div>
-              )}
-              <ul className="divide-y divide-[var(--vyz-border-subtle)]">
-                {g.rows.map((q) => (
-                  <QuoteRow key={q.id} q={q} pending={pendingId === q.id} onOutcome={(o) => onOutcome(q.id, o)} />
+      <div className="vp-orca">
+        <div className="vp-tabela">
+          {visible.length === 0 && needle && inTab.length > 0 ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-5">
+              <p className="text-[14px] text-[var(--vyz-text-muted)]">Nenhum orçamento com “{query.trim()}” nesta aba.</p>
+              <button type="button" onClick={() => onQuery("")} className="vp-botao vp-botao--quieto">
+                Limpar busca
+              </button>
+            </div>
+          ) : visible.length === 0 ? (
+            <p className="px-4 py-7 text-[14px] leading-relaxed text-[var(--vyz-text-muted)]">{emptyTabText(tab, days)}</p>
+          ) : (
+            <>
+              <div className="vp-tabela__cab" aria-hidden="true">
+                <span>Cliente</span>
+                <span>Situação</span>
+                <span>Dias</span>
+                <span style={{ textAlign: "right" }}>Valor</span>
+                <span />
+              </div>
+              <ul>
+                {visible.map((q) => (
+                  <QuoteRow
+                    key={q.id}
+                    q={q}
+                    aberta={aberto?.id === q.id}
+                    onAbrir={() => setAbertoId(q.id)}
+                    pending={pendingId === q.id}
+                    onOutcome={(o) => onOutcome(q.id, o)}
+                  />
                 ))}
               </ul>
-            </div>
-          ))
-        )}
+            </>
+          )}
+        </div>
+        {aberto && <PainelEva q={aberto} onOutcome={(o) => onOutcome(aberto.id, o)} pending={pendingId === aberto.id} />}
       </div>
     </section>
   );
 }
-
-const sum = (rows: QuoteItem[]) => rows.reduce((s, q) => s + (q.amount ?? 0), 0);
 
 function emptyTabText(tab: Tab, days: number): string {
   switch (tab) {
@@ -473,63 +408,131 @@ function emptyTabText(tab: Tab, days: number): string {
   }
 }
 
-function initials(name: string): string {
-  const parts = name.replace(/[^\p{L}\s]/gu, "").trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+const SITUACAO: Record<QuoteState, { nome: string; tom?: "sol" | "ok" | "ruim" }> = {
+  no_reply: { nome: "Nunca respondeu" },
+  went_quiet: { nome: "Respondeu e sumiu" },
+  your_turn: { nome: "Esperando você", tom: "sol" },
+  talking: { nome: "Em conversa" },
+  won: { nome: "Fechou", tom: "ok" },
+  lost: { nome: "Perdeu", tom: "ruim" },
+  expired: { nome: "Morreu", tom: "ruim" },
+  closed: { nome: "Encerrado" },
+};
+
+// Dez marcas, uma por dia: a do 2º dia é amarela, porque é o dia em que a EVA avisa.
+function Marcas({ dias }: { dias: number }) {
+  return (
+    <span className="vp-marcas" aria-hidden="true">
+      {Array.from({ length: 10 }, (_, i) => (
+        <i key={i} data-on={i < dias || undefined} data-dia2={i === 1 || undefined} />
+      ))}
+    </span>
+  );
 }
 
-function QuoteRow({ q, pending, onOutcome }: { q: QuoteItem; pending: boolean; onOutcome: (o: QuoteOutcome) => void }) {
+function QuoteRow({
+  q, aberta, onAbrir, pending, onOutcome,
+}: { q: QuoteItem; aberta: boolean; onAbrir: () => void; pending: boolean; onOutcome: (o: QuoteOutcome) => void }) {
   const name = quoteName(q);
   const open = OPEN_QUOTE_STATES.includes(q.state);
-  const eva = evaLine(q);
+  const navigate = useNavigate();
   const target = q.conversation_id ? `/inbox?conversationId=${q.conversation_id}` : q.deal_id ? `/deals/${q.deal_id}` : null;
+  const situacao = SITUACAO[q.state];
+  // No computador a linha abre o painel da EVA; no celular, sem painel, abre a conversa.
+  const escolher = () => {
+    if (window.matchMedia("(min-width: 1024px)").matches || !target) onAbrir();
+    else navigate(target);
+  };
 
   return (
-    <li className={`group relative grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 px-4 py-4 sm:grid-cols-[36px_minmax(0,1fr)_auto] sm:gap-x-3.5 sm:px-5 transition-colors duration-150 ${EASE} hover:bg-[var(--vyz-surface-2)] motion-reduce:transition-none ${pending ? "opacity-60" : ""}`}>
-      <span
-        aria-hidden
-        className="mt-0.5 hidden h-9 w-9 items-center justify-center rounded-full sm:flex bg-[var(--vyz-surface-3)] text-[12px] font-semibold text-[var(--vyz-text-muted)]"
-      >
-        {q.contact_name ? initials(q.contact_name) : "#"}
+    <li className="vp-fila" data-aberta={aberta || undefined} style={pending ? { opacity: 0.6 } : undefined} onClick={escolher}>
+      <span className="vp-fila__cliente">
+        <button type="button" className={`truncate text-left text-[15px] font-semibold text-[var(--vyz-text-primary)] ${FOCUS}`} aria-pressed={aberta}>
+          {name}
+        </button>
+        <span>{evaLine(q) ?? (q.detected_by === "pdf" ? "Orçamento em PDF" : "Orçamento por mensagem")}</span>
       </span>
-
-      <div className="min-w-0">
-        {target ? (
-          // Link esticado: a linha inteira abre a conversa; o menu fica por cima (z-10).
-          <Link to={target} className={`block truncate text-[15px] font-semibold text-[var(--vyz-text-primary)] after:absolute after:inset-0 after:content-[''] ${FOCUS}`}>
-            {name}
-          </Link>
-        ) : (
-          <p className="truncate text-[15px] font-semibold text-[var(--vyz-text-primary)]">{name}</p>
-        )}
-        <p className={`mt-0.5 text-[13px] ${q.state === "your_turn" ? "font-medium text-amber-700" : "text-[var(--vyz-text-muted)]"}`}>
-          {stateLine(q)}
-        </p>
-        {eva && (
-          <p className="mt-1.5 flex items-center gap-1.5 text-[12.5px] text-[var(--vyz-text)]">
-            <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#6d28d9]" />
-            {eva}
-          </p>
-        )}
-      </div>
-
-      <div className="flex items-start gap-1.5">
-        <div className="flex flex-col items-end gap-2 pt-0.5">
-          <p
-            className={
-              q.amount != null
-                ? `text-[16px] font-semibold tabular-nums tracking-[-0.01em] text-[var(--vyz-text-primary)] ${q.state === "lost" || q.state === "expired" ? "text-[var(--vyz-text-soft)] line-through decoration-[var(--vyz-text-dim)]" : ""}`
-                : "text-[12.5px] text-[var(--vyz-text-soft)]"
-            }
-          >
-            {q.amount != null ? brl(q.amount) : "valor não identificado"}
-          </p>
-          {open && <DayTicks days={q.days} />}
-        </div>
+      <span className="vp-chip" data-tom={situacao.tom}>{situacao.nome}</span>
+      <span className="vp-fila__dias">
+        {open && <Marcas dias={q.days} />}
+        {open ? `${q.days}d` : ""}
+      </span>
+      <span className="vp-fila__valor">{q.amount != null ? brl(q.amount) : "Sem valor"}</span>
+      <span className="vp-fila__menu" onClick={(e) => e.stopPropagation()}>
         <RowMenu q={q} name={name} pending={pending} onOutcome={onOutcome} />
-      </div>
+      </span>
     </li>
+  );
+}
+
+// O rascunho pendente deste orçamento, para o dono ler sem sair da tela.
+function useRascunho(q: QuoteItem) {
+  const { companyId } = useAuth();
+  const { activeCompanyId } = useTenant();
+  const empresa = activeCompanyId || companyId;
+  return useQuery({
+    queryKey: ["rascunho-orcamento", empresa, q.id, q.draft_status],
+    enabled: !!empresa && q.draft_status === "pending" && !!(q.deal_id || q.conversation_id),
+    staleTime: 30_000,
+    queryFn: async () => {
+      const filtro = supabase.from("agent_suggestions").select("suggestion").eq("company_id", empresa!).eq("status", "pending");
+      const { data } = await (q.deal_id ? filtro.eq("deal_id", q.deal_id) : filtro.eq("conversation_id", q.conversation_id!))
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const sugestao = data?.suggestion as { message_text?: string } | null;
+      return sugestao?.message_text ?? null;
+    },
+  });
+}
+
+function PainelEva({ q, pending, onOutcome }: { q: QuoteItem; pending: boolean; onOutcome: (o: QuoteOutcome) => void }) {
+  const rascunho = useRascunho(q);
+  const name = quoteName(q);
+  const open = OPEN_QUOTE_STATES.includes(q.state);
+  const situacao = SITUACAO[q.state];
+  const conversa = q.conversation_id ? `/inbox?conversationId=${q.conversation_id}` : null;
+  const card = q.deal_id ? `/deals/${q.deal_id}` : null;
+
+  return (
+    <aside className="vp-painel hidden lg:block" aria-label={`A EVA sobre ${name}`}>
+      <div className="vp-painel__topo">
+        <EvaBot size={56} state={q.draft_status === "pending" ? "talking" : q.state === "won" ? "happy" : "idle"} />
+        <div>
+          <b><Swap id={q.id}>{name}</Swap></b>
+          <span><Swap id={`${q.id}-s`}>{situacao.nome}</Swap></span>
+        </div>
+      </div>
+      <p className="vp-painel__texto">{stateLine(q).split(" · ").pop()}</p>
+      {rascunho.data ? (
+        <>
+          <div className="vp-rotulo">{q.draft_status === "pending" ? "Rascunho esperando o seu 1" : "Rascunho"}</div>
+          <p className="vp-balao vp-balao--sol">{rascunho.data}</p>
+        </>
+      ) : (
+        evaLine(q) && <p className="vp-painel__texto">{evaLine(q)}</p>
+      )}
+      <div className="vp-acoes">
+        {conversa && (
+          <Link to={conversa} className="vp-botao">
+            <WhatsappLogo size={16} weight="fill" aria-hidden />
+            Abrir conversa
+          </Link>
+        )}
+        {card && (
+          <Link to={card} className="vp-botao vp-botao--quieto">
+            Abrir card
+          </Link>
+        )}
+        {open && (
+          <div className="vp-acoes vp-acoes--linha" style={{ marginTop: 0 }}>
+            <button type="button" className="vp-botao vp-botao--quieto" disabled={pending} onClick={() => onOutcome("won")}>Fechou</button>
+            <button type="button" className="vp-botao vp-botao--quieto" disabled={pending} onClick={() => onOutcome("lost")}>Perdeu</button>
+          </div>
+        )}
+      </div>
+      <p className="vp-nota">Nada sai para o cliente sem o seu 1.</p>
+    </aside>
   );
 }
 
@@ -585,7 +588,7 @@ function RowMenu({ q, name, pending, onOutcome }: { q: QuoteItem; name: string; 
 }
 
 const BTN_BASE = `inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-[14px] font-semibold transition-all duration-150 ${EASE} active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100`;
-const BTN_PRIMARY = `${BTN_BASE} bg-[#0B1220] text-white hover:bg-[#1F2A3B]`;
+const BTN_PRIMARY = `${BTN_BASE} bg-[var(--vyz-accent)] text-white hover:bg-[var(--vyz-accent-dark)]`;
 const BTN_OUTLINE = `${BTN_BASE} border border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-1)] text-[var(--vyz-text-strong)] hover:bg-[var(--vyz-surface-2)]`;
 
 // Vazio com WhatsApp conectado: nenhuma proposta na janela escolhida. Contas
