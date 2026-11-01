@@ -414,16 +414,15 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
       }}
       className={`
         vz-deal-card group relative
-        bg-white border border-slate-200/80
-        dark:bg-card dark:border-border/50
-        rounded-xl p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_2px_8px_-4px_rgba(15,23,42,0.05)]
+        bg-white border border-transparent
+        rounded-[14px] p-3.5
         ${selectionMode ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"}
         transition-[border-color,background-color,transform,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform
         motion-reduce:transition-none
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-1
         ${isBeingDragged
           ? "scale-[1.025] -translate-y-0.5 shadow-[0_12px_32px_-6px_rgba(15,23,42,0.25)] border-[var(--vyz-accent)] ring-1 ring-[var(--vyz-accent-border)] z-50 !opacity-100 motion-reduce:scale-100 motion-reduce:translate-y-0"
-          : "hover:border-slate-300 dark:hover:border-border hover:-translate-y-px hover:shadow-[0_8px_20px_-8px_rgba(15,23,42,0.18)] motion-reduce:hover:translate-y-0"
+          : "hover:-translate-y-px hover:shadow-[0_2px_10px_rgba(15,23,42,0.08)] motion-reduce:hover:translate-y-0"
         }
         ${isSortableDragging ? "opacity-30" : "opacity-100"}
         ${isSelected ? "!border-[var(--vyz-accent)] ring-2 ring-[var(--vyz-accent-border-strong)]" : ""}

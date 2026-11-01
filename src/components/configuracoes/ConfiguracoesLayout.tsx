@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   Buildings,
+  CaretRight,
   ChatCircleText,
   CheckCircle,
   CreditCard,
@@ -70,12 +71,15 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
   "webhooks-leads": { title: "Receber leads", subtitle: "Leads do seu site e dos anúncios entram direto no funil" },
   tags: { title: "Tags", subtitle: "Marcadores para oportunidades, conversas e contatos" },
   importar: { title: "Importar", subtitle: "Traga contatos e oportunidades de uma planilha" },
+  whatsapp: { title: "WhatsApp", subtitle: "Conecte o número da empresa" },
+  time: { title: "Equipe", subtitle: "Quem usa o Vyzon com você" },
 };
 
 export default function ConfiguracoesLayout() {
   const location = useLocation();
   const { isAdmin } = useAuth();
   const currentSection = location.pathname.split("/")[2] || "perfil";
+  const naRaiz = !location.pathname.split("/")[2];
   const header = TITLES[currentSection] || TITLES.perfil;
 
   const visibleGroups = useMemo(
@@ -91,11 +95,38 @@ export default function ConfiguracoesLayout() {
         : "text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-2)] hover:text-[var(--vyz-text-primary)]"
     }`;
 
+  // A raiz é um índice curto; cada linha leva à sua página.
+  if (naRaiz) {
+    return (
+      <div className="vp-tela">
+        <header className="vp-cabeca">
+          <h1 className="vp-titulo">Configurações</h1>
+        </header>
+        <div className="vp-config">
+          {visibleGroups.map((group) => (
+            <section key={group.label} className="vp-cartao vp-cartao--lista" aria-label={group.label}>
+              <div className="vp-rotulo">{group.label}</div>
+              {group.items.map((item) => (
+                <NavLink key={item.id} to={item.path} className="vp-conf">
+                  <b>{item.label}</b>
+                  <span>{TITLES[item.id]?.subtitle ?? ""}</span>
+                  <CaretRight size={14} weight="bold" aria-hidden />
+                </NavLink>
+              ))}
+            </section>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mx-auto w-full max-w-[1120px] space-y-6">
-      <header>
-        <h1 className="text-[26px] font-semibold tracking-[-0.03em] text-[var(--vyz-text-primary)]">{header.title}</h1>
-        <p className="mt-1 text-[14px] text-[var(--vyz-text-muted)]">{header.subtitle}</p>
+    <div className="vp-tela">
+      <header className="vp-cabeca">
+        <div>
+          <h1 className="vp-titulo">{header.title}</h1>
+          <p className="vp-sub">{header.subtitle}</p>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr] lg:gap-8">

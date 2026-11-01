@@ -14,9 +14,9 @@ export interface QuinzenaDay {
 }
 
 const KINDS = [
-    { key: "leads", label: "lead novo", color: "bg-[#2563EB]" },
-    { key: "quotes", label: "orçamento enviado", color: "bg-[#2B2E35]" },
-    { key: "won", label: "fechou", color: "bg-emerald-600" },
+    { key: "leads", label: "lead novo", color: "bg-[var(--vyz-accent)]" },
+    { key: "quotes", label: "orçamento enviado", color: "bg-[var(--vyz-noite)]" },
+    { key: "won", label: "fechou", color: "bg-[var(--vyz-sol)]" },
 ] as const;
 
 export function QuinzenaCard({ days, responseMedianMin, loading }: { days: QuinzenaDay[]; responseMedianMin: number | null; loading: boolean }) {

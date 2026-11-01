@@ -277,7 +277,7 @@ const AppShell = () => (
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<Navigate to="/configuracoes/perfil" replace />} />
+                <Route index element={null} />
                 <Route path="perfil" element={<ConfPerfil />} />
                 <Route path="seguranca" element={<ConfSeguranca />} />
                 <Route

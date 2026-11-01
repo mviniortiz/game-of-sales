@@ -884,7 +884,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
         addPriority({
             id: dealKey(d.id),
             title: `${d.title || d.customer_name || "Oportunidade"} sem atualização`,
-            description: `Stage: ${d.stage}. Última atividade ${Math.floor((Date.now() - new Date(d.updated_at).getTime()) / 86400_000)}d atrás.`,
+            description: `Sem movimento há ${Math.floor((Date.now() - new Date(d.updated_at).getTime()) / 86400_000)}d atrás.`,
             reason: "Sem atualização há mais de 7 dias",
             priority: "medium",
             actionLabel: "Ver oportunidade",
