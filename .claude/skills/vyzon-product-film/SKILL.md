@@ -21,8 +21,7 @@ Leia antes do primeiro frame.
   responde 1 e ela sai do número dele. Promessa dos filmes (23/10/2026): "No 2º
   dia sem resposta, a mensagem pra chamar de volta chega pronta no seu
   WhatsApp; você responde 1 e ela sai do seu número". CTA: "Fale com o Markus
-  no WhatsApp · vyzon.com.br". Preço, se aparecer: fundador R$ 97/mês nos 3
-  primeiros meses para as 10 primeiras integradoras, depois R$ 197
+  no WhatsApp · vyzon.com.br". Preço, se aparecer: R$ 97/mês
   (`src/config/plans.ts`).
 - **EVA é assistida:** o humano aprova o que sai para o cliente. Nunca prometer
   automação total, envio automático ou "IA fechando vendas sozinha".

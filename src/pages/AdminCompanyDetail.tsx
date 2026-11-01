@@ -184,7 +184,7 @@ export const AdminCompanyDetail = () => {
                     className="w-full h-10 rounded-md border border-border bg-card text-foreground px-3"
                   >
                     <option value="free">Free</option>
-                    <option value="pro">Vyzon (R$ 197)</option>
+                    <option value="pro">Vyzon (R$ 97)</option>
                   </select>
                 </div>
                 <div className="space-y-2">

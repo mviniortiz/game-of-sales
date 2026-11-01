@@ -3802,18 +3802,6 @@ All colors MUST be HSL.
 .lp-solar .vs-btn--sol:hover { box-shadow: 4px 4px 0 0 #fff; }
 .lp-solar .vs-btn--sol:focus-visible { outline-color: #fff; }
 .lp-solar .vs-btn--vazado { background: transparent; color: var(--lp-ink); }
-.lp-solar .vs-btn__wa {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  background: var(--lp-whatsapp);
-  color: var(--lp-ink);
-}
-.lp-solar .vs-btn__wa svg { width: 14px; height: 14px; }
 
 /* Fatura: a conta do dinheiro parado, no molde da conta de luz. */
 .lp-solar .vs-fatura {
@@ -3890,19 +3878,8 @@ All colors MUST be HSL.
   .lp-solar .vs-tempo { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
-/* Preço: cartão noite, etiqueta de fundador cortando a borda, sem contrato com peso. */
+/* Preço: cartão noite, sem contrato com peso. */
 .lp-solar .vs-preco { position: relative; border-radius: 22px; padding: 32px 24px 24px; }
-.lp-solar .vs-preco__etiqueta {
-  position: absolute;
-  top: -16px;
-  left: 24px;
-  padding: 5px 10px;
-  border-radius: 10px;
-  background: var(--lp-sol);
-  color: var(--lp-ink);
-  font-size: 15px;
-  font-weight: 800;
-}
 
 /* Conheça a EVA: cartão largo, bot grande cortado pela borda. */
 .lp-solar .vs-conheca { position: relative; overflow: clip; border-radius: 28px; padding: 40px 24px 300px; }

@@ -1,31 +1,27 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { trackEvent, trackDemoConversion, FUNNEL_EVENTS } from "@/lib/analytics";
-import { getAttribution } from "@/lib/attribution";
+import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
 import { logLandingEvent } from "@/lib/landingFunnel";
-import { whatsappUrl } from "@/config/contact";
+import { CONTACT, whatsappUrl } from "@/config/contact";
+import { PLANS, formatPrice } from "@/config/plans";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
-import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { EvaBot, type EvaBotState } from "@/components/eva/EvaBot";
 
-// Home de produção: integradores de energia solar. O botão principal é a
-// conversa de 20 min com o Markus no WhatsApp; o Raio-X automático fica como
-// segunda opção, porque conectar o WhatsApp num site recém-conhecido é pedir
-// muito (anúncio de out/2026: 9 cliques no botão, 0 cadastros). SEO desta
-// página fica no index.html; manter em
-// sincronia (title, description, FAQPage e o <noscript>).
-//
-// Cadastro vai pra demo_requests com source='orcamento_teste': o trigger do SDR
-// automático ignora essa origem (migration 20260914_sdr_outreach_skip_orcamento),
-// senão o dono do negócio receberia o pitch de agência. O contato é manual.
+// Home de produção: integradores de energia solar. Desde 01/11/2026 a página
+// vende sozinha, sem conversa marcada com o Markus: o botão do topo leva à
+// calculadora, que não pede conexão, e a oferta leva ao cadastro. Isso desfaz a
+// decisão anterior, de quando o cadastro era o botão principal e o anúncio de
+// out/2026 deu 9 cliques e 0 cadastros (conectar o WhatsApp num site
+// recém-conhecido é pedir muito). Se o cadastro travar de novo, olhe aqui.
+// SEO desta página fica no index.html; manter em sincronia (title, description,
+// FAQPage e o <noscript>).
 
 const AvisoDemo = lazy(() => import("@/components/landing/AvisoDemo"));
 
-const SOURCE = "orcamento_teste";
 // Raio-X automático: cadastro e, depois, /raio-x no app.
 const RAIO_X_AUTO = "/criar-conta?segmento=energia_solar";
 const FUNNEL_PAGE = "solar";
+const PRECO = formatPrice(PLANS.pro.monthlyPrice);
 
 // Um ângulo por anúncio: a página repete a dor que a pessoa acabou de ver.
 // "sumiu" é a home; os outros vivem em /raio-x/:angulo (noindex).
@@ -61,25 +57,6 @@ const TITLE = "Propostas de energia solar paradas no WhatsApp | Vyzon";
 const DESCRIPTION =
     "Mandou o orçamento de energia solar e o cliente sumiu? O Vyzon mostra quais clientes pararam de responder no seu WhatsApp e deixa a mensagem pronta para chamar de novo. Raio-X grátis.";
 
-
-// Tem que conter o prefill da automação de leads (automations, 20261009_automations_ad_leads):
-// é essa frase que faz a conversa virar lead do anúncio, lida pela EVA e avisada no grupo.
-const WHATSAPP_MESSAGE = "Oi, Markus. Vi o site. Quero ver quanto está parado nos meus orçamentos de energia solar.";
-
-type FormState = {
-    name: string;
-    phone: string;
-    email: string;
-};
-
-// Três campos: quem chega frio do anúncio desistia diante de cinco. Empresa e
-// volume de propostas o Markus pergunta na conversa.
-const EMPTY_FORM: FormState = { name: "", phone: "", email: "" };
-
-const normalizePhone = (raw: string) => {
-    const digits = raw.replace(/\D/g, "");
-    return digits.startsWith("55") && digits.length >= 12 ? `+${digits}` : `+55${digits}`;
-};
 
 // Uma visita por ângulo e carregamento de página (o StrictMode do dev roda o efeito duas vezes).
 const viewedAngles = new Set<SolarAngle>();
@@ -152,20 +129,20 @@ const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
 
     return (
         <div className="lp-v2 lp-solar min-h-screen">
-            <Header onWhatsapp={() => trackWhatsappClick("header")} />
+            <Header onCta={() => trackFormCta("header")} />
             <main>
-                <Hero copy={copy} onCta={() => trackFormCta("hero")} onWhatsapp={() => trackWhatsappClick("hero")} />
+                <Hero copy={copy} onCta={() => trackFormCta("hero")} />
                 <Numbers />
-                <Calculator angle={angle} onWhatsapp={() => trackWhatsappClick("calc")} />
+                <Calculator angle={angle} onCta={() => trackFormCta("calc")} />
                 <ProductMock />
                 <ConhecaEva />
                 <HowItWorks />
-                <Offer onWhatsapp={() => trackWhatsappClick("oferta")} />
+                <Offer onCta={() => trackFormCta("oferta")} />
                 <Objections />
                 <Faq />
-                <SignupForm angle={angle} onWhatsapp={trackWhatsappClick} onCta={trackFormCta} />
+                <RaioXFinal onCta={() => trackFormCta("final")} />
             </main>
-            <Footer />
+            <Footer onSuporte={() => trackWhatsappClick("footer")} />
         </div>
     );
 };
@@ -175,7 +152,7 @@ const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
 // creme e faixas chapadas de sol e noite, com Geist, a fonte do app, em tudo e a fatura e a
 // conversa de WhatsApp como objetos gráficos.
 
-const Header = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
+const Header = ({ onCta }: { onCta: () => void }) => (
     <div className="vs-topo">
         <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between px-4 py-5 sm:px-5 md:px-8">
             <Link to="/" aria-label="Vyzon, início">
@@ -185,16 +162,9 @@ const Header = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
                 <Link to="/auth" className="text-sm font-medium" style={{ color: "var(--lp-ink-muted)" }}>
                     Entrar
                 </Link>
-                <a
-                    href={whatsappUrl(WHATSAPP_MESSAGE)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="vs-btn"
-                    style={{ minHeight: 40, padding: "0 16px", fontSize: 14 }}
-                    onClick={onWhatsapp}
-                >
-                    Falar com o Markus
-                </a>
+                <Link to={RAIO_X_AUTO} className="vs-btn" style={{ minHeight: 40, padding: "0 16px", fontSize: 14 }} onClick={onCta}>
+                    Criar conta
+                </Link>
             </div>
         </header>
     </div>
@@ -260,15 +230,9 @@ const ConhecaEva = () => {
     );
 };
 
-const WaIcon = () => (
-    <span className="vs-btn__wa" aria-hidden="true">
-        <WhatsAppIcon />
-    </span>
-);
-
 // Texto à esquerda e, à direita, o aviso que chega no WhatsApp do dono: o
 // produto inteiro numa olhada. O fim do título leva o marca-texto da tela.
-const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void; onWhatsapp: () => void }) => (
+const Hero = ({ copy, onCta }: { copy: AngleCopy; onCta: () => void }) => (
     <section className="vs-topo overflow-hidden" aria-label="Topo">
         <div className="mx-auto grid w-full max-w-[1120px] items-center gap-10 px-4 pt-4 sm:px-5 md:grid-cols-[1.12fr_0.88fr] md:gap-12 md:px-8 md:pt-10">
         <div className="md:pb-24">
@@ -288,26 +252,18 @@ const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void;
                 {copy.sub}
             </p>
             <div className="mt-7 flex flex-col items-stretch gap-3 landing-fade-in-up-lg landing-delay-300 sm:items-start md:mt-8">
-                <WhatsappCta placement={onWhatsapp}>Me mostra quanto tá parado</WhatsappCta>
+                <a href="#conta" className="vs-btn" onClick={onCta}>
+                    Me mostra quanto tá parado
+                </a>
                 <p className="text-[14px]" style={{ color: "var(--lp-ink-subtle)" }}>
-                    Abre no seu WhatsApp. Quem responde é o Markus, que criou o Vyzon.
+                    Leva 30 segundos e não precisa conectar nada.
                 </p>
             </div>
             <PriceLine className="mt-7 max-w-[520px]" />
-            <a href="#conta" className="vs-azul mt-4 inline-block text-[14px] underline underline-offset-4" onClick={onCta}>
-                Prefere fazer a conta sozinho? Leva 30 segundos e não precisa conectar nada
-            </a>
         </div>
         <AvisoNoWhatsApp />
         </div>
     </section>
-);
-
-const WhatsappCta = ({ placement, sol, children }: { placement: () => void; sol?: boolean; children: ReactNode }) => (
-    <a href={whatsappUrl(WHATSAPP_MESSAGE)} target="_blank" rel="noopener noreferrer" className={`vs-btn${sol ? " vs-btn--sol" : ""}`} onClick={placement}>
-        <WaIcon />
-        <span>{children}</span>
-    </a>
 );
 
 // A demo do topo vem em pedaço separado: o título, que é o LCP, não espera por ela.
@@ -322,18 +278,14 @@ const AvisoNoWhatsApp = () => (
     </figure>
 );
 
-// Preço à vista, como na Heliux ("R$ 390 até 90 placas" no topo). Escassez
-// real: o preço de fundador vale para as 10 primeiras integradoras
-// (src/config/plans.ts). Carimbo neutro: o marca-texto da tela é o do título.
+// Preço à vista, como na Heliux ("R$ 390 até 90 placas" no topo). Vem de
+// src/config/plans.ts.
 const PriceLine = ({ className = "" }: { className?: string }) => (
-    <p className={`flex items-start gap-3 text-[14.5px] leading-snug ${className}`} style={{ color: "var(--lp-ink-muted)" }}>
-        <span className="vs-carimbo vs-carimbo--neutro mt-[1px]">Fundador</span>
-        <span>
-            <strong className="vs-num text-[17px] font-semibold" style={{ color: "var(--lp-ink)" }}>
-                R$ 97 por mês
-            </strong>{" "}
-            nos 3 primeiros meses para as 10 primeiras integradoras. Depois, R$ 197 por mês. Sem contrato.
-        </span>
+    <p className={`text-[14.5px] leading-snug ${className}`} style={{ color: "var(--lp-ink-muted)" }}>
+        <strong className="vs-num text-[17px] font-semibold" style={{ color: "var(--lp-ink)" }}>
+            {PRECO} por mês
+        </strong>
+        , tudo liberado para até 10 pessoas. Sem contrato.
     </p>
 );
 
@@ -370,7 +322,7 @@ const Numbers = () => (
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const TICKETS = [15000, 25000, 40000, 80000];
 
-const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () => void }) => {
+const Calculator = ({ angle, onCta }: { angle: SolarAngle; onCta: () => void }) => {
     const [orcamentos, setOrcamentos] = useState(25);
     const [vendas, setVendas] = useState(5);
     const [ticket, setTicket] = useState(25000);
@@ -382,7 +334,6 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
     };
     const semVenda = Math.max(0, orcamentos - vendas);
     const total = semVenda * ticket;
-    const msg = `${WHATSAPP_MESSAGE} Pela minha conta: ${orcamentos} orçamentos por mês, ${vendas} fechados, uns ${brl(total)} que não viraram venda.`;
     const mudaOrcamentos = (d: number) => {
         marcar();
         const novo = Math.min(500, Math.max(1, orcamentos + d));
@@ -461,13 +412,12 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                             <span className="vs-marca">{brl(total)}</span>
                         </p>
                         <p className="mt-3 text-[14.5px]" style={{ color: "var(--lp-ink-muted)" }}>
-                            Nem tudo isso volta. O Vyzon acompanha o que ainda dá para chamar de volta, por R$ 197 por mês.
+                            Nem tudo isso volta. O Vyzon acompanha o que ainda dá para chamar de volta, por {PRECO} por mês.
                         </p>
                     </div>
-                    <a href={whatsappUrl(msg)} target="_blank" rel="noopener noreferrer" onClick={onWhatsapp} className="vs-btn mt-6 self-stretch sm:self-start">
-                        <WaIcon />
-                        <span>Mandar essa conta pro Markus</span>
-                    </a>
+                    <Link to={RAIO_X_AUTO} onClick={onCta} className="vs-btn mt-6 self-stretch sm:self-start">
+                        Ver meu número de verdade
+                    </Link>
                 </div>
                 </div>
             </div>
@@ -541,7 +491,7 @@ const INCLUDED = [
     "Raio-X dos últimos 90 dias, grátis antes de assinar",
 ];
 
-const Offer = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
+const Offer = ({ onCta }: { onCta: () => void }) => (
     <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-32" aria-label="O que está incluso">
         <div className="grid gap-12 md:grid-cols-[1.2fr_1fr] md:gap-10">
             <div>
@@ -561,24 +511,28 @@ const Offer = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
                 </ul>
             </div>
             <div className="vs-preco vs-noite mt-4 self-start md:mt-0">
-                <span className="vs-preco__etiqueta">Preço de fundador</span>
                 <p className="flex items-baseline gap-2">
-                    <span className="vs-num text-[80px] font-semibold leading-[0.95]" style={{ color: "var(--lp-sol)" }}>R$ 97</span>
+                    <span className="vs-num text-[80px] font-semibold leading-[0.95]" style={{ color: "var(--lp-sol)" }}>
+                        {PRECO}
+                    </span>
                     <span className="text-[16px]" style={{ color: "var(--lp-ink-muted)" }}>
                         por mês
                     </span>
                 </p>
                 <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
-                    Nos 3 primeiros meses, para as 10 primeiras integradoras. Depois, R$ 197 por mês.
+                    Pagamento por Pix ou cartão.
                 </p>
                 <p className="mt-4 border-t pt-4 text-[15px] font-semibold leading-relaxed" style={{ borderColor: "var(--lp-line)" }}>
                     Sem contrato: você paga mês a mês e para quando quiser.
                 </p>
                 <div className="mt-6 flex flex-col">
-                    <WhatsappCta placement={onWhatsapp} sol>
-                        Quero o preço de fundador
-                    </WhatsappCta>
+                    <Link to={RAIO_X_AUTO} className="vs-btn vs-btn--sol" onClick={onCta}>
+                        Criar minha conta
+                    </Link>
                 </div>
+                <p className="mt-3 text-[14px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
+                    Você cria a conta, vê o Raio-X grátis e só paga se quiser continuar.
+                </p>
             </div>
         </div>
     </section>
@@ -751,16 +705,12 @@ const Objections = () => (
 // Espelhado no FAQPage do index.html: mudou aqui, muda lá.
 const FAQ = [
     {
-        q: "Como é a conversa de 20 minutos?",
-        a: "Você me chama no WhatsApp e a gente marca um horário. Eu te mostro o Vyzon funcionando e, se você quiser, montamos juntos a lista dos seus orçamentos que ficaram sem resposta. É grátis e você não precisa decidir nada na hora.",
-    },
-    {
         q: "O que é o Raio-X?",
         a: "É uma lista dos orçamentos que você mandou pelo WhatsApp nos últimos 90 dias e que ficaram sem resposta. Mostra há quantos dias cada um está parado, quanto eles somam e a mensagem pronta para chamar cada cliente de novo. É grátis.",
     },
     {
         q: "Quanto custa?",
-        a: "O Raio-X é grátis. Se depois você quiser que a EVA acompanhe as suas propostas todo mês, o Vyzon custa R$ 197 por mês, com tudo liberado para até 10 pessoas da equipe. As 10 primeiras integradoras pagam R$ 97 por mês nos 3 primeiros meses. Não tem teste: o Raio-X já mostra o que o Vyzon acha no seu WhatsApp.",
+        a: `O Raio-X é grátis. Se depois você quiser que a EVA acompanhe as suas propostas todo mês, o Vyzon custa ${PRECO} por mês, com tudo liberado para até 10 pessoas da equipe. Não tem teste: o Raio-X já mostra o que o Vyzon acha no seu WhatsApp.`,
     },
     {
         q: "O que vocês fazem com as minhas conversas?",
@@ -797,190 +747,33 @@ const Faq = () => (
     </section>
 );
 
-const SignupForm = ({ angle, onWhatsapp, onCta }: { angle: SolarAngle; onWhatsapp: (placement: string) => void; onCta: (placement: string) => void }) => {
-    const [form, setForm] = useState<FormState>(EMPTY_FORM);
-    const [submitting, setSubmitting] = useState(false);
-    const [done, setDone] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const started = useRef(false);
-    const markStart = () => {
-        if (started.current) return;
-        started.current = true;
-        logLandingEvent(FUNNEL_PAGE, angle, "form_start");
-    };
-
-    const phoneDigits = form.phone.replace(/\D/g, "");
-    // O botão fica sempre clicável: se faltar algo, o envio diz o quê (botão
-    // cinza sem explicação parecia site quebrado).
-    const faltando = [
-        form.name.trim().length < 2 && "seu nome",
-        !(phoneDigits.length === 10 || phoneDigits.length === 11) && "WhatsApp com DDD",
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) && "e-mail",
-    ].filter(Boolean) as string[];
-    const valid = faltando.length === 0;
-    const [tentou, setTentou] = useState(false);
-
-    const set = (key: keyof FormState) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-        setForm((f) => ({ ...f, [key]: e.target.value }));
-
-    const onSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-        if (submitting) return;
-        if (!valid) {
-            setTentou(true);
-            return;
-        }
-        setSubmitting(true);
-        setError(null);
-        const phone = normalizePhone(form.phone);
-        const payload = {
-            name: form.name.trim(),
-            email: form.email.trim(),
-            phone,
-            biggest_pain: "Energia solar",
-            source: SOURCE,
-            ...getAttribution(),
-        };
-        const { data, error: rpcError } = await supabase.rpc("submit_demo_request", { payload });
-        if (rpcError) {
-            setSubmitting(false);
-            setError("Não deu certo. Tenta de novo ou me chama direto no WhatsApp.");
-            logLandingEvent(FUNNEL_PAGE, angle, "form_error", { code: rpcError.code ?? "rpc" });
-            return;
-        }
-        const leadId = typeof data === "string" ? data : undefined;
-        trackEvent(FUNNEL_EVENTS.ORCAMENTO_LEAD, { segment: "energia_solar", angle });
-        logLandingEvent(FUNNEL_PAGE, angle, "form_submit");
-        void trackDemoConversion({ email: payload.email, phone, leadId });
-        try {
-            (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq?.("track", "Lead", { content_name: "raio_x_solar" });
-        } catch {
-            // analytics nunca derruba o cadastro
-        }
-        setSubmitting(false);
-        setDone(true);
-    };
-
-    return (
-        <section id="raio-x" className="mx-auto w-full max-w-[1120px] scroll-mt-6 px-4 pb-20 pt-24 sm:px-5 md:px-8 md:pb-28">
-            <div className="vs-cartao relative grid gap-8 rounded-[22px] p-5 sm:p-7 md:grid-cols-[1fr_1.1fr] md:gap-12 md:p-10" style={{ background: "var(--lp-white)" }}>
-                <EvaSentada size={132} state={done ? "happy" : "idle"} />
-                <div>
-                    <Eyebrow>Grátis, sem compromisso</Eyebrow>
-                    <SectionTitle>20 minutos comigo pelo WhatsApp</SectionTitle>
-                    {/* Quem atende, com nome: no lugar de depoimento, que ainda não existe. */}
-                    <div className="mt-5 flex items-start gap-3.5">
-                        <span
-                            className="vs-display flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[20px]"
-                            style={{ background: "var(--lp-blue)", color: "var(--lp-white)" }}
-                            aria-hidden="true"
-                        >
-                            M
-                        </span>
-                        <p className="text-[15px] leading-relaxed md:text-[16px]" style={{ color: "var(--lp-ink-muted)" }}>
-                            Sou o Markus, de Floripa. Estou construindo o Vyzon junto com as primeiras integradoras, e quem responde no WhatsApp sou eu. Nos 20
-                            minutos eu te mostro funcionando, e você decide depois.
-                        </p>
-                    </div>
-                    <div className="mt-6 flex flex-col items-stretch gap-3 sm:items-start">
-                        <WhatsappCta placement={() => onWhatsapp("final")}>Falar com o Markus no WhatsApp</WhatsappCta>
-                        <Link to={RAIO_X_AUTO} className="vs-azul text-[14px] underline underline-offset-4" onClick={() => onCta("final")}>
-                            Prefere ver sozinho? Veja em 3 minutos o que ficou sem resposta
-                        </Link>
-                    </div>
-                </div>
-                <div>
-                    <p className="mb-4 text-[15px] font-medium">Ou deixe seu número que eu te chamo.</p>
-
-                    {done ? (
-                        <div className="rounded-[16px] border p-5" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
-                            <p className="text-lg font-medium">Recebemos, {form.name.trim().split(" ")[0]}.</p>
-                            <p className="mt-1 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
-                                O Markus te chama no WhatsApp pra marcar os 20 minutos. Se não quiser esperar, dá pra ver o seu Raio-X agora mesmo, em 3 minutos.
-                            </p>
-                            <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
-                                <Link
-                                    to={RAIO_X_AUTO}
-                                    state={{ nome: form.name.trim(), email: form.email.trim(), whats: form.phone.trim() }}
-                                    onClick={() => logLandingEvent(FUNNEL_PAGE, angle, "cta_click", { placement: "form_done" })}
-                                    className="vs-btn"
-                                >
-                                    Ver meu Raio-X agora
-                                </Link>
-                                <a
-                                    href={whatsappUrl(`Oi Markus, sou ${form.name.trim()}. Acabei de pedir o Raio-X no site.`)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={() => onWhatsapp("form_done")}
-                                    className="vs-btn vs-btn--vazado"
-                                >
-                                    Falar com o Markus agora
-                                </a>
-                            </div>
-                        </div>
-                    ) : (
-                        <form onSubmit={onSubmit} onFocus={markStart} className="grid gap-4" noValidate>
-                            <Field label="Seu nome">
-                                <input className={inputCls} style={inputStyle} value={form.name} onChange={set("name")} autoComplete="name" />
-                            </Field>
-                            <Field label="Seu WhatsApp (com DDD)">
-                                <input
-                                    className={inputCls}
-                                    style={inputStyle}
-                                    value={form.phone}
-                                    onChange={set("phone")}
-                                    inputMode="tel"
-                                    autoComplete="tel"
-                                    placeholder="(11) 99999-9999"
-                                />
-                            </Field>
-                            <Field label="Seu e-mail">
-                                <input className={inputCls} style={inputStyle} value={form.email} onChange={set("email")} inputMode="email" autoComplete="email" />
-                            </Field>
-                            {tentou && !valid && (
-                                <p className="text-sm" role="alert" style={{ color: "#b42318" }}>
-                                    Falta preencher: {faltando.join(", ")}.
-                                </p>
-                            )}
-                            {error && (
-                                <p className="text-sm" role="alert" style={{ color: "#b42318" }}>
-                                    {error}{" "}
-                                    <a href={whatsappUrl(WHATSAPP_MESSAGE)} target="_blank" rel="noopener noreferrer" className="underline" onClick={() => onWhatsapp("form_error")}>
-                                        Abrir WhatsApp
-                                    </a>
-                                </p>
-                            )}
-                            <div className="mt-2">
-                                <button type="submit" className="vs-btn vs-btn--vazado" disabled={submitting}>
-                                    {submitting ? "Enviando" : "Quero que o Markus me chame"}
-                                </button>
-                            </div>
-                        </form>
-                    )}
-                </div>
+// O fim da página repete o caminho grátis. A âncora #raio-x é usada pelos links
+// /#raio-x de fora da home.
+const RaioXFinal = ({ onCta }: { onCta: () => void }) => (
+    <section id="raio-x" className="mx-auto w-full max-w-[1120px] scroll-mt-6 px-4 pb-20 pt-24 sm:px-5 md:px-8 md:pb-28">
+        <div className="vs-cartao relative rounded-[22px] p-5 sm:p-7 md:p-10" style={{ background: "var(--lp-white)" }}>
+            <EvaSentada size={132} state="idle" />
+            <Eyebrow>Grátis, sem compromisso</Eyebrow>
+            <SectionTitle>Veja o que ficou sem resposta no seu WhatsApp</SectionTitle>
+            <p className="mt-5 max-w-[620px] text-[16px] leading-relaxed md:text-[17px]" style={{ color: "var(--lp-ink-muted)" }}>
+                Você cria a conta, conecta o WhatsApp pelo QR e em cerca de 3 minutos recebe a lista dos orçamentos parados nos últimos 90 dias, com quanto eles somam. Sem cartão.
+            </p>
+            <div className="mt-6 flex flex-col items-stretch sm:items-start">
+                <Link to={RAIO_X_AUTO} className="vs-btn" onClick={onCta}>
+                    Ver meu Raio-X grátis
+                </Link>
             </div>
-        </section>
-    );
-};
-
-const inputCls = "h-11 w-full rounded-[10px] border px-3.5 text-[16px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--lp-blue)]";
-const inputStyle = {
-    borderColor: "var(--lp-line)",
-    background: "var(--lp-white)",
-    color: "var(--lp-ink)",
-} as const;
-
-const Field = ({ label, children }: { label: string; children: ReactNode }) => (
-    <label className="grid gap-1.5 text-sm" style={{ color: "var(--lp-ink-muted)" }}>
-        <span>{label}</span>
-        {children}
-    </label>
+        </div>
+    </section>
 );
 
-const Footer = () => (
+const Footer = ({ onSuporte }: { onSuporte: () => void }) => (
     <footer className="mx-auto flex w-full max-w-[1120px] flex-wrap items-center justify-between gap-3 px-4 py-8 text-sm sm:px-5 md:px-8" style={{ color: "var(--lp-ink-subtle)" }}>
         <span>Vyzon</span>
         <nav className="flex flex-wrap gap-5">
+            <a href={whatsappUrl(CONTACT.defaultMessage)} target="_blank" rel="noopener noreferrer" onClick={onSuporte}>
+                Suporte no WhatsApp
+            </a>
             <Link to="/politica-privacidade">Privacidade</Link>
             <Link to="/termos-de-servico">Termos</Link>
         </nav>

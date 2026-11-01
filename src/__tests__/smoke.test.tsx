@@ -148,7 +148,7 @@ describe('Smoke Tests - Public Pages', () => {
         expect(container.firstChild).toBeTruthy();
     });
 
-    it('Home solar renders with the conversation CTA', async () => {
+    it('Home solar renders with the signup CTA', async () => {
         const { default: SolarLanding } = await import('@/pages/SolarLanding');
         render(
             <MemoryRouter>
@@ -156,7 +156,8 @@ describe('Smoke Tests - Public Pages', () => {
             </MemoryRouter>
         );
         expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/chega pronta no seu whatsapp/i);
-        expect(screen.getAllByRole('link', { name: /falar com o markus no whatsapp/i }).length).toBeGreaterThan(0);
+        expect(screen.getByRole('link', { name: /criar minha conta/i })).toHaveAttribute('href', '/criar-conta?segmento=energia_solar');
+        expect(screen.queryByText(/markus/i)).not.toBeInTheDocument();
     });
 });
 

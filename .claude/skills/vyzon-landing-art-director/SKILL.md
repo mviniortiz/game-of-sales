@@ -35,10 +35,9 @@ topo (Raio-X, EVA, placar, rascunho, aprovação A2).
    sumiu?"), título com promessa e prazo ("No 2º dia sem resposta, a
    mensagem pra chamar de volta chega pronta no seu WhatsApp"), subtítulo
    com o mecanismo (responde 1, sai do seu número, nada vai sem aprovar).
-   Depois vêm o botão principal "Me mostra quanto tá parado" e a linha "Abre no
-   seu WhatsApp. Quem responde é o Markus, que criou o Vyzon."
-   Logo abaixo, a linha de preço de fundador e, por último, um link discreto
-   para a calculadora, que não pede conexão.
+   Depois vêm o botão principal "Me mostra quanto tá parado", que desce para a
+   calculadora, a linha "Leva 30 segundos e não precisa conectar nada." e a
+   linha de preço.
    À direita (abaixo, no celular), o **aviso no WhatsApp do dono** (objeto
    Conversa): mensagem pronta para o Carlos, "Responda 1", o 1 e "Enviada".
 2. **Números de mercado com fonte** (NumeroComFonte): 18% de conversão e 25
@@ -47,7 +46,7 @@ topo (Raio-X, EVA, placar, rascunho, aprovação A2).
 3. **Calculadora** em faixa noite (`#conta`), o caminho sem conectar nada: o dono
    informa quantos orçamentos manda por mês, quantos viram venda e o valor médio,
    números que ele sabe de cabeça. Começa na média da Greener e o resultado sai na
-   Fatura. A conta vai na mensagem do WhatsApp para o Markus. Evento `calc_use`.
+   Fatura, com o botão "Ver meu número de verdade" para o cadastro. Evento `calc_use`.
 4. **Mock do produto**, claro: lista de propostas com carimbos de estado e a
    conversa do Carlos depois da aprovação.
 5. **Conheça a EVA**: cartão noite largo, bot grande cortado pela borda, passando
@@ -55,19 +54,18 @@ topo (Raio-X, EVA, placar, rascunho, aprovação A2).
 6. **Como funciona como linha do tempo da proposta**: uma vez (conecta o
    WhatsApp), dia 0 (manda orçamento como sempre), dia 1 (cliente visualiza
    e não responde), dia 2 (chega o aviso, único cartão noite).
-7. **Incluso + cartão de preço**: só o que existe no app. Preço de fundador
-   R$ 97/mês nos 3 primeiros meses para as 10 primeiras integradoras, depois
-   R$ 197/mês. Sem contrato (confirmado pelo Markus em 19/10/2026).
+7. **Incluso + cartão de preço**: só o que existe no app. Plano único de
+   R$ 97/mês, sem preço de fundador (01/11/2026). Sem contrato (confirmado pelo
+   Markus em 19/10/2026). O botão leva ao cadastro.
 8. **Objeções reais**, com as frases acima e a resposta de cada uma.
 9. **FAQ**, espelhado no FAQPage do `index.html`.
-10. **Bloco final do Markus**: "20 minutos comigo pelo WhatsApp", a
-   apresentação dele, o botão do WhatsApp e o formulário "Quero que o Markus
-   me chame" (`demo_requests`, source `orcamento_teste`).
+10. **Bloco final do Raio-X grátis** (`#raio-x`): o que a pessoa recebe e o botão
+   para o cadastro. O rodapé tem o link de suporte no WhatsApp.
 
-O botão principal da página inteira é a conversa com o Markus no WhatsApp.
-Conectar o WhatsApp num site recém-conhecido é pedir demais para o primeiro
-contato: na campanha de out/2026 foram 115 visitas, 9 cliques no botão e 0
-cadastros.
+Desde 01/11/2026 a página vende sozinha, sem conversa com o Markus. Vigie o
+cadastro: conectar o WhatsApp num site recém-conhecido é pedir muito, e na
+campanha de out/2026, com o cadastro como botão principal, foram 115 visitas,
+9 cliques no botão e 0 cadastros. Por isso o topo leva primeiro à calculadora.
 
 ## Direção visual: sistema "EVA em campo" (LP.9, 01/11/2026)
 
@@ -96,8 +94,7 @@ tem personagem, então a EVA é a estrela.
   em links e no corpo da EVA.
 - Objetos gráficos: Fatura, Conversa, LinhaDoTempo com a EVA em cada dia (só o
   Dia 2 em noite) e carimbo de estado, sempre com a palavra.
-- Botão principal `.vs-btn`: pill `--lp-ink`, ícone do WhatsApp em círculo verde,
-  sombra dura azul no hover. Sobre noite, `.vs-btn--sol`.
+- Botão principal `.vs-btn`: pill `--lp-ink`, sombra dura azul no hover. Sobre noite, `.vs-btn--sol`.
 - Foto real (do Markus, de integradora parceira com autorização) entra quando
   existir. A EVA ocupa esse lugar até lá; banco de imagem e telhado com painel
   ficam de fora, porque foto de cliente que não existe é depoimento inventado.
@@ -113,9 +110,10 @@ tem personagem, então a EVA é a estrela.
   Antes de escrever copy de produto, grep.
 - EVA assistida: interno automático, saída pro lead sempre aprovada pelo
   dono. Nunca "automatize suas vendas" nem "robô que vende sozinho".
-- Toda mensagem de WhatsApp da página precisa conter o prefill da automação
-  de leads, "Quero ver quanto está parado nos meus orçamentos"
-  (`20261009_automations_ad_leads.sql`). Sem isso a conversa não vira lead.
+- O link de suporte do rodapé usa `CONTACT.defaultMessage` e não vira lead de
+  anúncio. Se um botão de venda pelo WhatsApp voltar, a mensagem precisa conter
+  "Quero ver quanto está parado nos meus orçamentos"
+  (`20261009_automations_ad_leads.sql`).
 - Mudou texto da página: atualize o `<noscript>` e o FAQPage do
   `index.html` na mesma entrega.
 - Preço vem de `src/config/plans.ts`. Contato vem de `src/config/contact.ts`.
@@ -139,7 +137,7 @@ cliente real.
 ## Conferência antes de entregar
 
 1. Em 5 segundos dá para entender para quem é, o que faz e quanto custa?
-2. O botão do WhatsApp aparece na primeira tela do celular (375px)?
+2. O botão principal aparece na primeira tela do celular (375px)?
 3. Toda afirmação de produto existe no código e todo número tem fonte?
 4. Algum termo interno (Raio-X, EVA, A2) aparece antes da metade da página
    sem explicação?

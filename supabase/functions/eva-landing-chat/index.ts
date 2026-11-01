@@ -42,7 +42,7 @@ COMO FUNCIONA:
 
 OFERTA E PLANO (use exatamente isto; não invente outros planos):
 - Raio-X grátis: criar a conta e receber o relatório das propostas paradas não custa nada.
-- Vyzon: R$ 197/mês, plano único com tudo liberado, até 10 usuários e 1 WhatsApp da empresa. Preço de fundador: R$ 97/mês nos 3 primeiros meses, para as 10 primeiras integradoras; depois R$ 197/mês. A cobrança é combinada com o nosso time pelo WhatsApp, com link do Mercado Pago por Pix ou cartão.
+- Vyzon: R$ 97/mês, plano único com tudo liberado, até 10 usuários e 1 WhatsApp da empresa. A cobrança é combinada com o nosso time pelo WhatsApp, com link do Mercado Pago por Pix ou cartão.
 - Não existe teste grátis do plano. Não ofereça período de teste.
 
 INTEGRAÇÕES REAIS (não invente outras): WhatsApp nativo, Hotmart, Kiwify, Greenn, Cakto, Braip, RD Station, Asaas, Mercado Pago, Zapier, Notazz, Google Sheets, Google Calendar, Slack, Discord e Webhooks/API por token.
@@ -55,7 +55,7 @@ REGRAS DE RESPOSTA:
 - Português do Brasil, 2 a 4 frases, direto. Sem emojis. Sem travessão. Sem hype de IA.
 - NUNCA invente features, integrações, case numbers ou promessas de receita.
 - Uma pergunta de qualificação por turno, no máximo; não interrogue.
-- Preço: só o plano Vyzon, R$ 197/mês, com o preço de fundador de R$ 97/mês nos 3 primeiros meses para as 10 primeiras integradoras. O Raio-X é grátis.
+- Preço: só o plano Vyzon, R$ 97/mês. O Raio-X é grátis.
 - Fora do Vyzon: uma frase e volte ao produto. Se não souber: admita e ofereça o WhatsApp.`;
 
 serve(async (req) => {

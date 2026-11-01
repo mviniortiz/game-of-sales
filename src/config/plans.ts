@@ -1,10 +1,10 @@
 /**
  * Vyzon — Fonte ÚNICA de planos.
  *
- * Estrutura comercial (decisão de 08/10/2026): um plano só, "Vyzon",
- * R$ 197/mês, tudo liberado, até 10 usuários (decisão de 16/10/2026).
- * Preço de fundador: R$ 97/mês nos 3 primeiros meses para as 10 primeiras
- * integradoras, cobrado à mão no link do Mercado Pago. O id continua "pro" porque é o
+ * Estrutura comercial (decisão de 01/11/2026): um plano só, "Vyzon", R$ 97/mês,
+ * tudo liberado, até 10 usuários, sem preço de fundador. Três planos foram
+ * descartados porque só usuários e análises da EVA têm trava real no produto.
+ * O id continua "pro" porque é o
  * que está gravado em companies.plan. O id "free" NÃO é plano comercial: é piso
  * interno silencioso pra degradação de trial expirado e contas legadas (nunca
  * aparece na landing nem no checkout). "essential" e "escala" de contas antigas
@@ -68,7 +68,7 @@ export const PLANS: Record<PlanId, Plan> = {
         id: "pro",
         name: "Vyzon",
         description: "Tudo liberado para a sua equipe parar de perder proposta no WhatsApp",
-        monthlyPrice: 197,
+        monthlyPrice: 97,
         annualDiscount: 10,
         // Só o que existe no produto. Os limites diários da EVA e do agente
         // (whatsapp-copilot, eva-agent-loop) são proteção de uso, não degrau
