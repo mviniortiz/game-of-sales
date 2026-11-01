@@ -8,8 +8,8 @@
 - **Para quem é:** donos de integradoras de energia solar no Brasil que enviam propostas em PDF ou por mensagem no WhatsApp e perdem vendas porque o cliente visualiza e para de responder.
 - **Problema que resolve:** proposta que esfria sem ninguém perceber. No meio de visita técnica, instalação e outras conversas, a integradora esquece de chamar de volta quem não respondeu.
 - **Modelo de IA:** assistido. A EVA lê, organiza e escreve o rascunho; o dono aprova antes de qualquer mensagem sair para o cliente. Rascunho não aprovado em 48 horas é descartado e nunca é enviado.
-- **Grátis:** Raio-X das propostas paradas, feito automaticamente em cerca de 3 minutos depois de conectar o WhatsApp, sem cartão. Também pode ser feito numa conversa com o fundador.
-- **Plano:** Vyzon, R$ 497 por mês, até 10 pessoas. Não há teste grátis do plano; o grátis é o Raio-X.
+- **Grátis:** Raio-X das propostas paradas, feito automaticamente em cerca de 3 minutos depois de conectar o WhatsApp, sem cartão.
+- **Plano:** Vyzon, R$ 97 por mês, tudo liberado, até 10 pessoas. Não há teste grátis do plano; o grátis é o Raio-X.
 - **Idioma e país:** português brasileiro, empresa e suporte no Brasil, cobrança em Real.
 
 ## O que o Raio-X grátis mostra

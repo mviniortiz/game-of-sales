@@ -111,7 +111,7 @@ const SECOES: LegalSection[] = [
                 <Sub>Plano pago</Sub>
                 <P>
                     As demais funções exigem a assinatura do plano pago, com o preço publicado no site. A cobrança é mensal e começa
-                    na contratação. Condições promocionais, como o preço de fundador, valem pelo prazo e para as empresas informadas
+                    na contratação. Condições promocionais valem pelo prazo e para as empresas informadas
                     na oferta.
                 </P>
                 <Sub>Mudança de preço</Sub>

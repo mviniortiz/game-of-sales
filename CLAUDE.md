@@ -114,8 +114,8 @@ está BLOQUEADO por billing; não criar workflows.
 - Rotas públicas/SEO em `App.tsx`; `/auth`, `/criar-conta` e o app
   autenticado (catch-all) em `AppShell.tsx`. `/onboarding` e `/register` são
   redirects de compatibilidade.
-- Plano único "Vyzon" R$ 197/mês (id `pro`, decisão de 16/10/2026), com preço de
-  fundador de R$ 97/mês nos 3 primeiros meses para as 10 primeiras integradoras. SEM teste grátis (08/10/2026): conta
+- Plano único "Vyzon" R$ 97/mês (id `pro`, decisão de 01/11/2026), tudo liberado,
+  até 10 usuários, sem preço de fundador. SEM teste grátis (08/10/2026): conta
   nova nasce free/inactive (o `guard_company_billing` força) e o grátis é o
   Raio-X automático (`/raio-x` → edge `raio-x-build` em modo dono → relatório
   em `/relatorio/:token`, que o dono confere e corrige). Paga = assinatura
@@ -127,9 +127,10 @@ está BLOQUEADO por billing; não criar workflows.
   assinatura só mudam por service_role ou super admin (trigger
   `guard_company_billing`). Edges mercadopago-* estão dormentes e o webhook
   não valida assinatura; não religar sem consertar.
-- CTAs: home solar → Raio-X automático (`/criar-conta?segmento=energia_solar`,
-  o cadastro dispara o Lead do pixel) e, como segunda opção, o formulário do
-  Raio-X com o Markus (`demo_requests` source='orcamento_teste') ou WhatsApp. `DemoScheduleSection` e
+- CTAs: home solar sem conversa com o Markus (01/11/2026): o topo leva à
+  calculadora e a oferta ao Raio-X automático
+  (`/criar-conta?segmento=energia_solar`, o cadastro dispara o Lead do pixel).
+  WhatsApp só no link de suporte do rodapé. `DemoScheduleSection` e
   `NativeScheduler` estão órfãos, não usar como referência.
 - WhatsApp nativo (QR, não oficial): servidor Whatsmiau no Railway, que fala
   as rotas da Evolution, por isso as edges seguem `evolution-whatsapp` e

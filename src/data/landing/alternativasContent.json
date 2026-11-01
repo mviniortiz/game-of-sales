@@ -105,7 +105,7 @@
       },
       {
         "feature": "Preço em Real, time BR",
-        "vyzon": { "level": "yes", "text": "R$ 197/mês, até 10 usuários · suporte WA" },
+        "vyzon": { "level": "yes", "text": "R$ 97/mês, até 10 usuários · suporte WA" },
         "pipedrive": { "level": "partial", "text": "USD por usuário" },
         "ploomes": { "level": "yes", "text": "Empresa BR" },
         "kommo": { "level": "partial", "text": "USD · operação BR" },
@@ -203,7 +203,7 @@
     },
     {
       "q": "Os preços e features desta página estão atualizados?",
-      "a": "Atualizamos em 22 de julho de 2026 com base no posicionamento público de cada produto e no que está no produto Vyzon hoje. Preços de terceiros mudam; use os sites oficiais pra fechar contrato. No Vyzon: plano único a R$ 197/mês, tudo liberado, até 10 usuários. Criar a conta e receber o Raio-X das propostas paradas é grátis."
+      "a": "Atualizamos em 22 de julho de 2026 com base no posicionamento público de cada produto e no que está no produto Vyzon hoje. Preços de terceiros mudam; use os sites oficiais pra fechar contrato. No Vyzon: plano único a R$ 97/mês, tudo liberado, até 10 usuários. Criar a conta e receber o Raio-X das propostas paradas é grátis."
     }
   ],
   "footerBelief": "Comparativo bom recomenda o outro lado quando ele ganha. O resto é anúncio."
