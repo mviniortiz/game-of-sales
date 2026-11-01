@@ -26,9 +26,9 @@ Leia antes do primeiro frame.
   (`src/config/plans.ts`).
 - **EVA é assistida:** o humano aprova o que sai para o cliente. Nunca prometer
   automação total, envio automático ou "IA fechando vendas sozinha".
-- A EVA aparece como o **EvaBot** (corpo redondo azul-noite, dois olhos brancos,
-  pontinho roxo; cores em `src/components/eva/evaBot.css`). Nunca orbe, plasma,
-  partícula, rosto realista ou personagem.
+- A EVA aparece como o **EvaBot** (cápsula azul, visor azul-noite, olhos âmbar e
+  placa solar; cores em `src/components/eva/evaBot.css`). Ela é o único bot dos
+  filmes. Nunca orbe, plasma, partícula ou rosto realista.
 - Registros visuais (detalhe no style guide §2):
   - **Vyzon Solar** (padrão desde 23/10/2026, mesmo design system da home,
     bloco LP.8 de `src/index.css`): papel frio `#f6f7f9`, azul `#1556c0` dono,
@@ -38,8 +38,8 @@ Leia antes do primeiro frame.
   - **Noite azul** (aprovado em 17/10/2026): azul-noite, borda acesa, um brilho
     por cena. O molde ficou no PC antigo e não foi refeito no Mac.
   Um registro por filme; nunca misturar.
-- Proibido: gradiente roxo-azul genérico de IA, partículas, neon sem freio, robôs,
-  stock de escritório, b-roll genérico, rosto de IA.
+- Proibido: gradiente roxo-azul genérico de IA, partículas, neon sem freio, robô
+  genérico, stock de escritório, b-roll genérico, rosto de IA.
 
 ## Onde as coisas vivem
 

@@ -1,175 +1,411 @@
-/* EvaBot: a EVA como ícone vivo, feito só com CSS. Todas as medidas são frações
-   de --s (o lado do ícone), então o mesmo desenho vale de 16px a 240px.
+/* EvaBot: a EVA como bot montado por peças, feito só com CSS. O desenho vive
+   numa caixa de 240x240 (.eva-bot__palco) e o tamanho real vem de scale(), então
+   as medidas abaixo são da caixa e o mesmo bot vale de 16px a 240px.
    Só transform e opacity animam: o navegador entrega isso na placa de vídeo, a
    60fps ou mais, sem recalcular layout a cada quadro.
-   Camadas: .eva-bot (o pulinho de troca de estado, via JS) > __body (a bola e o
-   loop de cada estado) > __face (segue o ponteiro, via JS) > __eyes (olhar em
-   volta, varrer) > __eye (pílula ::before e arco do sorriso ::after). */
+   Camadas: .eva-bot (o pulinho de troca de estado, via JS) > __palco (encaixe no
+   tamanho) > __body (o bot inteiro e o loop de cada estado) > __face (segue o
+   ponteiro, via JS) > __eyes (olhar em volta, varrer) > __eye (olho ::before e
+   arco do sorriso ::after).
+   Peças por tamanho (data-tam, calculado em EvaBot.tsx): "cheio" tem tudo,
+   "pequeno" perde topo e orelhas, "minimo" perde também o visor. Nesses dois o
+   __dot avisa alerta e sucesso, que o painel solar mostraria no tamanho cheio. */
 
 .eva-bot {
   --s: 40px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --soft: cubic-bezier(0.45, 0, 0.55, 1);
+  --laranja: #ff6b1a;
   position: relative;
   display: inline-block;
   width: var(--s);
   height: var(--s);
   flex-shrink: 0;
   vertical-align: middle;
+  transform-origin: 50% 92%;
 }
 
+/* ── temas: as cores saem daqui ─────────────────────────────────────────── */
+.eva-bot,
+.eva-bot[data-tema="vyzon"] {
+  --corpo: #1556c0;
+  --visor: #0f1730;
+  --olho: #ffc933;
+  --peca: #0f1730;
+  --fone: #0f1730;
+  --cel-on: #ffc933;
+}
+.dark .eva-bot[data-tema="vyzon"] {
+  --peca: #2a3a66;
+  --fone: #2a3a66;
+}
+.eva-bot[data-tema="noite"] {
+  --corpo: #0f1730;
+  --visor: #2a3a66;
+  --olho: #ffc933;
+  --peca: #2a3a66;
+  --fone: #1556c0;
+  --cel-on: #ffc933;
+}
+.eva-bot[data-tema="sol"] {
+  --corpo: #ffc933;
+  --visor: #0f1730;
+  --olho: #fff;
+  --peca: #ffc933;
+  --fone: #fff;
+  --cel-on: #fff;
+}
+.eva-bot[data-tema="empresa"] {
+  --corpo: var(--cor-empresa, #1556c0);
+  --visor: #0f1730;
+  --olho: #fff;
+  --peca: #0f1730;
+  --fone: #0f1730;
+  --cel-on: #ffc933;
+}
+
+/* ── geometria: corpo e olhos ───────────────────────────────────────────── */
+.eva-bot[data-corpo="capsula"] {
+  --bx: 24px; --by: 76px; --bw: 192px; --bh: 148px; --br: 62px;
+  --vx: 44px; --vy: 100px; --vw: 152px; --vh: 96px; --vr: 42px;
+  --passo: 61px;
+}
+.eva-bot[data-corpo="bolinha"] {
+  --bx: 36px; --by: 64px; --bw: 168px; --bh: 168px; --br: 84px;
+  --vx: 56px; --vy: 104px; --vw: 128px; --vh: 84px; --vr: 42px;
+  --passo: 51px;
+}
+.eva-bot[data-corpo="tela"] {
+  --bx: 20px; --by: 72px; --bw: 200px; --bh: 136px; --br: 30px;
+  --vx: 36px; --vy: 88px; --vw: 168px; --vh: 104px; --vr: 18px;
+  --passo: 67px;
+}
+.eva-bot[data-olhos="pilula"] { --ew: 24px; --eh: 44px; --er: 12px; --achata: 0.32; }
+.eva-bot[data-olhos="bolinha"] { --ew: 36px; --eh: 36px; --er: 18px; --achata: 0.39; }
+.eva-bot[data-olhos="pixel"] { --ew: 32px; --eh: 32px; --er: 6px; --achata: 0.44; }
+.eva-bot { --cy: calc(var(--vy) + var(--vh) / 2); --am: 1; }
+
+/* sem visor, o olho é escuro direto no corpo e cresce pra ser lido em 16px */
+.eva-bot[data-tam="minimo"] { --olho: var(--visor); --am: 1.7; }
+.eva-bot[data-tema="noite"][data-tam="minimo"] { --olho: #ffc933; }
+
+.eva-bot__palco {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 240px;
+  height: 240px;
+  transform-origin: 0 0;
+  transform: translate(var(--tx, 0), var(--ty, 0)) scale(var(--k, 1));
+}
+.eva-bot__body,
+.eva-bot__face,
+.eva-bot__eyes,
+.eva-bot__topo {
+  position: absolute;
+  inset: 0;
+}
 .eva-bot__body {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  /* luz vindo de cima à esquerda: dá volume de bolinha, sem brilho neon */
-  background:
-    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 32%),
-    radial-gradient(circle at 38% 30%, #34508a 0%, #1b2b4e 48%, #0b1220 100%);
-  box-shadow:
-    inset 0 0 0 max(1px, calc(var(--s) * 0.012)) rgba(255, 255, 255, 0.1),
-    inset 0 calc(var(--s) * -0.05) calc(var(--s) * 0.1) rgba(0, 0, 0, 0.35),
-    0 calc(var(--s) * 0.06) calc(var(--s) * 0.14) rgba(13, 20, 33, 0.26),
-    0 calc(var(--s) * 0.01) calc(var(--s) * 0.03) rgba(13, 20, 33, 0.18);
-  transform: translateZ(0);
+  transform-origin: 120px 224px;
   will-change: transform;
 }
-
-/* o pontinho é a assinatura da EVA: roxo, âmbar quando acha algo, verde quando dá certo */
-.eva-bot__dot {
-  position: absolute;
-  top: 13%;
-  right: 19%;
-  width: calc(var(--s) * 0.085);
-  height: calc(var(--s) * 0.085);
-  border-radius: 50%;
-  background: #a78bfa;
-  box-shadow: 0 0 0 calc(var(--s) * 0.018) rgba(11, 18, 32, 0.6);
-  transition: background-color 0.35s var(--ease), transform 0.45s var(--ease);
+.eva-bot__topo {
+  transform-origin: 120px var(--by);
 }
-
-/* onda que se espalha quando ela acha algo ou quando dá certo */
-.eva-bot__ring {
+.eva-bot__haste {
   position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: max(1.5px, calc(var(--s) * 0.025)) solid transparent;
-  opacity: 0;
-  pointer-events: none;
+  left: 115px;
+  top: calc(var(--by) - 30px);
+  width: 10px;
+  height: 36px;
+  border-radius: 5px;
+  background: var(--peca);
 }
-
-.eva-bot__face {
+.eva-bot__placa {
   position: absolute;
-  inset: 0;
-  will-change: transform;
+  left: 54px;
+  top: calc(var(--by) - 68px);
+  width: 132px;
+  height: 48px;
+  box-sizing: border-box;
+  padding: 5px;
+  border-radius: 8px;
+  background: var(--peca);
+  transform: rotate(-7deg);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 3px;
 }
-
-.eva-bot__eyes {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: calc(var(--s) * 0.13);
-  padding-top: calc(var(--s) * 0.02);
-  transition: transform 0.5s var(--ease);
-  will-change: transform;
-}
-
-.eva-bot__eye {
+.eva-bot__placa i {
   position: relative;
-  width: calc(var(--s) * 0.16);
-  height: calc(var(--s) * 0.25);
-  transition: transform 0.45s var(--ease);
+  display: block;
+  border-radius: 2px;
+  background: #2c62c4;
+}
+/* célula acesa: camada por cima, porque cor de fundo não anima na placa de vídeo */
+.eva-bot__placa i::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--cel-on);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.eva-bot__placa i:nth-child(5n + 2)::after { transition-delay: 45ms; }
+.eva-bot__placa i:nth-child(5n + 3)::after { transition-delay: 90ms; }
+.eva-bot__placa i:nth-child(5n + 4)::after { transition-delay: 135ms; }
+.eva-bot__placa i:nth-child(5n)::after { transition-delay: 180ms; }
+
+.eva-bot__lampada {
+  position: absolute;
+  left: 104px;
+  top: calc(var(--by) - 56px);
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--olho);
+  transition: background-color 0.18s ease;
+}
+.eva-bot__arco {
+  position: absolute;
+  left: calc(var(--bx) - 6px);
+  top: calc(var(--by) - 28px);
+  width: calc(var(--bw) + 12px);
+  height: calc(var(--bh) / 2 + 24px);
+  box-sizing: border-box;
+  border: 12px solid var(--fone);
+  border-bottom-width: 0;
+  border-radius: calc((var(--bw) + 12px) / 2) calc((var(--bw) + 12px) / 2) 0 0;
+}
+.eva-bot__base {
+  position: absolute;
+  left: 90px;
+  top: 204px;
+  width: 60px;
+  height: 20px;
+  border-radius: 0 0 10px 10px;
+  background: var(--peca);
+}
+.eva-bot__orelha {
+  position: absolute;
+  left: calc(var(--bx) - 10px);
+  top: calc(var(--by) + var(--bh) / 2 - 25px);
+  width: 20px;
+  height: 50px;
+  border-radius: 10px;
+  background: var(--peca);
+}
+.eva-bot__orelha + .eva-bot__orelha {
+  left: calc(var(--bx) + var(--bw) - 10px);
+}
+.eva-bot[data-topo="fone"] .eva-bot__orelha {
+  left: calc(var(--bx) - 18px);
+  top: calc(var(--by) + var(--bh) / 2 - 37px);
+  width: 26px;
+  height: 74px;
+  background: var(--fone);
+}
+.eva-bot[data-topo="fone"] .eva-bot__orelha + .eva-bot__orelha {
+  left: calc(var(--bx) + var(--bw) - 8px);
+}
+.eva-bot__casco {
+  position: absolute;
+  left: var(--bx);
+  top: var(--by);
+  width: var(--bw);
+  height: var(--bh);
+  border-radius: var(--br);
+  background: var(--corpo);
+}
+.eva-bot__visor {
+  position: absolute;
+  left: var(--vx);
+  top: var(--vy);
+  width: var(--vw);
+  height: var(--vh);
+  border-radius: var(--vr);
+  background: var(--visor);
+}
+.eva-bot__capacete {
+  position: absolute;
+  inset: 0;
+}
+.eva-bot__capacete::before {
+  content: "";
+  position: absolute;
+  left: 44px;
+  top: calc(var(--vy) - 77px);
+  width: 152px;
+  height: 58px;
+  border-radius: 76px 76px 4px 4px;
+  background: #f26b1d;
+}
+.eva-bot__capacete::after {
+  content: "";
+  position: absolute;
+  left: 22px;
+  top: calc(var(--vy) - 21px);
+  width: 196px;
+  height: 15px;
+  border-radius: 8px;
+  background: #f26b1d;
+}
+.eva-bot__capacete i {
+  position: absolute;
+  z-index: 1;
+  left: 108px;
+  top: calc(var(--vy) - 83px);
+  width: 24px;
+  height: 40px;
+  border-radius: 8px;
+  background: #c9520e;
+}
+.eva-bot__microfone {
+  position: absolute;
+  left: var(--bx);
+  top: calc(var(--vy) + var(--vh) + 8px);
+  width: 72px;
+  height: 9px;
+  border-radius: 5px;
+  background: var(--fone);
+}
+.eva-bot__microfone::after {
+  content: "";
+  position: absolute;
+  left: 62px;
+  top: -7px;
+  width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--olho);
+}
+
+/* ── rosto ──────────────────────────────────────────────────────────────── */
+.eva-bot__face {
+  will-change: transform;
+}
+.eva-bot__eyes {
+  transition: transform 0.22s var(--ease);
+}
+.eva-bot__eye {
+  position: absolute;
+  left: calc(120px - var(--passo) / 2 - var(--ew) * var(--am) / 2);
+  top: calc(var(--cy) - var(--eh) * var(--am) / 2);
+  width: calc(var(--ew) * var(--am));
+  height: calc(var(--eh) * var(--am));
+}
+.eva-bot__eye + .eva-bot__eye {
+  left: calc(120px + var(--passo) / 2 - var(--ew) * var(--am) / 2);
 }
 .eva-bot__eye::before,
 .eva-bot__eye::after {
   content: "";
   position: absolute;
-  will-change: transform, opacity;
 }
-/* a pílula */
 .eva-bot__eye::before {
   inset: 0;
-  border-radius: calc(var(--s) * 0.08);
-  background: #fff;
-  box-shadow: 0 0 calc(var(--s) * 0.05) rgba(255, 255, 255, 0.25);
-  transition: transform 0.45s var(--ease), opacity 0.25s var(--ease);
+  border-radius: calc(var(--er) * var(--am));
+  background: var(--olho);
+  transition: transform 0.22s var(--ease), opacity 0.16s ease;
 }
 /* o arco do sorriso (^), escondido até ela ficar feliz */
 .eva-bot__eye::after {
-  left: -6%;
-  right: -6%;
-  top: 30%;
-  height: calc(var(--s) * 0.11);
-  border: calc(var(--s) * 0.048) solid #fff;
+  left: calc(50% - 23px * var(--am));
+  top: calc(50% - 12px * var(--am));
+  width: calc(46px * var(--am));
+  height: calc(26px * var(--am));
+  box-sizing: border-box;
+  border: calc(11px * var(--am)) solid var(--olho);
   border-bottom: 0;
-  border-radius: calc(var(--s) * 0.12) calc(var(--s) * 0.12) 0 0;
+  border-radius: calc(46px * var(--am)) calc(46px * var(--am)) 0 0;
   opacity: 0;
-  transform: translateY(calc(var(--s) * 0.04)) scale(0.6);
-  transition: transform 0.5s var(--ease), opacity 0.3s var(--ease);
+  transform: translateY(6px) scale(0.7);
+  transition: transform 0.22s var(--ease), opacity 0.16s ease;
 }
 
 /* boquinha de digitando: três pontos, só quando ela escreve */
 .eva-bot__mouth {
   position: absolute;
-  left: 50%;
-  top: 70%;
+  left: 120px;
+  top: calc(var(--cy) + 22px);
   display: flex;
-  gap: calc(var(--s) * 0.04);
-  transform: translateX(-50%) scale(0.4);
+  gap: 7px;
+  transform: translateX(-50%) scale(0.6);
   opacity: 0;
-  transition: transform 0.4s var(--ease), opacity 0.25s var(--ease);
+  transition: transform 0.22s var(--ease), opacity 0.16s ease;
 }
 .eva-bot__mouth i {
   display: block;
-  width: calc(var(--s) * 0.05);
-  height: calc(var(--s) * 0.05);
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--olho);
 }
 
-/* ── esperando: respira, inclina a cabeça, pisca (às vezes duas vezes) e olha em volta */
+/* sinal de alerta e sucesso nos tamanhos que não têm painel */
+.eva-bot__dot {
+  position: absolute;
+  right: 0;
+  top: 2%;
+  width: clamp(6px, calc(var(--s) * 0.26), 11px);
+  height: clamp(6px, calc(var(--s) * 0.26), 11px);
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: transform 0.2s var(--ease), opacity 0.16s ease;
+}
+
+/* ── esperando: respira, a placa balança, pisca e olha em volta */
 .eva-bot[data-state="idle"] .eva-bot__body {
-  animation: eva-bot-idle 6.4s var(--soft) infinite;
+  animation: eva-bot-respira 3.4s var(--soft) infinite;
+}
+.eva-bot[data-state="idle"] .eva-bot__topo {
+  animation: eva-bot-balanca 4.2s var(--soft) infinite;
 }
 .eva-bot[data-state="idle"] .eva-bot__eye::before {
-  animation: eva-bot-blink 5.2s var(--soft) infinite;
+  animation: eva-bot-pisca 5.2s linear infinite;
 }
-.eva-bot[data-state="idle"]:not([data-tracking]) .eva-bot__eyes {
-  animation: eva-bot-look 9s var(--soft) infinite;
+.eva-bot[data-state="idle"][data-tam="cheio"]:not([data-tracking]) .eva-bot__eyes {
+  transform: translateX(12px);
+  animation: eva-bot-olhar 6.4s cubic-bezier(0.77, 0, 0.175, 1) infinite;
 }
 /* mouse em cima: ela sorri */
-.eva-bot[data-state="idle"]:hover .eva-bot__eye::before {
-  opacity: 0;
-  transform: scale(0.4, 0.2);
-  animation: none;
-}
-.eva-bot[data-state="idle"]:hover .eva-bot__eye::after {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+@media (hover: hover) and (pointer: fine) {
+  .eva-bot[data-state="idle"]:hover .eva-bot__eye::before {
+    opacity: 0;
+    transform: scale(0.4, 0.2);
+    animation: none;
+  }
+  .eva-bot[data-state="idle"]:hover .eva-bot__eye::after {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-/* ── lendo: olhos viram barras que varrem, o corpo balança de leve */
+/* ── lendo: olhos viram barras que varrem e uma onda passa pelo painel */
 .eva-bot[data-state="thinking"] .eva-bot__body {
-  animation: eva-bot-sway 2.4s var(--soft) infinite;
+  animation: eva-bot-respira 3.4s var(--soft) infinite;
 }
 .eva-bot[data-state="thinking"] .eva-bot__eye::before {
-  transform: scaleY(0.3);
+  transform: scale(1.5, var(--achata));
 }
 .eva-bot[data-state="thinking"] .eva-bot__eyes {
-  animation: eva-bot-scan 1.4s var(--soft) infinite alternate;
+  animation: eva-bot-varre 1.5s var(--soft) infinite;
 }
-.eva-bot[data-state="thinking"] .eva-bot__dot {
-  animation: eva-bot-pulse 1.2s var(--soft) infinite;
+.eva-bot[data-state="thinking"] .eva-bot__placa i {
+  animation: eva-bot-onda 1.5s linear infinite;
 }
+.eva-bot[data-state="thinking"] .eva-bot__placa i:nth-child(5n + 2) { animation-delay: 90ms; }
+.eva-bot[data-state="thinking"] .eva-bot__placa i:nth-child(5n + 3) { animation-delay: 180ms; }
+.eva-bot[data-state="thinking"] .eva-bot__placa i:nth-child(5n + 4) { animation-delay: 270ms; }
+.eva-bot[data-state="thinking"] .eva-bot__placa i:nth-child(5n) { animation-delay: 360ms; }
 
-/* ── pensando: olha pra cima e vai de um lado pro outro devagar, com pausas,
-   um olho meio apertado, cabeça inclinada e bolinhas de pensamento subindo */
+/* ── pensando: olha pra cima de um lado pro outro e solta bolinhas */
 .eva-bot__thought {
   position: absolute;
-  right: calc(var(--s) * -0.16);
-  top: calc(var(--s) * -0.2);
+  right: calc(var(--s) * -0.14);
+  top: calc(var(--s) * -0.08);
   width: calc(var(--s) * 0.4);
   height: calc(var(--s) * 0.4);
   pointer-events: none;
@@ -177,9 +413,8 @@
 .eva-bot__thought i {
   position: absolute;
   border-radius: 50%;
-  /* mesma cor do corpo, com borda clara: aparece em fundo claro e escuro */
-  background: radial-gradient(circle at 35% 30%, #34508a 0%, #1b2b4e 70%);
-  box-shadow: 0 0 0 max(1px, calc(var(--s) * 0.014)) rgba(255, 255, 255, 0.85), 0 calc(var(--s) * 0.02) calc(var(--s) * 0.05) rgba(13, 20, 33, 0.22);
+  background: var(--corpo);
+  box-shadow: 0 0 0 max(1px, calc(var(--s) * 0.014)) rgba(255, 255, 255, 0.85);
   opacity: 0;
   transform: scale(0.2);
 }
@@ -192,66 +427,64 @@
 .eva-bot[data-state="pondering"] .eva-bot__thought i:nth-child(2) { animation-delay: 0.22s; }
 .eva-bot[data-state="pondering"] .eva-bot__thought i:nth-child(3) { animation-delay: 0.44s; }
 .eva-bot[data-state="pondering"] .eva-bot__body {
-  animation: eva-bot-ponder 4.8s var(--soft) infinite;
+  animation: eva-bot-respira 3.4s var(--soft) infinite;
 }
 .eva-bot[data-state="pondering"] .eva-bot__eyes {
   animation: eva-bot-recall 4.8s var(--soft) infinite;
 }
-.eva-bot[data-state="pondering"] .eva-bot__eye:first-child::before {
-  transform: scaleY(0.62) translateY(12%);
-}
-.eva-bot[data-state="pondering"] .eva-bot__eye:last-child::before {
-  animation: eva-bot-blink 4.8s var(--soft) infinite;
-}
-.eva-bot[data-state="pondering"] .eva-bot__dot {
-  animation: eva-bot-pulse 1.8s var(--soft) infinite;
+.eva-bot[data-state="pondering"] .eva-bot__eye::before {
+  transform: scaleY(0.72);
 }
 
-/* ── achou algo: olhos arregalam, pulinho com achatamento, onda âmbar */
+/* ── achou algo: pulinho, a placa treme, olhos abertos e células acesas pulsando */
 .eva-bot[data-state="alert"] .eva-bot__body {
-  animation: eva-bot-hop 0.75s var(--ease) 1, eva-bot-idle 6.4s var(--soft) 0.75s infinite;
+  animation: eva-bot-hop 0.75s var(--ease) 1, eva-bot-respira 3.4s var(--soft) 0.75s infinite;
+}
+.eva-bot[data-state="alert"] .eva-bot__topo {
+  animation: eva-bot-treme 0.75s var(--soft) 1;
 }
 .eva-bot[data-state="alert"] .eva-bot__eye::before {
-  transform: scale(1.14, 1.2);
+  transform: scaleY(1.3);
+  animation: none;
+}
+.eva-bot[data-state="alert"] .eva-bot__eye {
+  animation: eva-bot-pisca-dupla 2.6s linear infinite;
+}
+.eva-bot[data-state="alert"] .eva-bot__lampada {
+  background: var(--laranja);
+  animation: eva-bot-lampada 0.9s var(--soft) infinite;
+}
+.eva-bot[data-state="alert"] .eva-bot__placa i:nth-child(n + 2):nth-child(-n + 4)::after,
+.eva-bot[data-state="alert"] .eva-bot__placa i:nth-child(n + 6):nth-child(-n + 9)::after {
+  opacity: 1;
+  animation: eva-bot-acende 0.9s var(--soft) 0.3s infinite;
 }
 .eva-bot[data-state="alert"] .eva-bot__dot {
-  background: #f59e0b;
-  transform: scale(1.3);
-}
-.eva-bot[data-state="alert"] .eva-bot__ring {
-  border-color: #f59e0b;
-  animation: eva-bot-ring 1.1s var(--ease) 0.1s 2;
+  background: var(--laranja);
+  opacity: 1;
+  transform: none;
 }
 
-/* ── escrevendo: olhos sobem e descem em alternância e a boquinha digita */
+/* ── escrevendo: olhos sobem, a cabeça acompanha o ritmo e os pontos digitam */
 .eva-bot[data-state="talking"] .eva-bot__body {
-  animation: eva-bot-breathe 1.8s var(--soft) infinite;
-}
-.eva-bot[data-state="talking"] .eva-bot__eye::before {
-  transform: scaleY(0.78);
-}
-.eva-bot[data-state="talking"] .eva-bot__eye {
-  animation: eva-bot-talk 0.9s var(--soft) infinite;
-}
-.eva-bot[data-state="talking"] .eva-bot__eye:last-child {
-  animation-delay: -0.45s;
+  animation: eva-bot-respira 3.4s var(--soft) infinite;
 }
 .eva-bot[data-state="talking"] .eva-bot__eyes {
-  transform: translateY(calc(var(--s) * -0.05));
+  transform: translateY(-12px);
 }
 .eva-bot[data-state="talking"] .eva-bot__mouth {
   opacity: 1;
   transform: translateX(-50%) scale(1);
 }
 .eva-bot[data-state="talking"] .eva-bot__mouth i {
-  animation: eva-bot-type 1s var(--soft) infinite;
+  animation: eva-bot-type 0.9s var(--soft) infinite;
 }
-.eva-bot[data-state="talking"] .eva-bot__mouth i:nth-child(2) { animation-delay: 0.15s; }
-.eva-bot[data-state="talking"] .eva-bot__mouth i:nth-child(3) { animation-delay: 0.3s; }
+.eva-bot[data-state="talking"] .eva-bot__mouth i:nth-child(2) { animation-delay: 0.12s; }
+.eva-bot[data-state="talking"] .eva-bot__mouth i:nth-child(3) { animation-delay: 0.24s; }
 
-/* ── deu certo: a pílula some, o arco aparece (^ ^), pulinho e onda verde */
+/* ── deu certo: o olho vira arco (^ ^), o painel acende inteiro e ela comemora */
 .eva-bot[data-state="happy"] .eva-bot__body {
-  animation: eva-bot-joy 0.9s var(--ease) 1, eva-bot-breathe 3.6s var(--soft) 0.9s infinite;
+  animation: eva-bot-festa 0.9s var(--ease) 1, eva-bot-respira 3.4s var(--soft) 0.9s infinite;
 }
 .eva-bot[data-state="happy"] .eva-bot__eye::before {
   opacity: 0;
@@ -259,99 +492,98 @@
 }
 .eva-bot[data-state="happy"] .eva-bot__eye::after {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: none;
+}
+.eva-bot[data-state="happy"] .eva-bot__placa i::after {
+  opacity: 1;
 }
 .eva-bot[data-state="happy"] .eva-bot__dot {
   background: #22c55e;
-}
-.eva-bot[data-state="happy"] .eva-bot__ring {
-  border-color: #22c55e;
-  animation: eva-bot-ring 1.1s var(--ease) 0.05s 1;
+  opacity: 1;
+  transform: none;
 }
 
 /* sombra no chão do palco */
 .eva-bot-floor {
   width: calc(var(--s) * 0.62);
   height: calc(var(--s) * 0.09);
-  margin-top: calc(var(--s) * -0.1);
+  margin-top: calc(var(--s) * -0.03);
   border-radius: 50%;
   background: radial-gradient(closest-side, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
 }
 
 /* parada: mesmo desenho, sem loop (listas com muitos itens, como o pipeline) */
 .eva-bot[data-still] *,
-.eva-bot[data-still] *::before {
+.eva-bot[data-still] *::before,
+.eva-bot[data-still] *::after {
   animation: none !important;
 }
 
-@keyframes eva-bot-idle {
-  0%, 100% { transform: translateZ(0) rotate(0) scale(1, 1); }
-  25% { transform: translateZ(0) rotate(0) scale(1.03, 0.98); }
-  50% { transform: translateZ(0) rotate(-3deg) scale(1, 1); }
-  62% { transform: translateZ(0) rotate(-3deg) scale(1.025, 0.985); }
-  80% { transform: translateZ(0) rotate(2deg) scale(1, 1); }
+@keyframes eva-bot-respira {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
-@keyframes eva-bot-breathe {
-  0%, 100% { transform: translateZ(0) scale(1, 1); }
-  50% { transform: translateZ(0) scale(1.03, 0.98); }
+@keyframes eva-bot-balanca {
+  0%, 100% { transform: rotate(-1.4deg); }
+  50% { transform: rotate(1.4deg); }
 }
-/* uma piscada aos 46% e uma dupla no fim do ciclo */
-@keyframes eva-bot-blink {
-  0%, 44%, 49%, 86%, 91%, 93.5%, 98%, 100% { transform: scaleY(1); }
-  46.5% { transform: scaleY(0.08); }
-  88.5% { transform: scaleY(0.08); }
-  95.8% { transform: scaleY(0.08); }
+@keyframes eva-bot-pisca {
+  0%, 93%, 100% { transform: scaleY(1); }
+  96.5% { transform: scaleY(0.08); }
 }
-@keyframes eva-bot-look {
-  0%, 26%, 100% { transform: translate3d(0, 0, 0); }
-  34%, 46% { transform: translate3d(calc(var(--s) * -0.065), calc(var(--s) * -0.02), 0); }
-  56%, 68% { transform: translate3d(calc(var(--s) * 0.065), calc(var(--s) * -0.01), 0); }
-  78% { transform: translate3d(0, calc(var(--s) * 0.02), 0); }
-  86% { transform: translate3d(0, 0, 0); }
+@keyframes eva-bot-pisca-dupla {
+  0%, 62%, 70%, 78%, 100% { transform: scaleY(1); }
+  66%, 74% { transform: scaleY(0.1); }
 }
-@keyframes eva-bot-sway {
-  0%, 100% { transform: translateZ(0) rotate(0) scale(1); }
-  30% { transform: translateZ(0) rotate(-5deg) scale(1.02, 0.98); }
-  70% { transform: translateZ(0) rotate(5deg) scale(0.98, 1.02); }
+@keyframes eva-bot-olhar {
+  0%, 34% { transform: translateX(12px); }
+  42%, 66% { transform: translateX(-14px); }
+  74%, 100% { transform: translateX(12px); }
 }
-@keyframes eva-bot-scan {
-  from { transform: translate3d(calc(var(--s) * -0.07), 0, 0); }
-  to { transform: translate3d(calc(var(--s) * 0.07), 0, 0); }
+@keyframes eva-bot-varre {
+  0%, 100% { transform: translateX(-16px); }
+  50% { transform: translateX(16px); }
 }
-@keyframes eva-bot-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.45; transform: scale(0.8); }
+@keyframes eva-bot-onda {
+  0%, 28%, 100% { opacity: 1; }
+  14% { opacity: 0.45; }
+}
+@keyframes eva-bot-acende {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+@keyframes eva-bot-lampada {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.16); }
 }
 @keyframes eva-bot-hop {
-  0% { transform: translateZ(0) translateY(0) scale(1, 1); }
-  18% { transform: translateZ(0) translateY(0) scale(1.1, 0.88); }
-  48% { transform: translateZ(0) translateY(calc(var(--s) * -0.14)) scale(0.94, 1.07); }
-  76% { transform: translateZ(0) translateY(0) scale(1.05, 0.95); }
-  100% { transform: translateZ(0) translateY(0) scale(1, 1); }
+  0% { transform: translateY(0) scale(1, 1); }
+  18% { transform: translateY(0) scale(1.08, 0.9); }
+  48% { transform: translateY(-20px) scale(0.95, 1.06); }
+  76% { transform: translateY(0) scale(1.04, 0.96); }
+  100% { transform: translateY(0) scale(1, 1); }
 }
-@keyframes eva-bot-talk {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(0, calc(var(--s) * -0.04), 0); }
+@keyframes eva-bot-treme {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+  75% { transform: rotate(-2deg); }
 }
 @keyframes eva-bot-type {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.55; }
-  30% { transform: translateY(calc(var(--s) * -0.035)); opacity: 1; }
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-8px); }
 }
-@keyframes eva-bot-joy {
-  0%, 100% { transform: translateZ(0) translateY(0) rotate(0); }
-  30% { transform: translateZ(0) translateY(calc(var(--s) * -0.12)) rotate(-8deg) scale(1.04); }
-  62% { transform: translateZ(0) translateY(0) rotate(5deg) scale(0.98); }
-}
-@keyframes eva-bot-ponder {
-  0%, 100% { transform: translateZ(0) rotate(-4deg) translateY(0); }
-  45% { transform: translateZ(0) rotate(4deg) translateY(calc(var(--s) * -0.02)); }
-  60% { transform: translateZ(0) rotate(4deg) translateY(calc(var(--s) * -0.02)); }
+@keyframes eva-bot-festa {
+  0%, 100% { transform: translateY(0); }
+  36% { transform: translateY(-14px); }
+  62% { transform: translateY(0); }
+  80% { transform: translateY(-5px); }
 }
 /* olhar de quem está lembrando: pra cima à direita, pausa, pra cima à esquerda */
 @keyframes eva-bot-recall {
-  0%, 8% { transform: translate3d(calc(var(--s) * 0.06), calc(var(--s) * -0.07), 0); }
-  38%, 52% { transform: translate3d(calc(var(--s) * -0.06), calc(var(--s) * -0.075), 0); }
-  80%, 100% { transform: translate3d(calc(var(--s) * 0.06), calc(var(--s) * -0.07), 0); }
+  0%, 8% { transform: translate(12px, -14px); }
+  38%, 52% { transform: translate(-12px, -14px); }
+  80%, 100% { transform: translate(12px, -14px); }
 }
 @keyframes eva-bot-bubble {
   0% { opacity: 0; transform: translate3d(calc(var(--s) * -0.04), calc(var(--s) * 0.05), 0) scale(0.2); }
@@ -359,15 +591,13 @@
   70% { opacity: 1; transform: translate3d(0, calc(var(--s) * -0.02), 0) scale(1); }
   100% { opacity: 0; transform: translate3d(calc(var(--s) * 0.02), calc(var(--s) * -0.05), 0) scale(0.85); }
 }
-@keyframes eva-bot-ring {
-  0% { opacity: 0.7; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.55); }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .eva-bot *,
-  .eva-bot *::before {
+  .eva-bot *::before,
+  .eva-bot *::after {
     animation: none !important;
+    transition: none !important;
   }
   /* parada, a última bolinha fica visível: ainda dá pra ver que ela pensa */
   .eva-bot[data-state="pondering"] .eva-bot__thought i:nth-child(3) {

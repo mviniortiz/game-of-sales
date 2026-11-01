@@ -75,12 +75,15 @@ Tokens live in `src/index.css`. Always use tokens, never hardcode hex when a tok
 
 ## EVA (importante)
 
-Desde 08/10/2026 a EVA é um **ícone vivo no jeito do Grok Bot**, decisão do Markus:
-`EvaBot` (`src/components/eva/EvaBot.tsx` + `evaBot.css`), corpo redondo e olhos que
-mudam por estado (idle, thinking, alert, talking, happy). É o único desenho da EVA:
-orbe, malha, glifo e avatares antigos foram apagados. Em listas cheias use `still`.
-Estados de telas antigas passam por `evaBotFrom()`. Nunca personagem com rosto realista,
-corpo ou estilo anime.
+Desde 01/11/2026 a EVA é um **bot montado por peças**, decisão do Markus:
+`EvaBot` (`src/components/eva/EvaBot.tsx` + `evaBot.css`). Padrão: cápsula azul com
+placa solar; `corpo`, `topo`, `olhos` e `tema` trocam as peças, e os olhos mudam por
+estado (idle, thinking, pondering, alert, talking, happy). As cores vivem nos temas
+de `evaBot.css`. Abaixo de 48px saem topo e orelhas e abaixo de 28px sai o visor, com
+um ponto no lugar do painel. Em fundo escuro use `tema="sol"`. É o único desenho da
+EVA: orbe, malha, glifo e avatares antigos foram apagados. Em listas cheias use
+`still`. Estados de telas antigas passam por `evaBotFrom()`. Rosto realista e estilo
+anime continuam fora.
 
 ## Acessibilidade & Performance
 
