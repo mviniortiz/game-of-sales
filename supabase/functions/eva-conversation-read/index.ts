@@ -1,9 +1,9 @@
-// EVA.READ.1: a EVA lê a conversa depois de 3 minutos de silêncio, não cada
+// EVA.READ.1: a Lume lê a conversa depois de 3 minutos de silêncio, não cada
 // mensagem. O webhook marca channel_conversations.eva_read_due_at; o cron
 // trigger_eva_conversation_read chama esta função a cada minuto, que pega as
 // vencidas (claim_eva_reads) e manda a conversa inteira para a whatsapp-copilot
 // em modo serviço. Só lê conversa que vale o custo: com card, com orçamento
-// aberto ou de lead novo (até 24h). Assistido: a leitura fica no painel da EVA,
+// aberto ou de lead novo (até 24h). Assistido: a leitura fica no painel da Lume,
 // nada sai para o lead.
 //
 // Invocação: POST com x-cron-secret (cron) ou Bearer service_role.

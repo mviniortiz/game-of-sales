@@ -2,7 +2,7 @@
 // F4E.5 (2026-05-21) — generate-eva-context-suggestions
 //
 // Lê eva_training_documents.raw_text e gera sugestões estruturadas de
-// contexto pra EVA. As sugestões ficam em eva_context_suggestions com
+// contexto pra Lume. As sugestões ficam em eva_context_suggestions com
 // status='pending' — NÃO altera eva_business_context. Aprovação é manual.
 //
 // MANUAL: só roda quando o user clica "Gerar sugestões" na UI.
@@ -40,7 +40,7 @@ function json(status: number, body: unknown) {
 
 const SYSTEM_PROMPT = `Você é uma extratora estruturada de contexto comercial para um CRM de agências de marketing.
 
-Sua tarefa: ler o texto enviado por um admin de agência e gerar SUGESTÕES de contexto pra EVA usar como base ao analisar conversas de vendas.
+Sua tarefa: ler o texto enviado por um admin de agência e gerar SUGESTÕES de contexto pra Lume usar como base ao analisar conversas de vendas.
 
 Tipos de sugestão (campo "suggestion_type"):
 - "agency": fatos da agência (nicho, posicionamento, diferencial, equipe, ano de fundação).

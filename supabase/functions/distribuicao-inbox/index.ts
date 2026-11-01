@@ -18,7 +18,7 @@
 // Bot de vendas (VENDAS.0, 2026-10-24): o pipeline do próprio Vyzon é o CRM das
 // vendas do Vyzon. Só quem respondeu de verdade vira card (ver _shared/vendas.ts).
 // action=vendas_pipeline   cards abertos da empresa Vyzon, com dias parado e se
-//                          a EVA já tem retomada esperando aprovação.
+//                          a Lume já tem retomada esperando aprovação.
 // action=vendas_criar      card novo (não duplica telefone já no pipeline).
 // action=vendas_atualizar  move etapa e/ou anota; nunca marca venda ganha.
 //

@@ -1,5 +1,5 @@
 // eva-agent-loop
-// Loop agéntico da EVA com autonomia GRADUADA (VYZON.AGENTS.3, 2026-08-21).
+// Loop agéntico da Lume com autonomia GRADUADA (VYZON.AGENTS.3, 2026-08-21).
 //
 // Regras de autonomia (decisão de produto 2026-08-21):
 //   - Tools INTERNAS executam sozinhas dentro do loop (ler contexto, mover
@@ -268,7 +268,7 @@ function makeExecutor(
                     company_id: companyId,
                     user_id: ownerUserId,
                     activity_type: "stage_changed",
-                    description: `EVA moveu o estagio para ${stage}`,
+                    description: `Lume moveu o estagio para ${stage}`,
                     old_value: String(deal.stage ?? ""),
                     new_value: stage,
                 });
@@ -283,7 +283,7 @@ function makeExecutor(
                     deal_id: deal.id,
                     company_id: companyId,
                     user_id: ownerUserId,
-                    content: `[EVA] ${content}`,
+                    content: `[Lume] ${content}`,
                 });
                 if (error) throw new Error(error.message);
                 return { ok: true };
@@ -295,7 +295,7 @@ function makeExecutor(
                 const channel = String(args.channel ?? "whatsapp");
                 const messageText = String(args.message_text ?? "").trim();
                 if (!messageText) throw new Error("message_text obrigatorio");
-                const suggestionText = String(args.suggestion_text ?? "").trim() || "Rascunho gerado pela EVA.";
+                const suggestionText = String(args.suggestion_text ?? "").trim() || "Rascunho gerado pela Lume.";
                 const { data: inserted, error } = await supabase
                     .from("agent_suggestions")
                     .insert({

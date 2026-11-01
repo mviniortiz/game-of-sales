@@ -116,7 +116,7 @@ export async function buildRaioX(admin: SupabaseClient, companyId: string, opts:
         if (out?.message_draft) drafts.set(item.conversation_id, { reading: out.suggestion_text, draft: out.message_draft });
     }));
 
-    // Por que a EVA achou que era proposta: o nome do PDF ou o trecho do texto.
+    // Por que a Lume achou que era proposta: o nome do PDF ou o trecho do texto.
     // O dono confere isso no relatório e tira o que não for.
     const evidencia = (i: RxItem): string | null => {
         const m = (byConv.get(i.conversation_id) ?? []).find((x) => x.id === i.message_id);

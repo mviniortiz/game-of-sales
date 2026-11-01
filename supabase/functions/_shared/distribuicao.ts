@@ -4,7 +4,7 @@
 // Ferramenta para gerir e crescer o Vyzon, não feature de cliente. Os agentes
 // do OpenBot entregam post, anúncio, abordagem de parceiro e copy da
 // prospecção pela edge distribuicao-inbox. O rascunho fica em
-// distribuicao_rascunhos, separado da fila da EVA, e o Markus decide no
+// distribuicao_rascunhos, separado da fila da Lume, e o Markus decide no
 // WhatsApp com código próprio (D + letra + dígito). Aprovar não publica nada.
 //
 // Sem nada de Deno: validador, código e texto do aviso rodam nos testes do
@@ -22,7 +22,7 @@ export type Acao = typeof ACOES[number];
 /** Todo aviso e toda resposta do time começa assim. Quando volta pelo webhook
  *  (chat do Markus com ele mesmo), o webhook descarta antes de qualquer
  *  leitura de comando: sem isso o aviso viraria "texto corrigido" de um
- *  rascunho da EVA. */
+ *  rascunho da Lume. */
 export const DIST_PREFIX = "DISTRIBUIÇÃO";
 
 const ROTULO_CANAL: Record<Canal, string> = {
@@ -162,10 +162,10 @@ export function validarRascunho(input: unknown): Validacao {
 
 // ── Código ──────────────────────────────────────────────────────────────────
 
-// D + letra + dígito. Três caracteres: o parser da EVA só reconhece letra +
+// D + letra + dígito. Três caracteres: o parser da Lume só reconhece letra +
 // dígito (A2) e a prospecção usa P + letra + dígito (PK4), então um "DK4 1"
 // nunca resolve rascunho de outro fluxo. Sem I, O, 0 e 1 pelo mesmo motivo da
-// EVA: o Markus digita de memória.
+// Lume: o Markus digita de memória.
 const LETRAS = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const DIGITOS = "23456789";
 
@@ -190,7 +190,7 @@ export type ComandoDistribuicao =
     | { codigo: string; intent: "corrigir"; texto: string };
 
 /** Só reconhece mensagem que começa com um código D (DK4, [DK4], DK4:). O
- *  resto devolve null e segue para os fluxos da EVA e da prospecção intactos. */
+ *  resto devolve null e segue para os fluxos da Lume e da prospecção intactos. */
 export function parseComandoDistribuicao(raw: string): ComandoDistribuicao | null {
     const texto = String(raw || "").trim();
     const m = texto.match(/^\[?(d[a-hj-np-z][2-9])\]?(?=$|[\s,.:;-])[\s,.:;-]*/i);

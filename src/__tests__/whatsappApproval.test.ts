@@ -79,6 +79,7 @@ describe("parseOwnerCommand", () => {
     });
 
     it("ignora a própria confirmação da EVA voltando pelo webhook", () => {
+        expect(parseOwnerCommand("Lume Enviado para João Silva.").intent).toBe("none");
         expect(parseOwnerCommand("EVA Enviado para João Silva.").intent).toBe("none");
         expect(parseOwnerCommand("EVA [A2] rascunho pronto\n\nLead: João").intent).toBe("none");
     });

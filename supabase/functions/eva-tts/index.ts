@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// eva-tts — narração por voz da EVA (demo do hero, Fase 1). Recebe um trecho de
+// eva-tts — narração por voz da Lume (demo do hero, Fase 1). Recebe um trecho de
 // texto e devolve áudio mp3 (base64) gerado pelo ElevenLabs (voz feminina PT-BR,
 // eleven_multilingual_v2). Se a chave não estiver configurada, devolve
 // { ok:false, reason:"no_key" } pro front cair no fallback (SpeechSynthesis).

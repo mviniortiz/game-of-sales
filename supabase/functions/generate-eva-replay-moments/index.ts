@@ -3,8 +3,8 @@
 //
 // Pré-computa os MOMENTOS-CHAVE do replay de prova de confiança. Pega conversas
 // REAIS com desfecho (perdida/sumida/ganha), acha o ponto onde o lead testou o
-// vendedor, e gera como a EVA TERIA respondido ali — usando o MESMO
-// eva_business_context que o whatsapp-copilot usa, pra não divergir da EVA real.
+// vendedor, e gera como a Lume TERIA respondido ali — usando o MESMO
+// eva_business_context que o whatsapp-copilot usa, pra não divergir da Lume real.
 //
 // MANUAL: só roda quando o admin clica "Atualizar replay" na aba Simulações.
 // Sem cron, sem trigger. Persiste em eva_replay_moments (service_role).
@@ -17,7 +17,7 @@
 // Anti-alucinação (espelha generate-eva-context-suggestions):
 //   - "Use SÓ o que está no transcript." Sem inventar fala.
 //   - "Preço/número só se aparecer no contexto da agência."
-//   - "Respeite as promessas proibidas: a EVA não pode prometer o que é vetado."
+//   - "Respeite as promessas proibidas: a Lume não pode prometer o que é vetado."
 // ─────────────────────────────────────────────────────────────────────────────
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -49,7 +49,7 @@ function json(status: number, body: unknown) {
 
 type Outcome = "lost" | "ghosted" | "won";
 
-const SYSTEM_PROMPT = `Você é a EVA, assistente comercial de uma agência de marketing, avaliando uma conversa de vendas que JÁ TERMINOU.
+const SYSTEM_PROMPT = `Você é a Lume, assistente comercial de uma agência de marketing, avaliando uma conversa de vendas que JÁ TERMINOU.
 
 Sua tarefa: olhar o transcript real e o contexto da agência, achar o MOMENTO-CHAVE (o ponto onde o lead testou o vendedor: objeção de preço, pedido de garantia, dúvida que trava, sinal de fechamento) e mostrar como VOCÊ teria respondido ali.
 

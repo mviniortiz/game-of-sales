@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
-// eva-studio-chat — a EVA CONVERSA com o gestor pra montar um agente especialista
+// eva-studio-chat — a Lume CONVERSA com o gestor pra montar um agente especialista
 // (qualificação, follow-up, propostas ou reativação), sem formulário. A cada
 // turno ela: (1) faz UMA pergunta curta, (2) reextrai os campos daquele agente
 // do que o gestor já disse, (3) marca done quando estão preenchidos. Stateless;
@@ -84,7 +84,7 @@ function buildSystemPrompt(agent: AgentDef, priorContext?: string): string {
     const priorBlock = priorContext
         ? `\nA agência JÁ tem contexto no Vyzon. NÃO repita o que já sabe: confirme em uma frase curta ("vi que vocês fazem X, certo?") e pergunte SÓ o que falta:\n${priorContext}\n`
         : "";
-    return `Você é a EVA, do Vyzon. Está conversando com o dono/gestor de uma agência brasileira para ${agent.focus}.
+    return `Você é a Lume, do Vyzon. Está conversando com o dono/gestor de uma agência brasileira para ${agent.focus}.
 
 Objetivo pro gestor: em poucos minutos montar o agente que vai SUGERIR respostas no Inbox. Nada é enviado ao lead sem a aprovação dele. Sem formulário: só conversa.
 
@@ -138,14 +138,14 @@ interface Turn { from: "eva" | "user"; text: string }
 const MAX_USER_TURNS = 8;
 function forcedClosing(agent: AgentDef): string {
     const name = agent.label.includes("qualificação") ? "Qualificador" : `agente de ${agent.label}`;
-    return `Pronto. Montei o ${name} com o que você me passou. Confira o resumo à direita: se algo estiver torto, me fala e eu ajusto. Depois disso a EVA sugere no Inbox e você aprova cada mensagem.`;
+    return `Pronto. Montei o ${name} com o que você me passou. Confira o resumo à direita: se algo estiver torto, me fala e eu ajusto. Depois disso a Lume sugere no Inbox e você aprova cada mensagem.`;
 }
 
 async function runChat(agent: AgentDef, messages: Turn[], fields: Fields, priorContext?: string): Promise<{ reply: string; fields: Fields; done: boolean } | null> {
     if (!hasLlmKey()) return null;
 
     const transcript = messages
-        .map((m) => `${m.from === "eva" ? "EVA" : "Gestor"}: ${(m.text || "").trim()}`)
+        .map((m) => `${m.from === "eva" ? "Lume" : "Gestor"}: ${(m.text || "").trim()}`)
         .join("\n")
         .slice(0, 8000);
 
@@ -180,7 +180,7 @@ async function runChat(agent: AgentDef, messages: Turn[], fields: Fields, priorC
         const done = forced || (allFilled && (parsed.done === true || userTurns >= 2));
 
         let reply = typeof parsed.reply === "string" ? parsed.reply.trim().slice(0, 800) : "";
-        // Se vai fechar mas a EVA ainda fez uma pergunta, troca por uma fala de
+        // Se vai fechar mas a Lume ainda fez uma pergunta, troca por uma fala de
         // fechamento — não pode "encerrar" terminando em "?".
         if (done && (forced || /\?\s*$/.test(reply) || !reply)) reply = forcedClosing(agent);
 
@@ -227,6 +227,6 @@ serve(async (req) => {
         return json(200, { ok: true, ...result });
     } catch (error) {
         console.error("[eva-studio-chat] error:", error);
-        return json(500, { ok: false, reason: "error", message: "Erro ao conversar com a EVA." });
+        return json(500, { ok: false, reason: "error", message: "Erro ao conversar com a Lume." });
     }
 });

@@ -1,5 +1,5 @@
 // eva-site-context — lê o site da própria empresa do usuário logado (ele pede,
-// na conversa de configuração da EVA) e devolve um rascunho do negócio para ele
+// na conversa de configuração da Lume) e devolve um rascunho do negócio para ele
 // conferir. Nunca grava nada: quem salva é a tela, depois do "É isso".
 // Só o site da empresa; dado de lead nunca é buscado fora (regra do CLAUDE.md).
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";

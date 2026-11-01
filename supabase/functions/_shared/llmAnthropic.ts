@@ -1,4 +1,4 @@
-// Tradução entre o formato "chat completions" (o que as funções da EVA falam)
+// Tradução entre o formato "chat completions" (o que as funções da Lume falam)
 // e a Messages API da Anthropic, usada pelo llm.ts para o Claude Haiku 5.5.
 //
 // Regras do Haiku 5.5 que moldam a tradução (docs oficiais, 07/10/2026):

@@ -1,9 +1,9 @@
 // PROSPECT.2 — Prospecção automatizada de integradoras pelo número do dono.
 // Tudo que sai para a integradora passa pela aprovação dele no WhatsApp:
 //   - lote do dia: "PA3 1" aprova as primeiras mensagens, "PA3 2" recusa;
-//   - resposta de cada integradora: "PR4 1" envia o rascunho da EVA, "PR4 2"
+//   - resposta de cada integradora: "PR4 1" envia o rascunho da Lume, "PR4 2"
 //     descarta, "PR4 <texto>" envia a versão dele.
-// Códigos começam com P para não colidir com os da aprovação da EVA (letra+dígito).
+// Códigos começam com P para não colidir com os da aprovação da Lume (letra+dígito).
 
 import { evolutionRequest, normalizeNumber } from "./whatsappApproval.ts";
 import { saveNotice } from "./ownerGroups.ts";
@@ -91,7 +91,7 @@ export async function sendImage(instanceName: string, number: string, url: strin
 }
 
 /** Rascunho em parágrafos: uma mensagem por parágrafo, com pausa de quem relê entre elas.
- *  O parágrafo [imagem] sai como o print da EVA. */
+ *  O parágrafo [imagem] sai como o print da Lume. */
 export async function sendHumanMessages(instanceName: string, number: string, text: string): Promise<void> {
   const partes = dividirMensagens(text);
   for (let i = 0; i < partes.length; i++) {
@@ -111,7 +111,7 @@ export async function sendVoiceNote(instanceName: string, number: string, audioU
 
 export type ReplyRead = { kind: "interesse" | "sem_interesse" | "automatico" | "duvida" | "fora_do_perfil"; draft: string; porta: boolean; quer: boolean };
 
-/** A EVA lê a resposta da integradora e escreve a próxima mensagem do Markus. */
+/** A Lume lê a resposta da integradora e escreve a próxima mensagem do Markus. */
 export async function readProspectReply(row: ProspectRow, newText: string, freeSlots: string): Promise<ReplyRead> {
   // A versão "raiox" oferece o link do Raio-X grátis em vez da chamada de 20 minutos.
   const ofereceuLink = row.variant === "raiox";
@@ -144,7 +144,7 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
       : [
         "Objetivo do Markus: quando a pessoa abrir a porta, mostrar em uma frase e num print o que ele está montando e ouvir se a integradora faz algo assim hoje. Só depois, se aparecer dor ou curiosidade, convidar para 20 minutos online ou oferecer o Raio-X.",
         "Por que mostrar e não perguntar número: perguntar 'quantas propostas ficaram sem resposta' a um desconhecido soa como pedir para confessar que perde venda, e as conversas morreram ou travaram ('Porque eu te falaria isso?'). E quem diz que já resolve costuma ter só o aviso de que o cliente abriu; a diferença é a retomada já escrita (medido em 14/10/2026).",
-        "O que é, nestas palavras e sem prometer resultado: a EVA acompanha os orçamentos que a integradora manda no WhatsApp; quando um fica 2 dias sem resposta do cliente, ela avisa o dono no WhatsApp com a mensagem de retomada pronta, ele aprova e ela sai do número dele. Nada sai sem o dono aprovar.",
+        "O que é, nestas palavras e sem prometer resultado: a Lume acompanha os orçamentos que a integradora manda no WhatsApp; quando um fica 2 dias sem resposta do cliente, ela avisa o dono no WhatsApp com a mensagem de retomada pronta, ele aprova e ela sai do número dele. Nada sai sem o dono aprovar.",
         `Para mostrar, escreva a linha ${MARCA_IMAGEM} sozinha num parágrafo: ela vira o print de como o aviso chega. Só uma vez por conversa: se a conversa até aqui já tem ${MARCA_IMAGEM}, não mande de novo.`,
         `A primeira mensagem prometeu uma pergunta rápida: não peça reunião antes de a pessoa responder sobre o print. Nunca diga que não está vendendo nada nem esconda o motivo: o Markus e o time estão montando isso e querem saber se o problema é real antes de vender. Preço só se perguntarem, e aí direto, sem enrolar e sem dizer que não tem preço: R$ 197 por mês, tudo liberado, até 10 usuários; as 10 primeiras integradoras pagam R$ 97 por mês nos 3 primeiros meses. Na mesma resposta, ofereça fazer com o Markus o Raio-X grátis de 20 minutos antes de qualquer pagamento, com dois horários entre estes: ${freeSlots}.`,
       ].join(" "),
@@ -175,7 +175,7 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
         `- interesse, quando ele só pediu para conversar: proponha dois horários entre estes: ${freeSlots} e diga que manda o link da chamada.`,
       ].join("\n")
       : [
-        `- interesse, quando ele diz que já resolve ('fazemos follow-up com todos', 'temos CRM', 'temos uma ferramenta que avisa quando abre'): não feche a conversa e não convide para reunião ainda. Se o print ainda não foi: primeiro parágrafo, uma reação curta ao que ele disse e meia frase do que a EVA faz; segundo, ${MARCA_IMAGEM}; terceiro, UMA pergunta: o de vocês já deixa a mensagem pronta assim ou só avisa? Se o print já foi, pergunte isso sem imagem. Se ele já contou como e mesmo assim não mostrou dor, ofereça conferir de graça com o Raio-X se alguma proposta escapou, sem insistir.`,
+        `- interesse, quando ele diz que já resolve ('fazemos follow-up com todos', 'temos CRM', 'temos uma ferramenta que avisa quando abre'): não feche a conversa e não convide para reunião ainda. Se o print ainda não foi: primeiro parágrafo, uma reação curta ao que ele disse e meia frase do que a Lume faz; segundo, ${MARCA_IMAGEM}; terceiro, UMA pergunta: o de vocês já deixa a mensagem pronta assim ou só avisa? Se o print já foi, pergunte isso sem imagem. Se ele já contou como e mesmo assim não mostrou dor, ofereça conferir de graça com o Raio-X se alguma proposta escapou, sem insistir.`,
         `- interesse, quando ele mostrou dor ou deu número: agradeça, comente em uma frase o que ele contou (com o número dele) e convide para 20 minutos online com dois horários entre estes: ${freeSlots}, ou ofereça mostrar de graça quanto está parado com o Raio-X.`,
         `- interesse, quando ele só pediu para conversar: proponha dois horários entre estes: ${freeSlots} e diga que manda o link da chamada.`,
         `- interesse, quando ele aceitou ver de graça quanto está parado: mande este link exatamente: ${RAIO_X_LINK} e diga só isto sobre a ferramenta: ela lê as conversas do WhatsApp e acha as propostas que ficaram sem resposta do cliente, com o valor parado; leva uns 3 minutos; ela só lê e nada é enviado aos clientes. Não diga que ela sabe se o cliente abriu a proposta.`,
@@ -382,7 +382,7 @@ export async function cardDoProspect(
   return deal.id as string;
 }
 
-/** Integradora da lista respondeu: a EVA lê, escreve a próxima mensagem e pede
+/** Integradora da lista respondeu: a Lume lê, escreve a próxima mensagem e pede
  *  a aprovação do dono. O seguimento do dia 4 é cancelado. */
 export async function onProspectInbound(
   admin: any,

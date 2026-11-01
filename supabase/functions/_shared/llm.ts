@@ -1,6 +1,6 @@
 // Chamada de chat com troca automática de provedor.
 //
-// Todas as funções da EVA falam o formato "chat completions" da OpenAI.
+// Todas as funções da Lume falam o formato "chat completions" da OpenAI.
 // DeepSeek, Gemini e OpenAI aceitam esse formato; a Anthropic passa pelo
 // tradutor em llmAnthropic.ts. Este módulo recebe o corpo de sempre e tenta
 // os provedores em ordem. Erro de cota (429), saldo
@@ -89,7 +89,7 @@ const PROVIDERS: Record<LlmProvider, ProviderSpec> = {
 
 const DEFAULT_ORDER: LlmProvider[] = ["anthropic", "deepseek", "gemini", "openai"];
 
-// O Haiku 5.5 pensa por padrão (esforço "medium"). As tarefas da EVA são
+// O Haiku 5.5 pensa por padrão (esforço "medium"). As tarefas da Lume são
 // leitura e extração curtas, então "low" corta tempo e saída.
 const ANTHROPIC_EFFORT_DEFAULT = "low";
 

@@ -198,7 +198,7 @@ interface NormalizedMessage {
   mediaFileName: string | null;
   audioDuration: number | null;
   messageTimestamp: string;
-  /** Conversa do dono com o próprio número (canal de aprovação da EVA). */
+  /** Conversa do dono com o próprio número (canal de aprovação da Lume). */
   isOwnerChat: boolean;
   /** Arquivo da mídia (base64), tirado do payload para não ir ao banco. */
   mediaBase64: string | null;
@@ -362,7 +362,7 @@ async function dualWriteChannel(
     try { (globalThis as any).EdgeRuntime?.waitUntil?.(task); } catch { /* noop */ }
   }
 
-  // EVA.READ.1 — mensagem com conteúdo marca a conversa para a EVA reler
+  // EVA.READ.1 — mensagem com conteúdo marca a conversa para a Lume reler
   // depois de 3 min de silêncio; mensagem seguinte empurra o prazo. Quem lê
   // é a eva-conversation-read, pelo cron.
   if (
@@ -1123,7 +1123,7 @@ serve(async (req) => {
     const chatPhone = remoteJid.endsWith("@lid") ? "" : extractDigits(remoteJid);
     const phoneTail = chatPhone.slice(-10);
 
-    // O aviso do número oficial da EVA chega no WhatsApp da empresa. Não é
+    // O aviso do número oficial da Lume chega no WhatsApp da empresa. Não é
     // lead: fora da Inbox, do rastreio de orçamento e da contagem do Raio-X.
     if (chatPhone && isEvaOfficialNumber(chatPhone)) {
       skipped.push("eva_oficial");
@@ -1131,11 +1131,11 @@ serve(async (req) => {
     }
 
     // APPROVAL.1 — o dono respondendo no próprio chat resolve o rascunho da
-    // EVA: 1 envia, 2 descarta, texto corrige e envia. Precisa vir ANTES da
+    // Lume: 1 envia, 2 descarta, texto corrige e envia. Precisa vir ANTES da
     // trava de prospecção, porque o número dele nunca está na allowlist.
     // handleOwnerCommand devolve handled=false quando o texto não é comando,
     // e aí a mensagem segue o fluxo normal e vira registro como qualquer outra.
-    // Grupos de avisos do dono (prospecção, leads do anúncio, EVA): só ele está
+    // Grupos de avisos do dono (prospecção, leads do anúncio, Lume): só ele está
     // neles. Ele decide reagindo 👍/👎 no aviso, respondendo o aviso citado ou
     // digitando o código; sucesso vira ✅ (no aviso, quando foi reação). O resto,
     // inclusive os avisos que o Vyzon manda e que chegam como fromMe, não vira registro.
@@ -1197,7 +1197,7 @@ serve(async (req) => {
             continue;
           }
           // DIST.0 — "DK4 1" é do time interno; qualquer outro texto devolve
-          // false e segue para lead, prospecção e EVA como sempre.
+          // false e segue para lead, prospecção e Lume como sempre.
           try {
             if (await tratarComandoDistribuicao(admin, {
               userId, donoUserId: DISTRIBUICAO_USER_ID, instanceName, ownerNumber, text: commandText,
@@ -1254,7 +1254,7 @@ serve(async (req) => {
     }
 
     // AUTO.1 — lead do anúncio de conversa: entra no Vyzon mesmo com a trava da
-    // prospecção ligada, e a EVA lê e pede aprovação ao dono.
+    // prospecção ligada, e a Lume lê e pede aprovação ao dono.
     let isAdLead = false;
     if (leadAuto && companyId && !isGroup && chatPhone) {
       const key = brKey(chatPhone);
@@ -1296,7 +1296,7 @@ serve(async (req) => {
     const body = parseTextFromMessage(msg);
     const meta = detectMessageType(msg);
 
-    // PROSPECT.2 — integradora da lista respondeu: a EVA lê e pede aprovação ao dono.
+    // PROSPECT.2 — integradora da lista respondeu: a Lume lê e pede aprovação ao dono.
     if (prospectingActive && !fromMe) {
       try {
         await onProspectInbound(admin, {

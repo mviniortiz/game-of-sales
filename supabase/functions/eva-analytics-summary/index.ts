@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Supabase Edge Function: eva-analytics-summary
 //
-// Backend de agregação do painel "Analytics da EVA". POST { rangeDays?: 7|30|90 }
+// Backend de agregação do painel "Analytics da Lume". POST { rangeDays?: 7|30|90 }
 // (default 7). Valida JWT (authenticated) e escopa TUDO por company_id do usuário
 // (super_admin pode passar companyId no body, no padrão report-agent).
 //
@@ -129,7 +129,7 @@ async function buildConversationBlocks(admin: any, companyId: string, sinceIso: 
     if (typeof q.score_sugerido === "number") scores.push(q.score_sugerido);
 
     // Qualified: contamos conversa como qualificada quando há score sugerido
-    // (a EVA conseguiu pontuar o lead) ou temperatura definida.
+    // (a Lume conseguiu pontuar o lead) ou temperatura definida.
     if (typeof q.score_sugerido === "number" || temp) qualified++;
 
     // Objeções: qualification.objecao (string singular) + coluna objections[].
@@ -211,9 +211,9 @@ async function buildFunnel(admin: any, companyId: string, sinceIso: string) {
   return funnel;
 }
 
-// ─── Fase 2 — Funil atribuível à EVA ──────────────────────────────────────────
+// ─── Fase 2 — Funil atribuível à Lume ──────────────────────────────────────────
 // Counts por stage SÓ de deals com agent_suggestion_id não-null no período.
-// Atribuição: o deal nasceu de uma sugestão da EVA (manual ou híbrido).
+// Atribuição: o deal nasceu de uma sugestão da Lume (manual ou híbrido).
 async function buildFunnelEva(admin: any, companyId: string, sinceIso: string) {
   const { data, error } = await admin
     .from("deals")
@@ -295,7 +295,7 @@ async function buildTrend(admin: any, companyId: string, sinceIso: string) {
     if (!key) continue;
     const q = (r.qualification || {}) as QualJson;
     const temp = q.temperatura ?? r.temperature ?? null;
-    // qualificada = a EVA pontuou (score) ou definiu temperatura (espelha o
+    // qualificada = a Lume pontuou (score) ou definiu temperatura (espelha o
     // critério de "qualified" do bloco de conversas da Fase 1).
     if (typeof q.score_sugerido === "number" || temp) bump(key).qualified++;
   }
@@ -426,7 +426,7 @@ serve(async (req) => {
       approval,
       sla,
       funnel,
-      // Fase 2 — funil atribuível à EVA + tendência temporal diária.
+      // Fase 2 — funil atribuível à Lume + tendência temporal diária.
       funnelEva,
       trend,
       temperature: convBlocks.temperature,
@@ -441,6 +441,6 @@ serve(async (req) => {
     });
   } catch (err) {
     console.error("[eva-analytics-summary] error:", err);
-    return json(500, { error: "Falha ao agregar analytics da EVA" });
+    return json(500, { error: "Falha ao agregar analytics da Lume" });
   }
 });
