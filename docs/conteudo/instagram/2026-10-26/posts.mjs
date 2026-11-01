@@ -241,9 +241,9 @@ ${TAGS}`,
 
 Acompanha cada orçamento que sai do seu WhatsApp. No 2º dia sem resposta, a mensagem pra chamar de volta chega pronta, no seu tom. Você responde 1 e ela sai do seu número, com o seu nome. Nada vai sem você aprovar.
 
-R$ 97 por mês nos 3 primeiros meses para as 10 primeiras integradoras. Sem contrato.
+R$ 97 por mês, tudo liberado para até 10 pessoas. Sem contrato.
 
-Quer ver funcionando? Me chama pelo link da bio.
+Quer ver funcionando? Link na bio.
 
 ${TAGS}`,
     },
@@ -549,7 +549,7 @@ Você responde 1 e a mensagem sai do seu número. Responde 2 e ela é descartada
 
 Nada vai pro cliente sem você aprovar.
 
-R$ 97 por mês nos 3 primeiros meses para as 10 primeiras integradoras. Link na bio.
+R$ 97 por mês, tudo liberado para até 10 pessoas. Link na bio.
 
 ${TAGS}`,
     },
@@ -567,8 +567,10 @@ A EVA sugere. Você aprova.
 
 ${TAGS}`,
     },
+    // Fora da agenda de 03/11: voz e cartão ainda citam o preço de fundador,
+    // que acabou em 01/11. Refazer o vídeo antes de publicar.
     {
-        dia: "ter 03/11", hora: "11:30", arquivo: "parado-final.mp4",
+        dia: "ter 10/11", hora: "11:30", arquivo: "parado-final.mp4",
         legenda: `Quanto dinheiro está parado no seu WhatsApp agora?
 
 Cada proposta sem resposta é um cliente que já pediu orçamento. No 2º dia, a mensagem pra chamar de volta chega pronta no seu WhatsApp, e você aprova com 1.

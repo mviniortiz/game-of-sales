@@ -26,7 +26,6 @@ Os posts 11, 12, 13, 18, 22, 24 e 25 são para qualquer ramo; a oferta continua 
 | seg 02/11 | 11:30 | Post 06 | Assunto do setor (Fio B) com fonte |
 | seg 02/11 | 18:30 | Post 12 | Extra qualquer ramo: lista salvável |
 | ter 03/11 | 07:30 | Post 23 | Fatura contra parcela (exemplo) |
-| ter 03/11 | 11:30 | Reel R2 | parado-final.mp4 |
 | ter 03/11 | 18:30 | Post 07 | POV com a fatura |
 | qua 04/11 | 07:30 | Post 24 | Extra qualquer ramo: dica |
 | qua 04/11 | 11:30 | Post 08 | Frase de impacto (molde Mandou. Viu. Sumiu.) |
@@ -37,6 +36,7 @@ Os posts 11, 12, 13, 18, 22, 24 e 25 são para qualquer ramo; a oferta continua 
 | sex 06/11 | 07:30 | Post 27 | Convite para o Raio-X |
 | sex 06/11 | 11:30 | Post 10 | Produto (molde do nosso melhor post) |
 | sex 06/11 | 18:30 | Post 28 | Produto: como a aprovação funciona |
+| ter 10/11 | 11:30 | Reel R2 | parado-final.mp4 |
 
 ## Stories
 
@@ -89,7 +89,7 @@ A EVA sugere. Você aprova.
 #energiasolar #integradorsolar #vendasnowhatsapp #energiafotovoltaica
 ```
 
-### R2 · ter 03/11, 11:30
+### R2 · ter 10/11, 11:30
 
 Arquivo: ~/Movies/vyzon-film/entregas/parado-final.mp4
 
@@ -264,9 +264,9 @@ Formato: Produto (molde do nosso melhor post)
 
 Acompanha cada orçamento que sai do seu WhatsApp. No 2º dia sem resposta, a mensagem pra chamar de volta chega pronta, no seu tom. Você responde 1 e ela sai do seu número, com o seu nome. Nada vai sem você aprovar.
 
-R$ 97 por mês nos 3 primeiros meses para as 10 primeiras integradoras. Sem contrato.
+R$ 97 por mês, tudo liberado para até 10 pessoas. Sem contrato.
 
-Quer ver funcionando? Me chama pelo link da bio.
+Quer ver funcionando? Link na bio.
 
 #energiasolar #integradorsolar #vendasnowhatsapp #energiafotovoltaica
 ```
@@ -555,7 +555,7 @@ Você responde 1 e a mensagem sai do seu número. Responde 2 e ela é descartada
 
 Nada vai pro cliente sem você aprovar.
 
-R$ 97 por mês nos 3 primeiros meses para as 10 primeiras integradoras. Link na bio.
+R$ 97 por mês, tudo liberado para até 10 pessoas. Link na bio.
 
 #energiasolar #integradorsolar #vendasnowhatsapp #energiafotovoltaica
 ```
