@@ -64,7 +64,7 @@ const DESCRIPTION =
 
 // Tem que conter o prefill da automação de leads (automations, 20261009_automations_ad_leads):
 // é essa frase que faz a conversa virar lead do anúncio, lida pela EVA e avisada no grupo.
-const WHATSAPP_MESSAGE = "Oi, Markus. Vi o site e topo os 20 minutos. Quero ver quanto está parado nos meus orçamentos de energia solar.";
+const WHATSAPP_MESSAGE = "Oi, Markus. Vi o site. Quero ver quanto está parado nos meus orçamentos de energia solar.";
 
 type FormState = {
     name: string;
@@ -288,15 +288,15 @@ const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void;
                 {copy.sub}
             </p>
             <div className="mt-7 flex flex-col items-stretch gap-3 landing-fade-in-up-lg landing-delay-300 sm:items-start md:mt-8">
-                <WhatsappCta placement={onWhatsapp}>Falar com o Markus no WhatsApp</WhatsappCta>
+                <WhatsappCta placement={onWhatsapp}>Me mostra quanto tá parado</WhatsappCta>
                 <p className="text-[14px]" style={{ color: "var(--lp-ink-subtle)" }}>
-                    Quem responde é o Markus, que criou o Vyzon. Sem compromisso.
+                    Abre no seu WhatsApp. Quem responde é o Markus, que criou o Vyzon.
                 </p>
             </div>
             <PriceLine className="mt-7 max-w-[520px]" />
-            <Link to={RAIO_X_AUTO} className="vs-azul mt-4 inline-block text-[14px] underline underline-offset-4" onClick={onCta}>
-                Prefere ver sozinho? Veja em 3 minutos o que ficou sem resposta
-            </Link>
+            <a href="#conta" className="vs-azul mt-4 inline-block text-[14px] underline underline-offset-4" onClick={onCta}>
+                Prefere fazer a conta sozinho? Leva 30 segundos e não precisa conectar nada
+            </a>
         </div>
         <AvisoNoWhatsApp />
         </div>
@@ -363,15 +363,16 @@ const Numbers = () => (
     </section>
 );
 
-// A conta que o dono faz sozinho: o número é dele, não nosso. É também a
-// pergunta que valida o ICP (quantas propostas ficaram sem resposta no último
-// mês e quanto somam), e a resposta vai junto na mensagem do WhatsApp. Mantém o
-// prefill da automação de leads.
+// A conta que o dono faz sozinho, sem conectar nada: quantos orçamentos manda e
+// quantos fecha ele sabe de cabeça, e "quantos ficaram sem resposta" não. Começa na
+// média da Greener (25 por mês, 18% viram venda) e os números passam a ser dele. A
+// conta vai junto na mensagem do WhatsApp. Mantém o prefill da automação de leads.
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const TICKETS = [15000, 25000, 40000, 80000];
 
 const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () => void }) => {
-    const [qtd, setQtd] = useState(8);
+    const [orcamentos, setOrcamentos] = useState(25);
+    const [vendas, setVendas] = useState(5);
     const [ticket, setTicket] = useState(25000);
     const usou = useRef(false);
     const marcar = () => {
@@ -379,38 +380,31 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
         usou.current = true;
         logLandingEvent(FUNNEL_PAGE, angle, "calc_use");
     };
-    const total = qtd * ticket;
-    const msg = `${WHATSAPP_MESSAGE} Pela minha conta: ${qtd} orçamentos sem resposta no último mês, uns ${brl(total)}.`;
-    const step = (d: number) => {
+    const semVenda = Math.max(0, orcamentos - vendas);
+    const total = semVenda * ticket;
+    const msg = `${WHATSAPP_MESSAGE} Pela minha conta: ${orcamentos} orçamentos por mês, ${vendas} fechados, uns ${brl(total)} que não viraram venda.`;
+    const mudaOrcamentos = (d: number) => {
         marcar();
-        setQtd((q) => Math.min(200, Math.max(0, q + d)));
+        const novo = Math.min(500, Math.max(1, orcamentos + d));
+        setOrcamentos(novo);
+        setVendas((v) => Math.min(v, novo));
+    };
+    const mudaVendas = (d: number) => {
+        marcar();
+        setVendas((v) => Math.min(orcamentos, Math.max(0, v + d)));
     };
 
     // Faixa noite de ponta a ponta e o resultado em forma de fatura: o dono vive
     // de conta de luz, e aqui a conta é a do dinheiro parado. A EVA, sentada na
     // fatura, se assusta quando a conta passa de zero.
     return (
-        <section className="vs-noite py-16 md:py-32" aria-label="Calculadora">
+        <section id="conta" className="vs-noite scroll-mt-4 py-16 md:py-32" aria-label="Calculadora">
             <div className="mx-auto grid w-full max-w-[1120px] items-center gap-10 px-4 sm:px-5 md:grid-cols-2 md:gap-14 md:px-8">
                 <div>
-                    <Eyebrow light>Faça a conta da sua integradora</Eyebrow>
-                    <SectionTitle light>Quanto está esperando alguém chamar de volta?</SectionTitle>
-                    <div className="mt-8">
-                        <p className="text-[15px]" style={{ color: "rgba(255,255,255,0.85)" }}>
-                            Orçamentos que ficaram sem resposta no último mês
-                        </p>
-                        <div className="mt-2 flex items-center gap-3">
-                            <button type="button" aria-label="Menos um" onClick={() => step(-1)} className={stepperCls}>
-                                −
-                            </button>
-                            <output className="vs-num w-16 text-center text-[38px] font-black" style={{ color: "var(--lp-sol)" }} aria-live="polite">
-                                {qtd}
-                            </output>
-                            <button type="button" aria-label="Mais um" onClick={() => step(1)} className={stepperCls}>
-                                +
-                            </button>
-                        </div>
-                    </div>
+                    <Eyebrow light>Faça a conta sem conectar nada</Eyebrow>
+                    <SectionTitle light>Quanto fica pelo caminho todo mês?</SectionTitle>
+                    <Contador className="mt-8" rotulo="Orçamentos que você manda por mês" valor={orcamentos} muda={mudaOrcamentos} />
+                    <Contador className="mt-6" rotulo="Quantos desses viram venda" valor={vendas} muda={mudaVendas} />
                     <div className="mt-6">
                         <p className="text-[15px]" style={{ color: "rgba(255,255,255,0.85)" }}>
                             Valor médio de um orçamento
@@ -438,18 +432,21 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                             ))}
                         </div>
                     </div>
+                    <p className="mt-6 max-w-[460px] text-[14px] leading-relaxed" style={{ color: "var(--lp-ink-subtle)" }}>
+                        A conta começa na média do mercado (Greener, 1º semestre de 2026). Troque pelos seus números.
+                    </p>
                 </div>
                 <div className="relative mt-24 min-w-0 md:mt-16">
                 <EvaSentada size={132} state={total > 0 ? "alert" : "idle"} />
                 <div className="vs-fatura flex min-w-0 flex-col">
                     <div className="vs-fatura__topo">
-                        <span className="vs-fatura__titulo">Sua conta do último mês</span>
+                        <span className="vs-fatura__titulo">Sua conta do mês</span>
                         <span className="vs-fatura__ref">pela sua conta</span>
                     </div>
                     <dl className="mt-3 grid gap-2">
                         <div className="vs-fatura__linha">
-                            <dt>Orçamentos sem resposta</dt>
-                            <dd className="vs-num">{qtd}</dd>
+                            <dt>Orçamentos que não viraram venda</dt>
+                            <dd className="vs-num">{semVenda}</dd>
                         </div>
                         <div className="vs-fatura__linha">
                             <dt>Valor médio de cada um</dt>
@@ -458,13 +455,13 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                     </dl>
                     <div className="vs-fatura__total mt-4 pt-4">
                         <p className="text-[14.5px]" style={{ color: "var(--lp-ink-muted)" }}>
-                            Esperando alguém chamar de volta
+                            O que ficou pelo caminho
                         </p>
                         <p className="vs-num mt-1 text-[48px] font-black leading-none md:text-[60px]">
                             <span className="vs-marca">{brl(total)}</span>
                         </p>
                         <p className="mt-3 text-[14.5px]" style={{ color: "var(--lp-ink-muted)" }}>
-                            O Vyzon custa R$ 197 por mês.
+                            Nem tudo isso volta. O Vyzon acompanha o que ainda dá para chamar de volta, por R$ 197 por mês.
                         </p>
                     </div>
                     <a href={whatsappUrl(msg)} target="_blank" rel="noopener noreferrer" onClick={onWhatsapp} className="vs-btn mt-6 self-stretch sm:self-start">
@@ -477,6 +474,25 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
         </section>
     );
 };
+
+const Contador = ({ rotulo, valor, muda, className }: { rotulo: string; valor: number; muda: (d: number) => void; className: string }) => (
+    <div className={className}>
+        <p className="text-[15px]" style={{ color: "rgba(255,255,255,0.85)" }}>
+            {rotulo}
+        </p>
+        <div className="mt-2 flex items-center gap-3">
+            <button type="button" aria-label={`${rotulo}: menos um`} onClick={() => muda(-1)} className={stepperCls}>
+                −
+            </button>
+            <output className="vs-num w-16 text-center text-[38px] font-black" style={{ color: "var(--lp-sol)" }} aria-live="polite">
+                {valor}
+            </output>
+            <button type="button" aria-label={`${rotulo}: mais um`} onClick={() => muda(1)} className={stepperCls}>
+                +
+            </button>
+        </div>
+    </div>
+);
 
 const stepperCls =
     "h-11 w-11 rounded-full border-2 border-white/60 text-[20px] text-white transition-colors duration-150 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transition-none";

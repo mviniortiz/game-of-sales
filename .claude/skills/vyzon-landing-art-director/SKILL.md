@@ -35,19 +35,19 @@ topo (Raio-X, EVA, placar, rascunho, aprovação A2).
    sumiu?"), título com promessa e prazo ("No 2º dia sem resposta, a
    mensagem pra chamar de volta chega pronta no seu WhatsApp"), subtítulo
    com o mecanismo (responde 1, sai do seu número, nada vai sem aprovar).
-   Depois vêm o botão principal "Falar com o Markus no WhatsApp" e quem
-   responde ("Quem responde é o Markus, que criou o Vyzon. Sem compromisso").
+   Depois vêm o botão principal "Me mostra quanto tá parado" e a linha "Abre no
+   seu WhatsApp. Quem responde é o Markus, que criou o Vyzon."
    Logo abaixo, a linha de preço de fundador e, por último, um link discreto
-   para o Raio-X automático.
+   para a calculadora, que não pede conexão.
    À direita (abaixo, no celular), o **aviso no WhatsApp do dono** (objeto
    Conversa): mensagem pronta para o Carlos, "Responda 1", o 1 e "Enviada".
 2. **Números de mercado com fonte** (NumeroComFonte): 18% de conversão e 25
    orçamentos por mês, Greener 1º semestre de 2026, no lugar de depoimento.
    Só número de fora, com estudo e período.
-3. **Calculadora** em faixa noite: o dono informa quantos orçamentos ficaram
-   sem resposta no último mês e o valor médio; o resultado sai na Fatura
-   ("Sua conta do último mês"). A conta vai na mensagem do WhatsApp para o
-   Markus. É a pergunta que valida o ICP. Evento `calc_use`.
+3. **Calculadora** em faixa noite (`#conta`), o caminho sem conectar nada: o dono
+   informa quantos orçamentos manda por mês, quantos viram venda e o valor médio,
+   números que ele sabe de cabeça. Começa na média da Greener e o resultado sai na
+   Fatura. A conta vai na mensagem do WhatsApp para o Markus. Evento `calc_use`.
 4. **Mock do produto**, claro: lista de propostas com carimbos de estado e a
    conversa do Carlos depois da aprovação.
 5. **Conheça a EVA**: cartão noite largo, bot grande cortado pela borda, passando
