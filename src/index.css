@@ -3891,6 +3891,19 @@ All colors MUST be HSL.
   font-weight: 800;
 }
 
+/* Conheça a EVA: cartão largo, bot grande cortado pela borda. */
+.lp-solar .vs-conheca { position: relative; overflow: clip; border-radius: 28px; padding: 40px 24px 300px; }
+.lp-solar .vs-conheca__bot { position: absolute; right: 50%; bottom: -60px; transform: translateX(50%); line-height: 0; }
+@media (min-width: 768px) {
+  .lp-solar .vs-conheca { min-height: 460px; padding: 64px 56px; }
+  .lp-solar .vs-conheca__bot { right: -40px; bottom: -70px; transform: none; }
+}
+.lp-solar .vs-conheca__fala { animation: vs-fala 220ms cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes vs-fala {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
 /* NumeroComFonte: faixa de dois números com hairlines. */
 .lp-solar .vs-prova { display: grid; border-top: 1px solid var(--lp-line); border-bottom: 1px solid var(--lp-line); }
 .lp-solar .vs-prova__item { min-width: 0; padding: 28px 0; }
@@ -3903,6 +3916,7 @@ All colors MUST be HSL.
 
 @media (prefers-reduced-motion: reduce) {
   .lp-solar .vs-marca--draw { animation: none; }
+  .lp-solar .vs-conheca__fala { animation: none; }
   .lp-solar .vs-btn,
   .lp-solar .vs-btn:hover { transition: none; transform: none; }
 }

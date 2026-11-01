@@ -50,15 +50,17 @@ topo (Raio-X, EVA, placar, rascunho, aprovação A2).
    Markus. É a pergunta que valida o ICP. Evento `calc_use`.
 4. **Mock do produto**, claro: lista de propostas com carimbos de estado e a
    conversa do Carlos depois da aprovação.
-5. **Como funciona como linha do tempo da proposta**: uma vez (conecta o
+5. **Conheça a EVA**: cartão noite largo, bot grande cortado pela borda, passando
+   pelos estados com legenda. É aqui que o nome EVA é apresentado.
+6. **Como funciona como linha do tempo da proposta**: uma vez (conecta o
    WhatsApp), dia 0 (manda orçamento como sempre), dia 1 (cliente visualiza
    e não responde), dia 2 (chega o aviso, único cartão noite).
-6. **Incluso + cartão de preço**: só o que existe no app. Preço de fundador
+7. **Incluso + cartão de preço**: só o que existe no app. Preço de fundador
    R$ 97/mês nos 3 primeiros meses para as 10 primeiras integradoras, depois
    R$ 197/mês. Sem contrato (confirmado pelo Markus em 19/10/2026).
-7. **Objeções reais**, com as frases acima e a resposta de cada uma.
-8. **FAQ**, espelhado no FAQPage do `index.html`.
-9. **Bloco final do Markus**: "20 minutos comigo pelo WhatsApp", a
+8. **Objeções reais**, com as frases acima e a resposta de cada uma.
+9. **FAQ**, espelhado no FAQPage do `index.html`.
+10. **Bloco final do Markus**: "20 minutos comigo pelo WhatsApp", a
    apresentação dele, o botão do WhatsApp e o formulário "Quero que o Markus
    me chame" (`demo_requests`, source `orcamento_teste`).
 
@@ -77,7 +79,10 @@ Brasil é escura com âmbar ou neon (SolarMarket, Solfácil) e nenhum concorrent
 tem personagem, então a EVA é a estrela.
 
 - A EVA (`EvaBot`) aparece em toda faixa forte, sentada na borda de cima de um
-  cartão (`EvaSentada`). No topo ela passa pelo dia da proposta (`EvaDoDia`).
+  cartão (`EvaSentada`). A seção `ConhecaEva` a apresenta de perto.
+- A demo do topo (`src/components/landing/AvisoDemo.tsx`) usa o kit Stageshow de
+  Benji Taylor (MIT), copiado em `src/vendor/stageshow`, e carrega em pedaço
+  separado. Tela de produto ilustrada segue as regras dessa skill.
 - Ritmo de fundo, sempre em cor chapada: sol `.vs-sol` (topo), creme, noite
   `.vs-noite` (calculadora), creme, sol (objeções), creme. Faixas iguais nunca
   ficam coladas. Cartão branco sem sombra, raio de 22px, volta às cores do papel

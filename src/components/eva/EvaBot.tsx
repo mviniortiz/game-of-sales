@@ -124,6 +124,20 @@ export function EvaBot({
         );
     }, [state, still]);
 
+    // Antes de mudar de expressão ela pisca: a troca de forma some dentro da piscada
+    // e parece uma reação, não uma transição.
+    const estadoAnterior = useRef(state);
+    useEffect(() => {
+        if (estadoAnterior.current === state) return;
+        estadoAnterior.current = state;
+        const eyes = faceRef.current?.querySelector<HTMLElement>(".eva-bot__eyes");
+        if (!eyes || still || !canMove() || typeof eyes.animate !== "function") return;
+        eyes.animate(
+            [{ transform: "scaleY(1)" }, { transform: "scaleY(0.08)", offset: 0.4 }, { transform: "scaleY(1)" }],
+            { duration: 200, easing: "ease-in-out", composite: "add" },
+        );
+    }, [state, still]);
+
     // Olhos seguindo o ponteiro, com atraso suave. Só roda enquanto a EVA está
     // visível, em tela com mouse, e solta o olhar 2,5 s depois do mouse parar.
     useEffect(() => {

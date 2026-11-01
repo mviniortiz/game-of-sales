@@ -1,0 +1,45 @@
+/* Demo do topo da home: o kit Stageshow nas cores do WhatsApp e do sistema LP.9. */
+.ad-stage {
+  background: transparent;
+  font-family: var(--lp-font-display);
+}
+.ad-stage .ad-thread {
+  --ss-me: #d9fdd3;
+  --ss-me-text: #0f1730;
+  --ss-them: #fff;
+  --ss-them-text: #0f1730;
+  --ss-thread-size: 15px;
+}
+.ad-cena { position: absolute; inset: 0; }
+.ad-eva { position: absolute; z-index: 2; right: 56px; top: 0; line-height: 0; }
+.ad-phone { position: absolute; left: 30px; top: 118px; }
+[data-layout="compact"] .ad-phone { left: 12px; }
+[data-layout="compact"] .ad-eva { right: 24px; }
+.ad-topo { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: #fff; color: #0f1730; font-size: 15px; line-height: 1.2; }
+.ad-topo small { display: block; font-size: 12px; color: #566079; }
+.ad-avatar { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; background: #1556c0; color: #fff; font-weight: 900; }
+.ad-thread { padding: 10px 10px 0; }
+.ad-aviso { display: grid; gap: 4px; }
+.ad-aviso small { font-size: 13px; color: #3b4560; }
+.ad-rascunho { margin: 4px 0; padding: 8px 10px; border-radius: 10px; background: #fff3cc; font-weight: 500; }
+.ad-selo {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  top: 72px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: #fff;
+  color: #0f1730;
+  font-size: 14px;
+  line-height: 1.2;
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  transition: opacity 180ms ease, transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ad-selo[data-show] { opacity: 1; transform: none; }
+.ad-selo strong { display: block; font-weight: 700; }
+.ad-selo svg { width: 18px; height: 18px; flex-shrink: 0; color: #a14a07; }

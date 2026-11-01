@@ -15,6 +15,9 @@
   --s: 40px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --soft: cubic-bezier(0.45, 0, 0.55, 1);
+  /* mola curta: passa um pouco do ponto e assenta, como os olhos do Grok */
+  --mola: linear(0, 0.24 6%, 0.66 14%, 0.93 22%, 1.06 30%, 1.09 36%, 1.05 46%, 1.01 58%, 0.995 70%, 1);
+  --tilt: 6deg;
   --laranja: #ff6b1a;
   position: relative;
   display: inline-block;
@@ -86,7 +89,8 @@
 .eva-bot { --cy: calc(var(--vy) + var(--vh) / 2); --am: 1; }
 
 /* sem visor, o olho é escuro direto no corpo e cresce pra ser lido em 16px */
-.eva-bot[data-tam="minimo"] { --olho: var(--visor); --am: 1.7; }
+.eva-bot[data-tam="pequeno"] { --tilt: 0deg; }
+.eva-bot[data-tam="minimo"] { --olho: var(--visor); --am: 1.7; --tilt: 0deg; }
 .eva-bot[data-tema="noite"][data-tam="minimo"] { --olho: #ffc933; }
 
 .eva-bot__palco {
@@ -286,7 +290,8 @@
   will-change: transform;
 }
 .eva-bot__eyes {
-  transition: transform 0.22s var(--ease);
+  transform-origin: 120px var(--cy);
+  transition: transform 0.36s var(--mola);
 }
 .eva-bot__eye {
   position: absolute;
@@ -294,6 +299,7 @@
   top: calc(var(--cy) - var(--eh) * var(--am) / 2);
   width: calc(var(--ew) * var(--am));
   height: calc(var(--eh) * var(--am));
+  transition: transform 0.36s var(--mola);
 }
 .eva-bot__eye + .eva-bot__eye {
   left: calc(120px + var(--passo) / 2 - var(--ew) * var(--am) / 2);
@@ -307,7 +313,8 @@
   inset: 0;
   border-radius: calc(var(--er) * var(--am));
   background: var(--olho);
-  transition: transform 0.22s var(--ease), opacity 0.16s ease;
+  transform: rotate(var(--tilt));
+  transition: transform 0.36s var(--mola), opacity 0.14s ease;
 }
 /* o arco do sorriso (^), escondido até ela ficar feliz */
 .eva-bot__eye::after {
@@ -320,8 +327,8 @@
   border-bottom: 0;
   border-radius: calc(46px * var(--am)) calc(46px * var(--am)) 0 0;
   opacity: 0;
-  transform: translateY(6px) scale(0.7);
-  transition: transform 0.22s var(--ease), opacity 0.16s ease;
+  transform: translateY(10px) scale(0.5);
+  transition: transform 0.4s var(--mola), opacity 0.14s ease;
 }
 
 /* boquinha de digitando: três pontos, só quando ela escreve */
@@ -356,9 +363,9 @@
   transition: transform 0.2s var(--ease), opacity 0.16s ease;
 }
 
-/* ── esperando: respira, a placa balança, pisca e olha em volta */
+/* ── esperando: respira, a cabeça acompanha o olhar, pisca e a placa balança */
 .eva-bot[data-state="idle"] .eva-bot__body {
-  animation: eva-bot-respira 3.4s var(--soft) infinite;
+  animation: eva-bot-vivo 6.4s var(--soft) infinite;
 }
 .eva-bot[data-state="idle"] .eva-bot__topo {
   animation: eva-bot-balanca 4.2s var(--soft) infinite;
@@ -367,8 +374,15 @@
   animation: eva-bot-pisca 5.2s linear infinite;
 }
 .eva-bot[data-state="idle"][data-tam="cheio"]:not([data-tracking]) .eva-bot__eyes {
-  transform: translateX(12px);
-  animation: eva-bot-olhar 6.4s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+  transform: translateX(10px);
+  animation: eva-bot-olhar 6.4s var(--soft) infinite;
+}
+/* o olho do lado para onde ela vira cresce um pouco: dá volume sem desenhar 3D */
+.eva-bot[data-state="idle"][data-tam="cheio"]:not([data-tracking]) .eva-bot__eye {
+  animation: eva-bot-perto 6.4s var(--soft) infinite;
+}
+.eva-bot[data-state="idle"][data-tam="cheio"]:not([data-tracking]) .eva-bot__eye + .eva-bot__eye {
+  animation-name: eva-bot-longe;
 }
 /* mouse em cima: ela sorri */
 @media (hover: hover) and (pointer: fine) {
@@ -383,18 +397,18 @@
   }
 }
 
-/* ── lendo: olhos viram barras que varrem e uma onda passa pelo painel */
+/* ── lendo: olhos viram barras que varrem com pausa, a cabeça segue a leitura */
 .eva-bot[data-state="thinking"] .eva-bot__body {
-  animation: eva-bot-respira 3.4s var(--soft) infinite;
+  animation: eva-bot-lendo 2s var(--soft) infinite;
 }
 .eva-bot[data-state="thinking"] .eva-bot__eye::before {
   transform: scale(1.5, var(--achata));
 }
 .eva-bot[data-state="thinking"] .eva-bot__eyes {
-  animation: eva-bot-varre 1.5s var(--soft) infinite;
+  animation: eva-bot-varre 2s var(--soft) infinite;
 }
 .eva-bot[data-state="thinking"] .eva-bot__placa i {
-  animation: eva-bot-onda 1.5s linear infinite;
+  animation: eva-bot-onda 2s linear infinite;
 }
 .eva-bot[data-state="thinking"] .eva-bot__placa i:nth-child(5n + 2) { animation-delay: 90ms; }
 .eva-bot[data-state="thinking"] .eva-bot__placa i:nth-child(5n + 3) { animation-delay: 180ms; }
@@ -427,16 +441,20 @@
 .eva-bot[data-state="pondering"] .eva-bot__thought i:nth-child(2) { animation-delay: 0.22s; }
 .eva-bot[data-state="pondering"] .eva-bot__thought i:nth-child(3) { animation-delay: 0.44s; }
 .eva-bot[data-state="pondering"] .eva-bot__body {
-  animation: eva-bot-respira 3.4s var(--soft) infinite;
+  animation: eva-bot-pensa 4.8s var(--soft) infinite;
 }
 .eva-bot[data-state="pondering"] .eva-bot__eyes {
   animation: eva-bot-recall 4.8s var(--soft) infinite;
 }
+/* um olho apertado e o outro aberto: a cara de quem está lembrando */
 .eva-bot[data-state="pondering"] .eva-bot__eye::before {
-  transform: scaleY(0.72);
+  transform: rotate(-10deg) scale(1, 0.56);
+}
+.eva-bot[data-state="pondering"] .eva-bot__eye + .eva-bot__eye::before {
+  transform: rotate(8deg) scale(1.08, 0.92);
 }
 
-/* ── achou algo: pulinho, a placa treme, olhos abertos e células acesas pulsando */
+/* ── achou algo: pulinho, olhos bem abertos e retos, placa treme, células pulsam */
 .eva-bot[data-state="alert"] .eva-bot__body {
   animation: eva-bot-hop 0.75s var(--ease) 1, eva-bot-respira 3.4s var(--soft) 0.75s infinite;
 }
@@ -444,11 +462,10 @@
   animation: eva-bot-treme 0.75s var(--soft) 1;
 }
 .eva-bot[data-state="alert"] .eva-bot__eye::before {
-  transform: scaleY(1.3);
-  animation: none;
+  transform: scale(1.12, 1.32);
 }
-.eva-bot[data-state="alert"] .eva-bot__eye {
-  animation: eva-bot-pisca-dupla 2.6s linear infinite;
+.eva-bot[data-state="alert"] .eva-bot__eyes {
+  animation: eva-bot-pisca-dupla 3.2s linear infinite;
 }
 .eva-bot[data-state="alert"] .eva-bot__lampada {
   background: var(--laranja);
@@ -465,12 +482,21 @@
   transform: none;
 }
 
-/* ── escrevendo: olhos sobem, a cabeça acompanha o ritmo e os pontos digitam */
+/* ── escrevendo: olhos sobem e descem alternados, a cabeça marca o ritmo, pontos digitam */
 .eva-bot[data-state="talking"] .eva-bot__body {
-  animation: eva-bot-respira 3.4s var(--soft) infinite;
+  animation: eva-bot-digita 1.8s var(--soft) infinite;
 }
 .eva-bot[data-state="talking"] .eva-bot__eyes {
   transform: translateY(-12px);
+}
+.eva-bot[data-state="talking"] .eva-bot__eye::before {
+  transform: rotate(var(--tilt)) scaleY(0.8);
+}
+.eva-bot[data-state="talking"] .eva-bot__eye {
+  animation: eva-bot-talk 0.9s var(--soft) infinite;
+}
+.eva-bot[data-state="talking"] .eva-bot__eye + .eva-bot__eye {
+  animation-delay: -0.45s;
 }
 .eva-bot[data-state="talking"] .eva-bot__mouth {
   opacity: 1;
@@ -527,22 +553,57 @@
   0%, 100% { transform: rotate(-1.4deg); }
   50% { transform: rotate(1.4deg); }
 }
+@keyframes eva-bot-vivo {
+  0%, 30%, 100% { transform: translateY(0) rotate(0); }
+  15% { transform: translateY(-4px) rotate(0); }
+  44%, 62% { transform: translateY(-3px) rotate(-2.2deg); }
+  80% { transform: translateY(-2px) rotate(0.8deg); }
+}
+@keyframes eva-bot-lendo {
+  0%, 100% { transform: translateY(0) rotate(-1.6deg); }
+  50% { transform: translateY(-3px) rotate(1.6deg); }
+}
+@keyframes eva-bot-pensa {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  45%, 60% { transform: translateY(-4px) rotate(3deg); }
+}
+@keyframes eva-bot-digita {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  25% { transform: translateY(-3px) rotate(-1.2deg); }
+  75% { transform: translateY(-3px) rotate(1.2deg); }
+}
+/* uma piscada e, no fim do ciclo, uma dupla */
 @keyframes eva-bot-pisca {
-  0%, 93%, 100% { transform: scaleY(1); }
-  96.5% { transform: scaleY(0.08); }
+  0%, 44%, 49%, 88%, 91%, 93.5%, 96.5%, 100% { transform: rotate(var(--tilt)) scaleY(1); }
+  46.5%, 89.5%, 95% { transform: rotate(var(--tilt)) scaleY(0.08); }
 }
 @keyframes eva-bot-pisca-dupla {
   0%, 62%, 70%, 78%, 100% { transform: scaleY(1); }
   66%, 74% { transform: scaleY(0.1); }
 }
 @keyframes eva-bot-olhar {
-  0%, 34% { transform: translateX(12px); }
-  42%, 66% { transform: translateX(-14px); }
-  74%, 100% { transform: translateX(12px); }
+  0%, 34% { transform: translateX(10px); }
+  42%, 62% { transform: translateX(-22px); }
+  72%, 84% { transform: translate(24px, -5px); }
+  94%, 100% { transform: translateX(10px); }
+}
+@keyframes eva-bot-perto {
+  0%, 34%, 94%, 100% { transform: scale(1); }
+  42%, 62% { transform: scale(1.1); }
+  72%, 84% { transform: scale(0.92); }
+}
+@keyframes eva-bot-longe {
+  0%, 34%, 94%, 100% { transform: scale(1); }
+  42%, 62% { transform: scale(0.92); }
+  72%, 84% { transform: scale(1.1); }
 }
 @keyframes eva-bot-varre {
-  0%, 100% { transform: translateX(-16px); }
-  50% { transform: translateX(16px); }
+  0%, 12%, 100% { transform: translateX(-20px); }
+  50%, 62% { transform: translateX(20px); }
+}
+@keyframes eva-bot-talk {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
 }
 @keyframes eva-bot-onda {
   0%, 28%, 100% { opacity: 1; }
@@ -574,16 +635,16 @@
   30% { transform: translateY(-8px); }
 }
 @keyframes eva-bot-festa {
-  0%, 100% { transform: translateY(0); }
-  36% { transform: translateY(-14px); }
-  62% { transform: translateY(0); }
-  80% { transform: translateY(-5px); }
+  0%, 100% { transform: translateY(0) rotate(0); }
+  30% { transform: translateY(-16px) rotate(-6deg); }
+  60% { transform: translateY(0) rotate(4deg); }
+  80% { transform: translateY(-5px) rotate(-1.5deg); }
 }
 /* olhar de quem está lembrando: pra cima à direita, pausa, pra cima à esquerda */
 @keyframes eva-bot-recall {
-  0%, 8% { transform: translate(12px, -14px); }
-  38%, 52% { transform: translate(-12px, -14px); }
-  80%, 100% { transform: translate(12px, -14px); }
+  0%, 8% { transform: translate(16px, -14px); }
+  38%, 52% { transform: translate(-16px, -16px); }
+  80%, 100% { transform: translate(16px, -14px); }
 }
 @keyframes eva-bot-bubble {
   0% { opacity: 0; transform: translate3d(calc(var(--s) * -0.04), calc(var(--s) * 0.05), 0) scale(0.2); }

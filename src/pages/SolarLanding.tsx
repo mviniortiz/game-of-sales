@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent, trackDemoConversion, FUNNEL_EVENTS } from "@/lib/analytics";
@@ -19,6 +19,8 @@ import { EvaBot, type EvaBotState } from "@/components/eva/EvaBot";
 // Cadastro vai pra demo_requests com source='orcamento_teste': o trigger do SDR
 // automático ignora essa origem (migration 20260914_sdr_outreach_skip_orcamento),
 // senão o dono do negócio receberia o pitch de agência. O contato é manual.
+
+const AvisoDemo = lazy(() => import("@/components/landing/AvisoDemo"));
 
 const SOURCE = "orcamento_teste";
 // Raio-X automático: cadastro e, depois, /raio-x no app.
@@ -156,6 +158,7 @@ const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
                 <Numbers />
                 <Calculator angle={angle} onWhatsapp={() => trackWhatsappClick("calc")} />
                 <ProductMock />
+                <ConhecaEva />
                 <HowItWorks />
                 <Offer onWhatsapp={() => trackWhatsappClick("oferta")} />
                 <Objections />
@@ -206,8 +209,14 @@ const EvaSentada = ({ size, state, children }: { size: number; state?: EvaBotSta
 
 // A EVA passa pelo dia da proposta enquanto está na tela. Com movimento
 // reduzido, fica no primeiro estado.
-const DIA_DA_EVA: EvaBotState[] = ["idle", "thinking", "alert", "talking", "happy"];
-const EvaDoDia = ({ size }: { size: number }) => {
+const DIA_DA_EVA: { estado: EvaBotState; fala: string }[] = [
+    { estado: "idle", fala: "Proposta enviada. Ela fica de olho." },
+    { estado: "thinking", fala: "Lendo a conversa." },
+    { estado: "alert", fala: "Dois dias sem resposta. Ela te avisa." },
+    { estado: "talking", fala: "Escrevendo a mensagem de retomada." },
+    { estado: "happy", fala: "Você aprovou. Saiu do seu número." },
+];
+const useDiaDaEva = () => {
     const ref = useRef<HTMLSpanElement>(null);
     const [i, setI] = useState(0);
     useEffect(() => {
@@ -224,10 +233,30 @@ const EvaDoDia = ({ size }: { size: number }) => {
             window.clearInterval(id);
         };
     }, []);
+    return { ref, ...DIA_DA_EVA[i] };
+};
+
+// A EVA apresentada de perto, depois que a página já mostrou o que ela entrega.
+const ConhecaEva = () => {
+    const { ref, estado, fala } = useDiaDaEva();
     return (
-        <span ref={ref}>
-            <EvaBot size={size} state={DIA_DA_EVA[i]} />
-        </span>
+        <section className="mx-auto w-full max-w-[1120px] px-4 pt-20 sm:px-5 md:px-8 md:pt-32" aria-label="Conheça a EVA">
+            <div className="vs-conheca vs-noite">
+                <div className="relative z-[1] max-w-[520px]">
+                    <p className="vs-label">Quem faz isso por você</p>
+                    <h2 className="vs-display mt-3 text-[40px] leading-[1.02] md:text-[64px]">Conheça a EVA</h2>
+                    <p className="mt-4 text-[17px] leading-relaxed md:text-[19px]" style={{ color: "var(--lp-ink-muted)" }}>
+                        Ela acompanha cada proposta que sai do seu WhatsApp, te avisa quando o cliente para de responder e deixa a mensagem pronta. Quem decide o que sai é você.
+                    </p>
+                    <p key={fala} className="vs-conheca__fala mt-6 text-[19px] font-bold" style={{ color: "var(--lp-sol)" }} aria-live="polite">
+                        {fala}
+                    </p>
+                </div>
+                <span ref={ref} className="vs-conheca__bot">
+                    <EvaBot size={420} state={estado} />
+                </span>
+            </div>
+        </section>
     );
 };
 
@@ -240,9 +269,9 @@ const WaIcon = () => (
 // Texto à esquerda e, à direita, o aviso que chega no WhatsApp do dono: o
 // produto inteiro numa olhada. O fim do título leva o marca-texto da tela.
 const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void; onWhatsapp: () => void }) => (
-    <section className="vs-sol" aria-label="Topo">
-        <div className="mx-auto grid w-full max-w-[1120px] items-center gap-10 px-4 pb-14 pt-4 sm:px-5 md:grid-cols-[1.12fr_0.88fr] md:gap-12 md:px-8 md:pb-24 md:pt-10">
-        <div>
+    <section className="vs-sol overflow-hidden" aria-label="Topo">
+        <div className="mx-auto grid w-full max-w-[1120px] items-center gap-10 px-4 pt-4 sm:px-5 md:grid-cols-[1.12fr_0.88fr] md:gap-12 md:px-8 md:pt-10">
+        <div className="md:pb-24">
             <p className="text-[16px] font-bold landing-fade-in-up-lg">{copy.kicker}</p>
             {/* Letra forte em vez da serifa editorial: as páginas que convertem com
                 integrador (Heliux, Azume, InfinitePay) falam alto e direto. */}
@@ -281,50 +310,15 @@ const WhatsappCta = ({ placement, sol, children }: { placement: () => void; sol?
     </a>
 );
 
-// O aviso no WhatsApp do dono, no formato da aprovação real
-// (supabase/functions/_shared/whatsappApproval.ts), simplificado para "responda
-// 1" sem o código curto nem nome interno. Dados de exemplo.
+// A demo do topo vem em pedaço separado: o título, que é o LCP, não espera por ela.
+// A caixa reserva o espaço do palco, sem CLS.
 const AvisoNoWhatsApp = () => (
-    <figure className="mx-auto w-full max-w-[420px] pt-[150px] landing-fade-in-up-lg landing-delay-200" aria-label="Exemplo: o aviso que chega no seu WhatsApp no 2º dia">
-        <div className="relative">
-        <EvaSentada size={170}>
-            <EvaDoDia size={170} />
-        </EvaSentada>
-        <div className="vs-conversa">
-            <div className="vs-conversa__topo">
-                <span className="vs-conversa__avatar" aria-hidden="true">
-                    V
-                </span>
-                <div className="min-w-0">
-                    <p className="vs-conversa__nome">Aviso do Vyzon</p>
-                    <p className="vs-conversa__status">no seu WhatsApp</p>
-                </div>
-            </div>
-            <div className="vs-conversa__corpo">
-                <span className="vs-conversa__dia">Quarta</span>
-                <div className="vs-bolha">
-                    <p className="font-semibold">Mensagem pronta para o Carlos</p>
-                    <p className="text-[13px]" style={{ color: "var(--lp-ink-muted)" }}>
-                        Residência Oliveira · proposta de <span className="vs-num text-[15px] font-semibold">R$ 24.900</span> sem resposta há 2 dias
-                    </p>
-                    <p className="vs-bolha__rascunho">
-                        Oi, Carlos, conseguiu olhar a proposta? Se ajudar, te mando a simulação com financiamento pra comparar com a sua conta de luz.
-                    </p>
-                    <p style={{ color: "var(--lp-ink-muted)" }}>Responda 1 e ela sai do seu número.</p>
-                    <span className="vs-bolha__hora">09:02</span>
-                </div>
-                <div className="vs-bolha vs-bolha--saida">
-                    1<span className="vs-bolha__hora">09:03</span>
-                </div>
-                <div className="vs-bolha">
-                    Enviada para o Carlos.<span className="vs-bolha__hora">09:03</span>
-                </div>
-            </div>
+    <figure className="mx-auto w-full max-w-[420px] self-end landing-fade-in-up-lg landing-delay-200" aria-label="Exemplo: o aviso que chega no seu WhatsApp no 2º dia">
+        <div className="relative aspect-[420/640]">
+            <Suspense fallback={null}>
+                <AvisoDemo />
+            </Suspense>
         </div>
-        </div>
-        <figcaption className="mt-3 text-right text-[13px]" style={{ color: "var(--lp-ink-subtle)" }}>
-            Exemplo
-        </figcaption>
     </figure>
 );
 
@@ -352,7 +346,7 @@ const NUMBERS = [
 ] as const;
 
 const Numbers = () => (
-    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-24" aria-label="Números">
+    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-32" aria-label="Números">
         <ul className="vs-prova">
             {NUMBERS.map(([n, texto, fonte]) => (
                 <li key={n} className="vs-prova__item">
@@ -396,7 +390,7 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
     // de conta de luz, e aqui a conta é a do dinheiro parado. A EVA, sentada na
     // fatura, se assusta quando a conta passa de zero.
     return (
-        <section className="vs-noite py-16 md:py-24" aria-label="Calculadora">
+        <section className="vs-noite py-16 md:py-32" aria-label="Calculadora">
             <div className="mx-auto grid w-full max-w-[1120px] items-center gap-10 px-4 sm:px-5 md:grid-cols-2 md:gap-14 md:px-8">
                 <div>
                     <Eyebrow light>Faça a conta da sua integradora</Eyebrow>
@@ -497,7 +491,7 @@ const HOW: readonly (readonly [EvaBotState, string, string, string])[] = [
 ];
 
 const HowItWorks = () => (
-    <section className="mx-auto w-full max-w-[1120px] px-4 py-16 sm:px-5 md:px-8 md:py-24" aria-label="Como funciona">
+    <section className="mx-auto w-full max-w-[1120px] px-4 py-16 sm:px-5 md:px-8 md:py-32" aria-label="Como funciona">
         <Eyebrow>Como funciona</Eyebrow>
         <SectionTitle>
             Você continua no WhatsApp. <span className="vs-azul">O Vyzon lembra por você.</span>
@@ -532,7 +526,7 @@ const INCLUDED = [
 ];
 
 const Offer = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
-    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-24" aria-label="O que está incluso">
+    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-32" aria-label="O que está incluso">
         <div className="grid gap-12 md:grid-cols-[1.2fr_1fr] md:gap-10">
             <div>
                 <Eyebrow>O que está incluso</Eyebrow>
@@ -610,7 +604,7 @@ const CountUp = ({ to, ms = 1100, delay = 450 }: { to: number; ms?: number; dela
 };
 
 const ProductMock = () => (
-    <section className="mx-auto w-full max-w-[1120px] px-4 pt-16 sm:px-5 md:px-8 md:pt-24" aria-label="Como o Vyzon aparece pra você">
+    <section className="mx-auto w-full max-w-[1120px] px-4 pt-16 sm:px-5 md:px-8 md:pt-32" aria-label="Como o Vyzon aparece pra você">
         <Eyebrow>Exemplo</Eyebrow>
         <SectionTitle>
             Cada proposta que sai do seu WhatsApp <span className="vs-azul">entra na lista sozinha</span>
@@ -707,7 +701,7 @@ const OBJECTIONS = [
 ] as const;
 
 const Objections = () => (
-    <section className="vs-sol py-16 md:py-24" aria-label="Objeções">
+    <section className="vs-sol py-16 md:py-32" aria-label="Objeções">
         <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-5 md:px-8">
             <div className="flex items-end justify-between gap-6">
                 <div>
@@ -764,7 +758,7 @@ const FAQ = [
 
 // Na mesma grade das outras seções: título à esquerda, perguntas à direita.
 const Faq = () => (
-    <section className="mx-auto grid w-full max-w-[1120px] gap-6 px-4 py-16 sm:px-5 md:grid-cols-[0.8fr_1.2fr] md:gap-14 md:px-8 md:py-24">
+    <section className="mx-auto grid w-full max-w-[1120px] gap-6 px-4 py-16 sm:px-5 md:grid-cols-[0.8fr_1.2fr] md:gap-14 md:px-8 md:py-32">
         <div>
             <Eyebrow>Perguntas</Eyebrow>
             <SectionTitle>O que todo integrador pergunta antes</SectionTitle>
