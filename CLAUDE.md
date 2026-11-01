@@ -1,8 +1,8 @@
 # CLAUDE.md — Vyzon (game-of-sales)
 
-> **Nome (01/11/2026):** a EVA virou Lume no que o usuário lê. Código, tabelas,
-> edges e os prompts do WhatsApp ainda dizem EVA; `EVA_PREFIX` identifica as
-> mensagens dela, não renomear sem mexer no webhook.
+> **Nome (01/11/2026):** a EVA virou Lume em todo texto que usuário e lead leem.
+> Nomes internos (`EvaBot`, `eva-agent-loop`, tabelas, `/eva-studio`) seguem eva;
+> neste arquivo, EVA é a Lume. O webhook reconhece o prefixo novo e o antigo.
 >
 > **Vyzon é para integradores de energia solar que vendem pelo WhatsApp.**
 > A EVA acompanha cada proposta que sai do WhatsApp, avisa no 2º dia sem
