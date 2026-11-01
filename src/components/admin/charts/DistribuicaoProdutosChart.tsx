@@ -10,7 +10,7 @@ interface DistribuicaoProdutosChartProps {
   }>;
 }
 
-const BAR_COLORS = ["#2563EB", "#4A8CE8", "#7C3AED", "#0EA5E9", "#22C55E", "#94A3B8"];
+const BAR_COLORS = ["#1556C0", "#4A8CE8", "#7C3AED", "#0EA5E9", "#22C55E", "#94A3B8"];
 
 export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartProps) => {
   const chartData = useMemo(() => {
@@ -52,7 +52,7 @@ export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartPro
     <div className="rounded-2xl border border-[#E6EDF5] bg-white p-5" style={{ boxShadow: "0 1px 2px rgba(11,18,32,0.04)" }}>
       <div className="flex items-center gap-2.5 mb-4">
         <div className="flex items-center justify-center h-8 w-8 rounded-lg" style={{ background: "#EFF4FF" }}>
-          <Package className="h-4 w-4 text-[#2563EB]" />
+          <Package className="h-4 w-4 text-[#1556C0]" />
         </div>
         <div>
           <h4 className="text-sm font-semibold text-foreground">Faturamento por Produto</h4>
@@ -71,7 +71,7 @@ export const DistribuicaoProdutosChart = ({ data }: DistribuicaoProdutosChartPro
               borderRadius: "12px",
               boxShadow: "0 8px 24px -8px rgba(11,18,32,0.12)",
               padding: "10px 14px",
-              color: "#0B1220",
+              color: "#0F1730",
             }}
             labelStyle={{ color: "hsl(var(--popover-foreground))", fontWeight: 600, marginBottom: "4px" }}
             formatter={(value: number, _name: string, props: any) => [

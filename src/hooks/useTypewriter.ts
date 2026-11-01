@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-// Revela um texto progressivamente (efeito de digitação), para dar à EVA uma
+// Revela um texto progressivamente (efeito de digitação), para dar à Lume uma
 // presença de "respondendo" em vez de cuspir a resposta seca. Respeita
 // prefers-reduced-motion: nesse caso mostra o texto inteiro de imediato.
 export function useTypewriter(

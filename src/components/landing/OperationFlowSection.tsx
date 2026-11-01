@@ -2,7 +2,7 @@
 // F2.12.2 (2026-05-20) — OperationFlowSection v4 (dark premium graphite)
 //
 // Redesign completo: base graphite #070B12 (não preto chapado), overlays
-// radiais direcionais (azul atrás do mock, roxo perto da EVA, emerald sutil),
+// radiais direcionais (azul atrás do mock, roxo perto da Lume, emerald sutil),
 // vignette nas bordas, bridge curta sem faixa cinza no topo, progress
 // indicator vertical, mock dominante com cross-fade entre steps.
 //
@@ -54,8 +54,8 @@ const STEPS: Step[] = [
   {
     key: "eva",
     index: 2,
-    label: "EVA",
-    title: "EVA analisa e sugere",
+    label: "Lume",
+    title: "Lume analisa e sugere",
     body: "A IA lê a conversa com o contexto da agência e sugere o próximo passo.",
     icon: Sparkle,
     accent: "#A78BFA",
@@ -65,7 +65,7 @@ const STEPS: Step[] = [
     index: 3,
     label: "Aprovação humana",
     title: "Seu time aprova",
-    body: "A EVA sugere. O humano decide. Use, edite ou ignore antes de agir.",
+    body: "A Lume sugere. O humano decide. Use, edite ou ignore antes de agir.",
     icon: CheckCheck,
     accent: "#60A5FA",
   },
@@ -162,7 +162,7 @@ function DarkBackdrop() {
         }}
         aria-hidden
       />
-      {/* Glow lilás sutil perto do box EVA */}
+      {/* Glow lilás sutil perto do box Lume */}
       <div
         className="absolute pointer-events-none hidden lg:block"
         style={{
@@ -245,7 +245,7 @@ function SectionHeader() {
           maxWidth: "740px",
         }}
       >
-        Conversa entra pela Inbox, a EVA analisa o contexto, seu time aprova o
+        Conversa entra pela Inbox, a Lume analisa o contexto, seu time aprova o
         próximo passo e a oportunidade segue no pipeline.
       </p>
       <p
@@ -259,7 +259,7 @@ function SectionHeader() {
         }}
       >
         <Sparkle className="h-3.5 w-3.5" strokeWidth={2.3} />
-        A EVA continua assistida: ela analisa e sugere, mas seu time aprova
+        A Lume continua assistida: ela analisa e sugere, mas seu time aprova
         antes de qualquer ação.
       </p>
     </Reveal>
@@ -737,7 +737,7 @@ function EvaSuggestionBox({
           className="text-[11px] uppercase mb-1.5"
           style={{ color: "#C4B5FD", fontWeight: 700, letterSpacing: "0.12em" }}
         >
-          Sugestão EVA · Preview
+          Sugestão Lume · Preview
         </p>
         <p className="text-[13.5px]" style={{ color: "#F1F5F9", lineHeight: 1.5 }}>
           {text}

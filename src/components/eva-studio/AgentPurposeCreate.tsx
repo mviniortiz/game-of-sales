@@ -70,7 +70,7 @@ export function AgentPurposeCreate({ sources, onCreate, onProceed, onPickSpecial
                 <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 8 }}>
                     <EvaBot state={chosen ? "thinking" : "idle"} size={44} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                        <p className="vz-agentcreate-label">EVA Studio</p>
+                        <p className="vz-agentcreate-label">Lume Studio</p>
                         <h1
                             className="vz-agentcreate-title"
                             style={{ marginTop: 2, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 500, letterSpacing: "-0.012em" }}
@@ -80,7 +80,7 @@ export function AgentPurposeCreate({ sources, onCreate, onProceed, onPickSpecial
                                 : "Comece pelo Qualificador"}
                         </h1>
                     </div>
-                    <span className="vz-agentcreate-seal" title="A EVA sugere. Você aprova. Nada sai sozinho.">
+                    <span className="vz-agentcreate-seal" title="A Lume sugere. Você aprova. Nada sai sozinho.">
                         <span className="vz-agentcreate-seal-dot" />
                         Você aprova cada mensagem
                     </span>
@@ -90,7 +90,7 @@ export function AgentPurposeCreate({ sources, onCreate, onProceed, onPickSpecial
             {chosen === null ? (
                 <>
                     <p className="vz-agentcreate-intro">
-                        A EVA lê o WhatsApp e sugere a próxima resposta. Você revisa e envia.
+                        A Lume lê o WhatsApp e sugere a próxima resposta. Você revisa e envia.
                         Hoje o agente ao vivo é o Qualificador.
                     </p>
 
@@ -200,7 +200,7 @@ export function AgentPurposeCreate({ sources, onCreate, onProceed, onPickSpecial
                         </button>
                     </div>
                     <p className="vz-agentcreate-promise" style={{ justifyContent: "flex-start", marginTop: 14 }}>
-                        Em poucos minutos a EVA fica pronta pra sugerir no Inbox.
+                        Em poucos minutos a Lume fica pronta pra sugerir no Inbox.
                     </p>
                 </div>
             )}

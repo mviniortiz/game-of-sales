@@ -34,10 +34,10 @@ import { formatPhone } from "@/lib/formatPhone";
 //  - Empty state premium quando sem chat selecionado
 //  - Header comercial com origem/status/score (mock Preview) + ações rápidas
 //  - Thread de mensagens reais (text/audio/image/video) via componentes /whatsapp
-//  - Sugestão EVA Preview acima do composer (mock contextual com Usar/Editar/Ignorar)
+//  - Sugestão Lume Preview acima do composer (mock contextual com Usar/Editar/Ignorar)
 //  - Composer texto + áudio (AudioRecorder existente). Mídia placeholder até F4C.4.
 //
-// REGRA "EVA inside Vyzon": roxo só em selos/avatar ring. Azul Vyzon em ações
+// REGRA "Lume inside Vyzon": roxo só em selos/avatar ring. Azul Vyzon em ações
 // e mensagens enviadas. Verde reservado pra status "Demo marcada"/qualificado.
 // Nada se executa automaticamente — todas as ações dependem de clique do usuário.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -84,9 +84,9 @@ interface InboxConversationProps {
     statusChecked?: boolean;
     /** Abre o fluxo de (re)conexão do número (QR). */
     onReconnect?: () => void;
-    /** Mobile: abre a EVA (bottom sheet). No desktop a EVA é a coluna direita. */
+    /** Mobile: abre a Lume (bottom sheet). No desktop a Lume é a coluna direita. */
     onOpenEva?: () => void;
-    /** Texto que a EVA mandou pro composer ("Usar resposta"). Quando muda pra um
+    /** Texto que a Lume mandou pro composer ("Usar resposta"). Quando muda pra um
      *  valor não-nulo, vai pro campo de digitação; onInjectConsumed zera depois. */
     injectText?: string | null;
     onInjectConsumed?: () => void;
@@ -161,12 +161,12 @@ function EmptyConversation() {
                 <EvaBot state="idle" size={56} className="mx-auto mb-4" />
                 <h3
                     className="text-[15px] font-semibold mb-2"
-                    style={{ color: "#0B1220", letterSpacing: "-0.015em" }}
+                    style={{ color: "#0F1730", letterSpacing: "-0.015em" }}
                 >
                     Selecione uma conversa para começar
                 </h3>
                 <p className="text-[12.5px]" style={{ color: "#64748B", lineHeight: 1.6 }}>
-                    A EVA pode analisar o contexto, sugerir resposta e ajudar a mover o lead pro próximo passo.
+                    A Lume pode analisar o contexto, sugerir resposta e ajudar a mover o lead pro próximo passo.
                 </p>
             </div>
         </div>
@@ -274,7 +274,7 @@ function ConversationView({
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Sugestão REAL da EVA inline na conversa (lê a análise salva; o react-query
+    // Sugestão REAL da Lume inline na conversa (lê a análise salva; o react-query
     // compartilha o cache com o EvaPanel, sem disparar análise extra).
     const evaInsight = useEvaInsight({ chatPhone: chat.phone || chat.id, contactName: chat.name, messages });
     const evaSuggestionText: string = evaInsight.data
@@ -282,7 +282,7 @@ function ConversationView({
         : "";
     const [suggestionDismissed, setSuggestionDismissed] = useState(false);
 
-    // MOBILE — estado compacto da EVA pro botão do header virar um STATUS VIVO
+    // MOBILE — estado compacto da Lume pro botão do header virar um STATUS VIVO
     // (não uma pílula muda): "Lendo…", temperatura, ou "Análise pronta". É o que
     // faz o usuário perceber que ali tem algo a abrir.
     const evaHeaderState: EvaHeaderState = {
@@ -336,7 +336,7 @@ function ConversationView({
         setMediaCaption("");
     }, [chat.id]);
 
-    // "Usar resposta" da EVA: coloca o texto no composer (substitui o rascunho),
+    // "Usar resposta" da Lume: coloca o texto no composer (substitui o rascunho),
     // foca o campo e avisa o pai pra zerar. O humano revisa e envia (assistido).
     useEffect(() => {
         const t = (injectText || "").trim();
@@ -473,7 +473,7 @@ function ConversationView({
             />
 
             {/* V1.0.1 — EvaSuggestionBox removido (sugestão era mock determinístico
-                do nome do contato, não da IA). A análise real da EVA já vive no
+                do nome do contato, não da IA). A análise real da Lume já vive no
                 EvaPanel à direita via useEvaInsight. */}
 
             {/* INBOX.MEDIA — input escondido, sempre montado */}
@@ -512,8 +512,8 @@ function ConversationView({
                 </div>
             )}
 
-            {/* Sugestão da EVA inline (balão no fim da conversa): só no celular, onde
-                o painel da EVA fica numa gaveta (onOpenEva). No desktop o painel ao
+            {/* Sugestão da Lume inline (balão no fim da conversa): só no celular, onde
+                o painel da Lume fica numa gaveta (onOpenEva). No desktop o painel ao
                 lado já mostra a mesma resposta com o mesmo botão. */}
             {onOpenEva && evaSuggestionText && !suggestionDismissed && !pendingMedia && !showAudio && (
                 <EvaInlineSuggestion
@@ -580,9 +580,9 @@ function ConversationView({
 
 // ─── Header comercial ────────────────────────────────────────────────────
 
-// MOBILE — sinal compacto da EVA pro botão do header. Sem coluna própria no
+// MOBILE — sinal compacto da Lume pro botão do header. Sem coluna própria no
 // celular, o botão precisa comunicar (a) que abre um painel e (b) que tem algo
-// a abrir. Daí virar um status vivo em vez de uma pílula "EVA" muda.
+// a abrir. Daí virar um status vivo em vez de uma pílula "Lume" muda.
 interface EvaHeaderState {
     analyzing: boolean;
     hasAnalysis: boolean;
@@ -605,7 +605,7 @@ const EVA_TEMP_COLOR: Record<NonNullable<EvaHeaderState["temperature"]>, string>
 
 const EVA_HINT_KEY = "vyz_eva_mobile_hint_seen";
 
-// Botão de acesso à EVA no header (só mobile). Status vivo + caret pra cima
+// Botão de acesso à Lume no header (só mobile). Status vivo + caret pra cima
 // (afford de "abre um painel de baixo") + coachmark de 1ª vez explicando.
 function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: () => void }) {
     const [showHint, setShowHint] = useState(false);
@@ -643,7 +643,7 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
         ? EVA_TEMP_LABEL[temp]
         : hasAnalysis
         ? "Análise"
-        : "EVA";
+        : "Lume";
     const labelColor = !analyzing && temp ? EVA_TEMP_COLOR[temp] : "#6D28D9";
 
     return (
@@ -653,15 +653,15 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                 onClick={handleOpen}
                 className="h-10 pl-2 pr-2.5 rounded-full flex items-center gap-1.5 transition-colors"
                 style={{ background: "rgba(109,40,217,0.08)", border: "1px solid rgba(109,40,217,0.18)" }}
-                aria-label="Abrir análise da EVA"
-                title="Análise da EVA"
+                aria-label="Abrir análise da Lume"
+                title="Análise da Lume"
             >
                 {analyzing ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: "#6D28D9" }} />
                 ) : (
                     <EvaBot size={24} />
                 )}
-                {/* Ponto de temperatura: prova visual de que a EVA leu (e o quê). */}
+                {/* Ponto de temperatura: prova visual de que a Lume leu (e o quê). */}
                 {!analyzing && temp && (
                     <span className="h-1.5 w-1.5 rounded-full" style={{ background: EVA_TEMP_COLOR[temp] }} />
                 )}
@@ -687,7 +687,7 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                         boxShadow: "0 1px 2px rgba(15,23,42,0.06), 0 16px 36px -16px rgba(109,40,217,0.45)",
                     }}
                     role="dialog"
-                    aria-label="Dica sobre a EVA"
+                    aria-label="Dica sobre a Lume"
                 >
                     {/* Setinha apontando o botão */}
                     <span
@@ -697,8 +697,8 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                     <div className="flex items-start gap-2">
                         <EvaBot size={20} className="mt-0.5 shrink-0" />
                         <div className="flex-1 min-w-0">
-                            <p className="text-[12px] font-semibold mb-0.5" style={{ color: "#0B1220" }}>
-                                A análise da EVA fica aqui
+                            <p className="text-[12px] font-semibold mb-0.5" style={{ color: "#0F1730" }}>
+                                A análise da Lume fica aqui
                             </p>
                             <p className="text-[11px]" style={{ color: "#64748B", lineHeight: 1.45 }}>
                                 Toque para ver a leitura da conversa e a resposta sugerida.
@@ -719,7 +719,7 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                         onClick={handleOpen}
                         className="mt-2.5 w-full h-10 rounded-full text-[12px] font-semibold inline-flex items-center justify-center gap-1.5 bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                     >
-                        Ver análise da EVA
+                        Ver análise da Lume
                         <ArrowUp className="h-3.5 w-3.5" />
                     </button>
                 </div>
@@ -769,7 +769,7 @@ function ConversationHeader({
                 {picUrl && <AvatarImage src={picUrl} alt={chat.name} />}
                 <AvatarFallback
                     className="text-[12px] font-semibold text-white"
-                    style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)" }}
+                    style={{ background: "linear-gradient(135deg, #1556C0, #4A8CE8)" }}
                 >
                     {getInitials(chat.name)}
                 </AvatarFallback>
@@ -779,7 +779,7 @@ function ConversationHeader({
                 <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                     <span
                         className="text-[14px] font-semibold truncate"
-                        style={{ color: "#0B1220" }}
+                        style={{ color: "#0F1730" }}
                     >
                         {chat.name || chat.phone || "Sem nome"}
                     </span>
@@ -840,7 +840,7 @@ function ConversationHeader({
                 </button>
             )}
 
-            {/* EVA — mobile: no celular a EVA não tem coluna própria, então o
+            {/* Lume — mobile: no celular a Lume não tem coluna própria, então o
                 acesso à análise dela vive aqui (abre o bottom sheet). Status vivo
                 + caret + coachmark de 1ª vez resolvem a descoberta. */}
             {onOpenEva && <EvaHeaderButton eva={eva} onOpenEva={onOpenEva} />}
@@ -878,7 +878,7 @@ function MessageThread({
                 className="flex-1 flex items-center justify-center"
                 style={{ background: "var(--ibx-paper)" }}
             >
-                <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#2563EB" }} />
+                <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1556C0" }} />
             </div>
         );
     }
@@ -1032,15 +1032,15 @@ const MessageBubble = memo(function MessageBubble({
                 style={
                     isMe
                         ? {
-                              background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
+                              background: "linear-gradient(135deg, #1556C0, #4A8CE8)",
                               color: "#FFFFFF",
                               ...tail,
-                              boxShadow: "0 2px 8px -3px rgba(37,99,235,0.28)",
+                              boxShadow: "0 2px 8px -3px rgba(21,86,192,0.28)",
                               opacity: isPending ? 0.92 : 1,
                           }
                         : {
                               background: "#FFFFFF",
-                              color: "#0B1220",
+                              color: "#0F1730",
                               border: "1px solid var(--ibx-line)",
                               ...tail,
                               boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
@@ -1076,7 +1076,7 @@ const MessageBubble = memo(function MessageBubble({
                 {message.text && (
                     <p
                         className="text-[13.5px] leading-snug whitespace-pre-wrap break-words"
-                        style={{ color: isMe ? "#FFFFFF" : "#0B1220" }}
+                        style={{ color: isMe ? "#FFFFFF" : "#0F1730" }}
                     >
                         {message.text}
                     </p>
@@ -1085,7 +1085,7 @@ const MessageBubble = memo(function MessageBubble({
                 {message.mediaCaption && !message.text && (
                     <p
                         className="text-[13.5px] leading-snug whitespace-pre-wrap break-words"
-                        style={{ color: isMe ? "#FFFFFF" : "#0B1220" }}
+                        style={{ color: isMe ? "#FFFFFF" : "#0F1730" }}
                     >
                         {message.mediaCaption}
                     </p>
@@ -1135,8 +1135,8 @@ const MessageBubble = memo(function MessageBubble({
 
 // ─── Media preview (estilo WhatsApp: prévia + legenda antes de enviar) ──────
 
-// Balão da EVA no FIM da conversa: a resposta sugerida aparece "no meio do chat"
-// (não só no painel lateral). Visual de mensagem da EVA (roxo, rabinho à esquerda).
+// Balão da Lume no FIM da conversa: a resposta sugerida aparece "no meio do chat"
+// (não só no painel lateral). Visual de mensagem da Lume (roxo, rabinho à esquerda).
 // "Usar resposta" joga no composer; o humano revisa e envia (assistido).
 function EvaInlineSuggestion({ text, onUse, onDismiss }: { text: string; onUse: () => void; onDismiss: () => void }) {
     return (
@@ -1154,7 +1154,7 @@ function EvaInlineSuggestion({ text, onUse, onDismiss }: { text: string; onUse: 
                     <div className="flex items-center gap-1.5 px-3.5 pt-2.5">
                         <EvaBot size={17} still />
                         <span className="text-[10px] uppercase font-bold text-[var(--vyz-text-muted)]" style={{ letterSpacing: "0.08em" }}>
-                            Sugestão da EVA
+                            Sugestão da Lume
                         </span>
                         <button
                             type="button"
@@ -1191,7 +1191,7 @@ function fileTypeColor(file: File): string {
     const n = file.name.toLowerCase();
     if (n.endsWith(".xlsx") || n.endsWith(".xls") || n.endsWith(".csv")) return "#16A34A";
     if (n.endsWith(".pdf")) return "#DC2626";
-    if (n.endsWith(".doc") || n.endsWith(".docx")) return "#2563EB";
+    if (n.endsWith(".doc") || n.endsWith(".docx")) return "#1556C0";
     if (n.endsWith(".ppt") || n.endsWith(".pptx")) return "#EA580C";
     if (file.type.startsWith("image/")) return "#7C3AED";
     if (file.type.startsWith("video/")) return "#0891B2";
@@ -1219,7 +1219,7 @@ function UploadProgressCard({ file, pct, onCancel }: { file: File; pct: number; 
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                            <span className="text-[13px] font-semibold truncate" style={{ color: "#0B1220" }}>{file.name}</span>
+                            <span className="text-[13px] font-semibold truncate" style={{ color: "#0F1730" }}>{file.name}</span>
                             <button
                                 type="button"
                                 onClick={onCancel}
@@ -1232,13 +1232,13 @@ function UploadProgressCard({ file, pct, onCancel }: { file: File; pct: number; 
                             </button>
                         </div>
                         <div className="text-[11.5px] mt-0.5">
-                            <span style={{ color: "#2563EB", fontWeight: 600 }}>Enviando {Math.round(p * 100)}%</span>
+                            <span style={{ color: "#1556C0", fontWeight: 600 }}>Enviando {Math.round(p * 100)}%</span>
                             <span style={{ color: "#94A3B8" }}> · {fmtMB(loaded)} de {fmtMB(file.size)}</span>
                         </div>
                         <div className="mt-1.5 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--ibx-sunken)" }}>
                             <div
                                 className="h-full rounded-full transition-[width] duration-200 ease-out"
-                                style={{ width: `${p * 100}%`, background: "linear-gradient(90deg, #2563EB, #4A8CE8)" }}
+                                style={{ width: `${p * 100}%`, background: "linear-gradient(90deg, #1556C0, #4A8CE8)" }}
                             />
                         </div>
                     </div>
@@ -1285,7 +1285,7 @@ function MediaPreviewBar({
                     {/* Legenda + meta */}
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5">
-                            <p className="text-[12px] font-semibold truncate" style={{ color: "#0B1220" }}>
+                            <p className="text-[12px] font-semibold truncate" style={{ color: "#0F1730" }}>
                                 {media.file.name}
                             </p>
                             <span className="text-[10.5px] tabular-nums shrink-0" style={{ color: "#94A3B8" }}>
@@ -1299,7 +1299,7 @@ function MediaPreviewBar({
                             placeholder="Adicione uma legenda…"
                             autoFocus
                             className="w-full bg-white outline-none text-base md:text-[13px] px-2.5 py-2 rounded-lg"
-                            style={{ color: "#0B1220", border: "1px solid var(--ibx-line)" }}
+                            style={{ color: "#0F1730", border: "1px solid var(--ibx-line)" }}
                         />
                     </div>
 
@@ -1311,7 +1311,7 @@ function MediaPreviewBar({
                             disabled={sending}
                             aria-label="Enviar mídia"
                             className="h-10 w-10 md:h-9 md:w-9 rounded-full flex items-center justify-center text-white transition-all hover:brightness-110 disabled:opacity-50"
-                            style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)", boxShadow: "0 4px 12px -4px rgba(37,99,235,0.4)" }}
+                            style={{ background: "linear-gradient(135deg, #1556C0, #4A8CE8)", boxShadow: "0 4px 12px -4px rgba(21,86,192,0.4)" }}
                         >
                             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" strokeWidth={2.6} />}
                         </button>
@@ -1369,7 +1369,7 @@ function Composer({
     const [focused, setFocused] = useState(false);
 
     // Auto-cresce com o conteúdo (digitado OU injetado pela "Usar resposta" da
-    // EVA), até um teto (~128px). Sem isto, texto longo virava uma caixa de 1
+    // Lume), até um teto (~128px). Sem isto, texto longo virava uma caixa de 1
     // linha com scrollbar (as setas ▲▼). Só mostra scroll quando passa do teto.
     useEffect(() => {
         const el = inputRef.current;
@@ -1428,7 +1428,7 @@ function Composer({
                     type="button"
                     onClick={() => setShowTemplates((v) => !v)}
                     className="h-10 w-10 md:h-8 md:w-8 rounded-full flex items-center justify-center transition-colors shrink-0 hover:bg-white"
-                    style={{ color: showTemplates ? "#2563EB" : "#94A3B8" }}
+                    style={{ color: showTemplates ? "#1556C0" : "#94A3B8" }}
                     title="Templates de mensagem"
                     aria-label="Templates de mensagem"
                 >
@@ -1445,7 +1445,7 @@ function Composer({
                     placeholder="Mensagem"
                     rows={1}
                     className="flex-1 bg-transparent outline-none text-base md:text-[13.5px] py-2 md:py-1.5 px-1 resize-none max-h-32"
-                    style={{ color: "#0B1220", lineHeight: 1.45 }}
+                    style={{ color: "#0F1730", lineHeight: 1.45 }}
                 />
 
                 {canSendAudio && (
@@ -1470,8 +1470,8 @@ function Composer({
                     title="Enviar"
                     className="h-10 w-10 md:h-9 md:w-9 rounded-full flex items-center justify-center text-white transition-all hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                     style={{
-                        background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
-                        boxShadow: "0 4px 12px -4px rgba(37,99,235,0.4)",
+                        background: "linear-gradient(135deg, #1556C0, #4A8CE8)",
+                        boxShadow: "0 4px 12px -4px rgba(21,86,192,0.4)",
                     }}
                 >
                     {sending ? (

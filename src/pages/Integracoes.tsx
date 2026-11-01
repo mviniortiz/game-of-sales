@@ -270,22 +270,22 @@ const INTEGRATIONS: Integration[] = [
   {
     id: "slack",
     name: "Slack",
-    description: "A EVA avisa o time no canal a cada venda fechada e quando a meta é batida",
+    description: "A Lume avisa o time no canal a cada venda fechada e quando a meta é batida",
     logo: slackLogo,
     logoBg: "bg-white",
     status: "available",
     category: "notifications",
-    features: ["Venda fechada", "Meta batida", "Mensagem da EVA"],
+    features: ["Venda fechada", "Meta batida", "Mensagem da Lume"],
   },
   {
     id: "discord",
     name: "Discord",
-    description: "Notificações de vendas e metas no servidor do time, escritas pela EVA",
+    description: "Notificações de vendas e metas no servidor do time, escritas pela Lume",
     logo: discordLogo,
     logoBg: "bg-white",
     status: "available",
     category: "notifications",
-    features: ["Venda fechada", "Meta batida", "Mensagem da EVA"],
+    features: ["Venda fechada", "Meta batida", "Mensagem da Lume"],
   },
 ];
 
@@ -324,7 +324,7 @@ const GROUP_META: Record<Exclude<IntegrationCategory, "all">, { label: string; s
   },
   notifications: {
     label: "Notificações do time",
-    sub: "A EVA avisa o time sobre vendas e metas no Slack ou Discord",
+    sub: "A Lume avisa o time sobre vendas e metas no Slack ou Discord",
     icon: Bell,
   },
   productivity: {

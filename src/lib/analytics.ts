@@ -308,7 +308,7 @@ export function clarityIdentify(customId: string, friendlyName?: string) {
   }
 }
 
-/** Prioriza a GRAVAÇÃO desta sessão (use em momentos-chave: aha da EVA, CTA). */
+/** Prioriza a GRAVAÇÃO desta sessão (use em momentos-chave: aha da Lume, CTA). */
 export function clarityUpgrade(reason: string) {
   try {
     window.clarity?.("upgrade", reason);
@@ -317,7 +317,7 @@ export function clarityUpgrade(reason: string) {
   }
 }
 
-// Eventos de comportamento da demo/EVA. Mesmos nomes em GA4 (funil mensurável) e
+// Eventos de comportamento da demo/Lume. Mesmos nomes em GA4 (funil mensurável) e
 // no Clarity (filtro de sessão). Use trackBehavior() pra disparar nos dois.
 export const DEMO_EVENTS = {
   DEMO_START: "demo_start",

@@ -1,5 +1,5 @@
-// EVA.CANVAS.3 — Feed do "dia da EVA": lê agent_suggestions (auditoria do
-// "a EVA sugere, seu time aprova") e resolve o nome do contato da conversa.
+// EVA.CANVAS.3 — Feed do "dia da Lume": lê agent_suggestions (auditoria do
+// "a Lume sugere, seu time aprova") e resolve o nome do contato da conversa.
 // conversation_id não tem FK (PostgREST não aninha) → 2 lookups encadeados.
 // queryKey compartilhada com useAgentSuggestionLog → o feed atualiza sozinho
 // quando o Inbox registra/resolve uma sugestão.
@@ -18,7 +18,7 @@ export interface AgentFeedItem {
     dealId: string | null;
     /** Nome do contato da conversa (quando resolvível). */
     contactName: string | null;
-    /** Leitura/próximo passo sugerido pela EVA (nunca a mensagem crua do lead). */
+    /** Leitura/próximo passo sugerido pela Lume (nunca a mensagem crua do lead). */
     nextAction: string | null;
     /** Título do card criado no pipeline, se a sugestão virou deal. */
     dealTitle: string | null;

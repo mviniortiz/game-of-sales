@@ -1,4 +1,4 @@
-/* Palco do Raio-X automático: entradas curtas e o pensamento da EVA trocando.
+/* Palco do Raio-X automático: entradas curtas e o pensamento da Lume trocando.
    Só transform e opacity; com movimento reduzido, tudo aparece no lugar. */
 .rx-entra {
   animation: rx-entra 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;

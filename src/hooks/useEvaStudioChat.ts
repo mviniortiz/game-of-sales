@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getSpecialist, type SpecialistKey } from "@/lib/eva/evaSpecialists";
 import type { EvaPriorContext } from "./useEvaPriorContext";
 
-// useEvaStudioChat — conversa REAL com a EVA pra montar um agente especialista.
+// useEvaStudioChat — conversa REAL com a Lume pra montar um agente especialista.
 // Chama a edge `eva-studio-chat` (LLM conduz a entrevista + extrai os campos do
 // agente escolhido). Fail-open: sem backend/key, cai num roteiro guiado e os
 // campos recebem exatamente o que o gestor digitou (nada inventado).
@@ -12,7 +12,7 @@ import type { EvaPriorContext } from "./useEvaPriorContext";
 // Leva 3 (2026-06-21):
 //  - PERSISTÊNCIA: a conversa sobrevive a refresh (localStorage por empresa+agente).
 //  - ADAPTATIVIDADE: recebe o contexto que a empresa já configurou (prior) e já
-//    chega com os campos óbvios preenchidos + avisa a EVA pra não repetir perguntas.
+//    chega com os campos óbvios preenchidos + avisa a Lume pra não repetir perguntas.
 
 export type StudioMsg = { from: "eva" | "user"; text: string; attachment?: string };
 export type StudioFields = Record<string, string>;
@@ -150,7 +150,7 @@ export function useEvaStudioChat(agentKey: SpecialistKey, prior?: EvaPriorContex
             setMessages(history);
             setThinking(true);
 
-            // 1) EVA real (edge LLM) — manda o contexto que a empresa já configurou
+            // 1) Lume real (edge LLM) — manda o contexto que a empresa já configurou
             //    pra ela não repetir o que já sabe.
             try {
                 const { data, error } = await supabase.functions.invoke("eva-studio-chat", {
@@ -190,7 +190,7 @@ export function useEvaStudioChat(agentKey: SpecialistKey, prior?: EvaPriorContex
     );
 
     // Reabre a entrevista pós-recap ("quero ajustar") sem perder o que já foi
-    // montado: só destrava o envio e deixa a EVA convidar a ajustar.
+    // montado: só destrava o envio e deixa a Lume convidar a ajustar.
     const reopen = useCallback(() => {
         setDone(false);
         setMessages((m) => [

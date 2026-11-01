@@ -1,5 +1,5 @@
 // Texto de orçamento usado pela tela Orçamentos e pela fila "Agora" do Início:
-// como cada situação se lê em uma linha e o que a EVA fez pelo orçamento.
+// como cada situação se lê em uma linha e o que a Lume fez pelo orçamento.
 import type { QuoteItem } from "@/hooks/useQuoteBoard";
 
 /** Com 30 dias sem o cliente escrever, o orçamento morre (quote_tracking_expire). */
@@ -45,7 +45,7 @@ export function stateLine(q: QuoteItem): string {
   }
 }
 
-/** O que a EVA fez por este orçamento. Só para orçamento aberto. */
+/** O que a Lume fez por este orçamento. Só para orçamento aberto. */
 export function evaLine(q: QuoteItem): string | null {
   if (!OPEN_QUOTE_STATES.includes(q.state) || !q.draft_status) return null;
   switch (q.draft_status) {

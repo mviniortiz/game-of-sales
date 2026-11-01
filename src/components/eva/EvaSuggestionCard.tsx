@@ -1,16 +1,16 @@
 import type { ReactNode } from "react";
 
 // Vyzon UI alignment — EvaSuggestionCard
-// Cartão reutilizável da sugestão da EVA, alinhado à DNA da landing: off-white,
+// Cartão reutilizável da sugestão da Lume, alinhado à DNA da landing: off-white,
 // borda fina, radius suave, calmo. SEM tags coloridas (quente/urgência/fit),
-// sem ícone de robô, sem neon. Acento azul só no selo da EVA. Sempre reforça
+// sem ícone de robô, sem neon. Acento azul só no selo da Lume. Sempre reforça
 // que o humano aprova. Estados: loading (skeleton) e normal.
 interface EvaSuggestionCardProps {
-    /** Texto sugerido pela EVA (resposta ou próxima ação). */
+    /** Texto sugerido pela Lume (resposta ou próxima ação). */
     suggestion: string;
     /** Contexto opcional, em texto mudo (não chips). Ex: "primeiro contato · interesse em planos · agência". */
     context?: string;
-    /** Rótulo do cartão. Default: "Sugestão da EVA". */
+    /** Rótulo do cartão. Default: "Sugestão da Lume". */
     label?: string;
     onUse?: () => void;
     onEdit?: () => void;
@@ -27,7 +27,7 @@ const card: React.CSSProperties = {
     boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
 };
 
-export function EvaSuggestionCard({ suggestion, context, label = "Sugestão da EVA", onUse, onEdit, loading, className = "", footer }: EvaSuggestionCardProps) {
+export function EvaSuggestionCard({ suggestion, context, label = "Sugestão da Lume", onUse, onEdit, loading, className = "", footer }: EvaSuggestionCardProps) {
     if (loading) {
         return (
             <div className={`eva-suggestion-card p-5 ${className}`} style={card} aria-busy="true">
@@ -51,13 +51,13 @@ export function EvaSuggestionCard({ suggestion, context, label = "Sugestão da E
         <div className={`eva-suggestion-card p-5 ${className}`} style={card}>
             <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-2 text-[12.5px] font-semibold" style={{ color: "#334155" }}>
-                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#2563EB" }} aria-hidden="true" />
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#1556C0" }} aria-hidden="true" />
                     {label}
                 </span>
                 <span className="text-[11.5px]" style={{ color: "#94A3B8" }}>Você aprova antes de enviar</span>
             </div>
 
-            <p className="mt-3 text-[14px]" style={{ color: "#0B1220", lineHeight: 1.55 }}>
+            <p className="mt-3 text-[14px]" style={{ color: "#0F1730", lineHeight: 1.55 }}>
                 {suggestion}
             </p>
 
@@ -71,7 +71,7 @@ export function EvaSuggestionCard({ suggestion, context, label = "Sugestão da E
                 <button
                     type="button"
                     onClick={onUse}
-                    className="inline-flex h-9 items-center rounded-full bg-[#0B1220] px-4 text-[13px] font-semibold text-white transition-all hover:bg-[#1F2A3B] active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+                    className="inline-flex h-9 items-center rounded-full bg-[#0F1730] px-4 text-[13px] font-semibold text-white transition-all hover:bg-[#1F2A3B] active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
                 >
                     Usar sugestão
                 </button>

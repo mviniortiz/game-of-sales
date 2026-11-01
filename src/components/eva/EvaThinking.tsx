@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import "./evaThinking.css";
 
-// A EVA trabalhando, em uma pílula: grade de pontos que acende em onda e o nome da
-// etapa com um brilho correndo por cima. É o único "carregando" da EVA no app: o
+// A Lume trabalhando, em uma pílula: grade de pontos que acende em onda e o nome da
+// etapa com um brilho correndo por cima. É o único "carregando" da Lume no app: o
 // círculo girando dizia só "espera", a pílula diz o que ela está fazendo agora.
 // Referência visual: componente "thinking" da bluma.design (out/2026).
 //

@@ -3,7 +3,7 @@
  *
  * Estrutura comercial (decisão de 01/11/2026): um plano só, "Vyzon", R$ 97/mês,
  * tudo liberado, até 10 usuários, sem preço de fundador. Três planos foram
- * descartados porque só usuários e análises da EVA têm trava real no produto.
+ * descartados porque só usuários e análises da Lume têm trava real no produto.
  * O id continua "pro" porque é o
  * que está gravado em companies.plan. O id "free" NÃO é plano comercial: é piso
  * interno silencioso pra degradação de trial expirado e contas legadas (nunca
@@ -19,7 +19,7 @@
  * Toda superfície (landing, PlanPicker, Faturamento, TenantContext, edges)
  * deriva daqui ou espelha estes números. As edges que espelham:
  *   - supabase/functions/admin-create-seller (PLAN_MAX_USERS)
- *   - supabase/functions/whatsapp-copilot (limites diários da EVA)
+ *   - supabase/functions/whatsapp-copilot (limites diários da Lume)
  */
 
 export type PlanId = "free" | "pro";
@@ -36,7 +36,7 @@ export interface Plan {
         /** Total de perfis na empresa (vendedores + admins). */
         users: number;
         products: number;
-        /** Análises da EVA por usuário por dia. */
+        /** Análises da Lume por usuário por dia. */
         evaDailyPerUser: number;
         whatsappNumbers: number;
     };
@@ -70,7 +70,7 @@ export const PLANS: Record<PlanId, Plan> = {
         description: "Tudo liberado para a sua equipe parar de perder proposta no WhatsApp",
         monthlyPrice: 97,
         annualDiscount: 10,
-        // Só o que existe no produto. Os limites diários da EVA e do agente
+        // Só o que existe no produto. Os limites diários da Lume e do agente
         // (whatsapp-copilot, eva-agent-loop) são proteção de uso, não degrau
         // de plano.
         features: [
@@ -78,7 +78,7 @@ export const PLANS: Record<PlanId, Plan> = {
             "1 WhatsApp da empresa conectado",
             "Placar de propostas: quanto está parado e há quantos dias",
             "Valor da proposta lido direto do PDF",
-            "EVA escreve a retomada e você aprova pelo WhatsApp",
+            "Lume escreve a retomada e você aprova pelo WhatsApp",
             "Pipeline, Inbox e relatórios da equipe",
         ],
         limits: {

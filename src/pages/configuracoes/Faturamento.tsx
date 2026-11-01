@@ -135,11 +135,11 @@ export default function Faturamento() {
           <div className="p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
-                currentPlan === "pro" ? "bg-[rgba(37,99,235,0.12)]" :
+                currentPlan === "pro" ? "bg-[rgba(21,86,192,0.12)]" :
                 "bg-[#F1F5F9]"
               }`}>
                 <PlanIcon className={`h-5 w-5 ${
-                  currentPlan === "pro" ? "text-[#2563EB]" :
+                  currentPlan === "pro" ? "text-[#1556C0]" :
                   "text-[#64748B]"
                 }`} />
               </div>
@@ -264,7 +264,7 @@ function UsageRow({
       </div>
       <div className="h-1 rounded-full bg-muted/50 overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all ${nearLimit ? "bg-amber-500" : "bg-[#2563EB]"}`}
+          className={`h-full rounded-full transition-all ${nearLimit ? "bg-amber-500" : "bg-[#1556C0]"}`}
           style={{ width: `${pct}%` }}
         />
       </div>

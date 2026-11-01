@@ -152,7 +152,7 @@ export function GestaoEquipe() {
         <button
           type="button"
           onClick={openInvite}
-          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] px-4 text-[13px] font-semibold text-[var(--vyz-btn-on)] transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.3)]"
+          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] px-4 text-[13px] font-semibold text-[var(--vyz-btn-on)] transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.3)]"
         >
           <Plus size={14} weight="bold" aria-hidden /> Convidar
         </button>
@@ -186,7 +186,7 @@ export function GestaoEquipe() {
                 onClick={() => toggleAdmin(m)}
                 disabled={isMe}
                 title={isMe ? "Você não pode mudar o próprio papel" : m.isAdmin ? "Tornar vendedor" : "Tornar admin"}
-                className={`rounded-full px-3 py-1 text-[12px] font-medium transition-colors focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.28)] disabled:cursor-default ${
+                className={`rounded-full px-3 py-1 text-[12px] font-medium transition-colors focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.28)] disabled:cursor-default ${
                   m.isAdmin
                     ? "bg-[var(--vyz-accent-soft-10)] text-[var(--vyz-accent)] enabled:hover:bg-[var(--vyz-accent-soft-12)]"
                     : "bg-[var(--vyz-surface-2)] text-[var(--vyz-text-muted)] enabled:hover:text-[var(--vyz-text-primary)]"
@@ -199,7 +199,7 @@ export function GestaoEquipe() {
                   type="button"
                   onClick={() => setToRemove(m)}
                   aria-label={`Remover ${m.nome ?? m.email}`}
-                  className="grid h-8 w-8 place-items-center rounded-full text-[var(--vyz-text-soft)] transition-colors hover:bg-[rgba(220,38,38,0.08)] hover:text-[#DC2626] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.28)]"
+                  className="grid h-8 w-8 place-items-center rounded-full text-[var(--vyz-text-soft)] transition-colors hover:bg-[rgba(220,38,38,0.08)] hover:text-[#DC2626] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.28)]"
                 >
                   <Trash size={16} aria-hidden />
                 </button>
@@ -234,11 +234,11 @@ export function GestaoEquipe() {
             <form onSubmit={invite} className="space-y-3">
               <div>
                 <label htmlFor="eq-nome" className="text-[13px] font-medium">Nome</label>
-                <input id="eq-nome" value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="name" className="mt-1 h-10 w-full rounded-[10px] border border-[var(--vyz-border-strong)] bg-transparent px-3 text-[16px] outline-none focus:border-[var(--vyz-accent)] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.18)]" />
+                <input id="eq-nome" value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="name" className="mt-1 h-10 w-full rounded-[10px] border border-[var(--vyz-border-strong)] bg-transparent px-3 text-[16px] outline-none focus:border-[var(--vyz-accent)] focus:shadow-[0_0_0_3px_rgba(21,86,192,0.18)]" />
               </div>
               <div>
                 <label htmlFor="eq-email" className="text-[13px] font-medium">E-mail</label>
-                <input id="eq-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" className="mt-1 h-10 w-full rounded-[10px] border border-[var(--vyz-border-strong)] bg-transparent px-3 text-[16px] outline-none focus:border-[var(--vyz-accent)] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.18)]" />
+                <input id="eq-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" className="mt-1 h-10 w-full rounded-[10px] border border-[var(--vyz-border-strong)] bg-transparent px-3 text-[16px] outline-none focus:border-[var(--vyz-accent)] focus:shadow-[0_0_0_3px_rgba(21,86,192,0.18)]" />
               </div>
               <button
                 type="submit"

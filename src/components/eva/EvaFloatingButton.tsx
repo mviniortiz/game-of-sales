@@ -12,7 +12,7 @@ interface EvaFloatingButtonProps {
 const SPRING = { type: "spring" as const, stiffness: 220, damping: 26, mass: 0.95 };
 
 /**
- * Botão flutuante com o atom da Eva centralizado via flex.
+ * Botão flutuante com o atom da Lume centralizado via flex.
  * Quando `open=false`, o atom é renderizado aqui (com layoutId compartilhado).
  * Quando `open=true`, o atom é montado no sidechat (mesmo layoutId) e framer-motion
  * faz a transição FLIP entre as duas posições automaticamente.
@@ -24,7 +24,7 @@ export const EvaFloatingButton = forwardRef<HTMLButtonElement, EvaFloatingButton
         ref={ref}
         type="button"
         onClick={onClick}
-        aria-label={open ? "Fechar Eva" : "Abrir Eva"}
+        aria-label={open ? "Fechar Lume" : "Abrir Lume"}
         aria-expanded={open}
         className={cn(
           "group fixed bottom-5 right-5 z-40 flex items-center justify-center rounded-full transition-[opacity,box-shadow]",
@@ -58,7 +58,7 @@ export const EvaFloatingButton = forwardRef<HTMLButtonElement, EvaFloatingButton
             "dark:bg-zinc-950/95 dark:text-white/85 dark:border-white/10",
           )}
         >
-          Perguntar pra Eva
+          Perguntar pra Lume
         </span>
       </button>
     );

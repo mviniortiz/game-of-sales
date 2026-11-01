@@ -104,7 +104,7 @@ export function GestaoMeta() {
           Meta de {monthName}
         </label>
         <p className="mt-1 text-[12px] text-[var(--vyz-text-muted)]">Quanto a empresa quer fechar no mês, em reais.</p>
-        <div className="mt-3 flex items-center rounded-[10px] border border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-1)] focus-within:shadow-[0_0_0_3px_rgba(37,99,235,0.18)] focus-within:border-[var(--vyz-accent)]">
+        <div className="mt-3 flex items-center rounded-[10px] border border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-1)] focus-within:shadow-[0_0_0_3px_rgba(21,86,192,0.18)] focus-within:border-[var(--vyz-accent)]">
           <span className="pl-3 text-[14px] text-[var(--vyz-text-muted)]">R$</span>
           <input
             id="meta-valor"
@@ -118,7 +118,7 @@ export function GestaoMeta() {
         <button
           type="submit"
           disabled={saving || !draft}
-          className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-full bg-[var(--vyz-btn-solid)] text-[13.5px] font-semibold text-[var(--vyz-btn-on)] transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-50 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.3)]"
+          className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-full bg-[var(--vyz-btn-solid)] text-[13.5px] font-semibold text-[var(--vyz-btn-on)] transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-50 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.3)]"
         >
           {saving ? "Salvando…" : goal ? "Atualizar meta" : "Salvar meta"}
         </button>

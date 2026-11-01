@@ -53,7 +53,7 @@ export const AdminDashboardOverview = () => {
               </span>
             </h1>
             <p className="text-muted-foreground mt-1">
-              Acompanhe leads, EVA, pipeline e reuniões em tempo real.
+              Acompanhe leads, Lume, pipeline e reuniões em tempo real.
             </p>
           </div>
         </div>

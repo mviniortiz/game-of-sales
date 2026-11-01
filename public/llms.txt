@@ -1,13 +1,13 @@
 # Vyzon
 
-> Vyzon é um sistema para integradoras de energia solar que mandam proposta (orçamento) pelo WhatsApp. A EVA, a assistente do Vyzon, acompanha cada proposta enviada, avisa o dono no 2º dia sem resposta do cliente e entrega a mensagem de retomada pronta. O dono responde 1 e a mensagem sai do número dele. Nada é enviado ao cliente sem aprovação humana.
+> Vyzon é um sistema para integradoras de energia solar que mandam proposta (orçamento) pelo WhatsApp. A Lume, a assistente do Vyzon, acompanha cada proposta enviada, avisa o dono no 2º dia sem resposta do cliente e entrega a mensagem de retomada pronta. O dono responde 1 e a mensagem sai do número dele. Nada é enviado ao cliente sem aprovação humana.
 
 ## Resumo
 
 - **URL oficial:** https://vyzon.com.br
 - **Para quem é:** donos de integradoras de energia solar no Brasil que enviam propostas em PDF ou por mensagem no WhatsApp e perdem vendas porque o cliente visualiza e para de responder.
 - **Problema que resolve:** proposta que esfria sem ninguém perceber. No meio de visita técnica, instalação e outras conversas, a integradora esquece de chamar de volta quem não respondeu.
-- **Modelo de IA:** assistido. A EVA lê, organiza e escreve o rascunho; o dono aprova antes de qualquer mensagem sair para o cliente. Rascunho não aprovado em 48 horas é descartado e nunca é enviado.
+- **Modelo de IA:** assistido. A Lume lê, organiza e escreve o rascunho; o dono aprova antes de qualquer mensagem sair para o cliente. Rascunho não aprovado em 48 horas é descartado e nunca é enviado.
 - **Grátis:** Raio-X das propostas paradas, feito automaticamente em cerca de 3 minutos depois de conectar o WhatsApp, sem cartão.
 - **Plano:** Vyzon, R$ 97 por mês, tudo liberado, até 10 pessoas. Não há teste grátis do plano; o grátis é o Raio-X.
 - **Idioma e país:** português brasileiro, empresa e suporte no Brasil, cobrança em Real.
@@ -22,7 +22,7 @@
 
 ## O que o Vyzon faz no dia a dia (assinatura)
 
-- **Aviso no 2º dia:** quando o cliente visualiza a proposta e não responde, a EVA avisa o dono no WhatsApp com a retomada pronta. Ele responde 1 para enviar, 2 para descartar, ou escreve a própria versão.
+- **Aviso no 2º dia:** quando o cliente visualiza a proposta e não responde, a Lume avisa o dono no WhatsApp com a retomada pronta. Ele responde 1 para enviar, 2 para descartar, ou escreve a própria versão.
 - **Lista de orçamentos automática:** toda proposta enviada pelo WhatsApp entra sozinha numa lista com valor e situação, sem cadastro manual.
 - **Conversas em ordem de prioridade:** quem está esperando resposta aparece primeiro, depois as propostas paradas do maior valor para o menor.
 - **Funil de vendas:** etapas da venda com o valor de cada etapa e quanto está parado.

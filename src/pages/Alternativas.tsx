@@ -196,7 +196,7 @@ const Alternativas = () => {
 
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row landing-fade-in-up landing-delay-300">
             <ButtonV2 onClick={openDemo} showArrow>
-              Ver a EVA em ação
+              Ver a Lume em ação
             </ButtonV2>
             <ButtonV2 variant="secondary" onClick={() => document.getElementById("tabela")?.scrollIntoView({ behavior: "smooth" })}>
               Ver a tabela

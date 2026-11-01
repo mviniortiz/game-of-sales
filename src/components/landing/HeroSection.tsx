@@ -6,14 +6,14 @@ import { trackEvent } from "@/lib/analytics";
 // LP.6 2026-06-17: hero minimalista, direção "handhold". Composição centrada e
 // centralizada na viewport, headline em Sentient roman (display serif leve) e
 // UMA fita de marca (verde→azul) fluindo em loop contínuo atrás do conteúdo.
-// O cartão de demonstração da EVA saiu do hero (some daqui pra manter o herói
+// O cartão de demonstração da Lume saiu do hero (some daqui pra manter o herói
 // limpo e impactante); a demonstração vive nas seções abaixo. Estilos da fita
 // em index.css (.lp-hero-wave) — ver nota de exceção ao "sem glow".
 const HERO_COPY = {
     line1: "Um copiloto para",
     line2: "cada conversa.",
     subtitle:
-        "A EVA acompanha seus atendimentos no WhatsApp e mostra o próximo passo. Você aprova.",
+        "A Lume acompanha seus atendimentos no WhatsApp e mostra o próximo passo. Você aprova.",
 };
 
 interface HeroSectionProps {

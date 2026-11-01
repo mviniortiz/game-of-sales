@@ -18,11 +18,11 @@ export const LandingFooter = ({ onNavClick, onLoginClick, onRegisterClick }: Pro
                 <div className="col-span-2 md:col-span-2">
                     <ThemeLogo className="h-8 w-auto mb-4" variant="negative" />
                     <p className="text-sm leading-relaxed max-w-[260px]" style={{ color: "rgba(250,249,245,0.55)" }}>
-                        Central Comercial com EVA para agências que vendem por conversa.
+                        Central Comercial com Lume para agências que vendem por conversa.
                     </p>
                     <p className="lp-mono mt-6 inline-flex items-center gap-2" style={{ color: "rgba(250,249,245,0.35)", textTransform: "none", letterSpacing: "0.03em" }}>
                         <span className="lp-live-dot" />
-                        a EVA sugere · seu time aprova
+                        a Lume sugere · seu time aprova
                     </p>
                 </div>
 

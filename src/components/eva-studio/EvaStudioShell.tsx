@@ -1,12 +1,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // EvaStudioShell (EVA.STUDIO.SHELL, 2026-06-09) — a casca de JORNADA que
-// substitui as 4 abas paralelas do EVA Studio.
+// substitui as 4 abas paralelas do Lume Studio.
 //
 // O problema que resolve (feedback Markus): entrar e "não saber dizer" onde está
 // nem o que fazer, numa coluna vertical sem fim. A casca dá:
 //   - UM cabeçalho só (os componentes de passo entram headless, hideHeader)
 //   - um stepper Criar·Ensinar·Provar·Ativar com "você está aqui"
-//   - uma lateral fina persistente (passos + estado da EVA) que ANCORA e quebra
+//   - uma lateral fina persistente (passos + estado da Lume) que ANCORA e quebra
 //     a verticalidade
 //
 // PRESENTATIONAL: navegação e estado via props. O conteúdo de cada passo é
@@ -33,7 +33,7 @@ export interface EvaStudioShellProps {
     /** Passos já concluídos (viram ✓ e ficam clicáveis). */
     doneKeys: StudioStepKey[];
     onSelect: (key: StudioStepKey) => void;
-    /** Barra de prontidão da EVA na lateral (0..1). */
+    /** Barra de prontidão da Lume na lateral (0..1). */
     readiness?: { label: string; pct: number };
     /** Acesso secundário (Memória / Insights) — não competem com a jornada. */
     secondary?: { key: string; label: string; onClick: () => void; active?: boolean }[];
@@ -71,11 +71,11 @@ export function EvaStudioShell({
         <div className="vz-studioshell">
             {/* ── Cabeçalho ÚNICO ── */}
             <div className="vz-studioshell-head">
-                <EvaBot state={evaState} size={38} label="EVA Studio" />
+                <EvaBot state={evaState} size={38} label="Lume Studio" />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                    <h1 className="vz-studioshell-title">EVA Studio</h1>
+                    <h1 className="vz-studioshell-title">Lume Studio</h1>
                     <p className="vz-studioshell-subtitle">
-                        Configure a EVA que sugere respostas no Inbox. Você aprova cada mensagem.
+                        Configure a Lume que sugere respostas no Inbox. Você aprova cada mensagem.
                     </p>
                 </div>
                 <span className="vz-studioshell-stepcount">

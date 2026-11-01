@@ -2,9 +2,9 @@ import { MessageCircle, Workflow, Check, ArrowRight, Search } from "lucide-react
 import { EvaBot } from "@/components/eva/EvaBot";
 
 // LP.2.2 2026-05-25: prova visual de produto em mock CSS de alta fidelidade
-// (sem screenshot real). Mostra o fluxo WhatsApp → EVA → Pipeline:
-// Inbox (esquerda) · Conversa (centro) · Painel EVA (direita) · Pipeline (rodapé).
-// Sem promessa de automação — a EVA sugere, o time aprova.
+// (sem screenshot real). Mostra o fluxo WhatsApp → Lume → Pipeline:
+// Inbox (esquerda) · Conversa (centro) · Painel Lume (direita) · Pipeline (rodapé).
+// Sem promessa de automação — a Lume sugere, o time aprova.
 
 const INBOX = [
     { name: "Carla Ribeiro", meta: "Meta Ads · Clínica Estética", badge: "Lead novo", tone: "blue", active: true },
@@ -81,7 +81,7 @@ export const ProductShowcase = () => {
                         className="mt-5 max-w-2xl"
                         style={{ fontSize: "clamp(0.95rem, 1.8vw, 1.125rem)", lineHeight: 1.6, color: "var(--lp-ink-70)" }}
                     >
-                        A Inbox organiza o atendimento, a EVA sugere o próximo passo e o pipeline mantém a oportunidade em movimento.
+                        A Inbox organiza o atendimento, a Lume sugere o próximo passo e o pipeline mantém a oportunidade em movimento.
                     </p>
                 </div>
 
@@ -224,7 +224,7 @@ export const ProductShowcase = () => {
                                     style={{ background: "rgba(10,10,10,0.04)", border: "1px solid rgba(10,10,10,0.08)" }}
                                 >
                                     <span className="text-[12.5px]" style={{ color: "rgba(10,10,10,0.4)" }}>
-                                        Escreva ou use a sugestão da EVA…
+                                        Escreva ou use a sugestão da Lume…
                                     </span>
                                     <div
                                         className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0"
@@ -236,7 +236,7 @@ export const ProductShowcase = () => {
                             </div>
                         </div>
 
-                        {/* ── Coluna direita: Painel EVA ──────────────────── */}
+                        {/* ── Coluna direita: Painel Lume ──────────────────── */}
                         <div className="flex flex-col" style={{ background: "rgba(250,249,255,0.6)" }}>
                             <div className="flex items-center gap-2 px-5 py-4 border-b" style={{ borderColor: "rgba(10,10,10,0.07)" }}>
                                 <div
@@ -246,7 +246,7 @@ export const ProductShowcase = () => {
                                     <EvaBot size={21} />
                                 </div>
                                 <span className="text-[13.5px]" style={{ color: "#0B1220", fontWeight: 600 }}>
-                                    EVA Comercial
+                                    Lume Comercial
                                 </span>
                             </div>
 
@@ -280,7 +280,7 @@ export const ProductShowcase = () => {
                                     </p>
                                 </div>
 
-                                {/* Sugestão da EVA */}
+                                {/* Sugestão da Lume */}
                                 <div
                                     className="rounded-xl px-4 py-4"
                                     style={{ background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.25)" }}
@@ -290,7 +290,7 @@ export const ProductShowcase = () => {
                                         style={{ letterSpacing: "0.1em", color: "#6D28D9", fontWeight: 700 }}
                                     >
                                         <EvaBot size={16} still />
-                                        Sugestão da EVA
+                                        Sugestão da Lume
                                     </p>
                                     <p className="text-[13px] mb-3.5" style={{ color: "rgba(10,10,10,0.78)", lineHeight: 1.5 }}>
                                         Pergunte sobre orçamento e urgência antes de propor uma reunião.
@@ -362,7 +362,7 @@ export const ProductShowcase = () => {
                     style={{ fontSize: "1.0625rem", color: "var(--lp-ink-70)" }}
                 >
                     <EvaBot size={18} still />
-                    A EVA sugere. Seu time aprova.
+                    A Lume sugere. Seu time aprova.
                 </p>
             </div>
         </section>

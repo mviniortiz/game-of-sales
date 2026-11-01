@@ -28,12 +28,12 @@ const BlogV2 = lazy(() => import("./pages/BlogV2"));
 const BlogPostV2 = lazy(() => import("./pages/BlogPostV2"));
 const Alternativas = lazy(() => import("./pages/Alternativas"));
 
-// Página temporária de validação da nova lateral da EVA na Inbox (remover após integrar).
+// Página temporária de validação da nova lateral da Lume na Inbox (remover após integrar).
 const EvaAssistPreview = lazy(() => import("./pages/EvaAssistPreview"));
 
 // Página temporária de validação da nova lista de conversas do Inbox (remover após integrar).
 
-// Página temporária de validação do novo EVA Studio, frente a frente (remover após integrar).
+// Página temporária de validação do novo Lume Studio, frente a frente (remover após integrar).
 const EvaStudioPreview = lazy(() => import("./pages/EvaStudioPreview"));
 const EvaNudgePreview = lazy(() => import("./pages/EvaNudgePreview"));
 const EvaSuggestionPreview = lazy(() => import("./pages/EvaSuggestionPreview"));

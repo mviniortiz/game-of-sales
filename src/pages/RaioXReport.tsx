@@ -11,7 +11,7 @@ import { EvaBot } from "@/components/eva/EvaBot";
 // super admin) confere: tira o que não é proposta e preenche o valor que faltou;
 // os números se refazem a partir dos itens.
 //
-// A retomada aparece do jeito que a EVA manda no WhatsApp do dono
+// A retomada aparece do jeito que a Lume manda no WhatsApp do dono
 // (buildDraftMessage em supabase/functions/_shared/whatsappApproval.ts). Se
 // aquele formato mudar, este espelho muda junto.
 
@@ -28,7 +28,7 @@ type Item = {
     reading: string | null;
     draft: string | null;
     excluded?: boolean;
-    /** Nome do PDF ou trecho do texto que fez a EVA contar como proposta. */
+    /** Nome do PDF ou trecho do texto que fez a Lume contar como proposta. */
     evidencia?: string | null;
     amount_by_owner?: boolean;
 };
@@ -239,7 +239,7 @@ const RaioXReport = () => {
                         O que fazer com elas
                     </h2>
                     <p className="mt-2 max-w-[560px] text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
-                        Em ordem de urgência. Nas maiores, a EVA já escreveu a retomada no tom da sua conversa com o cliente.
+                        Em ordem de urgência. Nas maiores, a Lume já escreveu a retomada no tom da sua conversa com o cliente.
                     </p>
 
                     <Group id="hoje" title="Responda hoje" hint="O cliente mandou a última mensagem e ninguém respondeu." rows={view.today} {...rowProps} />
@@ -258,14 +258,14 @@ const RaioXReport = () => {
                     Nenhuma mensagem foi enviada aos seus clientes.
                 </h2>
                 <p className="mt-3 max-w-[560px] text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
-                    As retomadas deste relatório são rascunhos. Com o Vyzon ligado, a EVA acompanha cada proposta nova que sai do seu WhatsApp e te chama
+                    As retomadas deste relatório são rascunhos. Com o Vyzon ligado, a Lume acompanha cada proposta nova que sai do seu WhatsApp e te chama
                     quando ela para. Você confere, responde 1 e a mensagem sai do seu número.
                 </p>
                 <Link
                     to={isAdmin ? "/upgrade" : "/criar-conta?segmento=energia_solar"}
                     className="vz-btn vz-btn--primary mt-6 inline-flex w-full justify-center sm:w-auto"
                 >
-                    <span>{isAdmin ? "Ligar a EVA nas minhas propostas" : "Fazer o Raio-X do meu WhatsApp"}</span>
+                    <span>{isAdmin ? "Ligar a Lume nas minhas propostas" : "Fazer o Raio-X do meu WhatsApp"}</span>
                     <span className="vz-btn__arrow" aria-hidden="true">
                         →
                     </span>
@@ -486,8 +486,8 @@ const ValorInput = ({ inicial, onSalvar }: { inicial: number | null; onSalvar: (
 };
 
 /** A retomada como ela chega ao cliente (balão verde, saindo do seu número), com
- *  a nota da EVA de por que agora e o atalho de enviar já. O formato do aviso
- *  da EVA no WhatsApp do dono aparece uma vez só, na seção da companheira. */
+ *  a nota da Lume de por que agora e o atalho de enviar já. O formato do aviso
+ *  da Lume no WhatsApp do dono aparece uma vez só, na seção da companheira. */
 const Retomada = ({ item, draft }: { item: Item; draft: string }) => {
     const [copied, setCopied] = useState(false);
     const copy = async () => {
@@ -549,12 +549,12 @@ const STEPS = [
     ["Você responde 1 e ela envia", "Do seu número. Responde 2 e descarta, ou escreve o texto do seu jeito."],
 ] as const;
 
-/** A EVA como companheira: o fluxo de verdade, com o exemplo da maior parada. */
+/** A Lume como companheira: o fluxo de verdade, com o exemplo da maior parada. */
 const Companion = ({ example }: { example: Row | null }) => (
     <section className="mt-14 md:mt-16" aria-labelledby="eva">
         <p className="flex items-center gap-3 text-[13px] font-medium" style={{ color: "var(--lp-eva)" }}>
             <EvaBot size={44} />
-            EVA, sua companheira
+            Lume, sua companheira
         </p>
         <h2 id="eva" className="lp-display mt-2 text-[26px] leading-tight md:text-3xl" style={{ color: "var(--lp-ink)" }}>
             Uma companheira que lembra das propostas por você
@@ -593,12 +593,12 @@ const PhoneThread = ({ code, name, draft }: { code: string; name: string | null;
     const short = draft.length > 150 ? `${draft.slice(0, 147).trimEnd()}…` : draft;
     const bubble = "max-w-[88%] rounded-[8px] px-3 py-2 text-[13.5px] leading-[1.4]";
     return (
-        <figure className="mx-auto w-full max-w-[320px] overflow-hidden rounded-[22px] border" style={{ borderColor: "var(--lp-line)", background: WA_WALL }} aria-label="Exemplo da conversa com a EVA no WhatsApp">
+        <figure className="mx-auto w-full max-w-[320px] overflow-hidden rounded-[22px] border" style={{ borderColor: "var(--lp-line)", background: WA_WALL }} aria-label="Exemplo da conversa com a Lume no WhatsApp">
             <div className="flex items-center gap-2.5 px-4 py-3" style={{ background: "var(--lp-white)" }}>
                 <EvaBot size={32} state="talking" />
                 <div>
                     <p className="text-[14px] font-medium" style={{ color: "#111b21" }}>
-                        EVA
+                        Lume
                     </p>
                     <p className="text-[11.5px]" style={{ color: "#667781" }}>
                         no seu WhatsApp
@@ -607,7 +607,7 @@ const PhoneThread = ({ code, name, draft }: { code: string; name: string | null;
             </div>
             <div className="space-y-2 p-3">
                 <div className={`${bubble} rounded-tl-none`} style={{ background: "#fff", color: "#111b21" }}>
-                    <p className="font-medium">EVA [{code}] rascunho pronto</p>
+                    <p className="font-medium">Lume [{code}] rascunho pronto</p>
                     <p className="mt-1">Lead: {name ?? "cliente"}</p>
                     <p className="mt-1.5" style={{ color: "#3b4a54" }}>
                         {short}
@@ -617,7 +617,7 @@ const PhoneThread = ({ code, name, draft }: { code: string; name: string | null;
                     {code} 1
                 </div>
                 <div className={`${bubble} rounded-tl-none`} style={{ background: "#fff", color: "#111b21", width: "fit-content" }}>
-                    EVA Enviado para {name ?? "o cliente"}.
+                    Lume Enviado para {name ?? "o cliente"}.
                 </div>
             </div>
         </figure>

@@ -273,14 +273,14 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
         onClose();
     };
 
-    const linkBtn = "inline-flex items-center gap-1.5 rounded-full text-[13px] font-semibold text-[#2563EB] hover:text-[#1D4ED8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]";
-    const linkMudo = "rounded-full text-[13px] font-medium text-[#94A3B8] hover:text-[#475569] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]";
+    const linkBtn = "inline-flex items-center gap-1.5 rounded-full text-[13px] font-semibold text-[#1556C0] hover:text-[#1D4ED8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1556C0]";
+    const linkMudo = "rounded-full text-[13px] font-medium text-[#94A3B8] hover:text-[#475569] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1556C0]";
 
     return (
         <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
             <DialogContent className="max-h-[92dvh] w-[95vw] max-w-[760px] gap-0 overflow-y-auto rounded-[20px] border border-[#E6EDF5] bg-white p-0 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_32px_80px_-24px_rgba(15,23,42,0.35)]">
                 <DialogHeader className="px-6 pb-4 pt-6 text-left sm:px-8 sm:pt-7">
-                    <DialogTitle className="flex items-center gap-2.5 text-[20px] font-semibold tracking-[-0.02em] text-[#0B1220]">
+                    <DialogTitle className="flex items-center gap-2.5 text-[20px] font-semibold tracking-[-0.02em] text-[#0F1730]">
                         <span className="grid h-8 w-8 place-items-center rounded-full bg-[#25D366]/10">
                             <WhatsAppIcon className="h-4 w-4 text-[#128C4B]" />
                         </span>
@@ -298,7 +298,7 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
                                     role="radio"
                                     aria-checked={modo === m}
                                     onClick={() => trocarModo(m)}
-                                    className={`h-8 rounded-full px-4 text-[13px] font-semibold transition-colors duration-150 ${EASE} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] ${modo === m ? "bg-[#0B1220] text-white" : "text-[#475569] hover:text-[#0B1220]"}`}
+                                    className={`h-8 rounded-full px-4 text-[13px] font-semibold transition-colors duration-150 ${EASE} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1556C0] ${modo === m ? "bg-[#0F1730] text-white" : "text-[#475569] hover:text-[#0F1730]"}`}
                                 >
                                     {rotulo}
                                 </button>
@@ -311,13 +311,13 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
                     <div className="flex flex-col items-center gap-4 px-6 pb-8 pt-4 text-center sm:px-8">
                         <EvaBot size={72} state="happy" />
                         <div>
-                            <h3 className="text-[18px] font-semibold text-[#0B1220]">Conectado</h3>
+                            <h3 className="text-[18px] font-semibold text-[#0F1730]">Conectado</h3>
                             <p className="mt-1 text-[14px] text-[#64748B]">Agora eu leio suas conversas e acho as propostas.</p>
                         </div>
                         <button
                             type="button"
                             onClick={handleClose}
-                            className="inline-flex h-11 items-center rounded-full bg-[#0B1220] px-6 text-[15px] font-semibold text-white transition-colors duration-150 hover:bg-[#1F2A3B] active:scale-[0.97] motion-reduce:active:scale-100"
+                            className="inline-flex h-11 items-center rounded-full bg-[#0F1730] px-6 text-[15px] font-semibold text-white transition-colors duration-150 hover:bg-[#1F2A3B] active:scale-[0.97] motion-reduce:active:scale-100"
                         >
                             Continuar
                         </button>
@@ -337,7 +337,7 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
                             <ol className="flex flex-col gap-4">
                                 {PASSOS[modo].map((t, i) => (
                                     <li key={t} className="flex gap-3">
-                                        <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#0B1220] text-[12px] font-semibold text-white">{i + 1}</span>
+                                        <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#0F1730] text-[12px] font-semibold text-white">{i + 1}</span>
                                         <span className="text-[14px] leading-snug text-[#1F2A3B]">{t}</span>
                                     </li>
                                 ))}
@@ -345,7 +345,7 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
                             <ul className="mt-6 flex flex-col gap-2 border-t border-[#EEF2F7] pt-5">
                                 {["Seu número continua o mesmo", "Nada sai para cliente sem você aprovar", "Dá para desconectar quando quiser, em Aparelhos conectados"].map((t) => (
                                     <li key={t} className="flex items-center gap-2 text-[13px] text-[#64748B]">
-                                        <Check className="h-3.5 w-3.5 shrink-0 text-[#2563EB]" strokeWidth={2.5} aria-hidden />
+                                        <Check className="h-3.5 w-3.5 shrink-0 text-[#1556C0]" strokeWidth={2.5} aria-hidden />
                                         {t}
                                     </li>
                                 ))}
@@ -355,7 +355,7 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
                         <div className="order-1 flex flex-col items-center md:order-2">
                             <div className="relative grid min-h-[248px] w-full max-w-[300px] place-items-center rounded-2xl border border-[#E6EDF5] bg-white p-5 md:w-[300px]">
                                 {modo === "qr" && ["left-2 top-2 border-l-2 border-t-2 rounded-tl-lg", "right-2 top-2 border-r-2 border-t-2 rounded-tr-lg", "bottom-2 left-2 border-b-2 border-l-2 rounded-bl-lg", "bottom-2 right-2 border-b-2 border-r-2 rounded-br-lg"].map((c) => (
-                                    <span key={c} aria-hidden className={`absolute h-6 w-6 border-[#2563EB] ${c}`} />
+                                    <span key={c} aria-hidden className={`absolute h-6 w-6 border-[#1556C0] ${c}`} />
                                 ))}
 
                                 {state === "qr" && qr ? (
@@ -376,14 +376,14 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
                                             onChange={(e) => { setNumero(e.target.value); if (errorMsg) setErrorMsg(""); }}
                                             aria-invalid={errorMsg ? true : undefined}
                                             aria-describedby={errorMsg ? "wa-numero-erro" : undefined}
-                                            className="h-12 w-full rounded-xl border border-[#D7DEE9] bg-white px-4 text-[16px] tabular-nums text-[#0B1220] outline-none placeholder:text-[#94A3B8] focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/15"
+                                            className="h-12 w-full rounded-xl border border-[#D7DEE9] bg-white px-4 text-[16px] tabular-nums text-[#0F1730] outline-none placeholder:text-[#94A3B8] focus:border-[#1556C0] focus:ring-2 focus:ring-[#1556C0]/15"
                                         />
                                         {errorMsg && (
                                             <p id="wa-numero-erro" role="alert" className="text-[13px] leading-snug text-[#BE123C]">{errorMsg}</p>
                                         )}
                                         <button
                                             type="submit"
-                                            className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1220] px-5 text-[15px] font-semibold text-white transition-colors duration-150 hover:bg-[#1F2A3B] active:scale-[0.97] motion-reduce:active:scale-100"
+                                            className="inline-flex h-11 items-center justify-center rounded-full bg-[#0F1730] px-5 text-[15px] font-semibold text-white transition-colors duration-150 hover:bg-[#1F2A3B] active:scale-[0.97] motion-reduce:active:scale-100"
                                         >
                                             Gerar código
                                         </button>
@@ -391,13 +391,13 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
                                 ) : state === "codigo" && codigo ? (
                                     <div className="flex w-full flex-col items-center gap-3 text-center">
                                         <p className="text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Seu código</p>
-                                        <p className="font-mono text-[32px] font-bold tracking-[0.12em] text-[#0B1220]" aria-live="polite">{codigo}</p>
+                                        <p className="font-mono text-[32px] font-bold tracking-[0.12em] text-[#0F1730]" aria-live="polite">{codigo}</p>
                                         <button
                                             type="button"
                                             onClick={() => void copiar()}
                                             className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#D7DEE9] px-4 text-[13px] font-semibold text-[#1F2A3B] transition-colors hover:bg-[#F1F5F9]"
                                         >
-                                            {copiado ? <Check className="h-3.5 w-3.5 text-[#2563EB]" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}
+                                            {copiado ? <Check className="h-3.5 w-3.5 text-[#1556C0]" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}
                                             {copiado ? "Copiado" : "Copiar código"}
                                         </button>
                                     </div>
@@ -408,7 +408,7 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
                                     </div>
                                 ) : (
                                     <div className="flex flex-col items-center gap-3">
-                                        <Loader2 className="h-7 w-7 animate-spin text-[#2563EB] motion-reduce:animate-none" aria-hidden />
+                                        <Loader2 className="h-7 w-7 animate-spin text-[#1556C0] motion-reduce:animate-none" aria-hidden />
                                         <p className="text-[13px] text-[#64748B]">{modo === "qr" ? "Gerando o QR Code…" : "Pedindo o código ao WhatsApp…"}</p>
                                     </div>
                                 )}
@@ -416,7 +416,7 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
 
                             {(state === "qr" || state === "codigo") && (
                                 <>
-                                    <p className="mt-3 inline-flex items-center gap-2 text-[13px] font-medium text-[#0B1220]" role="status">
+                                    <p className="mt-3 inline-flex items-center gap-2 text-[13px] font-medium text-[#0F1730]" role="status">
                                         <span className="relative flex h-2 w-2">
                                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#25D366] opacity-60 motion-reduce:animate-none" />
                                             <span className="relative inline-flex h-2 w-2 rounded-full bg-[#25D366]" />

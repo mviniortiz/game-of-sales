@@ -45,7 +45,7 @@ export const PerformanceSkeleton = () => (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {Array.from({ length: 4 }).map((_, i) => <MetricCardSkeleton key={i} />)}
         </div>
-        {/* funil + EVA */}
+        {/* funil + Lume */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
             <SkCard className="lg:col-span-2">
                 <Bar className="h-3.5 w-40 mb-4" />
@@ -117,7 +117,7 @@ export const EvaPanelSkeleton = () => (
     <div className="space-y-3 p-4">
         <div className="flex items-center gap-2">
             <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#7C3AED]/60 text-white text-[8px] font-bold leading-none animate-pulse">E</span>
-            <span className="text-[12px] font-medium text-[#7C3AED]">EVA está analisando…</span>
+            <span className="text-[12px] font-medium text-[#7C3AED]">Lume está analisando…</span>
         </div>
         <Bar className="h-3 w-full" />
         <Bar className="h-3 w-5/6" />

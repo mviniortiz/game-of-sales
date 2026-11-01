@@ -1,17 +1,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// SimulationLab (EVA.STUDIO.SIMLAB, 2026-06-09) — o "Campo de Provas" da EVA.
+// SimulationLab (EVA.STUDIO.SIMLAB, 2026-06-09) — o "Campo de Provas" da Lume.
 //
 // Substitui a simulação antiga (lista de cenários sintéticos simples demais).
-// Visão (Markus): mostrar como a EVA se comporta em CADA situação, da mais
+// Visão (Markus): mostrar como a Lume se comporta em CADA situação, da mais
 // simples à mais COMPLEXA, de forma clara pro gestor (sem sobrecarregar).
 //
 // Design (persona designer sênior, refs Decagon/Sierra simulation mode +
 // Anthropic evals trace + UX edge-case happy-path→disaster):
 //   - TRILHA de dificuldade crescente (não tabela): do lead tranquilo ao
 //     pesadelo (objeções múltiplas + pedido proibido).
-//   - SALA que RODA a conversa animada (reusa o "pensando"): lead → EVA pensa →
-//     EVA responde.
-//   - TRACE: ao lado de cada resposta, "o que a EVA percebeu" (intenção,
+//   - SALA que RODA a conversa animada (reusa o "pensando"): lead → Lume pensa →
+//     Lume responde.
+//   - TRACE: ao lado de cada resposta, "o que a Lume percebeu" (intenção,
 //     temperatura, alerta de linha vermelha) — o porquê, não só o quê.
 //   - VEREDITO: segurou? respeitou a linha vermelha? escalou pro humano?
 //
@@ -39,8 +39,8 @@ interface SimRead {
 interface SimTurn {
     from: "lead" | "eva";
     text: string;
-    read?: SimRead; // só nos turnos da EVA
-    handoff?: boolean; // a EVA passou pro humano neste ponto
+    read?: SimRead; // só nos turnos da Lume
+    handoff?: boolean; // a Lume passou pro humano neste ponto
 }
 export interface LabScenario {
     id: string;
@@ -174,7 +174,7 @@ export function SimulationLab({ hideHeader, onJudge, onComplete }: SimulationLab
     const turns = scenario.turns;
     const finished = revealed >= turns.length;
     const allJudged = judged.size >= SCENARIOS.length;
-    // A última resposta da EVA é o que o gestor aprova ou reescreve
+    // A última resposta da Lume é o que o gestor aprova ou reescreve
     const evaFinal = [...turns].reverse().find((t) => t.from === "eva")?.text ?? "";
 
     // Toca a conversa ao trocar de cenário
@@ -209,7 +209,7 @@ export function SimulationLab({ hideHeader, onJudge, onComplete }: SimulationLab
         goNextPending(scenario.id);
     };
 
-    // Player: revela turno a turno, com "pensando" antes da EVA
+    // Player: revela turno a turno, com "pensando" antes da Lume
     useEffect(() => {
         if (revealed >= turns.length) return;
         const next = turns[revealed];
@@ -248,7 +248,7 @@ export function SimulationLab({ hideHeader, onJudge, onComplete }: SimulationLab
                 <div className="vz-simlab-head">
                     <EvaBot state="idle" size={34} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                        <h1 className="vz-simlab-title">Campo de provas da EVA</h1>
+                        <h1 className="vz-simlab-title">Campo de provas da Lume</h1>
                         <p className="vz-simlab-sub">Veja como ela se comporta, do lead mais tranquilo ao mais difícil.</p>
                     </div>
                 </div>
@@ -357,7 +357,7 @@ export function SimulationLab({ hideHeader, onJudge, onComplete }: SimulationLab
                                 value={draft}
                                 onChange={(e) => setDraft(e.target.value)}
                                 autoFocus
-                                aria-label="Corrigir a resposta da EVA"
+                                aria-label="Corrigir a resposta da Lume"
                             />
                             <p className="vz-ctxbuild-learn">
                                 Do seu jeito. Sua correção me ensina, a próxima resposta vem melhor.
@@ -392,7 +392,7 @@ export function SimulationLab({ hideHeader, onJudge, onComplete }: SimulationLab
                             </span>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <p className="vz-simlab-verdict-label">
-                                    {scenario.verdict.status === "ok" ? "A EVA se saiu bem" : "Caso crítico, conduzido certo"}
+                                    {scenario.verdict.status === "ok" ? "A Lume se saiu bem" : "Caso crítico, conduzido certo"}
                                 </p>
                                 <p className="vz-simlab-verdict-line">{scenario.verdict.line}</p>
                             </div>
@@ -426,7 +426,7 @@ export function SimulationLab({ hideHeader, onJudge, onComplete }: SimulationLab
                     {allJudged && (
                         <div className="vz-simlab-done">
                             <div style={{ flex: 1, minWidth: 0 }}>
-                                <p className="vz-simlab-done-title">Você viu a EVA do tranquilo ao extremo.</p>
+                                <p className="vz-simlab-done-title">Você viu a Lume do tranquilo ao extremo.</p>
                                 <p className="vz-simlab-done-sub">
                                     Agora a prova de verdade: como ela teria se saído nas SUAS conversas.
                                 </p>

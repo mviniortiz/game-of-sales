@@ -1,8 +1,8 @@
-// EvaHelpDock — o botão flutuante de AJUDA do produto, com a EVA (a "Holly" do Vyzon, na voz
-// da EVA). Pill no canto → painel com chips + chat. Responde "como usar o Vyzon"
-// via edge function eva-help. NÃO é a EVA comercial (que lê pipeline/conversas).
+// EvaHelpDock — o botão flutuante de AJUDA do produto, com a Lume (a "Holly" do Vyzon, na voz
+// da Lume). Pill no canto → painel com chips + chat. Responde "como usar o Vyzon"
+// via edge function eva-help. NÃO é a Lume comercial (que lê pipeline/conversas).
 //
-// Regras de marca: botão de enviar = seta-pra-cima circular (NUNCA avião); a EVA
+// Regras de marca: botão de enviar = seta-pra-cima circular (NUNCA avião); a Lume
 // aqui usa o azul da marca; tema claro.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -24,7 +24,7 @@ const ROUTE_LABELS: { prefix: string; label: string }[] = [
     { prefix: "/integracoes", label: "Integrações" },
     { prefix: "/metas", label: "Metas" },
     { prefix: "/performance", label: "Performance" },
-    { prefix: "/eva", label: "EVA Studio" },
+    { prefix: "/eva", label: "Lume Studio" },
 ];
 
 export function labelForPath(pathname: string): string {
@@ -32,7 +32,7 @@ export function labelForPath(pathname: string): string {
     return hit?.label || "uma tela do Vyzon";
 }
 
-// Bolha da EVA com efeito "digitando" só na mensagem recém-chegada (as restauradas
+// Bolha da Lume com efeito "digitando" só na mensagem recém-chegada (as restauradas
 // do histórico aparecem inteiras). Rola o thread conforme o texto cresce.
 export function AssistantBubble({ content, animate, onTick }: { content: string; animate: boolean; onTick: () => void }) {
     const { displayed, done } = useTypewriter(content, { enabled: animate, speed: 10 });
@@ -40,7 +40,7 @@ export function AssistantBubble({ content, animate, onTick }: { content: string;
     return (
         <div
             className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap"
-            style={{ background: "#F4F6FB", color: "#0B1220", border: "1px solid #EAF0F6", borderBottomLeftRadius: 6 }}
+            style={{ background: "#F4F6FB", color: "#0F1730", border: "1px solid #EAF0F6", borderBottomLeftRadius: 6 }}
         >
             {displayed}
             {animate && !done && (
@@ -61,7 +61,7 @@ export function AssistantBubble({ content, animate, onTick }: { content: string;
 // No computador o botão mora no cabeçalho do app: flutuando, ele cobria o
 // valor das linhas encostadas na direita (Orçamentos, Pipeline).
 const ABRIR_EVENTO = "vyz:eva-ajuda-abrir";
-// No Inbox a EVA tem painel próprio. No Início, o botão redondo flutuante
+// No Inbox a Lume tem painel próprio. No Início, o botão redondo flutuante
 // cobria a fila no celular, então lá só o do cabeçalho (computador) abre.
 const temLugarProprio = (pathname: string) => /^\/(inicio|dashboard|inbox)/.test(pathname);
 const temPainelProprio = (pathname: string) => /^\/inbox/.test(pathname);
@@ -73,10 +73,10 @@ export function PerguntarEvaCabecalho() {
         <button
             type="button"
             onClick={() => window.dispatchEvent(new Event(ABRIR_EVENTO))}
-            className="hidden sm:inline-flex h-9 items-center gap-2 rounded-full border border-[#E2E8F0] bg-white pl-1 pr-3.5 text-[13px] font-semibold text-[#0B1220] shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-[background-color,box-shadow] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#F8FAFC] hover:shadow-[0_2px_8px_-2px_rgba(15,23,42,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+            className="hidden sm:inline-flex h-9 items-center gap-2 rounded-full border border-[#E2E8F0] bg-white pl-1 pr-3.5 text-[13px] font-semibold text-[#0F1730] shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-[background-color,box-shadow] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#F8FAFC] hover:shadow-[0_2px_8px_-2px_rgba(15,23,42,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1556C0]"
         >
             <EvaBot size={28} still />
-            Perguntar à EVA
+            Perguntar à Lume
         </button>
     );
 }
@@ -129,13 +129,13 @@ export function EvaHelpDock() {
         { label: "Como conecto o WhatsApp?", q: "Como eu conecto o meu WhatsApp no Vyzon?" },
     ];
 
-    // No /inicio e no /inbox a EVA já tem lugar próprio (rail, painel ou sheet):
-    // esconde o botão de ajuda pra não ter dois "Perguntar à EVA" e não cobrir
+    // No /inicio e no /inbox a Lume já tem lugar próprio (rail, painel ou sheet):
+    // esconde o botão de ajuda pra não ter dois "Perguntar à Lume" e não cobrir
     // a lista e a sugestão no mobile.
     if (temLugarProprio(location.pathname) && !open) return null;
 
     return (
-        <div className="fixed z-40 right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-6 sm:bottom-6 print:hidden">
+        <div className="fixed z-40 right-4 bottom-[calc(72px+env(safe-area-inset-bottom))] md:right-6 md:bottom-6 print:hidden">
             <AnimatePresence mode="wait">
                 {open ? (
                     <motion.div
@@ -158,9 +158,9 @@ export function EvaHelpDock() {
                         >
                             {/* Header */}
                             <div className="flex items-center gap-2.5 px-4 py-3 border-b" style={{ borderColor: "#F1F5F9" }}>
-                                <EvaBot size={28} state={loading ? "thinking" : "idle"} label="EVA" />
+                                <EvaBot size={28} state={loading ? "thinking" : "idle"} label="Lume" />
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-[13.5px] font-bold leading-tight" style={{ color: "#0B1220" }}>EVA</p>
+                                    <p className="text-[13.5px] font-bold leading-tight" style={{ color: "#0F1730" }}>Lume</p>
                                     <p className="text-[11px] leading-tight" style={{ color: "#64748B" }}>Ajuda com o Vyzon</p>
                                 </div>
                                 {messages.length > 0 && (
@@ -190,7 +190,7 @@ export function EvaHelpDock() {
                             <div ref={threadRef} className="flex-1 overflow-y-auto px-4 py-3.5 flex flex-col gap-3">
                                 {messages.length === 0 && (
                                     <p className="text-[13px] leading-relaxed" style={{ color: "#475569" }}>
-                                        Oi! Sou a EVA. Posso te ajudar a usar o Vyzon, conectar o WhatsApp, configurar seu contexto e dar os primeiros passos. Pergunte o que quiser.
+                                        Oi! Sou a Lume. Posso te ajudar a usar o Vyzon, conectar o WhatsApp, configurar seu contexto e dar os primeiros passos. Pergunte o que quiser.
                                     </p>
                                 )}
                                 {messages.map((m, i) => (
@@ -204,7 +204,7 @@ export function EvaHelpDock() {
                                         {m.role === "user" ? (
                                             <div
                                                 className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap"
-                                                style={{ background: "#2563EB", color: "#FFFFFF", borderBottomRightRadius: 6 }}
+                                                style={{ background: "#1556C0", color: "#FFFFFF", borderBottomRightRadius: 6 }}
                                             >
                                                 {m.content}
                                             </div>
@@ -246,8 +246,8 @@ export function EvaHelpDock() {
                                     onChange={(e) => setInput(e.target.value)}
                                     placeholder="Pergunte qualquer coisa…"
                                     disabled={loading}
-                                    className="w-full h-11 pl-4 pr-12 rounded-xl text-[13px] outline-none transition-all focus:border-[#2563EB]/40 disabled:opacity-70"
-                                    style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#0B1220" }}
+                                    className="w-full h-11 pl-4 pr-12 rounded-xl text-[13px] outline-none transition-all focus:border-[#1556C0]/40 disabled:opacity-70"
+                                    style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#0F1730" }}
                                 />
                                 <motion.button
                                     type="submit"
@@ -255,7 +255,7 @@ export function EvaHelpDock() {
                                     aria-label="Enviar"
                                     whileTap={reduce ? undefined : { scale: 0.9 }}
                                     className="absolute right-4 top-2 inline-flex items-center justify-center h-8 w-8 rounded-full text-white transition-all disabled:opacity-40"
-                                    style={{ background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)" }}
+                                    style={{ background: "linear-gradient(135deg, #1556C0 0%, #1D4ED8 100%)" }}
                                 >
                                     {loading ? <CircleNotch size={15} weight="bold" className="animate-spin" /> : <ArrowUp size={15} weight="bold" />}
                                 </motion.button>
@@ -278,7 +278,7 @@ export function EvaHelpDock() {
                             border: "1px solid #E2E8F0",
                             boxShadow: "0 10px 26px -8px rgba(15,23,42,0.28)",
                         }}
-                        aria-label="Perguntar à EVA"
+                        aria-label="Perguntar à Lume"
                     >
                         <EvaBot size={34} />
                     </motion.button>

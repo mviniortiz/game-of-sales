@@ -7,7 +7,7 @@ interface VendasPorPlataformaChartProps {
 }
 
 const COLORS = [
-  "#2563EB", // Emerald-500 (primary)
+  "#1556C0", // Emerald-500 (primary)
   "#1D4ED8", // Emerald-600
   "#F59E0B", // Amber (gamification — keep)
   "#0891b2", // Cyan-600

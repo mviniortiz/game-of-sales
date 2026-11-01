@@ -440,7 +440,7 @@ export const DemoScheduleSection = ({
                                     <div className="flex flex-col gap-3">
                                         {[
                                             "Inbox e pipeline montados com seu contexto",
-                                            "EVA analisando uma conversa real da sua agência",
+                                            "Lume analisando uma conversa real da sua agência",
                                             "Próximos passos sugeridos para seu time aprovar",
                                             "Integrações com o que você já usa",
                                             "Plano ideal pro tamanho do seu time",

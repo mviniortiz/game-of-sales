@@ -1,11 +1,11 @@
-// A seção é a única superfície onde a pessoa vê o que a EVA fez sozinha. Os dois
+// A seção é a única superfície onde a pessoa vê o que a Lume fez sozinha. Os dois
 // estados que importam: conta vazia (o que ela VAI fazer) e conta trabalhando.
 import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { EvaDiaryCard } from "@/components/inicio/EvaDiaryCard";
 import type { EvaDiary } from "@/hooks/useEvaDiary";
 
-const VAZIO: EvaDiary = { eventos: [], rascunhos: [], traces: [], loading: false };
+const VAZIO: EvaDiary = { eventos: [], rascunhos: [], enviados: [], traces: [], loading: false };
 
 const hoje = (h: number, m: number) => {
     const d = new Date();
@@ -46,8 +46,8 @@ describe("EvaDiaryCard", () => {
             ...VAZIO,
             eventos: [{ id: "a", quando: hoje(9, 0), texto: "Abriu uma oportunidade para Promax", rascunho: false }],
             rascunhos: [
-                { id: "a", codigo: "A2", quem: "Promax", noWhatsapp: true },
-                { id: "b", codigo: null, quem: "Studio Alfa", noWhatsapp: false },
+                { id: "a", codigo: "A2", quem: "Promax", noWhatsapp: true, texto: null, porque: null },
+                { id: "b", codigo: null, quem: "Studio Alfa", noWhatsapp: false, texto: null, porque: null },
             ],
         };
         render(<EvaDiaryCard diary={diary} />);

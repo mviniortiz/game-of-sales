@@ -55,7 +55,7 @@ export const FEATURE_NAMES: Record<keyof Omit<PlanFeatures, 'maxUsers' | 'maxPro
     calls: 'Ligações na Plataforma (adicional)',
     reports: 'Relatórios Avançados',
     integrations: 'Integrações (Hotmart, etc)',
-    eva: 'Eva — Analista de Vendas com IA'
+    eva: 'Lume — Analista de Vendas com IA'
 };
 
 // Get the minimum plan required for a feature (nenhum plano tem ligações:

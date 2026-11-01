@@ -20,7 +20,7 @@ export const EvolucaoVendasChart = ({ data }: EvolucaoVendasChartProps) => {
     <div className="rounded-2xl border border-[#E6EDF5] bg-white p-5" style={{ boxShadow: "0 1px 2px rgba(11,18,32,0.04)" }}>
       <div className="flex items-center gap-2.5 mb-4">
         <div className="flex items-center justify-center h-8 w-8 rounded-lg" style={{ background: "#EFF4FF" }}>
-          <TrendingUp className="h-4 w-4 text-[#2563EB]" />
+          <TrendingUp className="h-4 w-4 text-[#1556C0]" />
         </div>
         <div>
           <h4 className="text-sm font-semibold text-foreground">Evolução de Vendas</h4>
@@ -31,8 +31,8 @@ export const EvolucaoVendasChart = ({ data }: EvolucaoVendasChartProps) => {
         <AreaChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#2563EB" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
+              <stop offset="5%" stopColor="#1556C0" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#1556C0" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="colorFaturamento" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#16A34A" stopOpacity={0.3} />
@@ -50,7 +50,7 @@ export const EvolucaoVendasChart = ({ data }: EvolucaoVendasChartProps) => {
               borderRadius: "12px",
               boxShadow: "0 8px 24px -8px rgba(11,18,32,0.12)",
               padding: "10px 14px",
-              color: "#0B1220",
+              color: "#0F1730",
             }}
             labelStyle={{ color: "hsl(var(--popover-foreground))", fontWeight: 600, marginBottom: "6px" }}
             formatter={(value: number, name: string) => {
@@ -66,7 +66,7 @@ export const EvolucaoVendasChart = ({ data }: EvolucaoVendasChartProps) => {
               </span>
             )}
           />
-          <Area yAxisId="left" type="monotone" dataKey="vendas" stroke="#2563EB" strokeWidth={2} fill="url(#colorVendas)" name="vendas" dot={false} activeDot={{ r: 4, fill: "#2563EB", stroke: "hsl(var(--card))", strokeWidth: 2 }} />
+          <Area yAxisId="left" type="monotone" dataKey="vendas" stroke="#1556C0" strokeWidth={2} fill="url(#colorVendas)" name="vendas" dot={false} activeDot={{ r: 4, fill: "#1556C0", stroke: "hsl(var(--card))", strokeWidth: 2 }} />
           <Area yAxisId="right" type="monotone" dataKey="faturamento" stroke="#16A34A" strokeWidth={2} fill="url(#colorFaturamento)" name="Faturamento" dot={false} activeDot={{ r: 4, fill: "#16A34A", stroke: "hsl(var(--card))", strokeWidth: 2 }} />
         </AreaChart>
       </ResponsiveContainer>

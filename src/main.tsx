@@ -4,7 +4,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { initAnalytics } from "./lib/analytics";
 
-// Tema por contexto (2026-05-26). A homepage nova ("Central Comercial com EVA")
+// Tema por contexto (2026-05-26). A homepage nova ("Central Comercial com Lume")
 // e o app logado são light-first (bg-white / --vyz-* claros em :root). As
 // páginas legadas do origin (SEO /crm-*, personas /para-*, relatório público
 // /r/*) são dark-only (bg-[#06080a] / text-white).

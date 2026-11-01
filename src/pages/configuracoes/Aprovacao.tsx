@@ -17,7 +17,7 @@ const formatPhone = (jid: string) => {
   return `+${d}`;
 };
 
-/** Para onde vão os rascunhos da EVA e como responder. Só leitura: o número é descoberto sozinho. */
+/** Para onde vão os rascunhos da Lume e como responder. Só leitura: o número é descoberto sozinho. */
 export default function Aprovacao() {
   const { companyId } = useAuth();
   const { activeCompanyId } = useTenant();
@@ -74,7 +74,7 @@ export default function Aprovacao() {
           </p>
         )}
         <p className="mt-2 text-[12.5px] text-[var(--vyz-text-muted)]">
-          É o próprio número da empresa conectado ao Vyzon. A EVA escreve para ele como uma conversa sua consigo mesmo.
+          É o próprio número da empresa conectado ao Vyzon. A Lume escreve para ele como uma conversa sua consigo mesmo.
         </p>
         {!!q.data?.pending && (
           <p className="mt-3 inline-flex rounded-full bg-[var(--vyz-accent-soft-10)] px-3 py-1 text-[12.5px] font-medium text-[var(--vyz-accent)]">
@@ -88,7 +88,7 @@ export default function Aprovacao() {
         <ol className="mt-3 space-y-3 text-[13.5px] text-[var(--vyz-text)]">
           <li className="flex gap-3">
             <Key>1</Key>
-            <span>Envia a mensagem para o cliente do jeito que a EVA escreveu. Também vale "ok" ou "sim".</span>
+            <span>Envia a mensagem para o cliente do jeito que a Lume escreveu. Também vale "ok" ou "sim".</span>
           </li>
           <li className="flex gap-3">
             <Key>2</Key>

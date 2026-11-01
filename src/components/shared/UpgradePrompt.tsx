@@ -35,8 +35,8 @@ export const UpgradePrompt = ({
         <div className={`flex items-center justify-center min-h-[400px] p-6 ${className}`}>
             <Card className="w-full max-w-lg border-border bg-card shadow-xl">
                 <CardHeader className="text-center pb-2">
-                    <div className="mx-auto mb-4 p-4 rounded-full bg-[rgba(37,99,235,0.10)] ring-1 ring-[rgba(37,99,235,0.30)]">
-                        <Lock className="h-8 w-8 text-[#2563EB]" />
+                    <div className="mx-auto mb-4 p-4 rounded-full bg-[rgba(21,86,192,0.10)] ring-1 ring-[rgba(21,86,192,0.30)]">
+                        <Lock className="h-8 w-8 text-[#1556C0]" />
                     </div>
                     <CardTitle className="text-2xl font-bold text-foreground">
                         {defaultTitle}
@@ -62,7 +62,7 @@ export const UpgradePrompt = ({
                     {/* Features included */}
                     <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                         <p className="text-sm font-medium text-foreground flex items-center gap-2">
-                            <ArrowUpCircle className="h-4 w-4 text-[#2563EB]" />
+                            <ArrowUpCircle className="h-4 w-4 text-[#1556C0]" />
                             O que você ganha com {requiredPlanInfo.label}:
                         </p>
                         <ul className="space-y-2 text-sm text-muted-foreground">
@@ -107,7 +107,7 @@ export const UpgradePrompt = ({
                     <div className="flex flex-col gap-3">
                         <Button
                             size="lg"
-                            className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold shadow-lg"
+                            className="w-full bg-[#1556C0] hover:bg-[#1D4ED8] text-white font-semibold shadow-lg"
                             onClick={() => navigate(`/upgrade?plan=${requiredPlan}`)}
                         >
                             <ArrowUpCircle className="h-4 w-4 mr-2" />

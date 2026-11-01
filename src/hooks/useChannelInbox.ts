@@ -349,7 +349,7 @@ export function useChannelInbox(): UseChannelInbox {
 
                 // (2) external_id derivado. Também da empresa ativa: o super admin
                 // operando outra empresa não pode ver o próprio WhatsApp misturado
-                // com o funil e a EVA dela.
+                // com o funil e a Lume dela.
                 const { data: byInstance, error: e1 } = await supabase
                     .from("channel_connections")
                     .select("id, provider, channel_type, external_id, status, last_seen_at, metadata")

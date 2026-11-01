@@ -3,7 +3,7 @@
     "title": "Pipedrive vs Ploomes e alternativas | Vyzon",
     "description": "Comparativo honesto: Pipedrive vs Ploomes, Kommo, RD Station e quando a Vyzon faz sentido pra integradores de energia solar que vendem por conversa no WhatsApp. Atualizado em julho de 2026.",
     "ogTitle": "Pipedrive vs Ploomes e alternativas pra quem vende por conversa",
-    "ogDescription": "Tabela clara, veredito por cenário e o papel da EVA. Sem propaganda disfarçada de comparativo."
+    "ogDescription": "Tabela clara, veredito por cenário e o papel da Lume. Sem propaganda disfarçada de comparativo."
   },
   "updated": "2026-07-22",
   "updatedLabel": "22 de julho de 2026",
@@ -11,7 +11,7 @@
     "eyebrow": "Comparativos",
     "h1Lead": "Pipedrive vs Ploomes",
     "h1Accent": "(e o que muda se você vende por conversa)",
-    "bluf": "Pipedrive ganha em pipeline visual global. Ploomes ganha em B2B brasileiro com proposta e integração ERP. A Vyzon entra quando o comercial mora no WhatsApp e o time precisa de uma EVA que sugere o próximo passo, com humano aprovando o envio.",
+    "bluf": "Pipedrive ganha em pipeline visual global. Ploomes ganha em B2B brasileiro com proposta e integração ERP. A Vyzon entra quando o comercial mora no WhatsApp e o time precisa de uma Lume que sugere o próximo passo, com humano aprovando o envio.",
     "sub": "Este hub existe pra quem está comparando ferramentas de venda, não pra fingir que todo CRM é a mesma coisa. Critérios honestos, forças de cada um, e recomendação por cenário."
   },
   "scenarios": [
@@ -19,7 +19,7 @@
       "id": "whatsapp",
       "label": "Integrador solar no WhatsApp",
       "pick": "Vyzon",
-      "why": "Inbox comercial + EVA assistida no fluxo de conversa. O CRM clássico sozinho não resolve follow-up e triagem no chat."
+      "why": "Inbox comercial + Lume assistida no fluxo de conversa. O CRM clássico sozinho não resolve follow-up e triagem no chat."
     },
     {
       "id": "b2b",
@@ -43,7 +43,7 @@
       "id": "multicanal",
       "label": "Multi-canal (IG/FB/Telegram)",
       "pick": "Kommo",
-      "why": "Bom quando a conversa espalha por vários messengers. Menos foco em stack BR de checkout e menos EVA assistida nativa."
+      "why": "Bom quando a conversa espalha por vários messengers. Menos foco em stack BR de checkout e menos Lume assistida nativa."
     }
   ],
   "matrix": {
@@ -65,7 +65,7 @@
       },
       {
         "feature": "IA no atendimento (humano no controle)",
-        "vyzon": { "level": "yes", "text": "EVA sugere; time aprova e envia" },
+        "vyzon": { "level": "yes", "text": "Lume sugere; time aprova e envia" },
         "pipedrive": { "level": "partial", "text": "AI Assistant (sem WA nativo)" },
         "ploomes": { "level": "partial", "text": "Recursos de IA pontuais" },
         "kommo": { "level": "partial", "text": "Salesbot / AI add-ons" },
@@ -128,7 +128,7 @@
       },
       {
         "title": "Olhe a Vyzon se…",
-        "body": "O integrador solar (ou o comercial) vive no WhatsApp: lead chega, conversa esfria, follow-up some. A EVA lê o contexto, sugere resposta e próximo passo; o humano aprova."
+        "body": "O integrador solar (ou o comercial) vive no WhatsApp: lead chega, conversa esfria, follow-up some. A Lume lê o contexto, sugere resposta e próximo passo; o humano aprova."
       }
     ]
   },
@@ -160,7 +160,7 @@
       "tagline": "CRM multi-messenger",
       "bestFor": "Operações que atendem Instagram, Facebook e Telegram além do WhatsApp.",
       "wins": ["Vários messengers", "Salesbot", "Pipeline multi-canal"],
-      "gaps": ["Pricing em USD", "Checkout BR via gambiarras", "IA menos alinhada ao modelo assistido da EVA"],
+      "gaps": ["Pricing em USD", "Checkout BR via gambiarras", "IA menos alinhada ao modelo assistido da Lume"],
       "verdict": "Melhor quando o canal é espalhado; Vyzon quando o canal é WhatsApp + aprovação humana."
     },
     {
@@ -177,9 +177,9 @@
       "id": "vyzon",
       "name": "Vyzon",
       "domain": "vyzon.com.br",
-      "tagline": "Central comercial com EVA",
+      "tagline": "Central comercial com Lume",
       "bestFor": "Integradores de energia solar e times que vendem por conversa no WhatsApp.",
-      "wins": ["EVA sugere, humano aprova", "WhatsApp + inbox comercial", "Preço em R$ (plano único, Raio-X grátis)"],
+      "wins": ["Lume sugere, humano aprova", "WhatsApp + inbox comercial", "Preço em R$ (plano único, Raio-X grátis)"],
       "gaps": ["Não é CPQ/ERP", "Não é plataforma de inbound", "Não promete robô que vende sozinho"],
       "verdict": "Melhor quando o gargalo é conversa, follow-up e CRM que mente."
     }
@@ -191,11 +191,11 @@
     },
     {
       "q": "A Vyzon substitui Pipedrive ou Ploomes?",
-      "a": "Não como clone de CRM genérico. A Vyzon é Central Comercial com EVA para operação de conversa. Se você precisa de CPQ pesado ou de um CRM global com marketplace enorme, Pipedrive ou Ploomes podem continuar sendo a escolha certa."
+      "a": "Não como clone de CRM genérico. A Vyzon é Central Comercial com Lume para operação de conversa. Se você precisa de CPQ pesado ou de um CRM global com marketplace enorme, Pipedrive ou Ploomes podem continuar sendo a escolha certa."
     },
     {
-      "q": "A EVA responde o cliente sozinha?",
-      "a": "Não. A EVA sugere respostas e próximos passos; o envio passa por aprovação humana. Isso é proposital: controle de marca e risco."
+      "q": "A Lume responde o cliente sozinha?",
+      "a": "Não. A Lume sugere respostas e próximos passos; o envio passa por aprovação humana. Isso é proposital: controle de marca e risco."
     },
     {
       "q": "Posso usar RD Station com a Vyzon?",

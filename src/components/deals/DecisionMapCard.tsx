@@ -5,7 +5,7 @@
 //   - Dados MANUAIS em deals.source_data.mapa_decisao. Sem busca externa,
 //     sem scraping de Google/LinkedIn, sem enriquecimento automático.
 //   - "Detalhe da pessoa" usa SÓ dados internos (conversas + notas do deal).
-//   - EVA SUGERE a partir da conversa; o time aprova antes de adicionar.
+//   - Lume SUGERE a partir da conversa; o time aprova antes de adicionar.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -89,7 +89,7 @@ function snippet(text: string, idx: number) {
     return (start > 0 ? "…" : "") + core + (end < text.length ? "…" : "");
 }
 
-// EVA: heurística de menções a quem decide. Por relação (o lead raramente cita
+// Lume: heurística de menções a quem decide. Por relação (o lead raramente cita
 // o nome), pra o humano completar. Nunca grava sozinha.
 const RELATION_PATTERNS: { re: RegExp; relacao: string; papel: string }[] = [
     { re: /\b(minha esposa|minha mulher|meu marido|meu esposo|c[ôo]njuge)\b/i, relacao: "Cônjuge", papel: "Decisor financeiro" },
@@ -162,7 +162,7 @@ const DecisionNode = ({ p, root = false, onClick }: { p: DecisionPerson; root?: 
         </span>
         <div className="min-w-0 pt-0.5">
             <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[12.5px] font-semibold text-[#0B1220]">{p.nome}</span>
+                <span className="text-[12.5px] font-semibold text-[#0F1730]">{p.nome}</span>
                 {p.papel && (
                     <span className={`inline-flex items-center px-1.5 py-px rounded text-[10px] font-semibold ${ROLE_CHIP[p.papel] ?? "bg-slate-100 text-slate-600"}`}>
                         {p.papel}
@@ -344,17 +344,17 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
             </div>
             <p className="text-[12px] text-[var(--vyz-text-muted)] mb-3">Quem o cliente disse que participa da compra.</p>
 
-            {/* Sugestões da EVA — assistida, time aprova */}
+            {/* Sugestões da Lume — assistida, time aprova */}
             {suggestions.length > 0 && (
                 <div className="space-y-1.5 mb-3">
                     {suggestions.map((s, i) => (
                         <div key={i} className="flex items-start gap-2 rounded-lg bg-[#7C3AED]/5 border border-[#7C3AED]/15 px-2.5 py-2">
                             <span className="text-[9px] font-bold text-white bg-[#7C3AED] rounded-full h-4 w-4 flex items-center justify-center shrink-0 mt-px leading-none">E</span>
                             <div className="min-w-0 flex-1">
-                                <p className="text-[11px] text-[#0B1220] leading-snug">
+                                <p className="text-[11px] text-[#0F1730] leading-snug">
                                     {s.relacao
-                                        ? <>A EVA notou menção a <strong className="font-semibold">{s.relacao.toLowerCase()}</strong> na conversa.</>
-                                        : <>A EVA notou alguém que pode influenciar a decisão.</>}
+                                        ? <>A Lume notou menção a <strong className="font-semibold">{s.relacao.toLowerCase()}</strong> na conversa.</>
+                                        : <>A Lume notou alguém que pode influenciar a decisão.</>}
                                 </p>
                                 <p className="text-[10.5px] text-slate-500 leading-snug mt-0.5">{ondeApareceu(s.kind, s.direction)} · {fmtDate(s.ts)}</p>
                             </div>
@@ -491,19 +491,19 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
                                             {p.relacao && (
                                                 <div>
                                                     <dt className="text-slate-400 text-[10.5px] uppercase tracking-wide">Relação</dt>
-                                                    <dd className="text-[#0B1220] font-medium mt-0.5">{p.relacao}</dd>
+                                                    <dd className="text-[#0F1730] font-medium mt-0.5">{p.relacao}</dd>
                                                 </div>
                                             )}
                                             {p.origem && (
                                                 <div>
                                                     <dt className="text-slate-400 text-[10.5px] uppercase tracking-wide">Como soubemos</dt>
-                                                    <dd className="text-[#0B1220] font-medium mt-0.5">{p.origem}</dd>
+                                                    <dd className="text-[#0F1730] font-medium mt-0.5">{p.origem}</dd>
                                                 </div>
                                             )}
                                         </dl>
                                     )}
                                     <div>
-                                        <p className="text-[11px] font-semibold text-[#0B1220] mb-1.5">Menções nesta negociação</p>
+                                        <p className="text-[11px] font-semibold text-[#0F1730] mb-1.5">Menções nesta negociação</p>
                                         {mentions.length > 0 ? (
                                             <ul className="space-y-1.5">
                                                 {mentions.slice(0, 5).map((m, i) => (
@@ -512,8 +512,8 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
                                                             ? <StickyNote className="h-3.5 w-3.5 text-slate-400 mt-px shrink-0" />
                                                             : <MessageSquare className="h-3.5 w-3.5 text-slate-400 mt-px shrink-0" />}
                                                         <div className="min-w-0">
-                                                            {m.kind === "note" && <p className="text-[11.5px] text-[#0B1220] leading-snug">{m.trecho}</p>}
-                                                            <p className={m.kind === "note" ? "text-[10px] text-slate-400 mt-0.5" : "text-[11.5px] text-[#0B1220] leading-snug"}>
+                                                            {m.kind === "note" && <p className="text-[11.5px] text-[#0F1730] leading-snug">{m.trecho}</p>}
+                                                            <p className={m.kind === "note" ? "text-[10px] text-slate-400 mt-0.5" : "text-[11.5px] text-[#0F1730] leading-snug"}>
                                                                 {m.kind === "note" ? "Nota do time" : `Citado ${ondeApareceu(m.kind, m.direction).replace("Numa", "numa")}`} · {fmtDate(m.ts)}
                                                             </p>
                                                         </div>
@@ -530,13 +530,13 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
                                     {/* Em outros lugares do CRM — contatos + outras negociações */}
                                     {xrefCount > 0 && (
                                         <div>
-                                            <p className="text-[11px] font-semibold text-[#0B1220] mb-1.5">Em outros lugares do CRM</p>
+                                            <p className="text-[11px] font-semibold text-[#0F1730] mb-1.5">Em outros lugares do CRM</p>
                                             <ul className="space-y-1.5">
                                                 {xref!.contacts.map((c) => (
                                                     <li key={"c-" + c.id} className="flex items-center gap-2 rounded-lg bg-slate-50 px-2.5 py-1.5">
                                                         <User className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                                                         <div className="min-w-0">
-                                                            <p className="text-[11.5px] text-[#0B1220] leading-snug truncate">{c.name}</p>
+                                                            <p className="text-[11.5px] text-[#0F1730] leading-snug truncate">{c.name}</p>
                                                             <p className="text-[10px] text-slate-400">{c.phone_e164 || "Contato no WhatsApp"}</p>
                                                         </div>
                                                     </li>
@@ -550,7 +550,7 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
                                                         >
                                                             <Building2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                                                             <div className="min-w-0 flex-1">
-                                                                <p className="text-[11.5px] text-[#0B1220] leading-snug truncate">{d.title}</p>
+                                                                <p className="text-[11.5px] text-[#0F1730] leading-snug truncate">{d.title}</p>
                                                                 {d.customer_name && <p className="text-[10px] text-slate-400 truncate">{d.customer_name}</p>}
                                                             </div>
                                                             <ExternalLink className="h-3 w-3 text-slate-300 shrink-0" />
@@ -563,7 +563,7 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
 
                                     {/* Procurar externamente — atalho de busca, não coleta nem armazena */}
                                     <div>
-                                        <p className="text-[11px] font-semibold text-[#0B1220] mb-1.5">Procurar externamente</p>
+                                        <p className="text-[11px] font-semibold text-[#0F1730] mb-1.5">Procurar externamente</p>
                                         <div className="flex gap-2">
                                             {externalLinks.map((l) => (
                                                 <a
@@ -571,7 +571,7 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
                                                     href={l.url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 rounded-lg border border-[#E5E7EB] text-[11.5px] font-medium text-[#0B1220] hover:border-[#1556C0]/40 hover:text-[#1556C0] transition-colors"
+                                                    className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 rounded-lg border border-[#E5E7EB] text-[11.5px] font-medium text-[#0F1730] hover:border-[#1556C0]/40 hover:text-[#1556C0] transition-colors"
                                                 >
                                                     <ExternalLink className="h-3.5 w-3.5" /> {l.label}
                                                 </a>

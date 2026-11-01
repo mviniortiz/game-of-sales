@@ -1,4 +1,4 @@
-// Configuração da EVA por conversa (/configurar-eva): o que a pessoa confirmou
+// Configuração da Lume por conversa (/configurar-eva): o que a pessoa confirmou
 // no resumo vira o eva_business_context que a whatsapp-copilot e o
 // eva-agent-loop leem. Sem IA aqui: só o que ela viu e aprovou é gravado.
 
@@ -89,7 +89,7 @@ export function resumoInicial(draft: SiteDraft | null, nomeEmpresa: string): Set
     };
 }
 
-/** Perguntas que o site não respondeu, na ordem em que a EVA faz. */
+/** Perguntas que o site não respondeu, na ordem em que a Lume faz. */
 export function perguntasPendentes(r: SetupResumo): ("oQueFaz" | "cidades" | "financiamento" | "ticket" | "travas" | "tom")[] {
     const out: ("oQueFaz" | "cidades" | "financiamento" | "ticket" | "travas" | "tom")[] = [];
     if (!r.oQueFaz.trim()) out.push("oQueFaz");

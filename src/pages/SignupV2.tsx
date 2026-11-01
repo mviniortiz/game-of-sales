@@ -58,7 +58,7 @@ const SignupV2 = () => {
     // Mantido só pra analytics/atribuição de origem: a conta nasce sem plano
     // (o banco força isso no guard_company_billing).
     const plan = (params.get("plan") || "pro").toLowerCase();
-    // Vira companies.segment, que escolhe o pacote da EVA e os nomes do funil.
+    // Vira companies.segment, que escolhe o pacote da Lume e os nomes do funil.
     // Solar é o único segmento que o blueprint reconhece; qualquer outro valor
     // (ou nenhum) cairia no pacote de agência, então todo cadastro nasce solar.
     const segment = SOLAR_SEGMENT;

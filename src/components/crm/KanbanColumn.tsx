@@ -115,11 +115,11 @@ export const KanbanColumn = memo(({
       <div
         ref={setNodeRef}
         className={`
-          relative flex flex-col w-[88vw] max-w-[380px] sm:w-[256px] 2xl:w-[280px] sm:max-w-none flex-shrink-0 h-full rounded-2xl
+          relative flex flex-col w-[88vw] max-w-[380px] sm:w-[248px] 2xl:w-[280px] sm:max-w-none flex-shrink-0 h-full rounded-2xl
           border transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] overflow-hidden
           ${isOver
             ? "border-[var(--vyz-accent-border-strong)] bg-[var(--vyz-accent-soft-4)]"
-            : "border-transparent bg-[rgba(15,23,42,0.03)] dark:bg-card/40"
+            : "border-transparent bg-transparent"
           }
         `}
       >
@@ -127,8 +127,7 @@ export const KanbanColumn = memo(({
             dinheiro está nesta etapa comparada à maior. */}
         <div className="px-3.5 pt-3.5 pb-2">
           <div className="flex items-center gap-2">
-            <span className={`h-2 w-2 rounded-full flex-shrink-0 ${dotBg}`} aria-hidden />
-            <span className="font-semibold text-foreground text-[13px] tracking-tight truncate">
+                        <span className="font-semibold text-foreground text-[13px] tracking-tight truncate">
               {stage.title}
             </span>
             <span className="text-[12px] font-semibold tabular-nums text-[var(--vyz-text-muted)]">
@@ -175,7 +174,7 @@ export const KanbanColumn = memo(({
                     <p className={`text-[10.5px] text-center leading-relaxed ${isOver ? "text-[var(--vyz-accent)] font-medium" : "text-muted-foreground/60"}`}>
                       {isOver
                         ? "Solte aqui"
-                        : "Arraste um card pra cá. A EVA também move quando a conversa avança."}
+                        : "Arraste um card pra cá. A Lume também move quando a conversa avança."}
                     </p>
                   </div>
                 ) : (

@@ -64,7 +64,7 @@ const Panel = ({ title, icon: Icon, action, children, className = "" }: {
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                     {Icon && <Icon className="h-4 w-4 text-slate-400" />}
-                    <h2 className="text-[13px] font-semibold text-[#0B1220]">{title}</h2>
+                    <h2 className="text-[13px] font-semibold text-[#0F1730]">{title}</h2>
                 </div>
                 {action}
             </div>
@@ -106,7 +106,7 @@ const TrendKpi = ({ label, value, context, tone = "default", trend, goodWhenUp, 
         <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
             <p className="text-[11.5px] font-semibold text-slate-500">{label}</p>
             <div className="flex items-baseline gap-1.5 mt-1">
-                <p className={`text-[22px] font-bold leading-tight tabular-nums ${tone === "muted" ? "text-slate-400" : "text-[#0B1220]"}`}>{value}</p>
+                <p className={`text-[22px] font-bold leading-tight tabular-nums ${tone === "muted" ? "text-slate-400" : "text-[#0F1730]"}`}>{value}</p>
                 {delta != null && delta !== 0 && (
                     <span className="text-[11px] font-bold tabular-nums leading-none" style={{ color: deltaColor }} title="vs. dia anterior">
                         {delta > 0 ? "↑" : "↓"}{formatDelta(Math.abs(delta))}
@@ -259,13 +259,13 @@ const SalesPerformanceCenter = () => {
         [activeCompanyId],
     );
 
-    // ─── Leitura da EVA: única voz de insight (absorve a antiga "Atenção do gestor") ──
+    // ─── Leitura da Lume: única voz de insight (absorve a antiga "Atenção do gestor") ──
     const eva = useMemo(() => {
         const bullets: { tone: "eva" | "warn" | "muted"; text: React.ReactNode }[] = [];
         if (m.funnelReliable && m.bottleneck && m.bottleneck.pct !== null) {
             bullets.push({
                 tone: "eva",
-                text: <>Maior queda em <strong className="text-[#0B1220]">{stageLbl(m.bottleneck.fromId, m.bottleneck.fromLabel)} → {stageLbl(m.bottleneck.toId, m.bottleneck.toLabel)}</strong> ({m.bottleneck.pct}%). É onde os deals estão caindo.</>,
+                text: <>Maior queda em <strong className="text-[#0F1730]">{stageLbl(m.bottleneck.fromId, m.bottleneck.fromLabel)} → {stageLbl(m.bottleneck.toId, m.bottleneck.toLabel)}</strong> ({m.bottleneck.pct}%). É onde os deals estão caindo.</>,
             });
         }
         if (m.stalledNegotiations.length > 0) bullets.push({ tone: "warn", text: `${m.stalledNegotiations.length} negociação(ões) parada(s) há mais de 7 dias.` });
@@ -296,7 +296,7 @@ const SalesPerformanceCenter = () => {
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
             <div>
                 <div className="flex items-center gap-2">
-                    <h1 className="text-xl sm:text-2xl font-bold text-[#0B1220] tracking-tight">Performance Comercial</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold text-[#0F1730] tracking-tight">Performance Comercial</h1>
                     <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#1556C0]/10 text-[#1556C0]">
                         {isManager ? "Visão da empresa" : "Minha performance"}
                     </span>
@@ -342,7 +342,7 @@ const SalesPerformanceCenter = () => {
                         <UserX className="h-5 w-5 text-rose-600" />
                     </span>
                     <div className="min-w-0 flex-1">
-                        <p className="text-[13.5px] font-semibold text-[#0B1220]">
+                        <p className="text-[13.5px] font-semibold text-[#0F1730]">
                             {m.unassigned.count} {m.unassigned.count === 1 ? "oportunidade" : "oportunidades"} sem responsável · {formatCurrencyCompact(m.unassigned.value)}
                         </p>
                         <p className="text-[12.5px] text-slate-600 mt-0.5">Ninguém está conduzindo esses deals. Distribua para o time avançar.</p>
@@ -375,14 +375,14 @@ const SalesPerformanceCenter = () => {
                     trend={trends.perf_forecast} goodWhenUp formatDelta={(a) => formatCurrencyCompact(a)} />
             </div>
 
-            {/* 4. Funil de conversão + Leitura da EVA */}
+            {/* 4. Funil de conversão + Leitura da Lume */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
                 <Panel className="lg:col-span-2">
                     <div className="flex items-start justify-between mb-4">
                         <div>
                             <div className="flex items-center gap-2">
                                 <Target className="h-4 w-4 text-slate-400" />
-                                <h2 className="text-[13px] font-semibold text-[#0B1220]">Funil de conversão</h2>
+                                <h2 className="text-[13px] font-semibold text-[#0F1730]">Funil de conversão</h2>
                             </div>
                             <p className="text-[12px] text-slate-500 mt-0.5">Passagem entre etapas (snapshot do pipeline atual)</p>
                         </div>
@@ -405,11 +405,11 @@ const SalesPerformanceCenter = () => {
                             <div className="flex items-center gap-8 pb-4 mb-4 border-b border-[#F1F5F9]">
                                 <div>
                                     <p className="text-[11px] text-slate-500">Pipeline total</p>
-                                    <p className="text-[20px] font-bold text-[#0B1220] tabular-nums leading-tight">{formatCurrencyCompact(m.pipelineValue)}</p>
+                                    <p className="text-[20px] font-bold text-[#0F1730] tabular-nums leading-tight">{formatCurrencyCompact(m.pipelineValue)}</p>
                                 </div>
                                 <div>
                                     <p className="text-[11px] text-slate-500">Oportunidades</p>
-                                    <p className="text-[20px] font-bold text-[#0B1220] tabular-nums leading-tight">{m.openCount} abertas</p>
+                                    <p className="text-[20px] font-bold text-[#0F1730] tabular-nums leading-tight">{m.openCount} abertas</p>
                                 </div>
                             </div>
 
@@ -425,12 +425,12 @@ const SalesPerformanceCenter = () => {
                                         return (
                                             <div key={c.fromId} className={`rounded-xl px-3 py-2.5 -mx-1 ${isBottleneck ? "bg-rose-50 ring-1 ring-rose-200" : ""}`}>
                                                 <div className="flex items-center justify-between gap-3 mb-1.5">
-                                                    <span className="text-[13px] font-medium text-[#0B1220] min-w-0 truncate">
+                                                    <span className="text-[13px] font-medium text-[#0F1730] min-w-0 truncate">
                                                         {stageLbl(c.fromId, c.fromLabel)} <span className="text-slate-400">→</span> {stageLbl(c.toId, c.toLabel)}
                                                     </span>
                                                     <div className="flex items-center gap-2 shrink-0">
                                                         {isBottleneck && <span className="text-[10.5px] font-semibold text-rose-600">maior queda</span>}
-                                                        <span className={`text-[14px] font-bold tabular-nums ${isBottleneck ? "text-rose-600" : weak ? "text-slate-400" : "text-[#0B1220]"}`}>
+                                                        <span className={`text-[14px] font-bold tabular-nums ${isBottleneck ? "text-rose-600" : weak ? "text-slate-400" : "text-[#0F1730]"}`}>
                                                             {c.pct !== null ? `${c.pct}%` : "—"}
                                                         </span>
                                                     </div>
@@ -450,17 +450,17 @@ const SalesPerformanceCenter = () => {
                     )}
                 </Panel>
 
-                {/* Leitura da EVA — única voz de insight (gargalo + atenção, num lugar só) */}
+                {/* Leitura da Lume — única voz de insight (gargalo + atenção, num lugar só) */}
                 <Panel className="bg-[#FAF5FF] border-[#E9D5FF]">
                     <div className="flex items-center gap-2 mb-3">
                         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#7C3AED] text-white text-[8px] font-bold leading-none">E</span>
-                        <h2 className="text-[13px] font-semibold text-[#7C3AED]">Leitura da EVA</h2>
+                        <h2 className="text-[13px] font-semibold text-[#7C3AED]">Leitura da Lume</h2>
                     </div>
                     {m.openCount === 0 ? (
-                        <p className="text-[12.5px] text-slate-500">Quando houver oportunidades no funil, a EVA aponta o gargalo e o que destravar aqui.</p>
+                        <p className="text-[12.5px] text-slate-500">Quando houver oportunidades no funil, a Lume aponta o gargalo e o que destravar aqui.</p>
                     ) : (
                         <>
-                            <p className="text-[13px] font-semibold text-[#0B1220] leading-snug mb-3">{eva.headline}</p>
+                            <p className="text-[13px] font-semibold text-[#0F1730] leading-snug mb-3">{eva.headline}</p>
                             <ul className="space-y-2 text-[12.5px] text-slate-600">
                                 {eva.bullets.map((b, i) => (
                                     <li key={i} className="flex gap-1.5">
@@ -474,7 +474,7 @@ const SalesPerformanceCenter = () => {
                             </button>
                         </>
                     )}
-                    <p className="text-[10px] text-[#7C3AED]/70 mt-3 pt-3 border-t border-[#E9D5FF]">A EVA aponta tendências. As decisões seguem com o time.</p>
+                    <p className="text-[10px] text-[#7C3AED]/70 mt-3 pt-3 border-t border-[#E9D5FF]">A Lume aponta tendências. As decisões seguem com o time.</p>
                 </Panel>
             </div>
 
@@ -499,7 +499,7 @@ const SalesPerformanceCenter = () => {
                                     return (
                                         <li key={uid} className="flex items-center justify-between gap-3 py-2.5">
                                             <div className="min-w-0">
-                                                <p className="text-[13px] font-medium text-[#0B1220] truncate">{sellerName(uid)}</p>
+                                                <p className="text-[13px] font-medium text-[#0F1730] truncate">{sellerName(uid)}</p>
                                                 <p className="text-[12px] text-slate-500">{agg.count} oportunidade(s) · {formatCurrencyCompact(agg.value)}</p>
                                             </div>
                                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold ${stalled > 0 ? "bg-amber-50 text-amber-700 border border-amber-200" : "bg-[#10B981]/10 text-[#0F8A63] border border-[#10B981]/20"}`}>
@@ -513,10 +513,10 @@ const SalesPerformanceCenter = () => {
                     })()
                 ) : (
                     <div className="grid grid-cols-2 gap-3">
-                        <div><p className="text-[11px] text-slate-500">Minhas oportunidades</p><p className="text-[18px] font-bold text-[#0B1220] tabular-nums">{m.openCount}</p></div>
-                        <div><p className="text-[11px] text-slate-500">Meu pipeline</p><p className="text-[18px] font-bold text-[#0B1220] tabular-nums">{formatCurrencyCompact(m.pipelineValue)}</p></div>
-                        <div><p className="text-[11px] text-slate-500">Deals parados</p><p className="text-[18px] font-bold text-[#0B1220] tabular-nums">{m.anyStalled.length}</p></div>
-                        <div><p className="text-[11px] text-slate-500">Leads quentes</p><p className="text-[18px] font-bold text-[#0B1220] tabular-nums">{m.visibleOpen.filter((d) => d.is_hot).length}</p></div>
+                        <div><p className="text-[11px] text-slate-500">Minhas oportunidades</p><p className="text-[18px] font-bold text-[#0F1730] tabular-nums">{m.openCount}</p></div>
+                        <div><p className="text-[11px] text-slate-500">Meu pipeline</p><p className="text-[18px] font-bold text-[#0F1730] tabular-nums">{formatCurrencyCompact(m.pipelineValue)}</p></div>
+                        <div><p className="text-[11px] text-slate-500">Deals parados</p><p className="text-[18px] font-bold text-[#0F1730] tabular-nums">{m.anyStalled.length}</p></div>
+                        <div><p className="text-[11px] text-slate-500">Leads quentes</p><p className="text-[18px] font-bold text-[#0F1730] tabular-nums">{m.visibleOpen.filter((d) => d.is_hot).length}</p></div>
                     </div>
                 )}
             </Panel>

@@ -16,7 +16,7 @@ import type { TagEntityType } from "@/types/tags";
 
 const PALETTE = [
     { key: "emerald", hex: "#10B981" },
-    { key: "blue", hex: "#2563EB" },
+    { key: "blue", hex: "#1556C0" },
     { key: "sky", hex: "#0EA5E9" },
     { key: "violet", hex: "#8B5CF6" },
     { key: "purple", hex: "#A855F7" },
@@ -54,7 +54,7 @@ function TagBadge({ name, color }: { name: string; color: string | null }) {
     return (
         <span
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
-            style={{ background: rgba(hex, 0.12), border: `1px solid ${rgba(hex, 0.28)}`, color: "#0B1220" }}
+            style={{ background: rgba(hex, 0.12), border: `1px solid ${rgba(hex, 0.28)}`, color: "#0F1730" }}
         >
             <span className="w-2 h-2 rounded-full shrink-0" style={{ background: hex }} />
             {name}
@@ -163,8 +163,8 @@ export default function Tags() {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar tag..."
-                        className="w-full pl-9 pr-3 h-9 text-sm rounded-lg outline-none transition-colors focus:border-[#2563EB]"
-                        style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", color: "#0B1220" }}
+                        className="w-full pl-9 pr-3 h-9 text-sm rounded-lg outline-none transition-colors focus:border-[#1556C0]"
+                        style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", color: "#0F1730" }}
                     />
                 </div>
                 <button className={primaryBtn} onClick={openCreate}>
@@ -175,14 +175,14 @@ export default function Tags() {
             {/* Lista */}
             {loading ? (
                 <div className="rounded-2xl p-10 flex items-center justify-center" style={{ background: "#FFFFFF", border: "1px solid #E6EDF5" }}>
-                    <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#2563EB" }} />
+                    <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#1556C0" }} />
                 </div>
             ) : filtered.length === 0 ? (
                 <div className="rounded-2xl p-10 text-center" style={{ background: "#FFFFFF", border: "1px solid #E6EDF5" }}>
-                    <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" style={{ background: "rgba(37,99,235,0.08)" }}>
-                        <TagIcon className="w-6 h-6" style={{ color: "#2563EB" }} />
+                    <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" style={{ background: "rgba(21,86,192,0.08)" }}>
+                        <TagIcon className="w-6 h-6" style={{ color: "#1556C0" }} />
                     </div>
-                    <p className="text-sm font-semibold" style={{ color: "#0B1220" }}>
+                    <p className="text-sm font-semibold" style={{ color: "#0F1730" }}>
                         {search ? "Nenhuma tag encontrada" : "Nenhuma tag ainda"}
                     </p>
                     <p className="text-[13px] mt-1" style={{ color: "#64748B" }}>
@@ -247,7 +247,7 @@ export default function Tags() {
             <Dialog open={!!form} onOpenChange={(o) => !o && setForm(null)}>
                 <DialogContent className="sm:max-w-[440px]" style={{ background: "#FFFFFF", border: "1px solid #E6EDF5" }}>
                     <DialogHeader>
-                        <DialogTitle style={{ color: "#0B1220" }}>{form?.id ? "Editar tag" : "Nova tag"}</DialogTitle>
+                        <DialogTitle style={{ color: "#0F1730" }}>{form?.id ? "Editar tag" : "Nova tag"}</DialogTitle>
                         <DialogDescription style={{ color: "#64748B" }}>
                             Tags ajudam o time a filtrar e organizar deals, conversas e contatos.
                         </DialogDescription>
@@ -263,8 +263,8 @@ export default function Tags() {
                                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                                     onKeyDown={(e) => e.key === "Enter" && handleSave()}
                                     placeholder="Ex: Lead quente, Sem orçamento, VIP"
-                                    className="w-full h-10 px-3 rounded-lg text-sm outline-none transition-colors focus:border-[#2563EB]"
-                                    style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", color: "#0B1220" }}
+                                    className="w-full h-10 px-3 rounded-lg text-sm outline-none transition-colors focus:border-[#1556C0]"
+                                    style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", color: "#0F1730" }}
                                 />
                             </div>
 
@@ -294,8 +294,8 @@ export default function Tags() {
                                     value={form.description}
                                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                                     placeholder="Quando usar essa tag"
-                                    className="w-full h-10 px-3 rounded-lg text-sm outline-none transition-colors focus:border-[#2563EB]"
-                                    style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", color: "#0B1220" }}
+                                    className="w-full h-10 px-3 rounded-lg text-sm outline-none transition-colors focus:border-[#1556C0]"
+                                    style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", color: "#0F1730" }}
                                 />
                             </div>
 
@@ -320,7 +320,7 @@ export default function Tags() {
             <Dialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
                 <DialogContent className="sm:max-w-[420px]" style={{ background: "#FFFFFF", border: "1px solid #E6EDF5" }}>
                     <DialogHeader>
-                        <DialogTitle style={{ color: "#0B1220" }}>Excluir tag</DialogTitle>
+                        <DialogTitle style={{ color: "#0F1730" }}>Excluir tag</DialogTitle>
                         <DialogDescription style={{ color: "#64748B" }}>
                             {deleting && (
                                 <>
@@ -353,7 +353,7 @@ export default function Tags() {
             <Dialog open={!!merging} onOpenChange={(o) => !o && (setMerging(null), setMergeTarget(null))}>
                 <DialogContent className="sm:max-w-[440px]" style={{ background: "#FFFFFF", border: "1px solid #E6EDF5" }}>
                     <DialogHeader>
-                        <DialogTitle style={{ color: "#0B1220" }}>Mesclar tag</DialogTitle>
+                        <DialogTitle style={{ color: "#0F1730" }}>Mesclar tag</DialogTitle>
                         <DialogDescription style={{ color: "#64748B" }}>
                             {merging && (
                                 <>Os usos de <strong>{merging.name}</strong> vão para a tag escolhida, e <strong>{merging.name}</strong> será excluída.</>
@@ -371,11 +371,11 @@ export default function Tags() {
                                         onClick={() => setMergeTarget(t.id)}
                                         className="w-full flex items-center justify-between gap-2 p-2.5 rounded-xl text-left transition-colors"
                                         style={active
-                                            ? { background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.3)" }
+                                            ? { background: "rgba(21,86,192,0.05)", border: "1px solid rgba(21,86,192,0.3)" }
                                             : { background: "#FFFFFF", border: "1px solid #E6EDF5" }}
                                     >
                                         <TagBadge name={t.name} color={t.color} />
-                                        {active && <Check className="w-4 h-4" style={{ color: "#2563EB" }} />}
+                                        {active && <Check className="w-4 h-4" style={{ color: "#1556C0" }} />}
                                     </button>
                                 );
                             })}

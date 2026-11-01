@@ -1,4 +1,4 @@
-// /configurar-eva: a EVA aprende a empresa numa conversa de uns 3 minutos.
+// /configurar-eva: a Lume aprende a empresa numa conversa de uns 3 minutos.
 // Lê o site (edge eva-site-context), pergunta só o que faltou e mostra um
 // resumo editável; nada é gravado antes do "É isso, salvar".
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
@@ -32,10 +32,10 @@ import {
 
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 const BTN_BASE = `inline-flex h-11 items-center justify-center gap-1.5 rounded-full px-5 text-[15px] font-semibold transition-all duration-150 ${EASE} active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100`;
-const BTN_PRIMARY = `${BTN_BASE} bg-[#0B1220] text-white hover:bg-[#1F2A3B]`;
+const BTN_PRIMARY = `${BTN_BASE} bg-[#0F1730] text-white hover:bg-[#1F2A3B]`;
 const CHIP = `inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 py-2 text-left text-[14px] font-medium transition-colors duration-150 ${EASE} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2`;
 const CHIP_OFF = "border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-1)] text-[var(--vyz-text-strong)] hover:bg-[var(--vyz-surface-2)]";
-const CHIP_ON = "border-[#0B1220] bg-[#0B1220] text-white";
+const CHIP_ON = "border-[#0F1730] bg-[#0F1730] text-white";
 
 type Pergunta = ReturnType<typeof perguntasPendentes>[number];
 type Fase = "site" | "lendo" | Pergunta | "resumo" | "salvando" | "whatsapp" | "importando" | "placar";
@@ -96,11 +96,11 @@ export default function ConfigurarEva() {
         });
     }, [companyId]);
 
-    // Quem já ensinou a empresa para a EVA pula direto para o WhatsApp.
+    // Quem já ensinou a empresa para a Lume pula direto para o WhatsApp.
     useEffect(() => {
         if (configured === null || wa.loading || inicioDecidido.current) return;
         inicioDecidido.current = true;
-        const oi = `Oi${primeiroNome ? `, ${primeiroNome}` : ""}. Eu sou a EVA.`;
+        const oi = `Oi${primeiroNome ? `, ${primeiroNome}` : ""}. Eu sou a Lume.`;
         if (configured) {
             setMsgs([{ de: "eva", texto: `${oi} Já conheço a ${empresa}. Falta pouco para eu começar a trabalhar.` }]);
             irParaWhatsapp();
@@ -344,7 +344,7 @@ export default function ConfigurarEva() {
                                     aria-label={fase === "site" ? "Site da empresa" : PERGUNTA[fase]}
                                     className="h-11 min-w-0 flex-1 rounded-full border border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-1)] px-4 text-[16px] outline-none placeholder:text-[var(--vyz-text-soft)] focus:border-[var(--vyz-accent)] focus:ring-2 focus:ring-[var(--vyz-accent)]/20"
                                 />
-                                <button type="submit" disabled={!texto.trim()} aria-label="Enviar" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#0B1220] text-white transition-colors hover:bg-[#1F2A3B] disabled:opacity-40">
+                                <button type="submit" disabled={!texto.trim()} aria-label="Enviar" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#0F1730] text-white transition-colors hover:bg-[#1F2A3B] disabled:opacity-40">
                                     <ArrowUp className="h-5 w-5" aria-hidden />
                                 </button>
                             </div>
@@ -473,7 +473,7 @@ function Placar({ r }: { r: Seed }) {
     }, [r.stuck_value]);
 
     return (
-        <section aria-label="Propostas paradas" className="flex flex-col gap-4 rounded-2xl border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_16px_40px_-20px_rgba(37,99,235,0.35)] sm:ml-8">
+        <section aria-label="Propostas paradas" className="flex flex-col gap-4 rounded-2xl border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_16px_40px_-20px_rgba(21,86,192,0.35)] sm:ml-8">
             <div>
                 <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--vyz-text-muted)]">Parado no seu WhatsApp</p>
                 <p className="mt-1 font-satoshi text-[40px] font-black leading-none tracking-[-0.03em] text-[var(--vyz-text-primary)] tabular-nums">

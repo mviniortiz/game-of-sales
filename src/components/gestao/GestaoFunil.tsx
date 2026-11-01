@@ -29,12 +29,12 @@ export function GestaoFunil() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[13px] text-[var(--vyz-text-muted)]">
-          As etapas que a EVA e a equipe usam para mover as oportunidades.
+          As etapas que a Lume e a equipe usam para mover as oportunidades.
         </p>
         <button
           type="button"
           onClick={() => setCreating(true)}
-          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-1)] px-4 text-[13px] font-semibold text-[var(--vyz-text-primary)] transition-colors hover:bg-[var(--vyz-surface-2)] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.28)]"
+          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-1)] px-4 text-[13px] font-semibold text-[var(--vyz-text-primary)] transition-colors hover:bg-[var(--vyz-surface-2)] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.28)]"
         >
           <Plus size={14} weight="bold" aria-hidden /> Novo funil
         </button>
@@ -95,7 +95,7 @@ function PipelineCard({ pipeline, onEdit }: { pipeline: Pipeline; onEdit: () => 
         <button
           type="button"
           onClick={onEdit}
-          className="rounded-full px-3 py-1.5 text-[13px] font-medium text-[var(--vyz-accent)] transition-colors hover:bg-[var(--vyz-accent-soft-8)] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.28)]"
+          className="rounded-full px-3 py-1.5 text-[13px] font-medium text-[var(--vyz-accent)] transition-colors hover:bg-[var(--vyz-accent-soft-8)] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.28)]"
         >
           Editar etapas
         </button>

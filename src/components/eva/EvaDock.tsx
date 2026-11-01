@@ -7,7 +7,7 @@ import { EvaHeroAtom } from "./EvaHeroAtom";
 const STORAGE_KEY = "eva:dock-open";
 
 /**
- * Eva Dock — botão flutuante + sidechat lateral + atom compartilhado (layoutId).
+ * Lume Dock — botão flutuante + sidechat lateral + atom compartilhado (layoutId).
  * O atom migra do botão pro header do sidechat automaticamente via FLIP animation
  * do framer-motion. Atalho: Ctrl/Cmd + K.
  */

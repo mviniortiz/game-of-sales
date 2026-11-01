@@ -365,7 +365,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
             </motion.div>
 
             {/* ── Contact group ─────────────────────────── */}
-            <motion.div variants={sectionItem} className="space-y-3 p-4 rounded-xl bg-[var(--vyz-surface-1)] border border-[var(--vyz-border)] transition-shadow duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-18px_rgba(37,99,235,0.16)]">
+            <motion.div variants={sectionItem} className="space-y-3 p-4 rounded-xl bg-[var(--vyz-surface-1)] border border-[var(--vyz-border)] transition-shadow duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-18px_rgba(21,86,192,0.16)]">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <User className="h-3 w-3" />
                 Contato

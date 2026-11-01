@@ -46,8 +46,8 @@ export const PeriodToggle = ({
             className={cn(
               "h-7 rounded-md px-3 text-[11.5px] font-medium transition-colors",
               active
-                ? "bg-white text-[#0B1220] shadow-sm ring-1 ring-[#E6EDF5]"
-                : "text-[#64748B] hover:text-[#0B1220]",
+                ? "bg-white text-[#0F1730] shadow-sm ring-1 ring-[#E6EDF5]"
+                : "text-[#64748B] hover:text-[#0F1730]",
             )}
           >
             {longLabels ? range.longLabel : range.label}

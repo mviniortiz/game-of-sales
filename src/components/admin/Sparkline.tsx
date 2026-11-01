@@ -12,7 +12,7 @@ interface SparklineProps {
  * Mini-gráfico de tendência (SVG leve, sem dependência de chart lib).
  * Usado nos KPIs reimaginados das telas de Gestão.
  */
-export function Sparkline({ data, color = "#2563EB", width = 100, height = 32, className }: SparklineProps) {
+export function Sparkline({ data, color = "#1556C0", width = 100, height = 32, className }: SparklineProps) {
   const gid = useId();
   if (!data || data.length < 2) {
     return <div style={{ height }} className={className} aria-hidden />;

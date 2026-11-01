@@ -7,7 +7,7 @@ import { useWhatsappStatus, whatsappStatusKey } from "@/hooks/useWhatsappStatus"
 import "./whatsappStatus.css";
 
 // Pílula do topo do app com o estado real do WhatsApp. A queda do número é o que
-// mais custa ao dono sem ele perceber: a retomada da EVA não chega, a prospecção
+// mais custa ao dono sem ele perceber: a retomada da Lume não chega, a prospecção
 // para e as respostas dos clientes não entram. Em 16/10/2026 o chip caiu às 11h40
 // e só foi notado às 12h25. Referência visual: "Up to date" da bluma.design.
 
@@ -25,7 +25,7 @@ function hora(iso: string | null): string {
     return iso ? new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
 }
 
-export function WhatsappStatusPill() {
+export function WhatsappStatusPill({ soProblema = false }: { soProblema?: boolean }) {
     const { data } = useWhatsappStatus();
     const [qrAberto, setQrAberto] = useState(false);
     const queryClient = useQueryClient();
@@ -34,6 +34,8 @@ export function WhatsappStatusPill() {
 
     // Sem dado do vigia ainda: melhor não mostrar nada do que chutar "conectado".
     if (!data || data.estado === "verificando") return null;
+    // Na sidebar a pílula só aparece quando o número pede atenção.
+    if (soProblema && data.estado === "conectado") return null;
 
     const { estado } = data;
     const quando = haQuanto(data.desde);
@@ -52,7 +54,7 @@ export function WhatsappStatusPill() {
     const titulo = estado === "conectado"
         ? [data.numero ? `Número ${data.numero}` : "", quando && quando !== "agora" ? `conectado ${quando}` : "", conferido].filter(Boolean).join(" · ")
         : estado === "desconectado"
-            ? `A EVA não manda retomada, a prospecção para e as respostas não chegam até reconectar. ${conferido}`.trim()
+            ? `A Lume não manda retomada, a prospecção para e as respostas não chegam até reconectar. ${conferido}`.trim()
             : conferido;
 
     return (

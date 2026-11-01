@@ -1,4 +1,4 @@
-// Catálogo dos agentes especialistas da EVA. Fonte única do que muda por agente:
+// Catálogo dos agentes especialistas da Lume. Fonte única do que muda por agente:
 // cor (orb + acento do chat), perguntas de abertura, campos que a entrevista
 // monta e o "foco" que orienta o LLM. A edge `eva-studio-chat` espelha o foco/
 // campos no servidor (Deno não importa daqui). Qualificação é o agente vivo no
@@ -24,7 +24,7 @@ export interface Specialist {
     accent: string;
     /** Descrição no card da galeria. */
     desc: string;
-    /** Primeira fala da EVA naquele chat. */
+    /** Primeira fala da Lume naquele chat. */
     opening: string;
     /** Os 4 campos que a conversa monta. */
     fields: SpecialistField[];

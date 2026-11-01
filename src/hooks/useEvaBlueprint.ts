@@ -196,7 +196,7 @@ export function useEvaBlueprint() {
                 // Tabela fora dos types gerados; select() é tipado como SelectQueryError.
                 const ctxRow = ctxRowRaw as unknown as { id: string; playbooks: unknown } | null;
                 if (ctxErr) {
-                    result.rulesNote = "Contexto da EVA indisponível; regras não aplicadas.";
+                    result.rulesNote = "Contexto da Lume indisponível; regras não aplicadas.";
                 } else {
                     const playbooks = Array.isArray(ctxRow?.playbooks) ? ctxRow.playbooks : [];
                     const seen = new Set(playbooks.map((p: any) => norm(p?.title) || norm(p?.content)));

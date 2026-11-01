@@ -10,7 +10,7 @@ import { AuthField } from "@/components/auth/AuthField";
 import { APP_HOME } from "@/config/routes";
 
 // LP.6/AUTH.1 — login premium dark. Duas colunas: form à esquerda, painel que
-// VENDE à direita (orb + cartão de rascunho da EVA). AUTH.1: validação inline
+// VENDE à direita (orb + cartão de rascunho da Lume). AUTH.1: validação inline
 // com erro no campo (não toast), toggle de senha, aviso de caps lock, Google
 // com loading próprio, email viaja pra recuperação/cadastro via router state.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;

@@ -1,6 +1,6 @@
 // VYZON.AGENTS.3.1 — Pacote Agência (Padrão de Agência) para o agente Qualificador.
 //
-// É o blueprint padrão com que uma agência "nasce": no estado `seeded`, a EVA já
+// É o blueprint padrão com que uma agência "nasce": no estado `seeded`, a Lume já
 // pode SUGERIR (campos/tags/perguntas) desde o dia 1, sem o dono configurar nada.
 //
 // A segurança NÃO está aqui: ela está na aprovação humana POR SUGESTÃO (1 toque).
@@ -9,7 +9,7 @@
 // "do seu jeito" (status approved_assisted = selo de afinado).
 import type { Blueprint } from "@/lib/eva/blueprint";
 
-// Perguntas básicas de qualificação que a EVA recomenda ao vendedor.
+// Perguntas básicas de qualificação que a Lume recomenda ao vendedor.
 // Não são enviadas automaticamente — viram "Copiar pro WhatsApp" no fluxo.
 export const AGENCY_QUESTIONS: string[] = [
     "Que serviço você procura (tráfego, social media, site, lançamento)?",

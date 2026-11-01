@@ -2,8 +2,8 @@ import { Clock, Target, Bell, Sparkle } from "lucide-react";
 
 // LP.2.4 2026-05-25: substitui a OperationFlowSection (5 etapas + mock sticky).
 // LP.2.5: cards reorientados pra RESULTADO (responder/priorizar/follow-up), não
-// pros módulos Inbox/EVA/Pipeline — esses já vivem na dark AgentStudioSection.
-// Sem mock, sem 5 etapas, sem automação autônoma (EVA sugere, time aprova).
+// pros módulos Inbox/Lume/Pipeline — esses já vivem na dark AgentStudioSection.
+// Sem mock, sem 5 etapas, sem automação autônoma (Lume sugere, time aprova).
 const CARDS = [
     {
         icon: Clock,
@@ -14,7 +14,7 @@ const CARDS = [
     {
         icon: Target,
         title: "Priorize melhor",
-        body: "A EVA aponta fit, intenção e urgência, então o time foca em quem está pronto pra avançar.",
+        body: "A Lume aponta fit, intenção e urgência, então o time foca em quem está pronto pra avançar.",
         accent: "#7C3AED",
     },
     {
@@ -57,7 +57,7 @@ export const CentralComercialSection = () => {
                         className="mt-5 mx-auto max-w-2xl"
                         style={{ fontSize: "clamp(0.95rem, 1.8vw, 1.125rem)", lineHeight: 1.6, color: "rgba(10,10,10,0.58)" }}
                     >
-                        Conversas, prioridades, oportunidades e próximos passos conectados pela EVA.
+                        Conversas, prioridades, oportunidades e próximos passos conectados pela Lume.
                     </p>
                 </div>
 
@@ -108,13 +108,13 @@ export const CentralComercialSection = () => {
                     A Central mostra o que precisa de atenção hoje, sem depender de cobrança no grupo.
                 </p>
 
-                {/* Microcopy EVA assistida */}
+                {/* Microcopy Lume assistida */}
                 <p
                     className="mt-5 text-center inline-flex items-center gap-1.5 w-full justify-center landing-fade-in landing-delay-300"
                     style={{ fontSize: "0.875rem", color: "#6D28D9", fontWeight: 600 }}
                 >
                     <Sparkle className="h-3.5 w-3.5" strokeWidth={2.3} />
-                    A EVA sugere. Seu time aprova.
+                    A Lume sugere. Seu time aprova.
                 </p>
             </div>
         </section>

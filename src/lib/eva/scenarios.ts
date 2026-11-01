@@ -1,5 +1,5 @@
 // EVA.STUDIO.8A — Cenários determinísticos de simulação (demo, sem IA real).
-// Usados na aba Simulações para testar como a EVA responderia ANTES do uso.
+// Usados na aba Simulações para testar como a Lume responderia ANTES do uso.
 export interface Scenario {
     key: string;
     label: string;

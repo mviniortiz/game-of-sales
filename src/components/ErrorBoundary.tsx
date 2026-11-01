@@ -98,7 +98,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </div>
 
               {/* Title + description */}
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight mb-2" style={{ color: "#0B1220" }}>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight mb-2" style={{ color: "#0F1730" }}>
                 Algo deu errado
               </h1>
               <p className="text-sm leading-relaxed mb-6" style={{ color: "#64748B" }}>
@@ -132,7 +132,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 <button
                   onClick={this.handleReload}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold text-white flex-1 transition-transform hover:-translate-y-px"
-                  style={{ background: "linear-gradient(135deg, #2563EB, #1D4ED8)", boxShadow: "0 4px 20px -6px rgba(37,99,235,0.5)" }}
+                  style={{ background: "linear-gradient(135deg, #1556C0, #1D4ED8)", boxShadow: "0 4px 20px -6px rgba(21,86,192,0.5)" }}
                 >
                   <RefreshCw className="h-3.5 w-3.5" strokeWidth={2.5} />
                   Recarregar

@@ -66,47 +66,54 @@
      LIGHT é default em :root. DARK override em .dark logo abaixo.
      Brand azul #2563EB (substituiu emerald #00E37A na migração de paleta).
   ──────────────────────────────────────────────────────────────────────── */
-  --vyz-bg: #F3F6FA;
+  --vyz-bg: #F3EFE4;
+  /* Mesmos valores da home (.lp-solar): amarelo só para o que importa na tela. */
+  --vyz-sol: #FFC933;
+  --vyz-sol-soft: #FFF3CC;
+  --vyz-sol-line: #C99400;
+  --vyz-noite: #0F1730;
+  --vyz-noite-2: #1C2748;
+  --vyz-noite-3: #24305A;
   --vyz-surface-1: #FFFFFF;
-  --vyz-surface-2: #F1F5F9;
-  --vyz-surface-3: #E2E8F0;
-  --vyz-surface-elevated: rgba(255,255,255,0.95);
+  --vyz-surface-2: #EAE5D7;
+  --vyz-surface-3: #DCD6C8;
+  --vyz-surface-elevated: rgba(255,255,255,0.96);
 
-  --vyz-border-subtle: #EEF2F7;
-  --vyz-border: #E6EDF5;
-  --vyz-border-strong: #D7DEE9;
+  --vyz-border-subtle: #EAE5D7;
+  --vyz-border: #DCD6C8;
+  --vyz-border-strong: #CCC5B4;
 
-  --vyz-text-primary: #0B1220;
-  --vyz-text-strong: #1F2A3B;
-  --vyz-text: #334155;
-  --vyz-text-muted: #64748B;
-  --vyz-text-soft: #94A3B8;
-  --vyz-text-dim: #CBD5E1;
+  --vyz-text-primary: #0F1730;
+  --vyz-text-strong: #1C2748;
+  --vyz-text: #3B4560;
+  --vyz-text-muted: #566079;
+  --vyz-text-soft: #5F6980;
+  --vyz-text-dim: #8A92A3;
 
-  --vyz-accent: #2563EB;
-  --vyz-accent-light: #4A8CE8;
-  --vyz-accent-dark: #1D4ED8;
-  --vyz-brand-blue: #2563EB;
-  --vyz-brand-blue-light: #4A8CE8;
-  --vyz-accent-soft-4: rgba(37,99,235,0.04);
-  --vyz-accent-soft-6: rgba(37,99,235,0.06);
-  --vyz-accent-soft-8: rgba(37,99,235,0.08);
-  --vyz-accent-soft-10: rgba(37,99,235,0.10);
-  --vyz-accent-soft-12: rgba(37,99,235,0.12);
-  --vyz-accent-border: rgba(37,99,235,0.22);
-  --vyz-accent-border-strong: rgba(37,99,235,0.32);
-  --vyz-accent-text: #2563EB;
+  --vyz-accent: #1556C0;
+  --vyz-accent-light: #2F6FD8;
+  --vyz-accent-dark: #124AA6;
+  --vyz-brand-blue: #1556C0;
+  --vyz-brand-blue-light: #2F6FD8;
+  --vyz-accent-soft-4: rgba(21,86,192,0.04);
+  --vyz-accent-soft-6: rgba(21,86,192,0.06);
+  --vyz-accent-soft-8: rgba(21,86,192,0.08);
+  --vyz-accent-soft-10: rgba(21,86,192,0.10);
+  --vyz-accent-soft-12: rgba(21,86,192,0.12);
+  --vyz-accent-border: rgba(21,86,192,0.22);
+  --vyz-accent-border-strong: rgba(21,86,192,0.32);
+  --vyz-accent-text: #1556C0;
 
-  --vyz-gradient-accent: linear-gradient(135deg, #2563EB, #4A8CE8);
-  --vyz-gradient-hero-text: linear-gradient(135deg, #4A8CE8, #2563EB, #1D4ED8);
-  --vyz-gradient-dual: linear-gradient(135deg, #2563EB 0%, #4A8CE8 55%, #7C3AED 100%);
-  --vyz-gradient-top-glow: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(37,99,235,0.10) 0%, rgba(37,99,235,0.04) 30%, transparent 65%);
-  --vyz-gradient-section-glow: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(37,99,235,0.06) 0%, transparent 70%);
+  --vyz-gradient-accent: linear-gradient(135deg, #1556C0, #2F6FD8);
+  --vyz-gradient-hero-text: linear-gradient(135deg, #2F6FD8, #1556C0, #1D4ED8);
+  --vyz-gradient-dual: linear-gradient(135deg, #1556C0 0%, #2F6FD8 55%, #7C3AED 100%);
+  --vyz-gradient-top-glow: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(21,86,192,0.10) 0%, rgba(21,86,192,0.04) 30%, transparent 65%);
+  --vyz-gradient-section-glow: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(21,86,192,0.06) 0%, transparent 70%);
 
-  --vyz-shadow-cta: 0 0 0 1px rgba(37,99,235,0.20), 0 4px 24px rgba(37,99,235,0.18);
-  --vyz-shadow-cta-sm: 0 4px 18px rgba(37,99,235,0.18);
-  --vyz-shadow-panel: 0 24px 60px -20px rgba(11,18,32,0.12), 0 0 0 1px rgba(11,18,32,0.04) inset;
-  --vyz-shadow-mock: 0 24px 60px -20px rgba(11,18,32,0.10);
+  --vyz-shadow-cta: 0 0 0 1px rgba(21,86,192,0.20), 0 4px 24px rgba(21,86,192,0.18);
+  --vyz-shadow-cta-sm: 0 4px 18px rgba(21,86,192,0.18);
+  --vyz-shadow-panel: 0 24px 60px -20px rgba(15,23,48,0.12), 0 0 0 1px rgba(15,23,48,0.04) inset;
+  --vyz-shadow-mock: 0 24px 60px -20px rgba(15,23,48,0.10);
 }
 
 /* ─── Vyzon tokens — DARK MODE OVERRIDE ──────────────────────────────────
@@ -168,39 +175,39 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Light mode — clean, professional, high contrast */
-    --background: 0 0% 98%;
-    --foreground: 222 47% 11%;
+    --background: 44 38% 92%;
+    --foreground: 225 52% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 225 52% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 225 52% 12%;
 
-    --primary: 221 83% 53%;
+    --primary: 217 80% 42%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 44 31% 88%;
+    --secondary-foreground: 225 52% 12%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 44 31% 88%;
+    --muted-foreground: 223 17% 41%;
 
-    --accent: 220 14% 96%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 44 31% 88%;
+    --accent-foreground: 225 52% 12%;
 
-    --success: 142 76% 36%;
+    --success: 157 78% 27%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 222 47% 11%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 5 77% 40%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 90%;
-    --input: 220 13% 90%;
-    --ring: 221 83% 53%;
+    --border: 42 22% 82%;
+    --input: 42 22% 82%;
+    --ring: 217 80% 42%;
 
     --radius: 0.75rem;
 
@@ -213,14 +220,14 @@ All colors MUST be HSL.
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 220 13% 90%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-background: 225 52% 12%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 44 100% 60%;
+    --sidebar-primary-foreground: 225 52% 12%;
+    --sidebar-accent: 224 44% 20%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 224 44% 20%;
+    --sidebar-ring: 44 100% 60%;
   }
 
   .dark {
@@ -895,7 +902,7 @@ All colors MUST be HSL.
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   EvaAssistColumn — lateral da EVA na Inbox como MÁQUINA DE RESPOSTA.
+   EvaAssistColumn — lateral da Lume na Inbox como MÁQUINA DE RESPOSTA.
    O olho lê camadas por função, não uma lista plana:
      branco  = ação (zona de resposta, o herói)
      #F8FAFC = contexto (faixa de apoio)
@@ -953,7 +960,7 @@ All colors MUST be HSL.
 /* Selo de controle — desenhado como ESTADO, não como limitação.
    data-autonomy="human" é a semente: no futuro este pill vira o toggle de
    "conceder autonomia por tipo de mensagem" (concedida pelo humano, revogável).
-   Por enquanto é fixo: a EVA NUNCA envia sozinha. */
+   Por enquanto é fixo: a Lume NUNCA envia sozinha. */
 .vz-evassist-seal {
   display: inline-flex;
   align-items: center;
@@ -976,7 +983,7 @@ All colors MUST be HSL.
   border-radius: 999px;
   background: var(--evassist-core);
 }
-/* Variante do selo no estado SE CALA: a EVA não sugeriu nada, então não há o
+/* Variante do selo no estado SE CALA: a Lume não sugeriu nada, então não há o
    que "controlar" — o selo diz o que ela ESTÁ fazendo: escutando. */
 .vz-evassist-seal--listening {
   border-color: #dde4ec;
@@ -1283,17 +1290,17 @@ All colors MUST be HSL.
    Texto segue ink/slate (neutro, coerente sobre papel quente).
    ───────────────────────────────────────────────────────────────────────── */
 :root {
-  --ibx-paper: #F6F4EF;        /* base/recessed: thread, corpo do painel, empty */
+  --ibx-paper: #F3EFE4;        /* base/recessed: thread, corpo do painel, empty */
   --ibx-card: #FFFFFF;         /* raised: lista, headers, composer, bolha recebida */
-  --ibx-sunken: #F1EDE5;       /* poços: inputs, busca, wells dentro de cards */
-  --ibx-line: #E7E1D5;         /* hairline primária (warm, ex-#D9E2EC) */
-  --ibx-line-soft: #EFEAE0;    /* divisória suave (ex-#E5EAF1/#EEF2F6) */
-  --ibx-line-strong: #DDD5C5;  /* borda forte */
-  --ibx-sel: #ECF1FE;          /* fundo da linha/aba selecionada (acento leve) */
-  --ibx-sel-bar: #2563EB;      /* âncora de acento da selecionada */
+  --ibx-sunken: #EAE5D7;       /* poços: inputs, busca, wells dentro de cards */
+  --ibx-line: #DCD6C8;         /* hairline primária (warm, ex-#D9E2EC) */
+  --ibx-line-soft: #EAE5D7;    /* divisória suave (ex-#E5EAF1/#EEF2F6) */
+  --ibx-line-strong: #CCC5B4;  /* borda forte */
+  --ibx-sel: #E3ECFA;          /* fundo da linha/aba selecionada (acento leve) */
+  --ibx-sel-bar: #1556C0;      /* âncora de acento da selecionada */
 }
 
-/* EVA no header mobile — selo "desatualizada" (pulso) + coachmark de 1ª vez.
+/* Lume no header mobile — selo "desatualizada" (pulso) + coachmark de 1ª vez.
    Globais (o botão vive fora do EvaPanel, que só monta no Drawer ao abrir).
    Coachmark anima transform+opacity (popover state-driven, não reveal-on-scroll);
    reduced-motion entrega o estado final estático. */
@@ -1307,7 +1314,7 @@ All colors MUST be HSL.
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   InboxPriorityList — lista de conversas reordenada pela EVA, com o PORQUÊ.
+   InboxPriorityList — lista de conversas reordenada pela Lume, com o PORQUÊ.
    Paleta de risco do app: coral = quente/urgente, âmbar = esfriando,
    cinza/neutro = frio. A cor comunica antes da leitura.
    Estado A (Studio configurado) prioriza por valor; Estado B se cala sobre
@@ -1345,7 +1352,7 @@ All colors MUST be HSL.
   color: #64748b;
   margin-top: 1px;
 }
-/* Toggle de ordem — a EVA propõe, o humano pode revogar */
+/* Toggle de ordem — a Lume propõe, o humano pode revogar */
 .vz-evlist-toggle {
   display: inline-flex;
   align-items: center;
@@ -1368,7 +1375,7 @@ All colors MUST be HSL.
   .vz-evlist-toggle { height: 36px; padding: 0 12px; border-radius: 999px; font-size: 12px; }
 }
 
-/* Ponte pro EVA Studio (estado B) — convite com presença, não erro.
+/* Ponte pro Lume Studio (estado B) — convite com presença, não erro.
    O fallback resolve a dor de hoje mas tem que vender o Studio de amanhã. */
 .vz-evlist-bridge {
   display: flex;
@@ -1575,8 +1582,8 @@ All colors MUST be HSL.
 .vz-evlist-junk-row:hover { background: #f4f1ea; }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   EVA Studio — Frente 1: criar agente é UMA decisão (o propósito), não um
-   formulário. Toda configuração vai pra construção guiada. Alma: a EVA
+   Lume Studio — Frente 1: criar agente é UMA decisão (o propósito), não um
+   formulário. Toda configuração vai pra construção guiada. Alma: a Lume
    propõe, o humano revisa, nada acontece sem aprovação.
    ───────────────────────────────────────────────────────────────────────── */
 .vz-agentcreate {
@@ -1786,7 +1793,7 @@ All colors MUST be HSL.
   padding: 3px 8px;
 }
 
-/* O que a EVA vai olhar pra montar sozinha */
+/* O que a Lume vai olhar pra montar sozinha */
 .vz-agentcreate-sources {
   margin-top: 32px;
   border-radius: 14px;
@@ -1846,7 +1853,7 @@ All colors MUST be HSL.
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   EVA Studio — Frente 2: construção guiada. Substitui o formulário em
+   Lume Studio — Frente 2: construção guiada. Substitui o formulário em
    branco por "olha o que eu entendi da sua operação, confirma?".
    Cards de sugestão com evidência + lacunas acionáveis (âmbar, mesma
    anatomia do "descubra" do Inbox) + rodapé de causa-e-efeito.
@@ -1996,7 +2003,7 @@ All colors MUST be HSL.
 }
 .vz-ctxbuild-dismiss:hover { color: #64748b; }
 
-/* Correção inline — editar ensina a EVA */
+/* Correção inline — editar ensina a Lume */
 .vz-ctxbuild-edit {
   width: 100%;
   min-height: 64px;
@@ -2535,7 +2542,7 @@ All colors MUST be HSL.
 .vz-simreplay-refresh:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
 .vz-simreplay-refresh:disabled { opacity: 0.6; cursor: progress; }
 
-/* ── EVA Studio Shell — casca de jornada (header único + stepper + lateral) ── */
+/* ── Lume Studio Shell — casca de jornada (header único + stepper + lateral) ── */
 .vz-studioshell {
   /* Fluido: preenche a largura disponível (de telas pequenas a grandes), com
      padding lateral responsivo. Não fica mais preso a um bloco central estreito. */
@@ -2789,7 +2796,7 @@ All colors MUST be HSL.
 }
 .vz-studioshell-content-step span { color: #94a3b8; font-weight: 600; text-transform: none; letter-spacing: 0; }
 
-/* ── EVA Studio Conversacional — criar agente conversando (não formulário) ── */
+/* ── Lume Studio Conversacional — criar agente conversando (não formulário) ── */
 .vz-convo {
   max-width: 1060px;
   margin: 0 auto;
@@ -3159,7 +3166,7 @@ All colors MUST be HSL.
   margin: 0 16px 10px;
 }
 
-/* ── Campo de Provas da EVA (SimulationLab) ── */
+/* ── Campo de Provas da Lume (SimulationLab) ── */
 .vz-simlab {
   max-width: 1060px;
   margin: 0 auto;
@@ -3251,7 +3258,7 @@ All colors MUST be HSL.
   box-shadow: 0 8px 18px -10px rgba(37, 99, 235, 0.55);
 }
 .vz-simlab-eva { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
-/* Trace — "o que a EVA percebeu" */
+/* Trace — "o que a Lume percebeu" */
 .vz-simlab-read {
   display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
   justify-content: flex-end;
@@ -3306,7 +3313,7 @@ All colors MUST be HSL.
 }
 .vz-simlab-replay:hover { color: #475569; }
 
-/* ── EVA Studio Journey (acoplamento chat + simulação na jornada) ────────── */
+/* ── Lume Studio Journey (acoplamento chat + simulação na jornada) ────────── */
 
 /* Componentes standalone entram embutidos no conteúdo da casca */
 .vz-convo--embedded { max-width: none; padding: 0; }
@@ -3332,7 +3339,7 @@ All colors MUST be HSL.
   .vz-typing-dot { animation: none; opacity: 0.7; }
 }
 
-/* ── EVA Studio — empilhamento limpo + respiro no mobile (≤880px) ────────────
+/* ── Lume Studio — empilhamento limpo + respiro no mobile (≤880px) ────────────
    Os grids de 2 colunas já colapsam neste breakpoint; aqui resolvemos a altura
    ESPREMIDA do chat embedded (o seletor .vz-convo--embedded vencia o colapso e
    prendia chat+aside em 62vh), compactamos o stepper e cortamos respiro vertical
@@ -3507,7 +3514,7 @@ All colors MUST be HSL.
   background: #fffbeb; color: #b45309; border: 1px solid rgba(217, 119, 6, 0.25);
 }
 
-/* ── EVA Studio Motion (micro + macro) ─────────────────────────────────────
+/* ── Lume Studio Motion (micro + macro) ─────────────────────────────────────
    Macro: o palco remonta a cada troca de passo/vista (key) e entra com
    fade+rise; a prontidão desliza; a linha do stepper cresce ao acender.
    Micro: checks "pop", o passo atual respira, pills têm press, a ativação
@@ -3612,7 +3619,7 @@ All colors MUST be HSL.
    lendo uma conversa. Três vozes tipográficas:
      · Satoshi 900  = voz da marca (headlines compactas)
      · Sentient it. = voz humana (a dor, acentos, carta do fundador)
-     · monospace    = telemetria da EVA (eyebrows, labels, números)
+     · monospace    = telemetria da Lume (eyebrows, labels, números)
    Superfície: papel quente + grade técnica fina + hairlines de tinta.
    Animações transform/opacity em loop CSS (sem IO).
 
@@ -3640,7 +3647,7 @@ All colors MUST be HSL.
   --lp-serif: 'Sentient', 'Georgia', serif;
   --lp-mono: 'Cascadia Mono', 'SFMono-Regular', ui-monospace, 'Consolas', monospace;
   --lp-radius: 10px;
-  /* LP.9 (2026-11-01) — sistema EVA em campo (ver bloco LP.9 abaixo) */
+  /* LP.9 (2026-11-01) — sistema Lume em campo (ver bloco LP.9 abaixo) */
   --lp-ink-muted: #4a5363;
   --lp-ink-subtle: #5f6776;
   --lp-blue-tint: #e8effb;
@@ -3658,9 +3665,9 @@ All colors MUST be HSL.
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   LP.9 (2026-11-01) — SISTEMA "EVA EM CAMPO" · home do integrador
+   LP.9 (2026-11-01) — SISTEMA "Lume EM CAMPO" · home do integrador
    Referência aprovada: https://claude.ai/artifact/L2qfp4yTM3RBvSL3yN5mjo
-   Substitui o Vyzon Solar (LP.8). A EVA é o que nenhum concorrente tem, então
+   Substitui o Vyzon Solar (LP.8). A Lume é o que nenhum concorrente tem, então
    ela é a estrela. Faixas chapadas de sol (.vs-sol) e noite (.vs-noite) sobre
    creme, cartões brancos sem sombra e Geist, a fonte do app, em tudo. A conversa
    e a fatura seguem como objetos. Marca-texto em fundo sol é branco.
@@ -3686,7 +3693,7 @@ All colors MUST be HSL.
   background: var(--lp-sol);
 }
 .lp-solar .vs-sol .vs-azul { color: var(--lp-ink); }
-/* Topo: texto sobre creme e o amarelo só como palco do celular e da EVA. */
+/* Topo: texto sobre creme e o amarelo só como palco do celular e da Lume. */
 @media (min-width: 768px) {
   .lp-solar .vs-topo { background: linear-gradient(90deg, var(--lp-paper) calc(50% + 40px), var(--lp-sol) 0); }
 }
@@ -3706,7 +3713,7 @@ All colors MUST be HSL.
   background: var(--lp-noite);
   color: #fff;
 }
-/* orelhas e haste da EVA somem no azul-noite */
+/* orelhas e haste da Lume somem no azul-noite */
 .lp-solar .vs-noite .eva-bot { --peca: #2a3a66; --fone: #2a3a66; }
 /* cartão branco volta às cores do papel, em qualquer faixa */
 .lp-solar .vs-fatura,
@@ -3717,7 +3724,7 @@ All colors MUST be HSL.
   --lp-marker: #ffc933;
   --lp-line: #dcd6c8;
 }
-/* EVA sentada na borda de cima de um cartão: a base dela fica a 224/240 da caixa */
+/* Lume sentada na borda de cima de um cartão: a base dela fica a 224/240 da caixa */
 .lp-solar .vs-sentada {
   position: absolute;
   z-index: 1;
@@ -3870,7 +3877,7 @@ All colors MUST be HSL.
 .lp-solar .vs-bolha__hora { display: block; margin-top: 2px; text-align: right; font-size: 11px; color: var(--lp-ink-subtle); }
 .lp-solar .vs-bolha__rascunho { margin: 6px 0; padding: 8px 10px; border-radius: 10px; background: #fff3cc; font-weight: 500; }
 
-/* LinhaDoTempo: a EVA em cada dia da proposta; só o Dia 2 em noite. */
+/* LinhaDoTempo: a Lume em cada dia da proposta; só o Dia 2 em noite. */
 .lp-solar .vs-tempo { display: grid; gap: 12px; padding: 0; list-style: none; }
 .lp-solar .vs-tempo__passo { min-width: 0; padding: 20px; border-radius: 22px; background: var(--lp-white); }
 .lp-solar .vs-tempo__passo.vs-noite { background: var(--lp-noite); }
@@ -3881,7 +3888,7 @@ All colors MUST be HSL.
 /* Preço: cartão noite, sem contrato com peso. */
 .lp-solar .vs-preco { position: relative; border-radius: 22px; padding: 32px 24px 24px; }
 
-/* Conheça a EVA: cartão largo, bot grande cortado pela borda. */
+/* Conheça a Lume: cartão largo, bot grande cortado pela borda. */
 .lp-solar .vs-conheca { position: relative; overflow: clip; border-radius: 28px; padding: 40px 24px 300px; }
 .lp-solar .vs-conheca__bot { position: absolute; right: 50%; bottom: -60px; transform: translateX(50%); line-height: 0; }
 @media (min-width: 768px) {
@@ -4088,7 +4095,7 @@ All colors MUST be HSL.
   box-shadow: 0 6px 16px -10px rgba(13, 20, 33, 0.5);
 }
 
-/* ── Hero: a EVA lendo a conversa (loop 9s, time-based — sem IO) ── */
+/* ── Hero: a Lume lendo a conversa (loop 9s, time-based — sem IO) ── */
 @keyframes lp-read-msg {
   0% { opacity: 0; transform: translate3d(0, 10px, 0); }
   4%, 96% { opacity: 1; transform: translate3d(0, 0, 0); }
@@ -4349,7 +4356,7 @@ All colors MUST be HSL.
 }
 
 /* ── LP.6 (v2) Micro-demos dos tiles de feature — loops suaves ~9s, sem
-   typing/cursor/spinner. Mostram a EVA "operando" dentro de cada card. ── */
+   typing/cursor/spinner. Mostram a Lume "operando" dentro de cada card. ── */
 /* Demo 1 — Assistente: sugestão entra, botão "Usar sugestão" ganha ênfase */
 .vzd1-sug { animation: vzd1-sug 9s ease-in-out infinite; }
 .vzd1-btn { animation: vzd1-btn 9s ease-in-out infinite; transform-origin: center; }
@@ -4447,7 +4454,7 @@ All colors MUST be HSL.
 @keyframes vzRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .vz-rise { animation: none !important; } }
 
-/* FeatureShowcase — EVA "lendo ao vivo": o glifo pulsa e os sinais detectados
+/* FeatureShowcase — Lume "lendo ao vivo": o glifo pulsa e os sinais detectados
    materializam em sequência. Remontam a cada troca de item (key={active}). */
 .vz-eva-live { animation: vzEvaLive 1.9s ease-in-out infinite; }
 @keyframes vzEvaLive { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
@@ -4462,7 +4469,7 @@ All colors MUST be HSL.
   .vz-eva-lines > * { opacity: 1; animation: none; }
 }
 
-/* ── EVA Orb (demo por voz, Fase 1) — classe vz-eorb p/ não colidir com a
+/* ── Lume Orb (demo por voz, Fase 1) — classe vz-eorb p/ não colidir com a
    .vz-orb decorativa legada da landing de produção ─────────────────────── */
 .vz-eorb { position: relative; display: grid; place-items: center; }
 .vz-eorb__halo {
@@ -4526,7 +4533,7 @@ All colors MUST be HSL.
     .vz-eorb__bar { transform: scaleY(0.5); }
 }
 
-/* Transição pro modo conversa da demo: a EVA "sai da demo" suavemente quando
+/* Transição pro modo conversa da demo: a Lume "sai da demo" suavemente quando
    o usuário começa a tirar dúvidas. */
 @keyframes vzDemoChatIn {
   from { opacity: 0; transform: translateY(12px); }
@@ -4624,7 +4631,7 @@ All colors MUST be HSL.
 }
 .vz-stage-in { animation: vzStageIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: center; }
 
-/* Orb da conversa: AUMENTA/pulsa quando a EVA está falando; calmo quando não.
+/* Orb da conversa: AUMENTA/pulsa quando a Lume está falando; calmo quando não.
    transição suave entre os dois estados. */
 @keyframes vzOrbSpeak { 0%, 100% { transform: scale(1.0); } 50% { transform: scale(1.075); } }
 .vz-orb-speaking { animation: vzOrbSpeak 0.82s ease-in-out infinite; }
@@ -4637,7 +4644,7 @@ All colors MUST be HSL.
   .vz-orb-speaking { animation: none; transform: scale(1.04); }
 }
 
-/* Legenda ao vivo da EVA: a frase atual se MATERIALIZA (blur→nítido) e a
+/* Legenda ao vivo da Lume: a frase atual se MATERIALIZA (blur→nítido) e a
    anterior DISSOLVE como vapor (vanish: blur + fade + sobe devagar). */
 @keyframes vzCapIn  { from { opacity: 0; filter: blur(5px); transform: translateY(6px); } to { opacity: 1; filter: blur(0); transform: none; } }
 @keyframes vzCapOut { 0% { opacity: 1; filter: blur(0); transform: translateY(0); } 100% { opacity: 0; filter: blur(8px); transform: translateY(-12px); } }
@@ -4867,8 +4874,8 @@ html.lenis, html.lenis body { height: auto; }
   opacity: 1;
 }
 
-/* ── LP.6 (v2) "Veja a EVA em ação": aura etérea + orbs iridescentes flutuando,
-   no espírito da seção da handhold. A figura central da EVA entra como <img>
+/* ── LP.6 (v2) "Veja a Lume em ação": aura etérea + orbs iridescentes flutuando,
+   no espírito da seção da handhold. A figura central da Lume entra como <img>
    (.eva-figure) quando houver um render; sem ela, a aura sustenta a cena. ── */
 .eva-stage { position: relative; isolation: isolate; }
 .eva-aura {
@@ -4943,7 +4950,7 @@ html.lenis, html.lenis body { height: auto; }
 /* ════════════════════════════════════════════════════════════════════════
    LP.5 2026-06-12 — camada de motion interativo
    Rise (reveal-on-scroll transform-only), tilt do hero, razão de dores
-   interativa, console hover, shine do CTA e o easter egg da EVA.
+   interativa, console hover, shine do CTA e o easter egg da Lume.
    ════════════════════════════════════════════════════════════════════════ */
 
 /* ── Rise: reveal-on-scroll sem framer (transform-only, nunca opacity) ── */
@@ -5033,17 +5040,28 @@ html.lenis, html.lenis body { height: auto; }
 /* ── Página full-height do app (Inbox/Pipeline/Pulse/Agenda) ──────────────
    Desconta o header real do AppLayout (h-14 = 3.5rem). dvh corrige o Safari
    iOS (100vh assume a toolbar recolhida e corta o composer). */
+/* No celular descontam o topo e as abas de baixo; no computador é a tela toda. */
 .vz-page-full {
-  height: calc(100vh - 3.5rem);
+  height: calc(100vh - 3.5rem - 66px);
 }
 @supports (height: 100dvh) {
   .vz-page-full {
-    height: calc(100dvh - 3.5rem);
+    height: calc(100dvh - 3.5rem - 66px - env(safe-area-inset-bottom));
+  }
+}
+@media (min-width: 768px) {
+  .vz-page-full {
+    height: 100vh;
+  }
+  @supports (height: 100dvh) {
+    .vz-page-full {
+      height: 100dvh;
+    }
   }
 }
 
 
-/* ── Easter egg da EVA ── */
+/* ── Easter egg da Lume ── */
 @keyframes lp-egg-veil { from { opacity: 0; } to { opacity: 1; } }
 @keyframes lp-egg-card {
   from { transform: translate3d(0, 18px, 0) scale(0.97); }
@@ -5298,18 +5316,18 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 /* =========================================================================
-   Central de Comando (COMMAND.UI.2) — adições --vyz-* (status, EVA, motion,
+   Central de Comando (COMMAND.UI.2) — adições --vyz-* (status, Lume, motion,
    botão preto, surface-0). Todos NOVOS (sem conflito). --lp-* e --vyz- nunca
    se misturam. Ver memória project_central_comando_redesign.
    ========================================================================= */
 :root {
   --vyz-surface-0: #f3f4f6;       /* page bg FRIA — cards brancos (surface-1) levantam por contraste */
-  --vyz-success: #008a52;
-  --vyz-success-bg: #e4f4ec;
-  --vyz-warning: #b45309;
-  --vyz-warning-bg: #fbeede;
-  --vyz-danger: #c0362c;
-  --vyz-danger-bg: #fbeceb;
+  --vyz-success: #0f7a4f;
+  --vyz-success-bg: #e2f1e9;
+  --vyz-warning: #a14b05;
+  --vyz-warning-bg: #fff3cc;
+  --vyz-danger: #b42318;
+  --vyz-danger-bg: #fbe4e0;
   --vyz-eva: #6d28d9;
   --vyz-eva-bg: #efeafc;
   --vyz-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -5317,7 +5335,7 @@ html.lenis, html.lenis body { height: auto; }
   --vyz-dur-reveal: 600ms;
   --vyz-radius: 10px;
   --vyz-radius-pill: 9999px;
-  --vyz-btn-solid: #080808;
+  --vyz-btn-solid: #1556c0;
   --vyz-btn-on: #ffffff;
 }
 .dark {

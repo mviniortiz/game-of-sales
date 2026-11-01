@@ -1,7 +1,7 @@
 // VYZON.AGENTS.2 — Log de sugestões dos agentes (auditoria + aprendizado).
 //
 // Registra em public.agent_suggestions toda sugestão e seu desfecho. É a base
-// de auditoria do "a EVA sugere, seu time aprova": quem recebeu, o que a EVA
+// de auditoria do "a Lume sugere, seu time aprova": quem recebeu, o que a Lume
 // propôs, o que o humano fez (aceitou/ajustou/rejeitou/enviou) e o que de fato
 // foi aplicado. RLS por empresa (qualquer membro registra o desfecho que revisou).
 import { useMutation, useQueryClient } from "@tanstack/react-query";

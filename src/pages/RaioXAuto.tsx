@@ -1,9 +1,9 @@
 // /raio-x: o Raio-X automático, a parte grátis do Vyzon. A pessoa conecta o
-// WhatsApp, a EVA espera o histórico chegar e monta o relatório (edge
+// WhatsApp, a Lume espera o histórico chegar e monta o relatório (edge
 // raio-x-build, modo dono), que abre em /relatorio/:token para ela conferir.
 // Nada é enviado para cliente nenhum.
 //
-// É um palco, não um chat: uma ação por vez e a EVA no centro mostrando o
+// É um palco, não um chat: uma ação por vez e a Lume no centro mostrando o
 // trabalho com números reais (mensagens, PDFs, nomes que chegam). Esperar vendo
 // o trabalho acontecer parece mais curto e dá mais valor ao resultado do que
 // ler balões. O fim é a revelação do número, antes do relatório.
@@ -105,7 +105,7 @@ export default function RaioXAuto() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [wa.loading]);
 
-    // O pensamento da EVA troca sozinho enquanto ela trabalha.
+    // O pensamento da Lume troca sozinho enquanto ela trabalha.
     useEffect(() => {
         if (fase !== "lendo" && fase !== "montando") return;
         const id = window.setInterval(() => setGiro((g) => g + 1), 2600);
@@ -192,7 +192,7 @@ export default function RaioXAuto() {
 
                     <div className="flex w-full flex-1 flex-col items-center justify-center pb-[6vh]">
                     <div className="rx-palco mt-8 flex flex-col items-center sm:mt-10">
-                        <EvaBot state={fase === "pronto" && resultado && resultado.resumo.stuck > 0 ? "alert" : evaDe[fase]} size={112} label="EVA" />
+                        <EvaBot state={fase === "pronto" && resultado && resultado.resumo.stuck > 0 ? "alert" : evaDe[fase]} size={112} label="Lume" />
                         <span className="eva-bot-floor mt-1 opacity-40" style={{ ["--s" as string]: "112px" }} aria-hidden />
                     </div>
 

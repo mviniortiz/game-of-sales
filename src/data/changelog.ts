@@ -46,11 +46,11 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     date: "2026-04-14",
-    title: "Eva AI unificada",
-    summary: "O agente Eva agora funciona como Report + Copilot num único contexto compartilhado.",
+    title: "Lume AI unificada",
+    summary: "O agente Lume agora funciona como Report + Copilot num único contexto compartilhado.",
     items: [
-      { tag: "feature", text: "Eva combina Report e Copilot compartilhando memória (eva_memory) e resumos de conversa (conversation_summaries)." },
-      { tag: "improvement", text: "Cache, deduplicação e cron de atualização da Eva em produção." },
+      { tag: "feature", text: "Lume combina Report e Copilot compartilhando memória (eva_memory) e resumos de conversa (conversation_summaries)." },
+      { tag: "improvement", text: "Cache, deduplicação e cron de atualização da Lume em produção." },
     ],
   },
   {
@@ -59,7 +59,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     summary: "WhatsApp foi rebatizado e ganhou layout novo estilo Linear dark.",
     items: [
       { tag: "feature", text: "Nova área Pulse (antigo WhatsApp) com layout de 3 colunas, híbrido A+B, estilo Linear." },
-      { tag: "feature", text: "Sidebar da Eva integrada ao Pulse pra contexto de conversa." },
+      { tag: "feature", text: "Sidebar da Lume integrada ao Pulse pra contexto de conversa." },
       { tag: "improvement", text: "Polling de 10 segundos direto no Evolution, base pro próximo passo com webhook + Realtime." },
     ],
   },

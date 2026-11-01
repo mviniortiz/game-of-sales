@@ -5,7 +5,7 @@ import { Reveal, StaggerContainer } from "./animation/Reveal";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // F2.10 (2026-05-19) — FAQ reescrita pro novo posicionamento.
-// 8 perguntas focadas em quebrar objeções de agência sobre EVA + WhatsApp +
+// 8 perguntas focadas em quebrar objeções de agência sobre Lume + WhatsApp +
 // pipeline + memória comercial. Plano gratuito ainda não confirmado → resposta
 // honesta "estamos estruturando".
 // ─────────────────────────────────────────────────────────────────────────────
@@ -13,23 +13,23 @@ import { Reveal, StaggerContainer } from "./animation/Reveal";
 const FAQS = [
     {
         q: "O que é o Vyzon?",
-        a: "Vyzon é uma Central Comercial com EVA para agências que vendem por conversa. Ele organiza Inbox, Pipeline, Central de Comando e IA comercial assistida para ajudar seu time a priorizar leads e transformar atendimento em oportunidade.",
+        a: "Vyzon é uma Central Comercial com Lume para agências que vendem por conversa. Ele organiza Inbox, Pipeline, Central de Comando e IA comercial assistida para ajudar seu time a priorizar leads e transformar atendimento em oportunidade.",
     },
     {
-        q: "O que é EVA?",
-        a: "EVA é a IA comercial do Vyzon. Ela entende o contexto da agência, analisa conversas e sugere próximos passos para o time agir com mais clareza.",
+        q: "O que é Lume?",
+        a: "Lume é a IA comercial do Vyzon. Ela entende o contexto da agência, analisa conversas e sugere próximos passos para o time agir com mais clareza.",
     },
     {
-        q: "A EVA responde sozinha meus leads?",
-        a: "Não por padrão. A EVA analisa e sugere respostas, próximos passos e prioridades. Seu time aprova antes de qualquer ação.",
+        q: "A Lume responde sozinha meus leads?",
+        a: "Não por padrão. A Lume analisa e sugere respostas, próximos passos e prioridades. Seu time aprova antes de qualquer ação.",
     },
     {
         q: "O Vyzon substitui meu vendedor?",
         a: "Não. O Vyzon ajuda o vendedor a agir melhor. A decisão continua com o time.",
     },
     {
-        q: "A EVA aprende com os materiais da minha agência?",
-        a: "Sim. Você pode adicionar serviços, FAQs, objeções, ICP e playbooks para a EVA usar como contexto. Nada é aplicado sem aprovação.",
+        q: "A Lume aprende com os materiais da minha agência?",
+        a: "Sim. Você pode adicionar serviços, FAQs, objeções, ICP e playbooks para a Lume usar como contexto. Nada é aplicado sem aprovação.",
     },
     // LP.3 2026-06-09: objeções práticas que não eram respondidas em lugar
     // nenhum da página (número atual, setup, CRM existente, dados, cancelar).
@@ -39,7 +39,7 @@ const FAQS = [
     },
     {
         q: "Quanto tempo leva para configurar?",
-        a: "A conexão do WhatsApp leva poucos minutos. Pipeline e time você monta no mesmo dia, e o contexto da EVA pode começar simples e crescer com o uso. Na demo, a gente mostra esse caminho com o seu cenário.",
+        a: "A conexão do WhatsApp leva poucos minutos. Pipeline e time você monta no mesmo dia, e o contexto da Lume pode começar simples e crescer com o uso. Na demo, a gente mostra esse caminho com o seu cenário.",
     },
     {
         q: "Preciso abandonar meu CRM ou planilha atual?",
@@ -47,7 +47,7 @@ const FAQS = [
     },
     {
         q: "Quem vê minhas conversas e dados?",
-        a: "Só o seu time. Os dados de cada agência ficam isolados na própria conta, e a EVA usa as conversas apenas para gerar análises e sugestões dentro da sua operação.",
+        a: "Só o seu time. Os dados de cada agência ficam isolados na própria conta, e a Lume usa as conversas apenas para gerar análises e sugestões dentro da sua operação.",
     },
     {
         q: "O que acontece se eu cancelar?",

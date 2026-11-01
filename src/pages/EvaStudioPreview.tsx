@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // EvaStudioPreview (EVA.STUDIO.F1-F3 + JOURNEY) — página TEMPORÁRIA de
-// validação do novo EVA Studio.
+// validação do novo Lume Studio.
 //
 // ★★★★ Studio acoplado (EvaStudioJourney) é a vista principal: a jornada
 // completa Criar → Ensinar (chat + revisão) → Provar (campo de provas + casos
@@ -99,7 +99,7 @@ const SUGGESTIONS: ContextSuggestion[] = [
         statement: "Social media em dois pacotes: 12 ou 20 posts por mês.",
         evidence: "Plano Essencial (12 posts/mês) e Plano Completo (20 posts/mês).",
         source: "da página de serviços do seu site",
-        effect: "A EVA passa a oferecer o pacote certo pro porte do lead.",
+        effect: "A Lume passa a oferecer o pacote certo pro porte do lead.",
     },
     {
         id: "s3",
@@ -120,7 +120,7 @@ const SUGGESTIONS: ContextSuggestion[] = [
         evidence:
             "Não trabalhamos com promessa de resultado garantido; todo plano começa por um diagnóstico.",
         source: "da proposta que você colou",
-        effect: "A EVA fica proibida de prometer resultado nas sugestões.",
+        effect: "A Lume fica proibida de prometer resultado nas sugestões.",
     },
     {
         id: "s5",
@@ -246,8 +246,8 @@ const MOMENTS: ReplayMoment[] = [
 
 const MEMORY_MOCK: EvaMemory = {
     rules: [
-        { text: "Nunca prometer resultado garantido antes do diagnóstico.", origin: "EVA Studio" },
-        { text: "Se o investimento total pesar, oferecer começar só pela frente de tráfego (R$ 2.500) e expandir depois.", origin: "EVA Studio" },
+        { text: "Nunca prometer resultado garantido antes do diagnóstico.", origin: "Lume Studio" },
+        { text: "Se o investimento total pesar, oferecer começar só pela frente de tráfego (R$ 2.500) e expandir depois.", origin: "Lume Studio" },
         { text: "Pedido de desconto fora da alçada → passar pro humano.", origin: "Contexto" },
         { text: "Cliente ideal: clínicas e negócios locais faturando acima de R$ 50 mil/mês.", origin: "Contexto" },
     ],
@@ -277,7 +277,7 @@ type View = "journey" | "simlab" | "convo" | "shell" | "f1" | "f2-full" | "f2-em
 const VIEWS: { key: View; label: string }[] = [
     { key: "journey", label: "★★★★ Studio acoplado" },
     { key: "simlab", label: "★★★ Campo de Provas" },
-    { key: "convo", label: "★★ Conversar com a EVA" },
+    { key: "convo", label: "★★ Conversar com a Lume" },
     { key: "shell", label: "★ Casca · Jornada" },
     { key: "f1", label: "Frente 1 · Criar agente" },
     { key: "f2-full", label: "Frente 2 · Com matéria-prima" },
@@ -310,7 +310,7 @@ export default function EvaStudioPreview() {
 
     const handleResolve = (s: ContextSuggestion, r: SuggestionResolution) => {
         if (r.action === "confirm") {
-            toast.success("Confirmado → entraria no contexto da EVA", {
+            toast.success("Confirmado → entraria no contexto da Lume", {
                 description: s.effect ?? s.statement,
             });
         } else if (r.action === "correct") {
@@ -332,7 +332,7 @@ export default function EvaStudioPreview() {
     };
 
     const handleDefineGap = (gap: ContextGap, answer: string) => {
-        toast.success("Lacuna fechada → entraria no contexto da EVA", {
+        toast.success("Lacuna fechada → entraria no contexto da Lume", {
             description: `${gap.question} → ${answer}`,
         });
     };
@@ -358,7 +358,7 @@ export default function EvaStudioPreview() {
                 m.critical
                     ? `Linha vermelha em caso CRÍTICO → trava a ativação`
                     : `Marcado inaceitável (result: rejected)`,
-                { description: m.critical ? "Hard-stop: precisa resolver antes de soltar a EVA." : undefined },
+                { description: m.critical ? "Hard-stop: precisa resolver antes de soltar a Lume." : undefined },
             );
         } else {
             toast.info("Pulado — sai da fila, não conta no termômetro.");
@@ -366,7 +366,7 @@ export default function EvaStudioPreview() {
     };
 
     const handleActivate = () => {
-        toast.success("Ativaria a EVA L2 no Inbox (mock)", {
+        toast.success("Ativaria a Lume L2 no Inbox (mock)", {
             description: "No integrado: eva_blueprints.status → approved_assisted.",
         });
     };
@@ -374,7 +374,7 @@ export default function EvaStudioPreview() {
     const handleLabJudge = (s: LabScenario, j: LabJudgment) => {
         if (j.action === "approve") {
             toast.success(`Campo de provas · "${s.persona}" aprovado`, {
-                description: "Conta na prontidão da EVA.",
+                description: "Conta na prontidão da Lume.",
             });
         } else {
             const pct = Math.round(j.outcome.similarity * 100);
@@ -477,12 +477,12 @@ export default function EvaStudioPreview() {
                     }
                     onSelect={setShellStep}
                     readiness={{
-                        label: "Prontidão da EVA",
+                        label: "Prontidão da Lume",
                         pct: shellStep === "criar" ? 0.1 : shellStep === "ensinar" ? 0.4 : shellStep === "provar" ? 0.7 : 0.95,
                     }}
                     secondary={[
-                        { key: "memoria", label: "Memória", onClick: () => toast.info("Abriria a Memória da EVA") },
-                        { key: "insights", label: "Insights", onClick: () => toast.info("Abriria os Insights da EVA") },
+                        { key: "memoria", label: "Memória", onClick: () => toast.info("Abriria a Memória da Lume") },
+                        { key: "insights", label: "Insights", onClick: () => toast.info("Abriria os Insights da Lume") },
                     ]}
                 >
                     {shellStep === "criar" && (
@@ -498,9 +498,9 @@ export default function EvaStudioPreview() {
                         <div className="vz-simreplay-panel vz-simreplay-panel--ready">
                             <div className="vz-simreplay-panel-top">
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                    <p className="vz-simreplay-panel-headline">A EVA está pronta pra te ajudar no Inbox.</p>
+                                    <p className="vz-simreplay-panel-headline">A Lume está pronta pra te ajudar no Inbox.</p>
                                     <p className="vz-simreplay-panel-reason">
-                                        Você criou, ensinou e provou. Agora a EVA passa a sugerir respostas no Inbox, sempre pra você aprovar antes de enviar.
+                                        Você criou, ensinou e provou. Agora a Lume passa a sugerir respostas no Inbox, sempre pra você aprovar antes de enviar.
                                     </p>
                                 </div>
                             </div>
@@ -508,9 +508,9 @@ export default function EvaStudioPreview() {
                                 type="button"
                                 className="vz-simreplay-activate vz-simreplay-activate--ready"
                                 style={{ marginTop: 16 }}
-                                onClick={() => toast.success("Ativaria a EVA no Inbox (mock)")}
+                                onClick={() => toast.success("Ativaria a Lume no Inbox (mock)")}
                             >
-                                Ativar a EVA no Inbox
+                                Ativar a Lume no Inbox
                             </button>
                         </div>
                     )}

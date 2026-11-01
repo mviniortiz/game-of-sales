@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// EvaAssistColumn (EVA.INBOX.1, 2026-06-06) — a lateral da EVA como MÁQUINA
+// EvaAssistColumn (EVA.INBOX.1, 2026-06-06) — a lateral da Lume como MÁQUINA
 // DE RESPOSTA. A dor nº1 do vendedor é demorar pra escrever; a RESPOSTA
 // SUGERIDA é o herói, contexto e próxima ação são insumo.
 //
@@ -19,7 +19,7 @@
 // "accepted" (direto) ou "edited" (com delta). Quem integra pluga
 // recordSuggestionFeedback (lib/eva/suggestionFeedback). Sem UI pra isso.
 //
-// REGRA FIXA: a EVA NUNCA envia sozinha. O selo "Você no controle" é um
+// REGRA FIXA: a Lume NUNCA envia sozinha. O selo "Você no controle" é um
 // ESTADO (data-autonomy="human") que um dia vira o toggle de conceder
 // autonomia por tipo de mensagem — mas a autonomia NÃO existe ainda.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -75,7 +75,7 @@ export interface EvaAssistColumnProps {
 const TEMP_META: Record<EvaAssistTemperatura, { label: string; dot: string }> = {
     quente: { label: "Quente", dot: "#E11D48" },
     morno: { label: "Morno", dot: "#D97706" },
-    frio: { label: "Frio", dot: "#2563EB" },
+    frio: { label: "Frio", dot: "#1556C0" },
 };
 
 // ─── Componente ─────────────────────────────────────────────────────────────
@@ -149,7 +149,7 @@ export function EvaAssistColumn({ data, onSend, hideHeader }: EvaAssistColumnPro
 function ControlSeal({ mode }: { mode: "suggest" | "discover" }) {
     // data-autonomy é o estado que um dia muda ("human" → autonomia concedida,
     // por tipo de mensagem, revogável). Hoje: fixo, sem toggle, sem lógica.
-    // No SE CALA não há sugestão pra controlar — o selo diz o que a EVA está
+    // No SE CALA não há sugestão pra controlar — o selo diz o que a Lume está
     // fazendo naquele estado: escutando.
     const listening = mode === "discover";
     return (
@@ -158,8 +158,8 @@ function ControlSeal({ mode }: { mode: "suggest" | "discover" }) {
             data-autonomy="human"
             title={
                 listening
-                    ? "A EVA está coletando contexto. Nada é enviado sem você."
-                    : "A EVA sugere, você envia. Sempre tem um humano no envio."
+                    ? "A Lume está coletando contexto. Nada é enviado sem você."
+                    : "A Lume sugere, você envia. Sempre tem um humano no envio."
             }
         >
             <span className="vz-evassist-seal-dot" />
@@ -252,7 +252,7 @@ function SuggestZone({
                     </button>
                 </div>
                 <p className="vz-evassist-learn">
-                    Se você editar, a EVA aprende seu jeito.
+                    Se você editar, a Lume aprende seu jeito.
                 </p>
             </motion.div>
         </div>

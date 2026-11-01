@@ -1,8 +1,8 @@
-// LP.5 2026-06-12: easter egg da EVA. Dois gatilhos escondidos:
+// LP.5 2026-06-12: easter egg da Lume. Dois gatilhos escondidos:
 //   1. digitar "eva" em qualquer lugar da página (fora de inputs);
-//   2. 5 toques rápidos na telemetria "EVA · lendo a conversa" do hero
+//   2. 5 toques rápidos na telemetria "Lume · lendo a conversa" do hero
 //      (mobile, via CustomEvent "vyzon:eva-egg").
-// A EVA "acorda" num diálogo editorial (veil de tinta + cartão de papel com
+// A Lume "acorda" num diálogo editorial (veil de tinta + cartão de papel com
 // marcas de corte) e datilografa uma leitura da visita — a mesma mecânica de
 // pills/stamp que ela usa com leads, aplicada ao próprio visitante. Há também
 // uma dica no console (ver LandingPage). Acessível: role=dialog, foco no
@@ -143,7 +143,7 @@ export function EvaEasterEgg() {
             <div
                 role="dialog"
                 aria-modal="true"
-                aria-label="Você encontrou a EVA"
+                aria-label="Você encontrou a Lume"
                 className="lp-frame lp-egg-card relative w-full max-w-[520px]"
                 onClick={(e) => e.stopPropagation()}
             >
@@ -164,7 +164,7 @@ export function EvaEasterEgg() {
                             <EvaBot size={21} />
                         </span>
                         <span className="lp-mono" style={{ color: "var(--lp-eva)" }}>
-                            EVA · presença detectada
+                            Lume · presença detectada
                         </span>
                         <button
                             ref={closeRef}
@@ -249,7 +249,7 @@ export function EvaEasterEgg() {
                                         fontWeight: 600,
                                     }}
                                 >
-                                    Conhecer a EVA de verdade
+                                    Conhecer a Lume de verdade
                                     <ArrowRight className="h-4 w-4" strokeWidth={2} />
                                 </button>
                                 <button

@@ -48,7 +48,7 @@ const mapStatus = (status?: string): AttendanceStatus => {
 
 // Status colors
 export const STATUS_COLORS: Record<AttendanceStatus, { bg: string; border: string; text: string; dot: string }> = {
-  show: { bg: "bg-emerald-500/15", border: "border-emerald-500", text: "text-emerald-300", dot: "bg-emerald-500" },
+  show: { bg: "bg-[var(--vyz-success-bg)]", border: "border-[var(--vyz-success)]", text: "text-[var(--vyz-success)]", dot: "bg-[var(--vyz-accent)]" },
   no_show: { bg: "bg-rose-500/15", border: "border-rose-500", text: "text-rose-300", dot: "bg-rose-500" },
   pending: { bg: "bg-muted", border: "border-muted-foreground", text: "text-muted-foreground", dot: "bg-muted-foreground" },
 };
@@ -122,13 +122,13 @@ const MiniCalendar = ({
                 relative h-7 w-7 mx-auto flex items-center justify-center rounded-full
                 text-[11px] font-medium transition-all duration-100
                 ${!inMonth ? "text-muted-foreground/40" : "text-muted-foreground hover:text-foreground hover:bg-muted"}
-                ${isSelected ? "!bg-emerald-500 !text-white shadow-md shadow-emerald-500/30" : ""}
-                ${isNow && !isSelected ? "!text-emerald-400 font-bold" : ""}
+                ${isSelected ? "!bg-[var(--vyz-accent)] !text-white " : ""}
+                ${isNow && !isSelected ? "!text-[var(--vyz-accent)] font-bold" : ""}
               `}
             >
               {format(day, "d")}
               {hasAg && inMonth && !isSelected && (
-                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-emerald-500" />
+                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[var(--vyz-accent)]" />
               )}
             </button>
           );
@@ -252,10 +252,10 @@ const MiniGoalWidget = ({ userId, companyId }: { userId?: string; companyId?: st
   if (!metaData) return null;
 
   const { pct, realizado, meta } = metaData;
-  const color = pct >= 100 ? "from-emerald-500 to-emerald-400" :
+  const color = pct >= 100 ? "from-[var(--vyz-success)] to-[var(--vyz-success)]" :
     pct >= 50 ? "from-cyan-500 to-cyan-400" :
       "from-muted-foreground to-muted-foreground";
-  const textColor = pct >= 100 ? "text-emerald-400" :
+  const textColor = pct >= 100 ? "text-[var(--vyz-accent)]" :
     pct >= 50 ? "text-cyan-400" : "text-muted-foreground";
 
   const fmt = (v: number) =>
@@ -267,7 +267,7 @@ const MiniGoalWidget = ({ userId, companyId }: { userId?: string; companyId?: st
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
           {pct >= 100
-            ? <Trophy className="h-3.5 w-3.5 text-emerald-400" />
+            ? <Trophy className="h-3.5 w-3.5 text-[var(--vyz-accent)]" />
             : <Target className="h-3.5 w-3.5 text-muted-foreground" />
           }
           <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -361,12 +361,12 @@ const MonthGridView = ({
                   relative flex flex-col items-center py-2 min-h-[48px] border-b border-r border-border/30
                   transition-colors active:bg-muted/60
                   ${!inMonth ? "bg-background/40" : ""}
-                  ${isNow ? "bg-emerald-500/5" : ""}
+                  ${isNow ? "bg-[var(--vyz-accent-soft-6)]" : ""}
                 `}
               >
                 <span className={`
                   text-[12px] font-semibold w-6 h-6 flex items-center justify-center rounded-full
-                  ${isNow ? "bg-emerald-500 text-white shadow-sm" : ""}
+                  ${isNow ? "bg-[var(--vyz-accent)] text-white shadow-sm" : ""}
                   ${!inMonth ? "text-muted-foreground/40" : !isNow ? "text-muted-foreground" : ""}
                 `}>
                   {format(day, "d")}
@@ -419,7 +419,7 @@ const MonthGridView = ({
                           {format(parseISO(ag.data_agendamento), "HH:mm")}
                         </span>
                         {showTeam && ag.seller_name && (
-                          <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/20 px-1 rounded flex-shrink-0">
+                          <span className="text-[9px] font-bold text-[var(--vyz-accent)] bg-[var(--vyz-accent-soft-12)] px-1 rounded flex-shrink-0">
                             {getInitials(ag.seller_name)}
                           </span>
                         )}
@@ -466,14 +466,14 @@ const MonthGridView = ({
                 group relative min-h-[110px] p-2 cursor-pointer border-b border-border/30
                 transition-colors hover:bg-muted/60
                 ${!inMonth ? "bg-background/40" : ""}
-                ${isNow ? "bg-emerald-500/5" : ""}
+                ${isNow ? "bg-[var(--vyz-accent-soft-6)]" : ""}
               `}
             >
               {/* Day number */}
               <div className="flex justify-between items-start mb-1">
                 <span className={`
                   text-[13px] font-semibold w-7 h-7 flex items-center justify-center rounded-full
-                  ${isNow ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/40" : ""}
+                  ${isNow ? "bg-[var(--vyz-accent)] text-white " : ""}
                   ${!inMonth ? "text-muted-foreground/40" : !isNow ? "text-muted-foreground" : ""}
                 `}>
                   {format(day, "d")}
@@ -499,7 +499,7 @@ const MonthGridView = ({
                         {format(parseISO(ag.data_agendamento), "HH:mm")}
                       </span>
                       {showTeam && ag.seller_name && (
-                        <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/20 px-1 rounded flex-shrink-0">
+                        <span className="text-[9px] font-bold text-[var(--vyz-accent)] bg-[var(--vyz-accent-soft-12)] px-1 rounded flex-shrink-0">
                           {getInitials(ag.seller_name)}
                         </span>
                       )}
@@ -691,10 +691,10 @@ export default function Calendario() {
 
   return (
     <>
-      <div className="vz-page-full -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6 flex flex-col bg-background text-foreground overflow-hidden">
+      <div className="vz-page-full -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-9 md:-my-8 flex flex-col bg-background text-foreground overflow-hidden">
 
         {/* ── TOP BAR ────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-2 md:gap-3 px-2 md:px-4 py-2 md:py-3 border-b border-border bg-card/80 backdrop-blur flex-shrink-0">
+        <div className="flex items-center gap-2 md:gap-3 px-3 md:px-9 pt-3 md:pt-8 pb-3 flex-shrink-0">
           {/* Mobile sidebar toggle */}
           {isMobile && (
             <button
@@ -728,7 +728,7 @@ export default function Calendario() {
           </div>
 
           {/* Title */}
-          <h1 className="text-[13px] md:text-[15px] font-bold text-foreground capitalize flex-1 truncate min-w-0">
+          <h1 className="vp-titulo capitalize flex-1 truncate min-w-0" style={{ fontSize: "clamp(18px, 2.4vw, 26px)" }}>
             {getTitle()}
           </h1>
 
@@ -794,7 +794,7 @@ export default function Calendario() {
               >
                 <ChevronDown className={`h-4 w-4 transition-transform ${showMobileFilters ? "rotate-180" : ""}`} />
                 {(selectedVendedor !== "all" || selectedStatus !== "all") && (
-                  <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-[var(--vyz-accent)]" />
                 )}
               </button>
             </>
@@ -805,7 +805,7 @@ export default function Calendario() {
             <DialogTrigger asChild>
               <Button
                 size="sm"
-                className="bg-emerald-600 hover:bg-emerald-500 text-white h-8 px-2 md:px-3 text-[12px] font-semibold shadow-md shadow-emerald-500/20 flex-shrink-0"
+                className="bg-[var(--vyz-accent)] hover:bg-[var(--vyz-accent-dark)] text-white h-8 px-2 md:px-3 text-[12px] font-semibold flex-shrink-0"
               >
                 <Plus className="h-3.5 w-3.5 md:mr-1" />
                 <span className="hidden md:inline">Novo</span>

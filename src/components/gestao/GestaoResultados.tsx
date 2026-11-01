@@ -6,6 +6,13 @@ import { useTenant } from "@/contexts/TenantContext";
 import { useQuoteBoard } from "@/hooks/useQuoteBoard";
 import { brl, monthStartIso } from "./format";
 import { plural } from "@/lib/quoteText";
+import { useCockpitData } from "@/hooks/useCockpitData";
+import { QuinzenaCard, type QuinzenaDay } from "@/components/inicio/QuinzenaCard";
+
+const dia = (iso: string) => {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
 type DealRow = { id: string; user_id: string | null; value: number | null; stage: string | null; updated_at: string };
 type ProfileRow = { id: string; nome: string | null };
@@ -18,6 +25,7 @@ export function GestaoResultados() {
   const { activeCompanyId } = useTenant();
   const company = activeCompanyId || companyId;
   const { query: board } = useQuoteBoard(30);
+  const cockpit = useCockpitData();
 
   const data = useQuery({
     queryKey: ["gestao-resultados", company],
@@ -75,40 +83,66 @@ export function GestaoResultados() {
   const loading = board.isLoading || data.isLoading;
   const failed = board.isError || data.isError;
 
+  const items = board.data?.items ?? [];
+  const enviados = totals?.total_count ?? 0;
+  const responderam = items.filter((q) => ["went_quiet", "your_turn", "talking", "won", "lost"].includes(q.state)).length;
+  const negociando = items.filter((q) => q.state === "your_turn" || q.state === "talking").length;
+  const fecharam = totals?.won_count ?? 0;
+  const conversao = enviados > 0 ? Math.round((fecharam / enviados) * 100) : null;
+
   const tiles = [
-    { label: "Parado agora", value: brl(totals?.parked_amount ?? 0), sub: `${plural(totals?.parked_count ?? 0, "orçamento sem resposta", "orçamentos sem resposta")}`, tone: "warn" as const },
-    { label: "Esperando vocês", value: brl(totals?.your_turn_amount ?? 0), sub: `${plural(totals?.your_turn_count ?? 0, "cliente respondeu", "clientes responderam")}`, tone: "accent" as const },
-    { label: "Recuperado pela EVA", value: brl(totals?.recovered_amount ?? 0), sub: `${plural(totals?.recovered_count ?? 0, "fechado", "fechados")} depois da retomada`, tone: "eva" as const },
-    { label: "Fechado no mês", value: brl(wonMonth.value), sub: `${plural(wonMonth.count, "negócio ganho", "negócios ganhos")}`, tone: "plain" as const },
+    { label: "Fechado no mês", value: brl(wonMonth.value), sub: plural(wonMonth.count, "negócio ganho", "negócios ganhos") },
+    { label: "Viraram venda", value: conversao != null ? `${conversao}%` : "Sem dados", sub: "Média do setor: 18%" },
+    { label: "Parado agora", value: brl(totals?.parked_amount ?? 0), sub: plural(totals?.parked_count ?? 0, "orçamento sem resposta", "orçamentos sem resposta") },
+    { label: "Voltou com a Lume", value: brl(totals?.recovered_amount ?? 0), sub: plural(totals?.recovered_count ?? 0, "fechou depois da retomada", "fecharam depois da retomada") },
   ];
 
+  const etapas = [
+    { nome: "Orçamentos enviados", n: enviados },
+    { nome: "Responderam", n: responderam },
+    { nome: "Em conversa", n: negociando },
+    { nome: "Fecharam", n: fecharam },
+  ];
+
+  const porDia = new Map<string, number>();
+  for (const q of items) porDia.set(dia(q.sent_at), (porDia.get(dia(q.sent_at)) ?? 0) + 1);
+  const quinzena: QuinzenaDay[] = (cockpit.data?.days ?? []).map((d) => ({ ...d, quotes: porDia.get(d.day) ?? 0 }));
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {failed && (
-        <p role="alert" className="rounded-[10px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-2)] px-4 py-3 text-[13px] text-[var(--vyz-text-muted)]">
+        <p role="alert" className="rounded-[10px] bg-[var(--vyz-surface-2)] px-4 py-3 text-[13px] text-[var(--vyz-text)]">
           Não deu para carregar todos os números agora. Tente de novo em instantes.
         </p>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="vp-stats">
         {tiles.map((t) => (
-          <div key={t.label} className="rounded-[14px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-4 py-4 shadow-[0_1px_2px_rgba(11,18,32,0.04)]">
-            <div className="flex items-center gap-2">
-              <span
-                aria-hidden
-                className="h-1.5 w-1.5 rounded-full"
-                style={{ background: t.tone === "warn" ? "#D97706" : t.tone === "eva" ? "#6d28d9" : t.tone === "accent" ? "var(--vyz-accent)" : "var(--vyz-text-soft)" }}
-              />
-              <p className="text-[12px] font-medium text-[var(--vyz-text-muted)]">{t.label}</p>
-            </div>
-            {loading ? (
-              <div className="mt-3 h-7 w-24 rounded-md bg-[var(--vyz-surface-2)] animate-pulse motion-reduce:animate-none" />
-            ) : (
-              <p className="mt-2 text-[24px] font-semibold tabular-nums tracking-[-0.02em] text-[var(--vyz-text-primary)]">{t.value}</p>
-            )}
-            <p className="mt-1 text-[12px] text-[var(--vyz-text-muted)]">{t.sub}</p>
+          <div key={t.label}>
+            <span>{t.label}</span>
+            {loading ? <i aria-hidden /> : <b>{t.value}</b>}
+            <em>{t.sub}</em>
           </div>
         ))}
+      </div>
+
+      <div className="vp-res">
+        <section className="vp-cartao" aria-label="Do orçamento à venda">
+          <div className="vp-rotulo">Do orçamento à venda</div>
+          <div className="vp-barras">
+            {etapas.map((e) => (
+              <div key={e.nome} className="vp-barra-etapa">
+                <span>{e.nome}</span>
+                <span className="vp-barra-etapa__trilho">
+                  <i style={{ width: `${enviados > 0 ? Math.max((e.n / enviados) * 100, 8) : 8}%` }}>
+                    <b>{e.n}</b>
+                  </i>
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+        <QuinzenaCard days={quinzena} responseMedianMin={cockpit.data?.responseMedianMin ?? null} loading={cockpit.loading} />
       </div>
 
       <section aria-labelledby="gestao-por-vendedor">
@@ -119,7 +153,7 @@ export function GestaoResultados() {
           <p className="text-[12px] text-[var(--vyz-text-muted)]">Orçamentos dos últimos 30 dias · fechados neste mês</p>
         </div>
 
-        <div className="mt-3 overflow-x-auto rounded-[14px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)]">
+        <div className="mt-3 overflow-x-auto rounded-[18px] bg-[var(--vyz-surface-1)]">
           <table className="w-full min-w-[560px] text-[13px]">
             <thead>
               <tr className="text-left text-[12px] text-[var(--vyz-text-muted)]">
@@ -154,7 +188,7 @@ export function GestaoResultados() {
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">
                       {r.parked.count > 0 ? (
-                        <span className="text-[#B45309]">
+                        <span className="text-[var(--vyz-warning)]">
                           {r.parked.amount > 0 ? (
                             <>
                               {brl(r.parked.amount)} <span className="opacity-80">· {r.parked.count}</span>

@@ -1,4 +1,4 @@
-// EVA.INBOX.SIGNALS (2026-06-09) — leitura dos sinais REAIS da EVA por conversa.
+// EVA.INBOX.SIGNALS (2026-06-09) — leitura dos sinais REAIS da Lume por conversa.
 // A edge whatsapp-copilot persiste cada análise em conversation_summaries
 // (user_id + chat_phone, com `qualification` estruturado). Este hook entrega o
 // último sinal por telefone pra lista priorizada do Inbox — substitui o
@@ -34,7 +34,7 @@ const PROXIMA_ACAO_LABEL: Record<string, string> = {
 };
 
 /**
- * Deriva a etiqueta-motivo da lista priorizada a partir dos campos que a EVA já
+ * Deriva a etiqueta-motivo da lista priorizada a partir dos campos que a Lume já
  * grava — sem campo novo, sem migration. Do mais específico ao mais genérico:
  * objeção detectada → ação de valor → justificativa do score → próxima ação →
  * sentimento. Retorna undefined quando não há nada honesto a dizer.

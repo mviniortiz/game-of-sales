@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   Buildings,
+  CaretRight,
   ChatCircleText,
   CheckCircle,
   CreditCard,
@@ -25,7 +26,7 @@ type NavItem = {
 
 type NavGroup = { label: string; items: NavItem[] };
 
-// Menu do produto de hoje (out/2026): WhatsApp, aprovação da EVA e leads.
+// Menu do produto de hoje (out/2026): WhatsApp, aprovação da Lume e leads.
 // Integrações de infoproduto (Hotmart, Kiwify) e Relatórios públicos saíram do
 // menu por falta de uso; Equipe mora na Gestão.
 const GROUPS: NavGroup[] = [
@@ -47,7 +48,7 @@ const GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "EVA",
+    label: "Lume",
     items: [{ id: "aprovacao", label: "Aprovação no WhatsApp", path: "/configuracoes/aprovacao", icon: CheckCircle, adminOnly: true }],
   },
   {
@@ -63,19 +64,22 @@ const GROUPS: NavGroup[] = [
 const TITLES: Record<string, { title: string; subtitle: string }> = {
   perfil: { title: "Perfil", subtitle: "Seu nome e sua foto no Vyzon" },
   seguranca: { title: "Segurança", subtitle: "Senha e acesso à conta" },
-  organizacao: { title: "Organização", subtitle: "Dados da empresa e o segmento que a EVA usa" },
+  organizacao: { title: "Organização", subtitle: "Dados da empresa e o segmento que a Lume usa" },
   faturamento: { title: "Plano e faturamento", subtitle: "Seu plano, o uso e as cobranças" },
-  aprovacao: { title: "Aprovação no WhatsApp", subtitle: "Como os rascunhos da EVA chegam até você" },
+  aprovacao: { title: "Aprovação no WhatsApp", subtitle: "Como os rascunhos da Lume chegam até você" },
   integracoes: { title: "Integrações", subtitle: "Conecte as ferramentas que você já usa" },
   "webhooks-leads": { title: "Receber leads", subtitle: "Leads do seu site e dos anúncios entram direto no funil" },
   tags: { title: "Tags", subtitle: "Marcadores para oportunidades, conversas e contatos" },
   importar: { title: "Importar", subtitle: "Traga contatos e oportunidades de uma planilha" },
+  whatsapp: { title: "WhatsApp", subtitle: "Conecte o número da empresa" },
+  time: { title: "Equipe", subtitle: "Quem usa o Vyzon com você" },
 };
 
 export default function ConfiguracoesLayout() {
   const location = useLocation();
   const { isAdmin } = useAuth();
   const currentSection = location.pathname.split("/")[2] || "perfil";
+  const naRaiz = !location.pathname.split("/")[2];
   const header = TITLES[currentSection] || TITLES.perfil;
 
   const visibleGroups = useMemo(
@@ -85,17 +89,44 @@ export default function ConfiguracoesLayout() {
   );
 
   const itemClass = (active: boolean) =>
-    `group flex items-center gap-2.5 rounded-[10px] px-2.5 text-[13.5px] font-medium outline-none transition-colors duration-150 focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.28)] ${
+    `group flex items-center gap-2.5 rounded-[10px] px-2.5 text-[13.5px] font-medium outline-none transition-colors duration-150 focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.28)] ${
       active
         ? "bg-[var(--vyz-accent-soft-10)] text-[var(--vyz-text-primary)]"
         : "text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-2)] hover:text-[var(--vyz-text-primary)]"
     }`;
 
+  // A raiz é um índice curto; cada linha leva à sua página.
+  if (naRaiz) {
+    return (
+      <div className="vp-tela">
+        <header className="vp-cabeca">
+          <h1 className="vp-titulo">Configurações</h1>
+        </header>
+        <div className="vp-config">
+          {visibleGroups.map((group) => (
+            <section key={group.label} className="vp-cartao vp-cartao--lista" aria-label={group.label}>
+              <div className="vp-rotulo">{group.label}</div>
+              {group.items.map((item) => (
+                <NavLink key={item.id} to={item.path} className="vp-conf">
+                  <b>{item.label}</b>
+                  <span>{TITLES[item.id]?.subtitle ?? ""}</span>
+                  <CaretRight size={14} weight="bold" aria-hidden />
+                </NavLink>
+              ))}
+            </section>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mx-auto w-full max-w-[1120px] space-y-6">
-      <header>
-        <h1 className="text-[26px] font-semibold tracking-[-0.03em] text-[var(--vyz-text-primary)]">{header.title}</h1>
-        <p className="mt-1 text-[14px] text-[var(--vyz-text-muted)]">{header.subtitle}</p>
+    <div className="vp-tela">
+      <header className="vp-cabeca">
+        <div>
+          <h1 className="vp-titulo">{header.title}</h1>
+          <p className="vp-sub">{header.subtitle}</p>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr] lg:gap-8">

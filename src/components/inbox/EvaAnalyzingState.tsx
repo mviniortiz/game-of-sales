@@ -1,7 +1,7 @@
 import { EvaBot } from "@/components/eva/EvaBot";
 import { EvaThinking } from "@/components/eva/EvaThinking";
 
-// Momento "EVA lendo a conversa" no Inbox. Em vez de um spinner, a EVA mostra
+// Momento "Lume lendo a conversa" no Inbox. Em vez de um spinner, a Lume mostra
 // que está LENDO: uma linha de varredura passa sobre uma miniatura da conversa
 // (bolhas abstratas) e cada bolha acende quando a leitura cruza por ela, com um
 // status que evolui. Honesto: não fabrica sinais nem números — só representa o
@@ -26,7 +26,7 @@ export function EvaAnalyzingState() {
         <div className="flex-1 flex flex-col items-center justify-center px-5 py-6 text-center">
             <EvaBot state="thinking" size={56} className="mb-4" />
 
-            {/* Miniatura da conversa sendo varrida pela leitura da EVA */}
+            {/* Miniatura da conversa sendo varrida pela leitura da Lume */}
             <div className="vz-scan-wrap" aria-hidden="true">
                 {BUBBLES.map((b, i) => (
                     <div key={i} className={`vz-scan-row ${b.me ? "vz-scan-row--me" : ""}`}>
@@ -34,7 +34,7 @@ export function EvaAnalyzingState() {
                             className="vz-scan-bubble"
                             style={{
                                 width: `${b.w}%`,
-                                background: b.me ? "rgba(37,99,235,0.16)" : "rgba(13,20,33,0.07)",
+                                background: b.me ? "rgba(21,86,192,0.16)" : "rgba(13,20,33,0.07)",
                                 animationDelay: `${i * 0.42}s`,
                             }}
                         />
@@ -66,7 +66,7 @@ export function EvaAnalyzingState() {
                 }
                 .vz-scan-line {
                     position: absolute; left: 0; right: 0; top: 0; height: 26px;
-                    background: linear-gradient(180deg, rgba(37,99,235,0) 0%, rgba(37,99,235,0.18) 50%, rgba(37,99,235,0) 100%);
+                    background: linear-gradient(180deg, rgba(21,86,192,0) 0%, rgba(21,86,192,0.18) 50%, rgba(21,86,192,0) 100%);
                     animation: vzScanSweep 1.7s ease-in-out infinite;
                 }
                 @keyframes vzScanSweep {

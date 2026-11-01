@@ -1,4 +1,4 @@
-// Se a EVA já conhece a empresa efetiva: existe linha em eva_business_context.
+// Se a Lume já conhece a empresa efetiva: existe linha em eva_business_context.
 // Orçamentos usa para levar a conta nova ao Raio-X (sem assinatura) ou à
 // configuração por conversa (assinante).
 import { useQuery } from "@tanstack/react-query";

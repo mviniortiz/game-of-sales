@@ -1,6 +1,6 @@
 // EVA.STUDIO.7 — EvaStudioRules
-// Bloco discreto que mostra as regras aplicadas via EVA Studio orientando a
-// sugestão da EVA. Reutilizável (EvaPanel/Inbox/Deal). Só leitura: NÃO envia
+// Bloco discreto que mostra as regras aplicadas via Lume Studio orientando a
+// sugestão da Lume. Reutilizável (EvaPanel/Inbox/Deal). Só leitura: NÃO envia
 // mensagem, não move estágio, não aplica tag, não altera oportunidade.
 import { ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -18,7 +18,7 @@ export function EvaStudioRules({ className = "", max = 3 }: { className?: string
         <details className={`group rounded-xl border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-3.5 py-2.5 ${className}`}>
             <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[12.5px] font-semibold text-[var(--vyz-text-strong)] [&::-webkit-details-marker]:hidden">
                 <ShieldCheck className="h-3.5 w-3.5 text-[var(--vyz-eva)]" aria-hidden />
-                Como a EVA decide neste card
+                Como a Lume decide neste card
                 <span className="ml-auto text-[11px] font-medium text-[var(--vyz-text-muted)] group-open:hidden">Ver regras</span>
             </summary>
             <ul className="mt-2 space-y-1">
@@ -30,7 +30,7 @@ export function EvaStudioRules({ className = "", max = 3 }: { className?: string
                 ))}
             </ul>
             <p className="mt-2 text-[10.5px] text-[var(--vyz-text-soft)]">
-                Regras do <Link to="/eva-studio" className="underline underline-offset-2">EVA Studio</Link>.
+                Regras do <Link to="/eva-studio" className="underline underline-offset-2">Lume Studio</Link>.
             </p>
         </details>
     );

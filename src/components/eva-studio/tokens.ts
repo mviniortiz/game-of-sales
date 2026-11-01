@@ -1,9 +1,9 @@
-// EVA Studio — tokens light compartilhados pelas abas.
-export const INK = "#0B1220";
+// Lume Studio — tokens light compartilhados pelas abas.
+export const INK = "#0F1730";
 export const SUB = "#64748B";
 export const MUTE = "#94A3B8";
 export const HAIR = "#E5E7EB";
-export const BLUE = "#2563EB";
+export const BLUE = "#1556C0";
 export const PURPLE = "#7C3AED";
 export const GREEN = "#16A34A";
 export const AMBER = "#B45309";

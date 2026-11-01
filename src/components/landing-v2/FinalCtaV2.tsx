@@ -7,7 +7,7 @@ import eterealRight from "@/assets/landing-v2/eva-etereal-right.webp";
 // LP.6 (v2) — CTA final. Fundo escuro elegante (fecha a página com contraste),
 // atmosfera azul/ciano quase invisível, headline serif, botão primário CLARO
 // (no escuro o preto não serve) + secundário outline claro. Imagens etéreas da
-// EVA ladeiam o texto, deslizando das bordas ao entrar na viewport.
+// Lume ladeiam o texto, deslizando das bordas ao entrar na viewport.
 interface FinalCtaV2Props {
     onScheduleDemoClick: () => void;
     onSecondaryClick: () => void;
@@ -48,7 +48,7 @@ export const FinalCtaV2 = ({ onScheduleDemoClick, onSecondaryClick }: FinalCtaV2
                 }}
             />
 
-            {/* imagens etéreas da EVA nas laterais (desktop) */}
+            {/* imagens etéreas da Lume nas laterais (desktop) */}
             <img
                 src={eterealLeft}
                 alt=""
@@ -72,14 +72,14 @@ export const FinalCtaV2 = ({ onScheduleDemoClick, onSecondaryClick }: FinalCtaV2
                     className="lp-display"
                     style={{ fontSize: "clamp(2.1rem, 5vw, 3.6rem)", lineHeight: 1.04, letterSpacing: "-0.035em", color: "#F7F7F4" }}
                 >
-                    Deixe o operacional com a EVA. A venda continua com você.
+                    Deixe o operacional com a Lume. A venda continua com você.
                 </h2>
                 <p className="mx-auto mt-6 max-w-xl" style={{ fontSize: "1.05rem", lineHeight: 1.6, color: "rgba(255,255,255,0.66)" }}>
                     Pipeline em dia, follow-up preparado, próximo passo sugerido. Seu time aprova cada mensagem antes do envio.
                 </p>
                 <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                     <ButtonV2 variant="light" onClick={onScheduleDemoClick} showArrow>
-                        Ver a EVA em ação
+                        Ver a Lume em ação
                     </ButtonV2>
                     <ButtonV2 variant="ghostlight" onClick={onSecondaryClick}>
                         Ver como funciona

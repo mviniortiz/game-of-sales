@@ -1,18 +1,18 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // EvaStudioJourney (EVA.STUDIO.JOURNEY, 2026-06-09) — o ACOPLAMENTO: a jornada
-// completa do novo EVA Studio, juntando as peças que antes viviam soltas no
+// completa do novo Lume Studio, juntando as peças que antes viviam soltas no
 // preview (chat conversacional + campo de provas) com a casca e as frentes
 // já validadas.
 //
 //   Criar   → AgentPurposeCreate (1 decisão, 3 propósitos)
 //   Ensinar → ConversationalStudio (conversar = caminho principal)
-//             + GuidedContextBuilder (revisar o que a EVA extraiu)
+//             + GuidedContextBuilder (revisar o que a Lume extraiu)
 //   Provar  → SimulationLab (campo de provas: do tranquilo ao extremo)
 //             + GuidedSimulationReplay (seus casos reais: termômetro + gate)
 //   Ativar  → confirmação final (no integrado: status → approved_assisted)
 //
 // Regras do fluxo:
-//   - O CTA do chat ("Testar a EVA nos meus casos") leva DIRETO pro Provar.
+//   - O CTA do chat ("Testar a Lume nos meus casos") leva DIRETO pro Provar.
 //   - Cobrir os 5 níveis do campo de provas convida pros casos reais — mas é
 //     o replay real (com linha vermelha) que LIBERA a ativação.
 //   - Prontidão na lateral é honesta: cresce com passo concluído e com
@@ -90,15 +90,15 @@ export interface EvaStudioJourneyProps {
     // Vistas secundárias (lateral): conteúdo pronto, renderizado por cima do passo
     memoryContent?: ReactNode;
     insightsContent?: ReactNode;
-    /** Analytics da EVA — vista transversal (não é etapa da jornada). */
+    /** Analytics da Lume — vista transversal (não é etapa da jornada). */
     analyticsContent?: ReactNode;
     /** Retomar a jornada de onde parou (no integrado vem do blueprint). */
     initialStep?: StudioStepKey;
-    /** EVA já aprovada (approved_assisted) → painel Ativar em estado "ativa". */
+    /** Lume já aprovada (approved_assisted) → painel Ativar em estado "ativa". */
     initialActivated?: boolean;
     /** Modo default do Ensinar ("revisao" no integrado enquanto o chat é prévia). */
     initialTeachMode?: TeachMode;
-    /** Selo no pill do chat (ex. "prévia") enquanto a EVA conversacional não é real. */
+    /** Selo no pill do chat (ex. "prévia") enquanto a Lume conversacional não é real. */
     chatBadge?: string;
 }
 
@@ -112,9 +112,9 @@ export interface EvaStudioJourneyHandle {
 }
 
 const ASIDE_META: Record<AsideView, { title: string; sub: string }> = {
-    memoria: { title: "Memória da EVA", sub: "O que ela já sabe da sua empresa." },
+    memoria: { title: "Memória da Lume", sub: "O que ela já sabe da sua empresa." },
     insights: { title: "Insights", sub: "O que ainda falta ensinar antes do Inbox." },
-    analytics: { title: "Resultados", sub: "O que a EVA sugeriu e como o time usou." },
+    analytics: { title: "Resultados", sub: "O que a Lume sugeriu e como o time usou." },
 };
 
 const STEPS = [
@@ -126,7 +126,7 @@ const STEPS = [
 
 const ORDER: StudioStepKey[] = ["criar", "ensinar", "provar", "ativar"];
 
-// A EVA do cabeçalho reage ao passo: esperando, lendo, escrevendo, pronta.
+// A Lume do cabeçalho reage ao passo: esperando, lendo, escrevendo, pronta.
 const STEP_EVA: Record<StudioStepKey, EvaBotState> = {
     criar: "idle",
     ensinar: "thinking",
@@ -328,7 +328,7 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
                     Modos montados e escondidos: alternar não perde a conversa */}
                 {!aside && !closingAside && step === "ensinar" && (
                     <>
-                        <div className="vz-studiomode" role="tablist" aria-label="Como ensinar a EVA">
+                        <div className="vz-studiomode" role="tablist" aria-label="Como ensinar a Lume">
                             <button
                                 type="button"
                                 role="tab"
@@ -366,7 +366,7 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
                                     onProceed={() => advance("ensinar", "provar")}
                                     onComplete={(fields) => {
                                         // Fecha o ciclo: o que a conversa montou vira material
-                                        // pro contexto da EVA (a etapa Revisar mostra como sugestões).
+                                        // pro contexto da Lume (a etapa Revisar mostra como sugestões).
                                         const spec = getSpecialist(chosenAgent);
                                         const text = spec.fields
                                             .map((f) => (fields[f.key] ? `${f.label}: ${fields[f.key]}` : ""))
@@ -409,7 +409,7 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
                     Modos montados e escondidos: voltar não zera os julgamentos */}
                 {!aside && !closingAside && step === "provar" && (
                     <>
-                        <div className="vz-studiomode" role="tablist" aria-label="Como provar a EVA">
+                        <div className="vz-studiomode" role="tablist" aria-label="Como provar a Lume">
                             <button
                                 type="button"
                                 role="tab"
@@ -480,7 +480,7 @@ export const EvaStudioJourney = forwardRef<EvaStudioJourneyHandle, EvaStudioJour
                                 </p>
                                 <p className="vz-simreplay-panel-reason">
                                     {activated
-                                        ? "Em cada conversa a EVA lê o lead e sugere a próxima mensagem. Nada sai sem a sua aprovação."
+                                        ? "Em cada conversa a Lume lê o lead e sugere a próxima mensagem. Nada sai sem a sua aprovação."
                                         : "Ao ativar, ela passa a sugerir respostas no WhatsApp. Você revisa, edita se quiser, e só então envia."}
                                 </p>
                             </div>

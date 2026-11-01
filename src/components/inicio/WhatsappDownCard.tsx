@@ -1,4 +1,4 @@
-// WhatsappDownCard — sem WhatsApp ligado a EVA não vê nada, então o Início diz
+// WhatsappDownCard — sem WhatsApp ligado a Lume não vê nada, então o Início diz
 // isso antes de qualquer número. Dois casos: a conta nunca conectou, ou
 // conectou e a sessão caiu (aí mostra quando chegou a última conversa, que é o
 // que o banco sabe de verdade; a hora exata da queda ninguém registra).
@@ -6,9 +6,9 @@ import { Link } from "react-router-dom";
 import { isDemoSession } from "@/lib/analytics";
 
 const STEPS: Array<{ when: string; text: string }> = [
-    { when: "Assim que conectar", text: "A EVA volta a ler cada conversa que chega no seu WhatsApp." },
+    { when: "Assim que conectar", text: "A Lume volta a ler cada conversa que chega no seu WhatsApp." },
     { when: "A cada proposta", text: "O orçamento que você mandar, em PDF ou texto, entra no placar com o valor." },
-    { when: "Quando o cliente some", text: "A EVA escreve a retomada e manda no seu WhatsApp. Nada sai sem o seu ok." },
+    { when: "Quando o cliente some", text: "A Lume escreve a retomada e manda no seu WhatsApp. Nada sai sem o seu ok." },
 ];
 
 function shortDate(iso: string): string {
@@ -31,7 +31,7 @@ export function WhatsappDownCard({ neverConnected, lastInboundAt }: { neverConne
                 {neverConnected ? "WhatsApp não conectado" : "WhatsApp desconectado"}
             </p>
             <h2 id="whatsapp-down" className="mt-2 text-[22px] font-semibold leading-tight tracking-[-0.02em] text-[var(--vyz-text-primary)]">
-                {neverConnected ? "Conecte seu WhatsApp para a EVA começar" : "Reconecte para a EVA voltar a trabalhar"}
+                {neverConnected ? "Conecte seu WhatsApp para a Lume começar" : "Reconecte para a Lume voltar a trabalhar"}
             </h2>
             <p className="mt-1.5 max-w-2xl text-[15px] leading-relaxed text-[var(--vyz-text)]">
                 {!neverConnected && lastInboundAt ? `A última conversa chegou em ${shortDate(lastInboundAt)}. ` : ""}
@@ -49,7 +49,7 @@ export function WhatsappDownCard({ neverConnected, lastInboundAt }: { neverConne
 
             <Link
                 to="/inbox?connect=1"
-                className="mt-6 inline-flex h-11 items-center rounded-full bg-[#0B1220] px-6 text-[14.5px] font-semibold text-white transition-colors duration-150 hover:bg-[#1F2A3B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2"
+                className="mt-6 inline-flex h-11 items-center rounded-full bg-[#0F1730] px-6 text-[14.5px] font-semibold text-white transition-colors duration-150 hover:bg-[#1F2A3B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2"
             >
                 {neverConnected ? "Conectar WhatsApp" : "Reconectar WhatsApp"}
             </Link>

@@ -6,7 +6,7 @@
 //   2. "Propostas paradas": proposta enviada sem resposta, maior valor primeiro.
 //   3. "Outras conversas".
 // Cada linha mostra o valor da proposta e há quanto tempo ela está parada
-// (placar de orçamentos, get_quote_board). Temperatura da EVA aparece quando
+// (placar de orçamentos, get_quote_board). Temperatura da Lume aparece quando
 // não há proposta.
 //
 // CONTROLE DO HUMANO: "Por horário" volta pro cronológico, como no WhatsApp.
@@ -23,7 +23,7 @@ import { ago, brl } from "@/lib/quoteText";
 export type LeadPriority = "quente" | "esfriando" | "frio";
 
 export interface InboxLeadSignal {
-    /** Prioridade de valor — ausente quando a EVA ainda não leu a conversa. */
+    /** Prioridade de valor — ausente quando a Lume ainda não leu a conversa. */
     priority?: LeadPriority;
     /** Motivo curto da etiqueta ("perto de fechar", "sem resposta há 4h"). */
     reason?: string;
@@ -33,7 +33,7 @@ export interface InboxLeadSignal {
 
 export interface InboxPriorityListProps {
     chats: Chat[];
-    /** chatId → sinal da EVA (temperatura, motivo, tempo de espera). */
+    /** chatId → sinal da Lume (temperatura, motivo, tempo de espera). */
     signals: Record<string, InboxLeadSignal>;
     selectedChatId: string | null;
     onSelect: (chatId: string) => void;
@@ -143,7 +143,7 @@ export function InboxPriorityList({
 }: InboxPriorityListProps) {
     const [filter, setFilter] = useState<ListFilter>("all");
     const [query, setQuery] = useState("");
-    // A EVA propõe a ordem; "time" é o humano revogando pro cronológico. Vale entre visitas.
+    // A Lume propõe a ordem; "time" é o humano revogando pro cronológico. Vale entre visitas.
     const [order, setOrderState] = useState<"eva" | "time">(loadOrder);
     const setOrder = (next: "eva" | "time") => {
         setOrderState(next);
@@ -180,7 +180,7 @@ export function InboxPriorityList({
         return {
             active: visible.filter(hasConversation),
             junk: visible.filter((c) => !hasConversation(c)),
-            // Grupos fora do fluxo de venda (EVA não analisa), mas acessíveis
+            // Grupos fora do fluxo de venda (Lume não analisa), mas acessíveis
             groups: matched
                 .filter((c) => c.isGroup)
                 .sort((a, b) => lastTime(b) - lastTime(a)),
@@ -261,7 +261,7 @@ export function InboxPriorityList({
                         title={
                             order === "eva"
                                 ? "Voltar pra ordem cronológica"
-                                : "Voltar pra ordem da EVA"
+                                : "Voltar pra ordem da Lume"
                         }
                     >
                         {order === "eva" ? (
@@ -272,7 +272,7 @@ export function InboxPriorityList({
                         ) : (
                             <>
                                 <ListOrdered style={{ width: 11, height: 11 }} />
-                                Ordem da EVA
+                                Ordem da Lume
                             </>
                         )}
                     </button>
@@ -303,14 +303,14 @@ export function InboxPriorityList({
                             }
                         }}
                         placeholder="Buscar nome ou telefone"
-                        className="h-10 md:h-[34px] text-base md:text-[12px] border border-[var(--ibx-line)] outline-none transition-[border-color,box-shadow] duration-150 focus:border-[var(--vyz-accent)] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] [&::-webkit-search-cancel-button]:hidden"
+                        className="h-10 md:h-[34px] text-base md:text-[12px] border border-[var(--ibx-line)] outline-none transition-[border-color,box-shadow] duration-150 focus:border-[var(--vyz-accent)] focus:shadow-[0_0_0_3px_rgba(21,86,192,0.15)] [&::-webkit-search-cancel-button]:hidden"
                         style={{
                             width: "100%",
                             paddingLeft: 32,
                             paddingRight: query ? 30 : 12,
                             borderRadius: 999,
                             background: "var(--ibx-sunken)",
-                            color: "#0B1220",
+                            color: "#0F1730",
                         }}
                     />
                     {query && (
@@ -558,7 +558,7 @@ function LeadRow({
     const short = quote ? quoteShort(quote) : null;
     // Cliente esperando: o tempo de espera vai junto da proposta, uma vez só.
     const q = short && short.tone === "turn" && wait ? { ...short, text: wait } : short;
-    // Sem proposta nem leitura da EVA, a espera vai para a esquerda, no mesmo
+    // Sem proposta nem leitura da Lume, a espera vai para a esquerda, no mesmo
     // lugar e cor da linha de proposta: assim toda linha lê igual.
     const waitLeft = !!wait && !quote && !priority;
     const showWait = !!wait && !waitLeft && !(short && short.tone === "turn");
@@ -599,7 +599,7 @@ function LeadRow({
                     </span>
 
                     {/* Linha 3: a proposta (valor e situação) quando existe; senão a
-                        leitura da EVA. À direita, quanto tempo o cliente espera você. */}
+                        leitura da Lume. À direita, quanto tempo o cliente espera você. */}
                     <span
                         style={{
                             display: "flex",

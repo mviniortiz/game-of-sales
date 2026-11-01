@@ -3,7 +3,7 @@
 // SUBSTITUI a aba de simulações sintéticas (EvaSimulationsTab + SCENARIOS).
 //
 // Não é sandbox de lead fictício: é REPLAY de conversa REAL que o gestor já
-// viveu. A EVA pega o MOMENTO-CHAVE (o ponto onde o lead testou: preço,
+// viveu. A Lume pega o MOMENTO-CHAVE (o ponto onde o lead testou: preço,
 // objeção, garantia) e mostra "olha como eu teria respondido aqui" — num caso
 // onde o gestor já sabe como terminou.
 //
@@ -17,7 +17,7 @@
 // - TERMÔMETRO HONESTO: aprovação enche; correção marca afiação pendente e NÃO
 //   enche; redline em caso CRÍTICO BLOQUEIA a ativação (hard-stop de linha
 //   vermelha). Pode dizer "ainda não tá afiada" — nunca mente sobre prontidão.
-// - ATIVAÇÃO = convite NÃO-BLOQUEANTE no pico de confiança → liga a EVA L2
+// - ATIVAÇÃO = convite NÃO-BLOQUEANTE no pico de confiança → liga a Lume L2
 //   (no integrado: eva_blueprints.approved_assisted, que JÁ existe). Em estado
 //   morno o botão continua disponível (convite, não pedágio); só a linha
 //   vermelha crítica trava.
@@ -51,7 +51,7 @@ export interface ReplayMoment {
     leadName: string;
     /** O tipo de tensão do momento ("Objeção de preço", "Pedido de garantia"). */
     tension: string;
-    /** Linha vermelha: se a EVA escorregar aqui, a ativação trava. */
+    /** Linha vermelha: se a Lume escorregar aqui, a ativação trava. */
     critical?: boolean;
     outcome: ReplayOutcome;
     /** Como terminou de verdade ("Sumiu depois desta pergunta"). */
@@ -60,7 +60,7 @@ export interface ReplayMoment {
     context: string;
     /** A fala do lead que testou o vendedor. */
     leadMessage: string;
-    /** Como a EVA teria respondido naquele ponto. */
+    /** Como a Lume teria respondido naquele ponto. */
     evaReply: string;
     /** O que o vendedor humano respondeu de fato — opt-in, escondido. */
     sellerReply?: string;
@@ -78,7 +78,7 @@ export interface GuidedSimulationReplayProps {
     moments: ReplayMoment[];
     /** ÚNICO caminho de escrita do julgamento (quem integra grava). */
     onJudge: (moment: ReplayMoment, judgment: MomentJudgment) => void;
-    /** Liga a EVA L2 no Inbox (no integrado: approved_assisted). */
+    /** Liga a Lume L2 no Inbox (no integrado: approved_assisted). */
     onActivate: () => void;
     /** Julgamentos já persistidos (id do momento → ação), pra semear o termômetro. */
     initialJudgments?: Record<string, JudgeAction>;
@@ -92,7 +92,7 @@ export interface GuidedSimulationReplayProps {
 
 /** Mínimo de momentos julgados antes de o convite esquentar de verdade. */
 const MIN_JUDGED = 3;
-/** Taxa de aprovação a partir da qual a EVA é considerada "afiada". */
+/** Taxa de aprovação a partir da qual a Lume é considerada "afiada". */
 const READY_RATE = 0.7;
 
 type JudgeAction = MomentJudgment["action"];
@@ -226,7 +226,7 @@ export function GuidedSimulationReplay({
                         style={{ width: 18, height: 18, color: "#16A34A", margin: "0 auto 8px" }}
                         strokeWidth={2.6}
                     />
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "#0B1220" }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: "#0F1730" }}>
                         Você revisou todos os momentos que eu separei.
                     </p>
                     <p style={{ fontSize: 11.5, color: "#64748B", marginTop: 3 }}>
@@ -311,7 +311,7 @@ function MomentCard({
                 {moment.leadMessage}
             </div>
 
-            {/* Como a EVA teria respondido (ou correção em curso) */}
+            {/* Como a Lume teria respondido (ou correção em curso) */}
             {editing ? (
                 <>
                     <textarea
@@ -319,7 +319,7 @@ function MomentCard({
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
                         autoFocus
-                        aria-label="Corrigir a resposta da EVA"
+                        aria-label="Corrigir a resposta da Lume"
                     />
                     <p className="vz-ctxbuild-learn">
                         Do seu jeito. Sua correção me ensina, a próxima resposta vem melhor.
@@ -502,7 +502,7 @@ function ConfidencePanel({
                     className="vz-simreplay-activate vz-simreplay-activate--ready"
                     onClick={onActivate}
                 >
-                    Deixar a EVA responder no Inbox
+                    Deixar a Lume responder no Inbox
                     <ArrowRight style={{ width: 15, height: 15 }} />
                 </button>
             ) : (

@@ -58,7 +58,7 @@ const ARTICLES: DocArticle[] = [
       },
       {
         heading: "1. Crie sua conta",
-        body: "Acesse vyzon.com.br/criar-conta e preencha seus dados. Criar a conta é grátis: você conecta o WhatsApp e recebe o **Raio-X grátis** das propostas paradas. Para a EVA agir no dia a dia, assine o plano Vyzon.",
+        body: "Acesse vyzon.com.br/criar-conta e preencha seus dados. Criar a conta é grátis: você conecta o WhatsApp e recebe o **Raio-X grátis** das propostas paradas. Para a Lume agir no dia a dia, assine o plano Vyzon.",
       },
       {
         heading: "2. Configure sua empresa",
@@ -240,13 +240,13 @@ const ARTICLES: DocArticle[] = [
   },
   {
     id: "eva",
-    title: "Eva — Analista com IA",
+    title: "Lume — Analista com IA",
     icon: Sparkles,
     category: "Funcionalidades",
     tags: ["eva", "ia", "inteligência artificial", "relatório", "gráfico", "insight", "análise"],
     content: [
       {
-        body: "A Eva é sua analista de vendas com inteligência artificial. Pergunte qualquer coisa sobre seus dados e ela responde em segundos — com texto e gráficos.",
+        body: "A Lume é sua analista de vendas com inteligência artificial. Pergunte qualquer coisa sobre seus dados e ela responde em segundos — com texto e gráficos.",
       },
       {
         heading: "O que você pode perguntar",
@@ -254,7 +254,7 @@ const ARTICLES: DocArticle[] = [
       },
       {
         heading: "Gráficos automáticos",
-        body: "A Eva gera gráficos automaticamente quando faz sentido — barras para rankings, linhas para evolução e pizza para distribuição. Tudo inline no chat.",
+        body: "A Lume gera gráficos automaticamente quando faz sentido — barras para rankings, linhas para evolução e pizza para distribuição. Tudo inline no chat.",
       },
       {
         heading: "Limites de uso",
@@ -318,7 +318,7 @@ const ARTICLES: DocArticle[] = [
       },
       {
         heading: "Permissões",
-        body: "- **Vendedor** — acessa dashboard, ranking, registra vendas\n- **Administrador** — tudo acima + configurações, integrações, Eva, gestão de equipe\n- **Super Admin** — tudo acima + multi-empresa, monitor do sistema",
+        body: "- **Vendedor** — acessa dashboard, ranking, registra vendas\n- **Administrador** — tudo acima + configurações, integrações, Lume, gestão de equipe\n- **Super Admin** — tudo acima + multi-empresa, monitor do sistema",
       },
     ],
   },
@@ -334,7 +334,7 @@ const ARTICLES: DocArticle[] = [
       },
       {
         heading: "Vyzon, R$ 97/mês",
-        body: "Tudo liberado, até 10 usuários.\n- WhatsApp conectado\n- Inbox Comercial completo\n- Pipeline com agendamentos\n- EVA com análise de intenção, fit, urgência e objeções\n- Ranking e metas do time\n- Relatórios completos",
+        body: "Tudo liberado, até 10 usuários.\n- WhatsApp conectado\n- Inbox Comercial completo\n- Pipeline com agendamentos\n- Lume com análise de intenção, fit, urgência e objeções\n- Ranking e metas do time\n- Relatórios completos",
       },
       {
         heading: "Raio-X grátis",

@@ -5,13 +5,13 @@ import { useAuth } from "@/contexts/AuthContext";
 
 // useEvaPriorContext — lê o que a empresa JÁ configurou no eva_business_context
 // (serviços, ICP, tom de voz, promessas proibidas) e devolve:
-//   - summary: texto compacto pra EVA não repetir perguntas já respondidas (edge)
+//   - summary: texto compacto pra Lume não repetir perguntas já respondidas (edge)
 //   - seeds:   valores pré-prontos por CHAVE DE CAMPO (vende/icp/redline/tom...),
 //              pra o "agente nascendo" já mostrar o que ela sabe antes de perguntar.
-// Adaptatividade do EVA Studio (leva 3): a conversa começa já conhecendo a casa.
+// Adaptatividade do Lume Studio (leva 3): a conversa começa já conhecendo a casa.
 
 export interface EvaPriorContext {
-    /** Resumo curto pro prompt da EVA (vazio se a empresa ainda não configurou nada). */
+    /** Resumo curto pro prompt da Lume (vazio se a empresa ainda não configurou nada). */
     summary: string;
     /** Valores prontos por chave de campo dos especialistas (só os que dá pra derivar). */
     seeds: Record<string, string>;

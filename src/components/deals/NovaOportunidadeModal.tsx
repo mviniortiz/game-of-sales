@@ -126,7 +126,7 @@ interface NovaOportunidadeModalProps {
     leadSource?: string;
     titulo?: string;
     observacoes?: string;
-    /** EVA sugere o valor (ancorado no preço do serviço) e o serviço de
+    /** Lume sugere o valor (ancorado no preço do serviço) e o serviço de
      *  interesse, pra pré-preencher o valor e casar o produto cadastrado. */
     valorEstimado?: number | null;
     servicoInteresse?: string | null;
@@ -181,13 +181,13 @@ export const NovaOportunidadeModal = ({
       setClienteNome(prefillData?.clienteNome || "");
       setClienteTelefone(prefillData?.clienteTelefone || "");
       setLeadSource(prefillData?.leadSource || "");
-      // V1.1 — título/observações sugeridos (ex.: vindos da conversa/EVA)
+      // V1.1 — título/observações sugeridos (ex.: vindos da conversa/Lume)
       if (prefillData?.titulo) {
         setTitulo(prefillData.titulo);
         setTituloEditadoManualmente(true); // não sobrescrever ao escolher produto
       }
       if (prefillData?.observacoes) setObservacoes(prefillData.observacoes);
-      // EVA sugeriu valor (ancorado no preço do serviço) → pré-preenche, editável.
+      // Lume sugeriu valor (ancorado no preço do serviço) → pré-preenche, editável.
       if (prefillData?.valorEstimado != null && prefillData.valorEstimado > 0) {
         setValor(String(prefillData.valorEstimado));
         setValorFormatado(formatBRL(prefillData.valorEstimado));
@@ -242,9 +242,9 @@ export const NovaOportunidadeModal = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [produtoId]);
 
-  // EVA.OPP — casa o serviço de interesse (EVA) com um produto cadastrado quando
+  // EVA.OPP — casa o serviço de interesse (Lume) com um produto cadastrado quando
   // a lista carrega, pré-selecionando o dropdown. O valor vem do valor_estimado
-  // da EVA (prefill acima); aqui é só o match. Roda enquanto nada foi escolhido.
+  // da Lume (prefill acima); aqui é só o match. Roda enquanto nada foi escolhido.
   useEffect(() => {
     if (!open || produtoId || !prefillData?.servicoInteresse || !produtos?.length) return;
     const alvo = prefillData.servicoInteresse.trim().toLowerCase();
@@ -271,8 +271,8 @@ export const NovaOportunidadeModal = ({
       const additionalContacts =
         Object.keys(contatoExtra).length > 0 ? [contatoExtra] : [];
 
-      // Fase 2 (Analytics da EVA) — atribuição ao funil da EVA: se este deal
-      // nasce de uma conversa com sugestão da EVA (pending/accepted), vincula a
+      // Fase 2 (Analytics da Lume) — atribuição ao funil da Lume: se este deal
+      // nasce de uma conversa com sugestão da Lume (pending/accepted), vincula a
       // mais recente e resolve a pendente. Sem sugestão = null (honesto).
       // Best-effort: não bloqueia a criação do deal.
       const agentSuggestionId = conversationId
@@ -439,7 +439,7 @@ export const NovaOportunidadeModal = ({
           className="px-6 sm:px-7 pt-6 pb-5 relative overflow-hidden"
           style={{
             background:
-              "linear-gradient(135deg, rgba(37,99,235,0.06) 0%, rgba(74,140,232,0.04) 100%), #FFFFFF",
+              "linear-gradient(135deg, rgba(21,86,192,0.06) 0%, rgba(74,140,232,0.04) 100%), #FFFFFF",
             borderBottom: "1px solid #EAF0F6",
           }}
         >
@@ -447,7 +447,7 @@ export const NovaOportunidadeModal = ({
             className="absolute top-0 inset-x-0 h-px pointer-events-none"
             style={{
               background:
-                "linear-gradient(90deg, transparent, rgba(37,99,235,0.40) 50%, transparent)",
+                "linear-gradient(90deg, transparent, rgba(21,86,192,0.40) 50%, transparent)",
             }}
             aria-hidden
           />
@@ -455,16 +455,16 @@ export const NovaOportunidadeModal = ({
             <div
               className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
               style={{
-                background: "rgba(37,99,235,0.10)",
-                border: "1px solid rgba(37,99,235,0.20)",
+                background: "rgba(21,86,192,0.10)",
+                border: "1px solid rgba(21,86,192,0.20)",
               }}
             >
-              <Plus className="h-5 w-5" strokeWidth={2.3} style={{ color: "#2563EB" }} />
+              <Plus className="h-5 w-5" strokeWidth={2.3} style={{ color: "#1556C0" }} />
             </div>
             <div className="min-w-0">
               <span
                 className="text-[18px] font-bold tracking-tight"
-                style={{ color: "#0B1220", letterSpacing: "-0.018em" }}
+                style={{ color: "#0F1730", letterSpacing: "-0.018em" }}
               >
                 Criar nova oportunidade
               </span>
@@ -696,7 +696,7 @@ export const NovaOportunidadeModal = ({
             </div>
           </Section>
 
-          {/* Microaviso EVA assistida */}
+          {/* Microaviso Lume assistida */}
           <motion.div
             variants={sectionItem}
             className="flex items-start gap-2 rounded-lg px-3 py-2.5"
@@ -710,7 +710,7 @@ export const NovaOportunidadeModal = ({
               style={{ color: "#7C3AED" }}
             />
             <p className="text-[11.5px] leading-relaxed" style={{ color: "#475569" }}>
-              EVA continua assistida: ela sugere próximos passos depois que a oportunidade
+              Lume continua assistida: ela sugere próximos passos depois que a oportunidade
               entra no pipeline. Você aprova antes de qualquer ação automática.
             </p>
           </motion.div>
@@ -770,7 +770,7 @@ function Section({
       <header className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
         <span
           className="inline-flex items-center justify-center h-5 w-5 rounded-md"
-          style={{ background: "#F6F4EF", border: "1px solid #E6EDF5" }}
+          style={{ background: "#F3EFE4", border: "1px solid #E6EDF5" }}
         >
           {icon}
         </span>

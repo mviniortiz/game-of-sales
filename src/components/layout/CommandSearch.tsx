@@ -41,10 +41,10 @@ const NAV_ITEMS = [
     { label: "Calls", path: "/calls", icon: PhoneCall, sub: "Histórico e performance de ligações", keywords: "ligacoes chamadas" },
     { label: "Calendário", path: "/calendario", icon: Calendar, sub: "Compromissos e follow-ups agendados", keywords: "agenda eventos" },
     { label: "Performance", path: "/performance", icon: TrendingUp, sub: "Números do time, metas e ranking", keywords: "desempenho resultados metas ranking" },
-    { label: "EVA Studio", path: "/eva-studio", icon: Brain, sub: "Regras e contexto que guiam a EVA", keywords: "ia agente regras contexto studio", adminOnly: true },
+    { label: "Lume Studio", path: "/eva-studio", icon: Brain, sub: "Regras e contexto que guiam a Lume", keywords: "ia agente regras contexto studio", adminOnly: true },
     { label: "Metas", path: "/metas", icon: Target, sub: "Objetivos mensais por vendedor", keywords: "objetivos goals" },
     { label: "Ranking", path: "/ranking", icon: Trophy, sub: "Placar da equipe em tempo real", keywords: "gamificacao competicao" },
-    { label: "Eva", path: "/agente", icon: EvaIcon, sub: "IA que analisa seu pipeline e sugere ações", keywords: "ia agente assistente copilot", feature: "eva" },
+    { label: "Lume", path: "/agente", icon: EvaIcon, sub: "IA que analisa seu pipeline e sugere ações", keywords: "ia agente assistente copilot", feature: "eva" },
     { label: "Gestão", path: "/admin", icon: Shield, sub: "Usuários, permissões e configurações do time", keywords: "admin time equipe", adminOnly: true },
     { label: "Configurações", path: "/configuracoes", icon: Settings, sub: "Integrações, faturamento, preferências", keywords: "settings perfil integracoes" },
     { label: "Minha conta", path: "/configuracoes/perfil", icon: UserCog, sub: "Seu perfil, avatar e dados pessoais", keywords: "profile" },
@@ -198,7 +198,7 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
             },
             {
                 id: "eva",
-                label: "Falar com a Eva",
+                label: "Falar com a Lume",
                 sub: "Abre o copilot de IA do CRM",
                 icon: EvaIcon as React.ComponentType<{ className?: string }>,
                 keywords: "ia agente assistente copilot",
@@ -362,7 +362,7 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
                                                     onClick={r.onSelect}
                                                     className="relative w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors"
                                                     style={{
-                                                        background: active ? "rgba(37, 99, 235,0.08)" : "transparent",
+                                                        background: active ? "rgba(21, 86, 192,0.08)" : "transparent",
                                                     }}
                                                 >
                                                     {active && (
@@ -376,7 +376,7 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
                                                         className="flex items-center justify-center h-7 w-7 rounded-md shrink-0"
                                                         style={{
                                                             background: active
-                                                                ? "rgba(37, 99, 235,0.12)"
+                                                                ? "rgba(21, 86, 192,0.12)"
                                                                 : "rgba(255,255,255,0.03)",
                                                             border: "1px solid rgba(255,255,255,0.05)",
                                                         }}

@@ -3,7 +3,7 @@
 //
 // Agrega dados reais da operação comercial pra /inicio. Read-only, sem
 // mutations, sem chamar edge functions, sem chamar Evolution/Meta, sem
-// disparar análise nova de EVA. Apenas SELECTs em tabelas já existentes.
+// disparar análise nova de Lume. Apenas SELECTs em tabelas já existentes.
 //
 // Fontes consumidas (todas scope company_id):
 //   - channel_conversations  → métricas + needsFollowUp + recent activity
@@ -299,7 +299,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
             .not("stage", "in", "(closed_won,closed_lost)")
             .order("updated_at", { ascending: false })
             .limit(200),
-        // 4. Summaries com qualification (hotLeads + EVA highlights)
+        // 4. Summaries com qualification (hotLeads + Lume highlights)
         supabase
             .from("conversation_summaries")
             .select("chat_phone, qualification, analyzed_at")
@@ -441,7 +441,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
                 ? `${safeName ?? "Lead quente"} aguardando resposta`
                 : `${c.unread_count} mensagem${(c.unread_count ?? 0) > 1 ? "s" : ""} não lida${(c.unread_count ?? 0) > 1 ? "s" : ""} de ${contactWord}`,
             description: isHot
-                ? "EVA marcou como temperatura quente; não recebeu resposta ainda."
+                ? "Lume marcou como temperatura quente; não recebeu resposta ainda."
                 : c.last_inbound_at
                     ? `Última mensagem em ${new Date(c.last_inbound_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}.`
                     : "Sem timestamp da última mensagem.",
@@ -504,7 +504,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
         };
     });
 
-    // ── F5C.3 — EVA Manager Readouts ──────────────────────────────────────
+    // ── F5C.3 — Lume Manager Readouts ──────────────────────────────────────
     // 6 tipos. Sempre derivados de dados persistidos. Cada tipo no máximo
     // 1 card. Ordem do array vira ordem de exibição.
     const highlights: EvaHighlight[] = [];
@@ -537,7 +537,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
                 id: "hl-hot-without-deal",
                 type: "hot_leads_without_deal",
                 title: `${candidates.length} ${candidates.length === 1 ? "lead quente" : "leads quentes"} sem oportunidade aberta`,
-                description: "Temperatura alta detectada pela EVA, mas o lead ainda não virou deal no pipeline.",
+                description: "Temperatura alta detectada pela Lume, mas o lead ainda não virou deal no pipeline.",
                 severity: "high",
                 confidence: "high",
                 source: "summary",
@@ -603,7 +603,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
                 id: "hl-high-intent-unanswered",
                 type: "high_intent_unanswered",
                 title: `${candidates.length} ${candidates.length === 1 ? "lead com alta intenção" : "leads com alta intenção"} sem resposta`,
-                description: "EVA classificou como intenção forte e o lead falou por último — janela quente.",
+                description: "Lume classificou como intenção forte e o lead falou por último — janela quente.",
                 severity: "high",
                 confidence: "high",
                 source: "summary",
@@ -730,7 +730,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
             description: c.last_inbound_at
                 ? `Última mensagem recebida há ${Math.max(1, Math.floor((Date.now() - new Date(c.last_inbound_at).getTime()) / 3600_000))}h.`
                 : "Lead falou por último; sem resposta sua ainda.",
-            reason: "Alta intenção segundo a EVA, sem resposta",
+            reason: "Alta intenção segundo a Lume, sem resposta",
             priority: "critical",
             actionLabel: "Abrir conversa",
             href: `/inbox?conversationId=${c.id}`,
@@ -813,7 +813,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
             addPriority({
                 id: convKey(c.id),
                 title: `${safeName ?? "Lead"} pediu reunião — sem agendamento`,
-                description: "Intenção de demo/reunião identificada pela EVA; nenhuma data marcada na agenda.",
+                description: "Intenção de demo/reunião identificada pela Lume; nenhuma data marcada na agenda.",
                 reason: "Meeting intent sem agendamento futuro",
                 priority: "high",
                 actionLabel: "Abrir conversa",
@@ -837,7 +837,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
             description: `Stage atual: ${d.stage}. Sem atualização há ${Math.floor((Date.now() - new Date(d.updated_at).getTime()) / 86400_000)}d.`,
             reason: "Stale deal marcado como quente",
             priority: "high",
-            actionLabel: "Ver oportunidade",
+            actionLabel: "Abrir",
             href: `/deals/${d.id}`,
             source: "deal",
             dealId: d.id,
@@ -884,10 +884,10 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
         addPriority({
             id: dealKey(d.id),
             title: `${d.title || d.customer_name || "Oportunidade"} sem atualização`,
-            description: `Stage: ${d.stage}. Última atividade ${Math.floor((Date.now() - new Date(d.updated_at).getTime()) / 86400_000)}d atrás.`,
+            description: `Sem movimento há ${Math.floor((Date.now() - new Date(d.updated_at).getTime()) / 86400_000)} dias`,
             reason: "Sem atualização há mais de 7 dias",
             priority: "medium",
-            actionLabel: "Ver oportunidade",
+            actionLabel: "Abrir",
             href: `/deals/${d.id}`,
             source: "deal",
             dealId: d.id,
@@ -911,7 +911,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
             addPriority({
                 id: topicKey("recurring_objection"),
                 title: "Objeção recorrente nas conversas",
-                description: "EVA detectou a mesma objeção em vários leads. Pode valer um ajuste de pitch ou material.",
+                description: "Lume detectou a mesma objeção em vários leads. Pode valer um ajuste de pitch ou material.",
                 reason: "Padrão repetido em >=3 conversas",
                 priority: "medium",
                 actionLabel: "Abrir Inbox",

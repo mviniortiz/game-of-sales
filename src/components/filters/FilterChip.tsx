@@ -15,16 +15,16 @@ export const FilterChip = ({ label, value, onRemove, className }: FilterChipProp
   return (
     <span
       className={cn(
-        "inline-flex h-6 items-center gap-1.5 rounded-full bg-[rgba(37,99,235,0.08)] pl-2.5 pr-1 text-[11px] font-medium ring-1 ring-[rgba(37,99,235,0.22)] transition-colors hover:bg-[rgba(37,99,235,0.12)]",
+        "inline-flex h-6 items-center gap-1.5 rounded-full bg-[rgba(21,86,192,0.08)] pl-2.5 pr-1 text-[11px] font-medium ring-1 ring-[rgba(21,86,192,0.22)] transition-colors hover:bg-[rgba(21,86,192,0.12)]",
         className,
       )}
     >
       <span className="text-[#64748B]">{label}</span>
-      {value ? <span className="text-[#0B1220] font-semibold">{value}</span> : null}
+      {value ? <span className="text-[#0F1730] font-semibold">{value}</span> : null}
       <button
         type="button"
         onClick={onRemove}
-        className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full text-[#2563EB] transition-colors hover:bg-[rgba(37,99,235,0.18)]"
+        className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full text-[#1556C0] transition-colors hover:bg-[rgba(21,86,192,0.18)]"
         aria-label={`Remover ${label}`}
       >
         <X className="h-3 w-3" />

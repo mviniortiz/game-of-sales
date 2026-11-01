@@ -216,16 +216,16 @@ function MessageBubble({ message, isLast, onTypingTick }: { message: ReportMessa
       transition={{ duration: 0.3 }}
       className="flex gap-3 group/msg"
     >
-      {/* Eva avatar */}
+      {/* Lume avatar */}
       <div className="shrink-0 mt-0.5">
         <EvaAvatar size={32} thinking={isTyping} />
       </div>
 
       {/* Content */}
       <div className="flex-1 max-w-[85%] space-y-2">
-        {/* Type badge + "Eva" label */}
+        {/* Type badge + "Lume" label */}
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-violet-400">Eva</span>
+          <span className="text-xs font-semibold text-violet-400">Lume</span>
           {config && (
             <Badge variant="outline" className={`text-[10px] font-medium gap-1 h-5 ${config.color}`}>
               {config.icon}
@@ -314,7 +314,7 @@ function ScrollToBottom({ onClick, visible }: { onClick: () => void; visible: bo
 function EmptyState({ onSuggestion }: { onSuggestion: (text: string) => void }) {
   return (
     <div className="flex flex-col items-center justify-center h-full px-4">
-      {/* Eva branded icon */}
+      {/* Lume branded icon */}
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -331,7 +331,7 @@ function EmptyState({ onSuggestion }: { onSuggestion: (text: string) => void }) 
         className="text-center mb-8"
       >
         <h4 className="text-lg font-semibold text-foreground mb-1">
-          Oi! Sou a Eva
+          Oi! Sou a Lume
         </h4>
         <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
           Me pergunte qualquer coisa sobre suas vendas, metas,
@@ -427,7 +427,7 @@ export const ReportAgent = () => {
           <EvaAvatar size={36} />
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-foreground">Eva</h3>
+              <h3 className="text-sm font-semibold text-foreground">Lume</h3>
               <Badge variant="outline" className="text-[9px] font-medium bg-violet-500/10 text-violet-400 border-violet-500/20 h-4 px-1.5">
                 AI
               </Badge>
@@ -480,7 +480,7 @@ export const ReportAgent = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={rateLimited ? "Limite diário atingido..." : "Pergunte algo pra Eva..."}
+              placeholder={rateLimited ? "Limite diário atingido..." : "Pergunte algo pra Lume..."}
               disabled={rateLimited}
               className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 outline-none py-1.5"
               autoComplete="off"

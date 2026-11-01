@@ -2,7 +2,7 @@ import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 
 // Componente reutilizável pra seções "narrativa + imagem conceitual" da Vyzon.
-// Uma imagem por seção (Ritmo Comercial, Segunda-feira, War Room, Eva).
+// Uma imagem por seção (Ritmo Comercial, Segunda-feira, War Room, Lume).
 // Aspect ratio 16:9 (1600x900) — define width/height pra evitar CLS.
 //
 // Acessibilidade: alt descritivo obrigatório porque as imagens explicam
@@ -17,7 +17,7 @@ export type IdentityImageSectionProps = {
     extra?: string;
     bullets?: string[];
     image: { src: string; alt: string };
-    /** Cor de acento da seção (Eva = roxo, War Room = azul, demais = emerald) */
+    /** Cor de acento da seção (Lume = roxo, War Room = azul, demais = emerald) */
     accent?: "emerald" | "blue" | "violet";
     /** "right" (default) ou "left" — onde a imagem aparece em desktop */
     imageSide?: "left" | "right";

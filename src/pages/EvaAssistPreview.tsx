@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // EvaAssistPreview (EVA.INBOX.1) — página TEMPORÁRIA de validação visual da
-// nova lateral da EVA, com os DOIS estados lado a lado (confia / se cala).
+// nova lateral da Lume, com os DOIS estados lado a lado (confia / se cala).
 //
 // Dados 100% mock (cenário "Agência Metria Growth"). O envio aqui só mostra
 // um toast com o sinal de aprendizado capturado (accepted/edited + delta),
@@ -47,7 +47,7 @@ const MOCK_DISCOVER: EvaAssistData = {
         chips: ["Origem: Instagram Ads"],
     },
     nextAction:
-        "Depois que ele responder, rode a análise de novo pra EVA conseguir sugerir.",
+        "Depois que ele responder, rode a análise de novo pra Lume conseguir sugerir.",
 };
 
 function handleSend(text: string, outcome: SuggestionOutcome | null) {
@@ -89,8 +89,8 @@ export default function EvaAssistPreview() {
                 >
                     Preview local
                 </p>
-                <h1 style={{ fontSize: 18, fontWeight: 700, color: "#0B1220", marginBottom: 6 }}>
-                    Lateral da EVA: máquina de resposta
+                <h1 style={{ fontSize: 18, fontWeight: 700, color: "#0F1730", marginBottom: 6 }}>
+                    Lateral da Lume: máquina de resposta
                 </h1>
                 <p style={{ fontSize: 12.5, color: "#64748B", marginBottom: 24, lineHeight: 1.5 }}>
                     Dados mock. Enviar aqui só mostra o sinal de aprendizado capturado

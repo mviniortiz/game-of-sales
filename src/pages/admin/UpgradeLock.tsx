@@ -38,9 +38,9 @@ export default function UpgradeLock() {
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 220, damping: 18 }}
                     className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
-                    style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)" }}
+                    style={{ background: "rgba(21,86,192,0.08)", border: "1px solid rgba(21,86,192,0.2)" }}
                 >
-                    <Lock className="h-7 w-7" style={{ color: "#2563EB" }} />
+                    <Lock className="h-7 w-7" style={{ color: "#1556C0" }} />
                 </motion.div>
 
                 <motion.div
@@ -49,15 +49,15 @@ export default function UpgradeLock() {
                     transition={{ delay: 0.1 }}
                     className="text-center mb-10 max-w-lg"
                 >
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2.5" style={{ color: "#0B1220" }}>
-                        Assine para a EVA agir
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2.5" style={{ color: "#0F1730" }}>
+                        Assine para a Lume agir
                     </h1>
                     <p className="text-[15px] leading-relaxed" style={{ color: "#64748B" }}>
                         O Raio-X das propostas paradas é grátis. O aviso no 2º dia, as
                         retomadas, o Inbox e o funil ficam liberados com a assinatura.
                         Seus dados e conversas continuam salvos.
                     </p>
-                    <Link to="/raio-x" className="inline-block mt-3 text-[13px] font-semibold hover:underline" style={{ color: "#2563EB" }}>
+                    <Link to="/raio-x" className="inline-block mt-3 text-[13px] font-semibold hover:underline" style={{ color: "#1556C0" }}>
                         Ver meu Raio-X grátis
                     </Link>
                 </motion.div>
@@ -72,7 +72,7 @@ export default function UpgradeLock() {
                     style={{ color: "#94A3B8" }}
                 >
                     Dúvidas?{" "}
-                    <a href="mailto:suporte@vyzon.com.br" className="font-semibold hover:underline" style={{ color: "#2563EB" }}>
+                    <a href="mailto:suporte@vyzon.com.br" className="font-semibold hover:underline" style={{ color: "#1556C0" }}>
                         suporte@vyzon.com.br
                     </a>
                 </motion.p>

@@ -190,7 +190,7 @@ export function GuidedContextBuilder({
                         Olha o que eu entendi da sua operação
                     </h1>
                 </div>
-                <span className="vz-agentcreate-seal" title="Nada entra no contexto da EVA sem a sua confirmação.">
+                <span className="vz-agentcreate-seal" title="Nada entra no contexto da Lume sem a sua confirmação.">
                     <span className="vz-agentcreate-seal-dot" />
                     Você no controle
                 </span>
@@ -271,7 +271,7 @@ export function GuidedContextBuilder({
                     style={{ textAlign: "center", padding: "26px 18px" }}
                 >
                     <Check style={{ width: 18, height: 18, color: "#16A34A", margin: "0 auto 8px" }} strokeWidth={2.6} />
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "#0B1220" }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: "#0F1730" }}>
                         Tudo revisado por aqui.
                     </p>
                     <p style={{ fontSize: 11.5, color: "#64748B", marginTop: 3 }}>
@@ -291,7 +291,7 @@ export function GuidedContextBuilder({
             <div className="vz-ctxbuild-footer">
                 <EvaBot state="idle" size={22} />
                 <p className="vz-ctxbuild-footer-text">
-                    Cada item que você confirma deixa a EVA mais certeira na ordem da
+                    Cada item que você confirma deixa a Lume mais certeira na ordem da
                     lista do Inbox e nas respostas sugeridas.
                 </p>
                 <span className="vz-ctxbuild-footer-count">
@@ -484,7 +484,7 @@ function GapsBlock({
                 <div>
                     <p className="vz-ctxbuild-gaps-title">O que falta no contexto</p>
                     <p className="vz-ctxbuild-gaps-sub">
-                        A EVA sentiu falta disso nas conversas. Cadastre pra ela sugerir melhor.
+                        A Lume sentiu falta disso nas conversas. Cadastre pra ela sugerir melhor.
                     </p>
                 </div>
                 <span className="vz-ctxbuild-gaps-count">{visible.length}</span>

@@ -1,4 +1,4 @@
-// useEvaDiary — o que a EVA fez desde ontem, em linguagem de gente.
+// useEvaDiary — o que a Lume fez desde ontem, em linguagem de gente.
 //
 // O agente age sozinho no interno (abre card, move etapa, agenda retomada) e
 // escreve rascunhos que o dono aprova no WhatsApp. Este hook junta isso numa
@@ -31,7 +31,7 @@ export interface EventoEva {
     id: string;
     quando: Date;
     texto: string;
-    /** Rascunho escrito pela EVA: ganha o ponto roxo. */
+    /** Rascunho escrito pela Lume: ganha o ponto roxo. */
     rascunho: boolean;
 }
 
@@ -40,6 +40,10 @@ export interface RascunhoPendente {
     codigo: string | null;
     quem: string;
     noWhatsapp: boolean;
+    /** A mensagem que a Lume escreveu. */
+    texto: string | null;
+    /** Por que agora, na voz da Lume. */
+    porque: string | null;
 }
 
 export interface PassoDoTrace {
@@ -59,6 +63,8 @@ export interface EvaDiary {
     /** Mais recente primeiro. */
     eventos: EventoEva[];
     rascunhos: RascunhoPendente[];
+    /** Rascunhos que o dono aprovou desde ontem. */
+    enviados: string[];
     /** Passo a passo de cada execução do agente, para quem quiser conferir. */
     traces: TraceDeRun[];
     loading: boolean;
@@ -78,7 +84,8 @@ type Sugestao = {
     id: string;
     deal_id: string | null;
     notified_at: string | null;
-    suggestion: { contact_name?: string | null } | null;
+    suggestion: { contact_name?: string | null; message_text?: string | null; suggestion_text?: string | null } | null;
+    input_summary?: { reason?: string | null } | null;
 };
 
 /** Nome de cada ferramenta na língua de quem vende, não na do catálogo. */
@@ -125,7 +132,7 @@ async function buscarDiario(companyId: string): Promise<Omit<EvaDiary, "loading"
             .order("created_at", { ascending: true }),
         supabase
             .from("agent_suggestions")
-            .select("id, deal_id, notified_at, created_at, suggestion")
+            .select("id, deal_id, notified_at, created_at, suggestion, status")
             .eq("company_id", companyId)
             .in("kind", TIPOS_DE_RASCUNHO)
             .gte("created_at", desde)
@@ -133,7 +140,7 @@ async function buscarDiario(companyId: string): Promise<Omit<EvaDiary, "loading"
             .limit(MAX_EVENTOS),
         supabase
             .from("agent_suggestions")
-            .select("id, approval_code, deal_id, notified_at, suggestion")
+            .select("id, approval_code, deal_id, notified_at, suggestion, input_summary")
             .eq("company_id", companyId)
             .eq("status", "pending")
             .in("kind", TIPOS_DE_RASCUNHO)
@@ -144,7 +151,7 @@ async function buscarDiario(companyId: string): Promise<Omit<EvaDiary, "loading"
     ]);
 
     const steps = (stepsRes.data ?? []) as Step[];
-    const feitos = (feitosRes.data ?? []) as Array<Sugestao & { created_at: string }>;
+    const feitos = (feitosRes.data ?? []) as Array<Sugestao & { created_at: string; status: string | null }>;
     const pendentes = (pendentesRes.data ?? []) as Array<Sugestao & { approval_code: string | null }>;
     // Placar indisponível (RPC fora do ar) não derruba a linha do tempo: só some a proposta.
     const propostas = (propostasRes.data?.items ?? []).filter(
@@ -212,7 +219,7 @@ async function buscarDiario(companyId: string): Promise<Omit<EvaDiary, "loading"
     }
 
     // Trace por execução: o dado sempre esteve em agent_steps. É o que responde
-    // "como ela chegou nessa conclusão" sem exigir que a pessoa confie na EVA.
+    // "como ela chegou nessa conclusão" sem exigir que a pessoa confie na Lume.
     const porRun = new Map<string, Step[]>();
     for (const st of steps) {
         if (!st.run_id) continue;
@@ -245,7 +252,10 @@ async function buscarDiario(companyId: string): Promise<Omit<EvaDiary, "loading"
             codigo: p.approval_code,
             quem: nomeDe(p.deal_id, p.suggestion?.contact_name),
             noWhatsapp: Boolean(p.notified_at),
+            texto: p.suggestion?.message_text ?? null,
+            porque: p.input_summary?.reason ?? p.suggestion?.suggestion_text ?? null,
         })),
+        enviados: feitos.filter((f) => f.status === "accepted" || f.status === "adjusted" || f.status === "sent").map((f) => f.id),
     };
 }
 
@@ -257,13 +267,16 @@ export function useEvaDiary(): EvaDiary {
     const query = useQuery({
         queryKey: ["eva-diary", effectiveCompanyId],
         enabled: !!effectiveCompanyId,
-        staleTime: 60_000,
+        staleTime: 30_000,
+        // O dono aprova no WhatsApp: o app descobre sozinho que a fila andou.
+        refetchInterval: 30_000,
         queryFn: () => buscarDiario(effectiveCompanyId!),
     });
 
     return {
         eventos: query.data?.eventos ?? [],
         rascunhos: query.data?.rascunhos ?? [],
+        enviados: query.data?.enviados ?? [],
         traces: query.data?.traces ?? [],
         loading: query.isLoading,
     };

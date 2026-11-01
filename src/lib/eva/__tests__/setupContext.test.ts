@@ -13,7 +13,7 @@ const draft: SiteDraft = {
     diferenciais: ["garantia de 25 anos nos painéis"],
 };
 
-describe("configuração da EVA por conversa", () => {
+describe("configuração da Lume por conversa", () => {
     it("o site preenche o que sabe e a conversa pergunta só o resto", () => {
         const r = resumoInicial(draft, "Empresa");
         expect(r.nome).toBe("Sol do Vale");
@@ -28,7 +28,7 @@ describe("configuração da EVA por conversa", () => {
         expect(perguntasPendentes(r)).toEqual(["oQueFaz", "cidades", "financiamento", "ticket", "travas", "tom"]);
     });
 
-    it("monta o contexto que a EVA lê, só com o que foi confirmado", () => {
+    it("monta o contexto que a Lume lê, só com o que foi confirmado", () => {
         const r = { ...resumoInicial(draft, "x"), ticket: "R$ 15 a 30 mil", travas: ["financiamento" as const, "sumiu" as const], tom: "proximo" as const };
         const ctx = composeContext(r);
         expect(ctx.agency.descricao).toBe("Projeta e instala energia solar para casas e empresas. Atende Campinas, Valinhos. Trabalha com financiamento do sistema.");

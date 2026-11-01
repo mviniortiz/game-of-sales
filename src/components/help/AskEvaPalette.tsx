@@ -1,6 +1,6 @@
-// AskEvaPalette — "Pergunte à EVA" via ⌘K/Ctrl+K, em qualquer tela do app.
+// AskEvaPalette — "Pergunte à Lume" via ⌘J/Ctrl+J, em qualquer tela do app.
 // Command palette (estilo Ask-AI do Mintlify): input no topo, sugestões
-// animadas, e ao perguntar vira o chat de ajuda da EVA (mesma conversa do
+// animadas, e ao perguntar vira o chat de ajuda da Lume (mesma conversa do
 // EvaHelpDock — hook useEvaHelpChat + localStorage compartilhados).
 //
 // Regras de marca: enviar = seta-pra-cima circular (NUNCA avião); azul da
@@ -32,10 +32,10 @@ export function AskEvaPalette() {
         if (threadRef.current) threadRef.current.scrollTop = threadRef.current.scrollHeight;
     };
 
-    // Ctrl/Cmd+K abre/fecha de qualquer tela (não rouba o atalho de quem digita).
+    // Ctrl/Cmd+J abre/fecha de qualquer tela (não rouba o atalho de quem digita).
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "j") {
                 const t = e.target as HTMLElement | null;
                 const tag = t?.tagName?.toLowerCase();
                 const isTyping = (tag === "input" || tag === "textarea" || t?.isContentEditable) && !open;
@@ -91,7 +91,7 @@ export function AskEvaPalette() {
         return [
             {
                 icon: <EvaBot state="idle" size={18} />,
-                label: "Perguntar à EVA",
+                label: "Perguntar à Lume",
                 desc: typed ? `“${typed}”` : "Digite sua pergunta",
                 run: () => { if (typed) { ask(typed); setInput(""); } },
                 disabled: !typed,
@@ -135,7 +135,7 @@ export function AskEvaPalette() {
                     onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
                     role="dialog"
                     aria-modal="true"
-                    aria-label="Pergunte à EVA"
+                    aria-label="Pergunte à Lume"
                 >
                     <motion.div
                         initial={reduce ? false : { opacity: 0, y: 10, scale: 0.98 }}
@@ -153,8 +153,8 @@ export function AskEvaPalette() {
                         {/* Header do modo chat */}
                         {inChat && (
                             <div className="flex items-center gap-2.5 px-4 py-2.5 border-b" style={{ borderColor: "#F1F5F9" }}>
-                                <EvaBot state={loading ? "thinking" : "idle"} size={24} className="shrink-0" label="EVA" />
-                                <p className="flex-1 text-[13px] font-bold" style={{ color: "#0B1220" }}>EVA · ajuda com o Vyzon</p>
+                                <EvaBot state={loading ? "thinking" : "idle"} size={24} className="shrink-0" label="Lume" />
+                                <p className="flex-1 text-[13px] font-bold" style={{ color: "#0F1730" }}>Lume · ajuda com o Vyzon</p>
                                 <button
                                     type="button"
                                     onClick={() => { reset(); setInput(""); inputRef.current?.focus(); }}
@@ -185,7 +185,7 @@ export function AskEvaPalette() {
                                         {m.role === "user" ? (
                                             <div
                                                 className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap"
-                                                style={{ background: "#2563EB", color: "#FFFFFF", borderBottomRightRadius: 6 }}
+                                                style={{ background: "#1556C0", color: "#FFFFFF", borderBottomRightRadius: 6 }}
                                             >
                                                 {m.content}
                                             </div>
@@ -214,10 +214,10 @@ export function AskEvaPalette() {
                                 value={input}
                                 onChange={(e) => { setInput(e.target.value); setSelected(0); }}
                                 onKeyDown={onInputKey}
-                                placeholder={inChat ? "Pergunte qualquer coisa…" : "Pergunte à EVA como usar o Vyzon…"}
+                                placeholder={inChat ? "Pergunte qualquer coisa…" : "Pergunte à Lume como usar o Vyzon…"}
                                 disabled={loading}
                                 className="w-full h-12 bg-transparent text-[14px] outline-none disabled:opacity-70"
-                                style={{ color: "#0B1220" }}
+                                style={{ color: "#0F1730" }}
                             />
                             {inChat && (
                                 <motion.button
@@ -227,7 +227,7 @@ export function AskEvaPalette() {
                                     aria-label="Enviar"
                                     whileTap={reduce ? undefined : { scale: 0.9 }}
                                     className="inline-flex shrink-0 items-center justify-center h-8 w-8 rounded-full text-white transition-all disabled:opacity-40"
-                                    style={{ background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)" }}
+                                    style={{ background: "linear-gradient(135deg, #1556C0 0%, #1D4ED8 100%)" }}
                                 >
                                     {loading ? <CircleNotch size={15} weight="bold" className="animate-spin" /> : <ArrowUp size={15} weight="bold" />}
                                 </motion.button>
@@ -255,7 +255,7 @@ export function AskEvaPalette() {
                                                 {it.icon}
                                             </span>
                                             <span className="min-w-0 flex-1">
-                                                <span className="block text-[13.5px] font-semibold leading-tight" style={{ color: "#0B1220" }}>{it.label}</span>
+                                                <span className="block text-[13.5px] font-semibold leading-tight" style={{ color: "#0F1730" }}>{it.label}</span>
                                                 <span className="block truncate text-[12px] leading-tight mt-0.5" style={{ color: "#64748B" }}>{it.desc}</span>
                                             </span>
                                             {selected === i && !it.disabled && (

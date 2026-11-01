@@ -1,4 +1,4 @@
-// O integrador de energia solar não pode abrir a EVA e ver o Padrão de Agência,
+// O integrador de energia solar não pode abrir a Lume e ver o Padrão de Agência,
 // nem uma agência passar a ver o pacote de solar.
 import { describe, it, expect } from "vitest";
 import { buildSuggestion, SOLAR_SEGMENT } from "../blueprint";

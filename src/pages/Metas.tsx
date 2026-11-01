@@ -79,10 +79,10 @@ interface TeamMember {
 function statusFromCockpit(c: CockpitData): { label: string; color: string; bg: string } {
     if (c.total <= 0) return { label: "Sem meta definida", color: "#64748B", bg: "rgba(148,163,184,0.15)" };
     if (c.percentual >= 100) return { label: "Meta batida", color: "#0F8A63", bg: "rgba(16,185,129,0.12)" };
-    if (!c.canJudgePace) return { label: "Início do mês", color: "#1D4ED8", bg: "rgba(37,99,235,0.10)" };
+    if (!c.canJudgePace) return { label: "Início do mês", color: "#1D4ED8", bg: "rgba(21,86,192,0.10)" };
     if (c.percentual >= c.percentualEsperadoHoje + 5) return { label: "Acima do ritmo", color: "#0F8A63", bg: "rgba(16,185,129,0.12)" };
     if (c.percentual < c.percentualEsperadoHoje - 15) return { label: "Abaixo do ritmo", color: "#B45309", bg: "rgba(245,158,11,0.14)" };
-    return { label: "No ritmo", color: "#1D4ED8", bg: "rgba(37,99,235,0.10)" };
+    return { label: "No ritmo", color: "#1D4ED8", bg: "rgba(21,86,192,0.10)" };
 }
 
 // ─── Subcomponentes visuais ─────────────────────────────────────────────────
@@ -108,7 +108,7 @@ function KpiCell({ icon: Icon, accent, label, value, hint }: KpiCellProps) {
                 </span>
             </div>
             <p className="text-[20px] sm:text-[22px] font-bold tabular-nums leading-none"
-                style={{ color: "#0B1220", letterSpacing: "-0.02em" }}>
+                style={{ color: "#0F1730", letterSpacing: "-0.02em" }}>
                 {value}
             </p>
             {hint && <div className="text-[11px] mt-1.5 leading-snug" style={{ color: "#64748B" }}>{hint}</div>}
@@ -145,10 +145,10 @@ function CockpitHero({ title, mesRef, cockpit }: { title: string; mesRef: string
             {/* Header do cockpit */}
             <div className="px-5 sm:px-6 pt-5 pb-4 flex items-start justify-between gap-3 border-b" style={{ borderColor: "#F1F5F9" }}>
                 <div className="min-w-0">
-                    <p className="text-[10px] uppercase tracking-[0.14em] font-bold" style={{ color: "#2563EB" }}>
+                    <p className="text-[10px] uppercase tracking-[0.14em] font-bold" style={{ color: "#1556C0" }}>
                         Meta consolidada
                     </p>
-                    <h2 className="text-[18px] sm:text-[20px] font-bold mt-0.5" style={{ color: "#0B1220", letterSpacing: "-0.018em" }}>
+                    <h2 className="text-[18px] sm:text-[20px] font-bold mt-0.5" style={{ color: "#0F1730", letterSpacing: "-0.018em" }}>
                         {title}
                     </h2>
                     <p className="text-[12px] mt-0.5 capitalize" style={{ color: "#64748B" }}>
@@ -176,13 +176,13 @@ function CockpitHero({ title, mesRef, cockpit }: { title: string; mesRef: string
                             style={{ transition: "stroke-dashoffset 800ms cubic-bezier(0.2,0.8,0.2,1)" }} />
                         <defs>
                             <linearGradient id="metasGrad" x1="0" y1="0" x2="1" y2="1">
-                                <stop offset="0%" stopColor="#2563EB" />
+                                <stop offset="0%" stopColor="#1556C0" />
                                 <stop offset="100%" stopColor="#4A8CE8" />
                             </linearGradient>
                         </defs>
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-[36px] font-bold tabular-nums leading-none" style={{ color: "#0B1220", letterSpacing: "-0.03em" }}>
+                        <span className="text-[36px] font-bold tabular-nums leading-none" style={{ color: "#0F1730", letterSpacing: "-0.03em" }}>
                             {cockpit.percentual.toFixed(0)}
                             <span className="text-[18px]" style={{ color: "#94A3B8" }}>%</span>
                         </span>
@@ -193,7 +193,7 @@ function CockpitHero({ title, mesRef, cockpit }: { title: string; mesRef: string
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <KpiCell icon={Lightning} accent="#2563EB" label="Realizado"
+                    <KpiCell icon={Lightning} accent="#1556C0" label="Realizado"
                         value={formatCurrencyCompact(cockpit.atingido)} hint={deltaHint} />
                     <KpiCell icon={Pulse} accent="#7C3AED" label="Pace diário"
                         value={cockpit.diasRestantes > 0 ? formatCurrencyCompact(cockpit.paceDiarioNecessario) : "—"}
@@ -216,27 +216,27 @@ function CockpitHero({ title, mesRef, cockpit }: { title: string; mesRef: string
                     <div className="absolute inset-y-0 left-0 rounded-full transition-all"
                         style={{
                             width: `${Math.min(cockpit.percentual, 100)}%`,
-                            background: "linear-gradient(90deg, #2563EB 0%, #4A8CE8 100%)",
+                            background: "linear-gradient(90deg, #1556C0 0%, #4A8CE8 100%)",
                         }} />
                     {cockpit.percentualEsperadoHoje > 0 && cockpit.percentualEsperadoHoje < 100 && (
                         <div className="absolute -top-1 -bottom-1 w-px" aria-label="Pace ideal hoje"
-                            style={{ left: `${cockpit.percentualEsperadoHoje}%`, background: "#0B1220", opacity: 0.32 }} />
+                            style={{ left: `${cockpit.percentualEsperadoHoje}%`, background: "#0F1730", opacity: 0.32 }} />
                     )}
                 </div>
                 <div className="flex items-center justify-between gap-3 mt-2 text-[11px] flex-wrap" style={{ color: "#64748B" }}>
                     <span className="tabular-nums">
                         <span style={{ color: "#94A3B8" }}>Realizado:</span>{" "}
-                        <strong style={{ color: "#0B1220" }}>{formatCurrencyCompact(cockpit.atingido)}</strong>
+                        <strong style={{ color: "#0F1730" }}>{formatCurrencyCompact(cockpit.atingido)}</strong>
                     </span>
                     {cockpit.percentualEsperadoHoje > 0 && cockpit.percentualEsperadoHoje < 100 && (
                         <span className="tabular-nums">
                             <span style={{ color: "#94A3B8" }}>Pace ideal hoje:</span>{" "}
-                            <strong style={{ color: "#0B1220" }}>{cockpit.percentualEsperadoHoje.toFixed(0)}%</strong>
+                            <strong style={{ color: "#0F1730" }}>{cockpit.percentualEsperadoHoje.toFixed(0)}%</strong>
                         </span>
                     )}
                     <span className="tabular-nums">
                         <span style={{ color: "#94A3B8" }}>Meta:</span>{" "}
-                        <strong style={{ color: "#0B1220" }}>{formatCurrencyCompact(cockpit.total)}</strong>
+                        <strong style={{ color: "#0F1730" }}>{formatCurrencyCompact(cockpit.total)}</strong>
                     </span>
                 </div>
             </div>
@@ -254,12 +254,12 @@ function TeamMemberRow({
     percentualEsperadoHoje: number;
     gap: number;
 }) {
-    const valueColor = isWinner ? "#0F8A63" : behindPace ? "#B45309" : "#0B1220";
+    const valueColor = isWinner ? "#0F8A63" : behindPace ? "#B45309" : "#0F1730";
     const barBg = isWinner
         ? "linear-gradient(90deg, #10B981 0%, #34D399 100%)"
         : behindPace
             ? "linear-gradient(90deg, #F59E0B 0%, #FBBF24 100%)"
-            : "linear-gradient(90deg, #2563EB 0%, #4A8CE8 100%)";
+            : "linear-gradient(90deg, #1556C0 0%, #4A8CE8 100%)";
 
     return (
         <div className="rounded-xl transition-colors hover:bg-[#F8FAFC]" style={{ background: "#FFFFFF", border: "1px solid #E4E9F2" }}>
@@ -267,14 +267,14 @@ function TeamMemberRow({
                 <span className="w-6 text-center text-[12px] font-bold tabular-nums" style={{ color: "#CBD5E1" }}>{pos}</span>
                 <Avatar className={`h-10 w-10 ${isWinner ? "ring-2 ring-[#10B981]/40" : ""}`}>
                     {v.avatar_url && <AvatarImage src={v.avatar_url} alt={v.nome} />}
-                    <AvatarFallback style={{ background: "#F1F5F9", color: "#0B1220" }} className="text-[12px] font-semibold">
+                    <AvatarFallback style={{ background: "#F1F5F9", color: "#0F1730" }} className="text-[12px] font-semibold">
                         {getInitials(v.nome)}
                     </AvatarFallback>
                 </Avatar>
 
                 <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-[13.5px] truncate" style={{ color: "#0B1220" }}>{v.nome}</span>
+                        <span className="font-semibold text-[13.5px] truncate" style={{ color: "#0F1730" }}>{v.nome}</span>
                         {isWinner && (
                             <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded font-bold uppercase"
                                 style={{ background: "rgba(16,185,129,0.12)", color: "#0F8A63", letterSpacing: "0.04em" }}>
@@ -298,7 +298,7 @@ function TeamMemberRow({
                             style={{ width: `${Math.min(v.percentual, 100)}%`, background: barBg }} />
                         {percentualEsperadoHoje > 0 && percentualEsperadoHoje < 100 && (
                             <div className="absolute -top-1 -bottom-1 w-px" aria-hidden
-                                style={{ left: `${percentualEsperadoHoje}%`, background: "#0B1220", opacity: 0.3 }} />
+                                style={{ left: `${percentualEsperadoHoje}%`, background: "#0F1730", opacity: 0.3 }} />
                         )}
                     </div>
                 </div>
@@ -539,7 +539,7 @@ const Metas = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-[22px] sm:text-[26px] font-bold" style={{ color: "#0B1220", letterSpacing: "-0.022em" }}>
+                    <h1 className="text-[22px] sm:text-[26px] font-bold" style={{ color: "#0F1730", letterSpacing: "-0.022em" }}>
                         Metas
                     </h1>
                     <p className="text-[12.5px] sm:text-[13px] mt-0.5" style={{ color: "#64748B" }}>
@@ -566,7 +566,7 @@ const Metas = () => {
                         onClick={() => setSelectedMetaId("all")}
                         className="text-[12px] px-3 py-1.5 rounded-full font-semibold transition-colors"
                         style={selectedMetaId === "all"
-                            ? { background: "#2563EB", color: "#FFFFFF", border: "1px solid #2563EB" }
+                            ? { background: "#1556C0", color: "#FFFFFF", border: "1px solid #1556C0" }
                             : { background: "#FFFFFF", color: "#475569", border: "1px solid #E2E8F0" }}
                     >
                         Atual
@@ -580,7 +580,7 @@ const Metas = () => {
                                 onClick={() => setSelectedMetaId(meta.id)}
                                 className="text-[12px] px-3 py-1.5 rounded-full font-semibold transition-colors capitalize"
                                 style={active
-                                    ? { background: "#2563EB", color: "#FFFFFF", border: "1px solid #2563EB" }
+                                    ? { background: "#1556C0", color: "#FFFFFF", border: "1px solid #1556C0" }
                                     : { background: "#FFFFFF", color: "#475569", border: "1px solid #E2E8F0" }}
                             >
                                 {meta.descricao || format(new Date(meta.mes_referencia + "T12:00:00"), "MMM yyyy", { locale: ptBR })}
@@ -593,17 +593,17 @@ const Metas = () => {
             {isLoading ? (
                 <div className="rounded-2xl p-10 text-center"
                     style={{ background: "#FFFFFF", border: "1px solid #E4E9F2", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
-                    <div className="inline-block h-7 w-7 animate-spin rounded-full border-[3px] border-solid border-[#2563EB] border-r-transparent" />
+                    <div className="inline-block h-7 w-7 animate-spin rounded-full border-[3px] border-solid border-[#1556C0] border-r-transparent" />
                     <p className="mt-3 text-[12.5px]" style={{ color: "#64748B" }}>Carregando metas…</p>
                 </div>
             ) : !metaConsolidadaSelecionada ? (
                 <div className="rounded-2xl p-10 text-center"
                     style={{ background: "#FFFFFF", border: "1px solid #E4E9F2", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
                     <div className="h-12 w-12 rounded-xl mx-auto flex items-center justify-center mb-3"
-                        style={{ background: "rgba(37,99,235,0.10)" }}>
-                        <Target size={24} weight="duotone" style={{ color: "#2563EB" }} />
+                        style={{ background: "rgba(21,86,192,0.10)" }}>
+                        <Target size={24} weight="duotone" style={{ color: "#1556C0" }} />
                     </div>
-                    <p className="text-[14px] font-bold" style={{ color: "#0B1220" }}>Nenhuma meta definida</p>
+                    <p className="text-[14px] font-bold" style={{ color: "#0F1730" }}>Nenhuma meta definida</p>
                     <p className="text-[12px] mt-1 max-w-[320px] mx-auto" style={{ color: "#64748B" }}>
                         Defina a meta consolidada do time em Configurações para o painel ganhar vida.
                     </p>
@@ -620,7 +620,7 @@ const Metas = () => {
                     <div className="space-y-3">
                         <div className="flex items-end justify-between gap-3 flex-wrap pt-1">
                             <div>
-                                <h2 className="text-[15px] sm:text-[16px] font-bold" style={{ color: "#0B1220", letterSpacing: "-0.012em" }}>
+                                <h2 className="text-[15px] sm:text-[16px] font-bold" style={{ color: "#0F1730", letterSpacing: "-0.012em" }}>
                                     Contribuição individual
                                 </h2>
                                 <p className="text-[12px]" style={{ color: "#64748B" }}>
@@ -635,7 +635,7 @@ const Metas = () => {
                                     style={{ background: "rgba(148,163,184,0.12)" }}>
                                     <Medal size={20} weight="duotone" style={{ color: "#64748B" }} />
                                 </div>
-                                <p className="text-[13px] font-semibold" style={{ color: "#0B1220" }}>Nenhuma meta individual</p>
+                                <p className="text-[13px] font-semibold" style={{ color: "#0F1730" }}>Nenhuma meta individual</p>
                                 <p className="text-[11.5px] mt-1 max-w-[300px] mx-auto" style={{ color: "#64748B" }}>
                                     Defina metas para os vendedores em Configurações.
                                 </p>

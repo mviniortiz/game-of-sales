@@ -13,6 +13,7 @@ import { useWhatsAppInboxDb } from "@/hooks/useWhatsAppInboxDb";
 import { useChannelInbox } from "@/hooks/useChannelInbox";
 import { useInboxConnectionStatus } from "@/hooks/useInboxConnectionStatus";
 import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
+import { usePlano } from "@/hooks/usePlano";
 import { useQuoteBoard, type QuoteItem } from "@/hooks/useQuoteBoard";
 import { OPEN_QUOTE_STATES } from "@/lib/quoteText";
 import {
@@ -103,15 +104,16 @@ function InboxEmpty({ status, onConnect }: { status: string; onConnect: () => vo
 const Inbox = () => {
     const { isAdmin, companyId } = useAuth();
     const { activeCompanyId, isSuperAdmin } = useTenant();
+    const { carregando: planoCarregando } = usePlano();
     const [connectModalOpen, setConnectModalOpen] = useState(false);
     const [kapsoModalOpen, setKapsoModalOpen] = useState(false);
     const [evaMobileOpen, setEvaMobileOpen] = useState(false);
-    // Texto que a EVA mandou pro composer ("Usar resposta"). InboxConversation
+    // Texto que a Lume mandou pro composer ("Usar resposta"). InboxConversation
     // consome e zera. Permite o humano revisar antes de enviar (assistido).
     const [composerInject, setComposerInject] = useState<string | null>(null);
     const [historySyncing, setHistorySyncing] = useState(false);
     // PROSPECT.1 — quando o número está em modo prospecção, o EvaPanel ganha
-    // "aprovar-e-enviar" e a EVA mira em marcar demo.
+    // "aprovar-e-enviar" e a Lume mira em marcar demo.
     const prospectingMode = useProspectingMode();
 
     // ── Sources: channel (primário) + legacy (fallback DEFERRED) ──────────
@@ -202,7 +204,7 @@ const Inbox = () => {
     const [, setTick] = useState(0);
     const isMobile = useIsMobile();
 
-    // Leitura da EVA por telefone: temperatura e motivo de cada conversa da lista.
+    // Leitura da Lume por telefone: temperatura e motivo de cada conversa da lista.
     const { signalsByPhone } = useConversationSummaries();
 
     // F5C.2 — deep link `?conversationId=<uuid>` vindo da Central de Comando.
@@ -254,7 +256,7 @@ const Inbox = () => {
 
     const selectedChat = chats.find((c) => c.id === selectedChatId);
 
-    // EVA.INBOX — sinais por conversa: leitura da EVA (conversation_summaries) +
+    // EVA.INBOX — sinais por conversa: leitura da Lume (conversation_summaries) +
     // tempo que o lead espera resposta SUA (client-side). A etiqueta-motivo vem
     // do buildReason (objeção → ação de valor → justificativa → próxima ação).
     const inboxSignals = useMemo<Record<string, InboxLeadSignal>>(() => {
@@ -303,7 +305,7 @@ const Inbox = () => {
         const found = chats.find((c) => c.id === deepLinkConvId);
         if (found) {
             setSelectedChatId(found.id);
-            // Vindo do detalhe do card: a resposta da EVA chega no campo, e o humano revisa e envia.
+            // Vindo do detalhe do card: a resposta da Lume chega no campo, e o humano revisa e envia.
             const texto = searchParams.get("texto");
             if (texto) setComposerInject(texto);
         }
@@ -324,13 +326,14 @@ const Inbox = () => {
 
     // FIO 1 — deep link `?connect=1` (vindo do fim do onboarding) abre direto
     // o modal de conexão do WhatsApp. Limpa o param pra não reabrir ao navegar.
+    // Espera saber o plano: sem assinatura quem usa o param é o AppLayout.
     useEffect(() => {
-        if (searchParams.get("connect") !== "1") return;
+        if (planoCarregando || searchParams.get("connect") !== "1") return;
         setConnectModalOpen(true);
         const sp = new URLSearchParams(searchParams);
         sp.delete("connect");
         setSearchParams(sp, { replace: true });
-    }, [searchParams, setSearchParams]);
+    }, [planoCarregando, searchParams, setSearchParams]);
 
     // F4W.4.3 — Sincroniza o ref do hook ANTES de qualquer fetch.
     // Garante que Realtime sempre veja o id correto, sem race condition.
@@ -516,7 +519,7 @@ const Inbox = () => {
         }, 2000);
     };
 
-    // Troca de conversa: a coluna central e o painel da EVA entram com um fade
+    // Troca de conversa: a coluna central e o painel da Lume entram com um fade
     // curto em vez de piscar o conteúdo novo. Anima os elementos que já existem
     // (WAAPI), então nada remonta e o scroll da lista não se perde.
     const conversaRef = useRef<HTMLElement>(null);
@@ -539,7 +542,7 @@ const Inbox = () => {
 
     return (
         <div
-            className="vz-inbox vz-page-full flex overflow-hidden -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6"
+            className="vz-inbox vz-page-full flex overflow-hidden -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-9 md:-my-8"
             style={{
                 background: "var(--ibx-paper)",
             }}
@@ -659,14 +662,14 @@ const Inbox = () => {
                 </aside>
             )}
 
-            {/* EVA no MOBILE — bottom sheet com o painel completo (no desktop a EVA
+            {/* Lume no MOBILE — bottom sheet com o painel completo (no desktop a Lume
                 é a coluna direita). Mesmo EvaPanel, mesmos props. */}
             {isMobile && (
                 <Drawer open={evaMobileOpen} onOpenChange={setEvaMobileOpen}>
                     <DrawerContent className="h-[88vh] supports-[height:100dvh]:h-[88dvh] bg-[var(--ibx-card)]">
                         {/* Título sr-only: a11y do Radix Drawer (sem isso, warning).
                             O título visível mora no header do próprio EvaPanel. */}
-                        <DrawerTitle className="sr-only">Análise da EVA</DrawerTitle>
+                        <DrawerTitle className="sr-only">Análise da Lume</DrawerTitle>
                         <div className="flex-1 overflow-y-auto overscroll-contain">
                             <EvaPanel
                                 chat={selectedChat || null}

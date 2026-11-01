@@ -4,7 +4,7 @@ import { A, Destaque, LegalLayout, Lista, P, Sub, type LegalSection } from "@/co
 const ATUALIZADOS = "Atualizados em 16 de outubro de 2026";
 
 const RESUMO = [
-    "O Vyzon acompanha as propostas que a sua empresa manda pelo WhatsApp, e a EVA sugere o próximo passo. Quem aprova o que vai para o cliente é o seu time.",
+    "O Vyzon acompanha as propostas que a sua empresa manda pelo WhatsApp, e a Lume sugere o próximo passo. Quem aprova o que vai para o cliente é o seu time.",
     "O Raio-X das propostas paradas é grátis. O resto do produto é um plano pago mensal, que você cancela quando quiser, sem multa.",
     "Os dados que você coloca no Vyzon continuam sendo seus.",
     "A conexão do WhatsApp por QR code não é a API oficial: o próprio WhatsApp pode restringir o número, e isso foge do nosso controle.",
@@ -37,7 +37,7 @@ const SECOES: LegalSection[] = [
                     "conexão do WhatsApp da empresa e caixa de conversas com o time;",
                     "acompanhamento de cada proposta enviada, com o placar do que está parado e do valor envolvido;",
                     "pipeline de oportunidades, notas, tarefas e propostas;",
-                    "a EVA, que lê as conversas, sugere o próximo passo e prepara mensagens de retomada para o time aprovar;",
+                    "a Lume, que lê as conversas, sugere o próximo passo e prepara mensagens de retomada para o time aprovar;",
                     "o Raio-X das propostas paradas;",
                     "integração com Google Calendar e com plataformas de pagamento e vendas, listadas na página de Integrações do app.",
                 ]} />
@@ -86,11 +86,11 @@ const SECOES: LegalSection[] = [
     },
     {
         id: "eva",
-        title: "A EVA e as sugestões automáticas",
+        title: "A Lume e as sugestões automáticas",
         body: (
             <>
                 <P>
-                    A EVA usa inteligência artificial para ler conversas, estimar a chance de fechamento e sugerir mensagens. Essas
+                    A Lume usa inteligência artificial para ler conversas, estimar a chance de fechamento e sugerir mensagens. Essas
                     leituras podem conter erros. Revise cada sugestão antes de aprovar.
                 </P>
                 <Destaque>
@@ -150,7 +150,7 @@ const SECOES: LegalSection[] = [
                     <><strong style={{ color: "var(--lp-ink)" }}>WhatsApp:</strong> a conexão pode ser por QR code, que não é a API oficial do WhatsApp, ou pela API oficial, por meio da Kapso. Na conexão por QR code, o WhatsApp pode limitar ou bloquear o número a qualquer momento.</>,
                     <><strong style={{ color: "var(--lp-ink)" }}>Google Calendar:</strong> sincronização de agendamentos, sujeita aos termos do Google.</>,
                     <><strong style={{ color: "var(--lp-ink)" }}>Plataformas de pagamento e vendas:</strong> envio automático de vendas por webhook.</>,
-                    <><strong style={{ color: "var(--lp-ink)" }}>Provedores de inteligência artificial:</strong> usados pela EVA, como descrito na <A href="/politica-privacidade">Política de Privacidade</A>.</>,
+                    <><strong style={{ color: "var(--lp-ink)" }}>Provedores de inteligência artificial:</strong> usados pela Lume, como descrito na <A href="/politica-privacidade">Política de Privacidade</A>.</>,
                 ]} />
                 <P>
                     Não respondemos por falhas, indisponibilidades ou mudanças nesses serviços. O uso deles também segue os termos e

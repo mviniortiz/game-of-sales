@@ -1,11 +1,11 @@
 // EVA.STUDIO.8A — useEvaMemory
-// Lê o que a EVA "sabe": playbooks (com origem), lacunas abertas e contagens.
+// Lê o que a Lume "sabe": playbooks (com origem), lacunas abertas e contagens.
 // Só leitura, scoped por company (RLS). Sem schema novo.
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-export type RuleOrigin = "EVA Studio" | "Contexto" | "Sistema";
+export type RuleOrigin = "Lume Studio" | "Contexto" | "Sistema";
 export interface MemoryRule { text: string; origin: RuleOrigin }
 
 export interface EvaMemory {
@@ -18,7 +18,7 @@ export interface EvaMemory {
 }
 
 function mapOrigin(source: unknown): RuleOrigin {
-    if (source === "eva_studio") return "EVA Studio";
+    if (source === "eva_studio") return "Lume Studio";
     if (source === "system" || source === "auto_learned") return "Sistema";
     return "Contexto";
 }
@@ -46,7 +46,7 @@ export function useEvaMemory() {
                 rules,
                 gaps,
                 playbooksCount: rules.length,
-                evaStudioCount: rules.filter((r) => r.origin === "EVA Studio").length,
+                evaStudioCount: rules.filter((r) => r.origin === "Lume Studio").length,
                 gapsOpenCount: gaps.length,
                 updatedAt: (ctxRes.data as any)?.updated_at ?? null,
             };

@@ -1188,7 +1188,7 @@ export default function CRM() {
   // Filter deals (vendedor multi + busca + avançados + status/ativo)
   const filteredDeals = useMemo(() => filterDeals(localDeals), [localDeals, filterDeals]);
 
-  // F5P.2 — Contexto comercial (conversa + EVA) por deal
+  // F5P.2 — Contexto comercial (conversa + Lume) por deal
   const pipelineContext = usePipelineContextData(
     useMemo(() => filteredDeals.map((d) => d.id), [filteredDeals]),
   );
@@ -1253,17 +1253,15 @@ export default function CRM() {
 
   return (
     <>
-      <div className="vz-page-full -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-6 flex flex-col text-foreground min-w-0 overflow-hidden">
+      <div className="vz-page-full -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-9 md:-my-8 flex flex-col text-foreground min-w-0 overflow-hidden">
         {/* F5P.4e — Header com Phosphor duotone + toolbar reestruturada.
             Row 1 = título / stats / ações. Row 2 = search à esquerda, controles à direita (sem spacer flex-1 que squeezava o search). */}
-        <div className="flex flex-col gap-2.5 px-4 sm:px-6 py-3 sm:py-3.5 border-b border-border bg-card shadow-sm">
+        <div className="flex flex-col gap-3 px-4 sm:px-6 md:px-9 pt-4 md:pt-8 pb-2">
           {/* Row 1: Title + stats inline + action buttons */}
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                <h1 className="text-base sm:text-lg font-bold text-foreground tracking-tight whitespace-nowrap">
-                  Pipeline
-                </h1>
+                <h1 className="vp-titulo whitespace-nowrap">Funil</h1>
                 {/* KPI inline: o que está na tela (respeita filtros e busca), valor e parados */}
                 <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] sm:text-[12.5px] text-muted-foreground/90 font-medium sm:pl-2 sm:ml-0.5 sm:border-l border-border/60" aria-live="polite">
                   {isLoading ? (
@@ -1272,7 +1270,7 @@ export default function CRM() {
                     <>
                       <span className="tabular-nums text-foreground">{filteredDeals.length}</span>
                       {isFiltering && <span>de <span className="tabular-nums">{deals.length}</span></span>}
-                      <span>{(isFiltering ? deals.length : filteredDeals.length) === 1 ? "oportunidade" : "oportunidades"}</span>
+                      <span>{(isFiltering ? deals.length : filteredDeals.length) === 1 ? "cliente" : "clientes"}</span>
                       <span className="text-muted-foreground/40">·</span>
                       <span className="text-foreground tabular-nums font-semibold">{formatCurrency(pipelineTotal)}</span>
                       {/* Integrador pensa em orçamento parado, não em card parado: com o
@@ -1372,11 +1370,11 @@ export default function CRM() {
               <Button
                 size="sm"
                 onClick={() => setShowNewDeal(true)}
-                aria-label="Nova oportunidade"
+                aria-label="Novo cliente"
                 className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] font-semibold hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 active:scale-[0.98] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:active:scale-100 min-h-[44px] sm:min-h-0 h-9"
               >
                 <PlusPh size={16} weight="bold" className="sm:mr-1.5" />
-                <span className="hidden sm:inline">Nova oportunidade</span>
+                <span className="hidden sm:inline">Novo cliente</span>
               </Button>
             </div>
           </div>
@@ -1399,7 +1397,7 @@ export default function CRM() {
                     setSearchQuery("");
                   }
                 }}
-                className="w-full pl-9 pr-8 h-9 rounded-full border border-input bg-background text-base md:text-[13px] text-foreground placeholder:text-muted-foreground/70 transition-[border-color,box-shadow] duration-150 hover:border-border focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[var(--vyz-accent)] focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] [&::-webkit-search-cancel-button]:hidden dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15"
+                className="w-full pl-9 pr-8 h-9 rounded-full border border-input bg-background text-base md:text-[13px] text-foreground placeholder:text-muted-foreground/70 transition-[border-color,box-shadow] duration-150 hover:border-border focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[var(--vyz-accent)] focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.15)] [&::-webkit-search-cancel-button]:hidden dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15"
               />
               {searchQuery && (
                 <button
@@ -1727,7 +1725,7 @@ export default function CRM() {
                 onClick={() => setShowNewDeal(true)}
                 className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] px-3.5 text-[12px] font-semibold text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
               >
-                <PlusPh size={13} weight="bold" /> Nova oportunidade
+                <PlusPh size={13} weight="bold" /> Novo cliente
               </button>
             )}
           </div>
@@ -1754,7 +1752,7 @@ export default function CRM() {
                   repetia, no topo, cards que já estavam nas colunas logo
                   abaixo, então a mesma negociação aparecia duas vezes na mesma
                   tela. A urgência continua legível no próprio card, pela
-                  leitura da EVA e pelo tempo parado. */
+                  leitura da Lume e pelo tempo parado. */
 
 }
 
@@ -1796,7 +1794,7 @@ export default function CRM() {
                    tempo, e o custo cresce com o tamanho do funil. */
                 data-dragging={activeId ? "true" : undefined}
                 className="
-                  flex gap-2 sm:gap-3 p-4 sm:p-6 h-full
+                  flex gap-2 sm:gap-3 px-4 sm:px-6 md:px-9 py-3 h-full
                   sm:min-w-max
                   max-sm:snap-x max-sm:snap-mandatory max-sm:overflow-x-auto max-sm:no-scrollbar
                   max-sm:scroll-pl-4 max-sm:pr-[14vw]
@@ -1889,7 +1887,7 @@ export default function CRM() {
               </DragOverlay>
             </DndContext>
           ) : (
-            // pb-24 no celular: o botão "Perguntar à EVA" fica fixo embaixo e cobria a última linha
+            // pb-24 no celular: o botão "Perguntar à Lume" fica fixo embaixo e cobria a última linha
             <div className="p-4 pb-24 sm:p-6">
               {sortedDealsForList.length > 0 && (
                 <div className="rounded-xl border border-border bg-white dark:bg-card overflow-hidden">
