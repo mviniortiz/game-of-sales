@@ -1,0 +1,48 @@
+{
+  "slug": "dia-2-g3",
+  "duracao": 23,
+  "trilha": {
+    "arquivo": "~/Movies/vyzon-film/trilha/house-02-lily-j-mixkit-744.mp3",
+    "bpm": 122.99, "fase": 0.017, "inicio": 0,
+    "ganho_db": -11, "ducking_db": -12, "fade_out": 1.2,
+    "automacao": [
+      { "beat": 0, "lp_hz": 20000, "ganho_db": 0 },
+      { "beat": 5.6, "lp_hz": 20000, "ganho_db": 0 },
+      { "beat": 6, "lp_hz": 900, "ganho_db": -2 },
+      { "beat": 13.4, "lp_hz": 900, "ganho_db": -2 },
+      { "beat": 14, "lp_hz": 20000, "ganho_db": 1 }
+    ]
+  },
+  "vozDir": "~/Movies/vyzon-film/voz/aparadas",
+  "sfxDir": "~/Movies/vyzon-film/sfx",
+  "voz": { "nome": "Nassif ulzsiMeCbfKyTPCNhCD5", "modelo": "eleven_v4", "ganho_db": 0 },
+  "falas": [
+    { "id": "L1", "arquivo": "G3-t1.wav", "beat": 0, "offset": 0.1, "texto": "Quantos dias você espera o cliente responder?", "semLegenda": true },
+    { "id": "L2", "arquivo": "L2-t2.wav", "beat": 6, "offset": 0.1, "texto": "Ele visualizou e não respondeu.",
+      "legenda": [[0.08, "Ele visualizou"], [1.24, "e não respondeu."]], "fim_palavras": 2.2 },
+    { "id": "L3", "arquivo": "L3-t1.wav", "beat": 14, "offset": 0.15, "texto": "No segundo dia, a mensagem pra chamar de volta chega pronta no seu WhatsApp.",
+      "legenda": [[0.08, "No 2º dia,"], [1.18, "a mensagem pra chamar de volta"], [2.8, "chega pronta no seu WhatsApp."]], "fim_palavras": 4.34 },
+    { "id": "L4", "arquivo": "L4-t2.wav", "beat": 24, "offset": 0.1, "texto": "Você responde um, e ela sai do seu número.",
+      "legenda": [[0.08, "Você responde 1"], [1.36, "e ela sai do seu número."]], "fim_palavras": 2.62 },
+    { "id": "L5", "arquivo": "L5-t2.wav", "beat": 30, "offset": 0.1, "texto": "Nada vai pro cliente sem você aprovar.",
+      "legenda": [[0.16, "Nada vai pro cliente"], [1.38, "sem você aprovar."]], "fim_palavras": 2.28 },
+    { "id": "L6", "arquivo": "L6-t1.wav", "beat": 41, "offset": 0.1, "texto": "Fale com o Markus no WhatsApp.", "semLegenda": true }
+  ],
+  "sfx": [
+    { "arquivo": "hook-thud-v1.mp3", "beat": 0, "offset": -0.017, "ganho_db": -6 },
+    { "arquivo": "tick-v2.mp3", "beat": 4, "offset": -0.14, "ganho_db": -11 },
+    { "arquivo": "tick-v2.mp3", "beat": 8, "offset": -0.14, "ganho_db": -10 },
+    { "arquivo": "zoom-air-v1.mp3", "beat": 10, "offset": -0.19, "ganho_db": -14 },
+    { "arquivo": "zoom-air-v1.mp3", "beat": 12, "offset": -0.19, "ganho_db": -14 },
+    { "arquivo": "riser-chargeup-v1.mp3", "beat": 15, "offset": -1.04, "ganho_db": -12 },
+    { "arquivo": "notify-v1.mp3", "beat": 15, "offset": 0, "ganho_db": -7 },
+    { "arquivo": "approve-click-v1.mp3", "beat": 24, "offset": -0.025, "ganho_db": -6 },
+    { "arquivo": "pop-light-v1.mp3", "beat": 26, "offset": -0.01, "ganho_db": -12 },
+    { "arquivo": "morph-v1.mp3", "beat": 30, "offset": -0.1, "ganho_db": -12 },
+    { "arquivo": "tick-v2.mp3", "beat": 32, "offset": -0.14, "ganho_db": -10 },
+    { "arquivo": "pop-light-v1.mp3", "beat": 35, "offset": -0.01, "ganho_db": -10 },
+    { "arquivo": "payoff-v1.mp3", "beat": 37, "offset": -0.015, "ganho_db": -9 },
+    { "arquivo": "zoom-air-v1.mp3", "beat": 41, "offset": -0.19, "ganho_db": -14 }
+  ],
+  "master": { "lufs": -14, "true_peak": -1.5 }
+}

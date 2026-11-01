@@ -13,3 +13,4 @@ renders/
 bin/full/
 films/*/transcricao/
 films/*/midia/
+films/*/snapshots/
