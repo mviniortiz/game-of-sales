@@ -14,8 +14,9 @@ Deno.test("versões em teste usam o nome da integradora, sem travessão e sem li
 
 Deno.test("a próxima versão é a em teste menos usada, ignorando as aposentadas", () => {
   assertEquals(nextVariant({ pergunta: 0, curta: 3, encaminha: 1, time: 1, aberta: 0, raiox: 2 }), "aberta");
-  assertEquals(nextVariant({ encaminha: 0, time: 2, aberta: 1 }), "encaminha");
-  assertEquals(nextVariant({}), "encaminha");
+  assertEquals(nextVariant({ encaminha: 0, time: 2, aberta: 1 }), "aberta");
+  assertEquals(nextVariant({}), "aberta");
+  assertEquals(VARIANTS, ["aberta"]);
 });
 
 Deno.test("teste de dores: time e aberta respondem no próprio assunto, sem print", () => {
@@ -29,10 +30,17 @@ Markus: ${porta}`, null, v), `${v} não reconhece a própria resposta`);
     assert(!portaJaFoi("Eles: pode falar", null, v));
   }
   assert(respostaPorta(null, "time").includes("vendedor"));
-  assert(respostaPorta(null, "aberta").includes("perder venda"));
+  assert(respostaPorta(null, "aberta").includes("dor de cabeça"));
   assert(followupMessage({ variant: "time" }).includes("vendedor"));
-  assert(followupMessage({ variant: "aberta" }).includes("perder venda"));
+  assert(followupMessage({ variant: "aberta" }).includes("dor de cabeça"));
   assert(followupMessage({ variant: "encaminha" }).includes("visualiza a proposta"));
+});
+
+Deno.test("pergunta aberta não sugere resposta", () => {
+  for (const t of [respostaPorta(null, "aberta"), followupMessage({ variant: "aberta" })]) {
+    assert(!/preço|financiamento|cliente que some|vendedor/i.test(t), t);
+    assert(!/[—–]/.test(t), "travessão");
+  }
 });
 
 Deno.test("com o sócio do CNPJ, todas as versões abrem pelo primeiro nome", () => {

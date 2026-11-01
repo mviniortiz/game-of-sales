@@ -194,7 +194,7 @@ Deno.serve(async (req) => {
           // Nicho novo (prospectNichos.ts) tem um texto só e fica fora do teste de dores.
           const novoNicho = Boolean(perfilDoNicho(c.niche));
           const jaTinha = Boolean((c.variant || novoNicho) && c.first_message);
-          const variant: ProspectVariant | null = novoNicho ? null : jaTinha ? c.variant : nextVariant(contagem);
+          const variant: ProspectVariant | null = novoNicho ? null : jaTinha ? c.variant : ehDistribuidora(c.niche) ? "encaminha" : nextVariant(contagem);
           if (!jaTinha && variant) contagem[variant] = (contagem[variant] || 0) + 1;
           c.variant = variant;
           await admin.from("prospecting_allowlist").update({
