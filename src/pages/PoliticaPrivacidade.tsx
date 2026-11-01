@@ -5,7 +5,7 @@ const ATUALIZADA = "Atualizada em 16 de outubro de 2026";
 
 const RESUMO = [
     "Para funcionar, o Vyzon guarda as conversas do WhatsApp que a sua empresa conecta, além dos dados da sua conta e do seu funil.",
-    "A EVA lê essas conversas com a ajuda de provedores de inteligência artificial para sugerir o próximo passo. Nenhuma mensagem sai para o seu cliente sem alguém do seu time aprovar.",
+    "A Lume lê essas conversas com a ajuda de provedores de inteligência artificial para sugerir o próximo passo. Nenhuma mensagem sai para o seu cliente sem alguém do seu time aprovar.",
     "Não vendemos dados. Só compartilhamos com os fornecedores que fazem o serviço funcionar, listados aqui.",
     "Você pode pedir acesso, correção ou exclusão dos seus dados quando quiser, por contato@vyzon.com.br.",
 ];
@@ -18,7 +18,7 @@ const SECOES: LegalSection[] = [
             <>
                 <P>
                     O Vyzon é uma ferramenta para integradores de energia solar que vendem pelo WhatsApp. Ele acompanha cada
-                    proposta enviada, mostra o que está parado e, com a EVA, sugere a retomada certa na hora certa.
+                    proposta enviada, mostra o que está parado e, com a Lume, sugere a retomada certa na hora certa.
                 </P>
                 <P>Esta política explica como tratamos dados pessoais de três grupos de pessoas:</P>
                 <Lista itens={[
@@ -51,7 +51,7 @@ const SECOES: LegalSection[] = [
 
                 <Sub>Site da sua empresa</Sub>
                 <P>
-                    Se você digitar o endereço do site da sua empresa ao configurar a EVA, nós lemos esse site para resumir o que
+                    Se você digitar o endereço do site da sua empresa ao configurar a Lume, nós lemos esse site para resumir o que
                     a empresa faz. O resumo só é gravado depois que você confirma.
                 </P>
 
@@ -76,7 +76,7 @@ const SECOES: LegalSection[] = [
         body: (
             <Lista itens={[
                 "Mostrar as suas conversas, o placar de orçamentos e o pipeline.",
-                "Fazer a EVA ler as conversas, entender em que pé cada proposta está e preparar rascunhos de mensagem. O rascunho só é enviado depois que alguém do seu time aprova.",
+                "Fazer a Lume ler as conversas, entender em que pé cada proposta está e preparar rascunhos de mensagem. O rascunho só é enviado depois que alguém do seu time aprova.",
                 "Gerar o Raio-X das propostas paradas.",
                 "Dar suporte, cobrar a assinatura e avisar sobre a sua conta.",
                 "Melhorar o produto e medir o resultado das nossas campanhas.",
@@ -86,7 +86,7 @@ const SECOES: LegalSection[] = [
     },
     {
         id: "eva",
-        title: "A EVA e os provedores de inteligência artificial",
+        title: "A Lume e os provedores de inteligência artificial",
         body: (
             <>
                 <P>
@@ -103,7 +103,7 @@ const SECOES: LegalSection[] = [
                 <P>Para transcrever áudio também podemos usar o Groq.</P>
                 <P>Nós não usamos as suas conversas para treinar modelos próprios de inteligência artificial.</P>
                 <Destaque>
-                    A EVA é assistida: ela lê, organiza e sugere. Toda mensagem para o seu cliente passa pela aprovação de uma
+                    A Lume é assistida: ela lê, organiza e sugere. Toda mensagem para o seu cliente passa pela aprovação de uma
                     pessoa do seu time antes de sair.
                 </Destaque>
             </>

@@ -147,8 +147,8 @@ const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
     );
 };
 
-// Sistema "EVA em campo" (bloco LP.9 do index.css; referência em
-// https://claude.ai/artifact/L2qfp4yTM3RBvSL3yN5mjo): a EVA é a estrela, sobre
+// Sistema "Lume em campo" (bloco LP.9 do index.css; referência em
+// https://claude.ai/artifact/L2qfp4yTM3RBvSL3yN5mjo): a Lume é a estrela, sobre
 // creme e faixas chapadas de sol e noite, com Geist, a fonte do app, em tudo e a fatura e a
 // conversa de WhatsApp como objetos gráficos.
 
@@ -170,14 +170,14 @@ const Header = ({ onCta }: { onCta: () => void }) => (
     </div>
 );
 
-// A EVA sentada na borda de cima de um cartão. O pai precisa ser relative.
+// A Lume sentada na borda de cima de um cartão. O pai precisa ser relative.
 const EvaSentada = ({ size, state, children }: { size: number; state?: EvaBotState; children?: ReactNode }) => (
     <span className="vs-sentada" style={{ ["--s-eva" as string]: `${size}px` }}>
         {children ?? <EvaBot size={size} state={state} />}
     </span>
 );
 
-// A EVA passa pelo dia da proposta enquanto está na tela. Com movimento
+// A Lume passa pelo dia da proposta enquanto está na tela. Com movimento
 // reduzido, fica no primeiro estado.
 const DIA_DA_EVA: { estado: EvaBotState; fala: string }[] = [
     { estado: "idle", fala: "Proposta enviada. Ela fica de olho." },
@@ -206,15 +206,15 @@ const useDiaDaEva = () => {
     return { ref, ...DIA_DA_EVA[i] };
 };
 
-// A EVA apresentada de perto, depois que a página já mostrou o que ela entrega.
+// A Lume apresentada de perto, depois que a página já mostrou o que ela entrega.
 const ConhecaEva = () => {
     const { ref, estado, fala } = useDiaDaEva();
     return (
-        <section className="mx-auto w-full max-w-[1120px] px-4 pt-20 sm:px-5 md:px-8 md:pt-32" aria-label="Conheça a EVA">
+        <section className="mx-auto w-full max-w-[1120px] px-4 pt-20 sm:px-5 md:px-8 md:pt-32" aria-label="Conheça a Lume">
             <div className="vs-conheca vs-noite">
                 <div className="relative z-[1] max-w-[520px]">
                     <p className="vs-label">Quem faz isso por você</p>
-                    <h2 className="vs-display mt-3 text-[40px] leading-[1.02] md:text-[64px]">Conheça a EVA</h2>
+                    <h2 className="vs-display mt-3 text-[40px] leading-[1.02] md:text-[64px]">Conheça a Lume</h2>
                     <p className="mt-4 text-[17px] leading-relaxed md:text-[19px]" style={{ color: "var(--lp-ink-muted)" }}>
                         Ela acompanha cada proposta que sai do seu WhatsApp, te avisa quando o cliente para de responder e deixa a mensagem pronta. Quem decide o que sai é você.
                     </p>
@@ -346,7 +346,7 @@ const Calculator = ({ angle, onCta }: { angle: SolarAngle; onCta: () => void }) 
     };
 
     // Faixa noite de ponta a ponta e o resultado em forma de fatura: o dono vive
-    // de conta de luz, e aqui a conta é a do dinheiro parado. A EVA, sentada na
+    // de conta de luz, e aqui a conta é a do dinheiro parado. A Lume, sentada na
     // fatura, se assusta quando a conta passa de zero.
     return (
         <section id="conta" className="vs-noite scroll-mt-4 py-16 md:py-32" aria-label="Calculadora">
@@ -447,7 +447,7 @@ const Contador = ({ rotulo, valor, muda, className }: { rotulo: string; valor: n
 const stepperCls =
     "h-11 w-11 rounded-full border-2 border-white/60 text-[20px] text-white transition-colors duration-150 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transition-none";
 
-// A vida de um orçamento, do envio ao aviso, com a EVA em cada dia. O 2º dia é o
+// A vida de um orçamento, do envio ao aviso, com a Lume em cada dia. O 2º dia é o
 // único cartão noite, porque é ali que o Vyzon entra.
 const HOW: readonly (readonly [EvaBotState, string, string, string])[] = [
     ["idle", "Uma vez", "Conecte o seu WhatsApp", "Pelo código no celular, como no WhatsApp Web. O número continua o mesmo."],
@@ -479,7 +479,7 @@ const HowItWorks = () => (
     </section>
 );
 
-// Só o que existe no app: aviso da EVA no 2º dia (eva-quote-followup + aprovação
+// Só o que existe no app: aviso da Lume no 2º dia (eva-quote-followup + aprovação
 // por WhatsApp), placar /orcamentos, Inbox por prioridade, funil, até 10
 // usuários (plans.ts) e o Raio-X automático (raio-x-build).
 const INCLUDED = [
@@ -710,7 +710,7 @@ const FAQ = [
     },
     {
         q: "Quanto custa?",
-        a: `O Raio-X é grátis. Se depois você quiser que a EVA acompanhe as suas propostas todo mês, o Vyzon custa ${PRECO} por mês, com tudo liberado para até 10 pessoas da equipe. Não tem teste: o Raio-X já mostra o que o Vyzon acha no seu WhatsApp.`,
+        a: `O Raio-X é grátis. Se depois você quiser que a Lume acompanhe as suas propostas todo mês, o Vyzon custa ${PRECO} por mês, com tudo liberado para até 10 pessoas da equipe. Não tem teste: o Raio-X já mostra o que o Vyzon acha no seu WhatsApp.`,
     },
     {
         q: "O que vocês fazem com as minhas conversas?",

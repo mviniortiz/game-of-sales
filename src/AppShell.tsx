@@ -194,7 +194,7 @@ const AppShell = () => (
                 }
               />
               <Route path="/agente" element={<Navigate to="/eva" replace />} />
-              {/* EVA.STUDIO.1 — EVA Studio (dark isolado). Dentro do AppLayout, admin-only. */}
+              {/* EVA.STUDIO.1 — Lume Studio (dark isolado). Dentro do AppLayout, admin-only. */}
               <Route
                 path="/eva-studio"
                 element={

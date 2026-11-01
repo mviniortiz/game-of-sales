@@ -1,4 +1,4 @@
-// Lógica do chat de AJUDA da EVA (edge eva-help), compartilhada entre o
+// Lógica do chat de AJUDA da Lume (edge eva-help), compartilhada entre o
 // EvaHelpDock (orb flutuante) e o AskEvaPalette (⌘J). Cada UI tem a própria
 // instância do hook; o histórico vive no localStorage (por usuário) e
 // reloadFromStorage() ao abrir mantém as duas entradas na mesma conversa.
@@ -11,7 +11,7 @@ export interface EvaChatMsg {
     content: string;
 }
 
-/** O que a EVA faz enquanto responde uma dúvida (eva-help): lê, busca na ajuda, escreve. */
+/** O que a Lume faz enquanto responde uma dúvida (eva-help): lê, busca na ajuda, escreve. */
 export const ETAPAS_RESPOSTA = ["Lendo sua pergunta", "Procurando na ajuda do Vyzon", "Escrevendo a resposta"];
 
 export function useEvaHelpChat(pageLabel: string) {
@@ -45,7 +45,7 @@ export function useEvaHelpChat(pageLabel: string) {
         const q = question.trim();
         if (!q || loading) return;
         const history = messages.slice(-6);
-        const assistantIdx = messages.length + 1; // índice da bolha da EVA (após a do user)
+        const assistantIdx = messages.length + 1; // índice da bolha da Lume (após a do user)
         setMessages((m) => [...m, { role: "user", content: q }]);
         setLoading(true);
         try {

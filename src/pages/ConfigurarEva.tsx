@@ -1,4 +1,4 @@
-// /configurar-eva: a EVA aprende a empresa numa conversa de uns 3 minutos.
+// /configurar-eva: a Lume aprende a empresa numa conversa de uns 3 minutos.
 // Lê o site (edge eva-site-context), pergunta só o que faltou e mostra um
 // resumo editável; nada é gravado antes do "É isso, salvar".
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
@@ -96,11 +96,11 @@ export default function ConfigurarEva() {
         });
     }, [companyId]);
 
-    // Quem já ensinou a empresa para a EVA pula direto para o WhatsApp.
+    // Quem já ensinou a empresa para a Lume pula direto para o WhatsApp.
     useEffect(() => {
         if (configured === null || wa.loading || inicioDecidido.current) return;
         inicioDecidido.current = true;
-        const oi = `Oi${primeiroNome ? `, ${primeiroNome}` : ""}. Eu sou a EVA.`;
+        const oi = `Oi${primeiroNome ? `, ${primeiroNome}` : ""}. Eu sou a Lume.`;
         if (configured) {
             setMsgs([{ de: "eva", texto: `${oi} Já conheço a ${empresa}. Falta pouco para eu começar a trabalhar.` }]);
             irParaWhatsapp();

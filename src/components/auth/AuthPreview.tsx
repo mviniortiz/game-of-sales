@@ -1,6 +1,6 @@
 // Painel ao lado do cadastro e do login. No cadastro, mostra o caminho inteiro
 // antes de a pessoa começar (o passo 1 é este, já em andamento) e um exemplo do
-// placar que ela vai ver, marcado como exemplo. No login, a EVA esperando.
+// placar que ela vai ver, marcado como exemplo. No login, a Lume esperando.
 import { EvaBot } from "@/components/eva/EvaBot";
 import { VyzonMark } from "@/components/brand/VyzonMark";
 
@@ -22,7 +22,7 @@ export function AuthPreview({ modo }: { modo: "cadastro" | "login" }) {
                 <EvaBot size={96} state="happy" />
                 <div className="max-w-sm">
                     <p className="font-satoshi text-[26px] font-black leading-tight tracking-[-0.02em] text-[#0F1730]">Suas propostas continuam onde você deixou.</p>
-                    <p className="mt-3 text-[15px] leading-relaxed text-[#475569]">A EVA acompanha cada uma. O que sai para o cliente, você aprova.</p>
+                    <p className="mt-3 text-[15px] leading-relaxed text-[#475569]">A Lume acompanha cada uma. O que sai para o cliente, você aprova.</p>
                 </div>
             </div>
         );

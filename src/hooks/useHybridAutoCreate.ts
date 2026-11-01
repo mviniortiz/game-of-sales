@@ -1,6 +1,6 @@
 // VYZON.AGENTS.2 (híbrido) — Configuração de auto-criação de oportunidade.
 //
-// Lê do blueprint da empresa se a EVA pode criar o card no pipeline sozinha
+// Lê do blueprint da empresa se a Lume pode criar o card no pipeline sozinha
 // (auto_create_opportunity) e se está liberada para operar (status
 // approved_assisted). Leve: só os 2 campos, cacheado. O gate real vive no
 // EvaPanel, que combina isto com o sinal deve_criar_oportunidade da análise.

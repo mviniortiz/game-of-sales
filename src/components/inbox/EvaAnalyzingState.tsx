@@ -1,7 +1,7 @@
 import { EvaBot } from "@/components/eva/EvaBot";
 import { EvaThinking } from "@/components/eva/EvaThinking";
 
-// Momento "EVA lendo a conversa" no Inbox. Em vez de um spinner, a EVA mostra
+// Momento "Lume lendo a conversa" no Inbox. Em vez de um spinner, a Lume mostra
 // que está LENDO: uma linha de varredura passa sobre uma miniatura da conversa
 // (bolhas abstratas) e cada bolha acende quando a leitura cruza por ela, com um
 // status que evolui. Honesto: não fabrica sinais nem números — só representa o
@@ -26,7 +26,7 @@ export function EvaAnalyzingState() {
         <div className="flex-1 flex flex-col items-center justify-center px-5 py-6 text-center">
             <EvaBot state="thinking" size={56} className="mb-4" />
 
-            {/* Miniatura da conversa sendo varrida pela leitura da EVA */}
+            {/* Miniatura da conversa sendo varrida pela leitura da Lume */}
             <div className="vz-scan-wrap" aria-hidden="true">
                 {BUBBLES.map((b, i) => (
                     <div key={i} className={`vz-scan-row ${b.me ? "vz-scan-row--me" : ""}`}>

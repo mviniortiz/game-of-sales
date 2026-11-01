@@ -35,7 +35,7 @@ const DOT: Record<DailyPriority["priority"], string> = {
 const SOURCE_LABEL: Record<DailyPriority["source"], string> = {
     conversation: "Esperando você",
     deal: "Oportunidade",
-    eva: "Sugestão da EVA",
+    eva: "Sugestão da Lume",
     calendar: "Agenda",
 };
 

@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// EvaAnalyticsPanel (EVA.STUDIO.ANALYTICS) — vista secundária transversal do EVA
-// Studio: "a EVA está valendo a pena?". Editorial premium, poucos números, cada
+// EvaAnalyticsPanel (EVA.STUDIO.ANALYTICS) — vista secundária transversal do Lume
+// Studio: "a Lume está valendo a pena?". Editorial premium, poucos números, cada
 // um com significado.
 //
 // Lê a edge `eva-analytics-summary` (useQuery, staleTime 5min) e tolera campos
@@ -16,7 +16,7 @@
 // Motion (EVA.STUDIO.MOTION): seções entram em stagger (fade+rise); números com
 // count-up curto. Tudo respeita prefers-reduced-motion (estado final estático).
 //
-// Regras de cor: azul = ação/link · roxo = accent pequeno da EVA · sem
+// Regras de cor: azul = ação/link · roxo = accent pequeno da Lume · sem
 // Sparkles/Zap. Botões pretos pill via <Button>.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useRef, useState } from "react";
@@ -56,7 +56,7 @@ interface FunnelShape {
     closed_won?: number;
     closed_lost?: number;
 }
-/** Funil SÓ dos deals atribuídos à EVA. `empty` quando ainda não há nenhum. */
+/** Funil SÓ dos deals atribuídos à Lume. `empty` quando ainda não há nenhum. */
 interface EvaFunnelShape extends FunnelShape {
     total?: number;
     empty?: boolean;
@@ -182,7 +182,7 @@ function PanelFrame({ rangeDays, onRange, children }: { rangeDays: RangeDays; on
         <div className="space-y-7">
             <div className="flex items-center justify-between gap-4 flex-wrap">
                 <p className="text-[12.5px] max-w-[460px]" style={{ color: SUB, lineHeight: 1.55 }}>
-                    O retrato do que a EVA fez no período: o quanto o time confia nela, o que isso virou no pipeline e o que ainda dá pra ensinar.
+                    O retrato do que a Lume fez no período: o quanto o time confia nela, o que isso virou no pipeline e o que ainda dá pra ensinar.
                 </p>
                 <div className="inline-flex p-0.5 rounded-full shrink-0" style={{ background: "#F1F5F9", border: `1px solid ${HAIR}` }}>
                     {RANGES.map((r) => {
@@ -248,7 +248,7 @@ function ApprovalCard({ approval, active }: { approval: ApprovalShape | undefine
                     <p className="text-[12.5px] font-semibold" style={{ color: INK }}>Taxa de aprovação</p>
                 </div>
                 <p className="text-[12.5px] mt-1" style={{ color: SUB, lineHeight: 1.6 }}>
-                    Quando o time começar a aprovar as sugestões da EVA no Inbox, a confiança aparece aqui.
+                    Quando o time começar a aprovar as sugestões da Lume no Inbox, a confiança aparece aqui.
                 </p>
             </div>
         );
@@ -394,7 +394,7 @@ function TrendCard({ trend, active }: { trend: TrendPoint[] | undefined; active:
                 </div>
                 <div className="rounded-xl px-4 py-8 text-center" style={{ background: "#F8FAFC", border: `1px dashed ${HAIR}` }}>
                     <p className="text-[12.5px]" style={{ color: SUB, lineHeight: 1.6 }}>
-                        A curva aparece conforme o time usa a EVA. Cada dia de aprovações desenha um ponto a mais aqui.
+                        A curva aparece conforme o time usa a Lume. Cada dia de aprovações desenha um ponto a mais aqui.
                     </p>
                 </div>
             </div>
@@ -523,7 +523,7 @@ function FunnelBars({ rows, compact }: { rows: ReturnType<typeof funnelRows>; co
 }
 
 function FunnelCard({ funnel, funnelEva, qualified }: { funnel: FunnelShape | undefined; funnelEva: EvaFunnelShape | undefined; qualified: number }) {
-    // Funil da EVA: só vale como destaque quando não-empty E tem algum movimento.
+    // Funil da Lume: só vale como destaque quando não-empty E tem algum movimento.
     const evaAvailable = !!funnelEva && !funnelEva.empty;
     const evaRows = evaAvailable ? funnelRows(funnelEva) : [];
     const evaHasData = evaRows.some((r) => r.v > 0);
@@ -538,7 +538,7 @@ function FunnelCard({ funnel, funnelEva, qualified }: { funnel: FunnelShape | un
                     <ChartColumn className="w-3.5 h-3.5" style={{ color: evaAvailable ? PURPLE : BLUE }} />
                 </span>
                 <p className="text-[13px] font-semibold" style={{ color: INK }}>
-                    {evaAvailable ? "Do qualificado ao fechado, pela EVA" : "Do qualificado ao fechado"}
+                    {evaAvailable ? "Do qualificado ao fechado, pela Lume" : "Do qualificado ao fechado"}
                 </p>
             </div>
 
@@ -548,7 +548,7 @@ function FunnelCard({ funnel, funnelEva, qualified }: { funnel: FunnelShape | un
                         <FunnelBars rows={evaRows} />
                     ) : (
                         <p className="text-[12px]" style={{ color: SUB, lineHeight: 1.6 }}>
-                            A EVA já tem deals atribuídos, mas nenhum se moveu no período ainda.
+                            A Lume já tem deals atribuídos, mas nenhum se moveu no período ainda.
                         </p>
                     )}
                     {/* Funil geral como contexto secundário, menor e atenuado */}
@@ -565,7 +565,7 @@ function FunnelCard({ funnel, funnelEva, qualified }: { funnel: FunnelShape | un
                 <>
                     <FunnelBars rows={generalRows} />
                     <p className="text-[11px] mt-3" style={{ color: MUTE, lineHeight: 1.5 }}>
-                        Ainda sem deals atribuídos à EVA neste período. Quando ela qualificar e o card avançar, o funil dela aparece aqui em destaque.
+                        Ainda sem deals atribuídos à Lume neste período. Quando ela qualificar e o card avançar, o funil dela aparece aqui em destaque.
                     </p>
                 </>
             ) : (
@@ -615,7 +615,7 @@ function TemperatureCard({ temperature, scoreAvg, active }: { temperature: Tempe
                 </>
             ) : (
                 <p className="text-[12px]" style={{ color: SUB, lineHeight: 1.6 }}>
-                    A EVA ainda não classificou leads por temperatura no período.
+                    A Lume ainda não classificou leads por temperatura no período.
                 </p>
             )}
 
@@ -748,7 +748,7 @@ export function EvaAnalyticsPanel({ onTeach }: { onTeach?: () => void }) {
                     </span>
                     <p className="text-[14px] font-semibold" style={{ color: INK }}>Ainda não há movimento neste período.</p>
                     <p className="text-[12.5px] mt-1.5 max-w-[400px] mx-auto" style={{ color: SUB, lineHeight: 1.6 }}>
-                        Conforme a EVA for sugerindo no Inbox e o time for aprovando, este painel mostra a confiança, o que virou pipeline e o que ainda dá pra ensinar.
+                        Conforme a Lume for sugerindo no Inbox e o time for aprovando, este painel mostra a confiança, o que virou pipeline e o que ainda dá pra ensinar.
                     </p>
                     {rangeDays !== 90 && (
                         <div className="mt-5">
@@ -784,8 +784,8 @@ export function EvaAnalyticsPanel({ onTeach }: { onTeach?: () => void }) {
                 </div>
             </Section>
 
-            {/* ── C) O QUE ENSINAR PRA EVA ── */}
-            <Section index={2} eyebrow="03" title="O que ensinar pra EVA">
+            {/* ── C) O QUE ENSINAR PRA Lume ── */}
+            <Section index={2} eyebrow="03" title="O que ensinar pra Lume">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <ListCard
                         icon={MessageSquareWarning}
@@ -801,13 +801,13 @@ export function EvaAnalyticsPanel({ onTeach }: { onTeach?: () => void }) {
                         accentBg="rgba(180,83,9,0.10)"
                         title="Lacunas de contexto"
                         rows={gaps}
-                        emptyText="A EVA não encontrou perguntas que não soube responder. Bom sinal."
+                        emptyText="A Lume não encontrou perguntas que não soube responder. Bom sinal."
                     />
                 </div>
                 {(objections.length > 0 || gaps.length > 0) && (
                     <div className="mt-3.5 flex items-center justify-between gap-3 flex-wrap rounded-xl px-4 py-3" style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.16)" }}>
                         <p className="text-[12px] flex-1 min-w-0" style={{ color: INK, lineHeight: 1.5 }}>
-                            Cada item acima é uma resposta a mais que a EVA pode aprender. Leve pro passo <strong style={{ fontWeight: 600 }}>Ensinar</strong> e ela melhora.
+                            Cada item acima é uma resposta a mais que a Lume pode aprender. Leve pro passo <strong style={{ fontWeight: 600 }}>Ensinar</strong> e ela melhora.
                         </p>
                         {onTeach && (
                             <button
@@ -833,7 +833,7 @@ export function EvaAnalyticsPanel({ onTeach }: { onTeach?: () => void }) {
                         <>
                             <p className="text-[12.5px] font-semibold" style={{ color: INK }}>Linhas vermelhas respeitadas</p>
                             <p className="text-[12px] mt-0.5" style={{ color: SUB, lineHeight: 1.55 }}>
-                                A EVA nunca envia sozinha — toda saída passa pelo seu time.
+                                A Lume nunca envia sozinha — toda saída passa pelo seu time.
                             </p>
                         </>
                     ) : (
@@ -845,7 +845,7 @@ export function EvaAnalyticsPanel({ onTeach }: { onTeach?: () => void }) {
                                 </span>
                             </p>
                             <p className="text-[12px] mt-0.5" style={{ color: SUB, lineHeight: 1.55 }}>
-                                Nenhuma saída foi enviada sem aprovação humana. A EVA sugere, seu time aprova.
+                                Nenhuma saída foi enviada sem aprovação humana. A Lume sugere, seu time aprova.
                             </p>
                         </>
                     )}

@@ -76,8 +76,8 @@ export function EvaSimulationsTab({ rulesText, results, onEvaluate, saving, appr
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-[16px] font-bold" style={{ color: INK }}>Simulações da EVA</h2>
-                <p className="text-[13px] mt-0.5" style={{ color: SUB }}>Teste como a EVA responderia antes de usar as regras em operação.</p>
+                <h2 className="text-[16px] font-bold" style={{ color: INK }}>Simulações da Lume</h2>
+                <p className="text-[13px] mt-0.5" style={{ color: SUB }}>Teste como a Lume responderia antes de usar as regras em operação.</p>
                 <span className="inline-flex items-center gap-1.5 mt-2 px-2 py-0.5 rounded-full text-[10.5px] font-semibold uppercase" style={{ background: "#FFFBEB", color: AMBER, letterSpacing: "0.04em" }}>Simulação · prévia</span>
             </div>
 
@@ -111,7 +111,7 @@ export function EvaSimulationsTab({ rulesText, results, onEvaluate, saving, appr
                         <div className="rounded-xl px-3.5 py-2.5 text-[13px]" style={{ background: "#F1F5F9", color: INK }}>{sc.leadMessage}</div>
                     </MotionSafeReveal>
                     <MotionSafeReveal key={`reply-${idx}`} index={1}>
-                        <p className="text-[10px] uppercase font-semibold mb-1.5" style={{ color: MUTE, letterSpacing: "0.05em" }}>Resposta sugerida da EVA</p>
+                        <p className="text-[10px] uppercase font-semibold mb-1.5" style={{ color: MUTE, letterSpacing: "0.05em" }}>Resposta sugerida da Lume</p>
                         <div className="rounded-xl px-3.5 py-2.5 text-[13px] leading-relaxed" style={{ background: "#F5F3FF", color: "#4C1D95", border: "1px solid rgba(124,58,237,0.14)" }}>{sc.reply}</div>
                     </MotionSafeReveal>
                     <MotionSafeReveal key={`grid-${idx}`} index={2} className="grid grid-cols-2 gap-x-6 gap-y-3">
@@ -134,7 +134,7 @@ export function EvaSimulationsTab({ rulesText, results, onEvaluate, saving, appr
                         <p className="text-[10px] uppercase font-semibold mb-1.5 flex items-center gap-1" style={{ color: MUTE, letterSpacing: "0.05em" }}><ShieldCheck className="w-3 h-3" style={{ color: PURPLE }} /> Regras usadas</p>
                         {usedRules.length ? (
                             <ul className="space-y-1">{usedRules.map((r, i) => <li key={i} className="text-[11.5px] flex items-start gap-1.5" style={{ color: "#4C1D95" }}><span className="mt-[5px] w-1 h-1 rounded-full shrink-0" style={{ background: PURPLE }} />{r}</li>)}</ul>
-                        ) : <p className="text-[11.5px]" style={{ color: MUTE }}>Nenhuma regra ativa. Configure no EVA Studio para orientar a resposta.</p>}
+                        ) : <p className="text-[11.5px]" style={{ color: MUTE }}>Nenhuma regra ativa. Configure no Lume Studio para orientar a resposta.</p>}
                     </MotionSafeReveal>
 
                     {/* avaliação persistida */}
@@ -260,7 +260,7 @@ export function EvaSimulationsTab({ rulesText, results, onEvaluate, saving, appr
                     <DialogHeader>
                         <DialogTitle style={{ color: INK }} className="flex items-center gap-2"><ThumbsUp className="w-4 h-4" style={{ color: GREEN }} /> Aprovar para uso assistido</DialogTitle>
                         <DialogDescription style={{ color: SUB }}>
-                            Esta aprovação libera a EVA para uso assistido. Ela continuará sugerindo ações e respostas, mas não enviará mensagens nem alterará oportunidades sem aprovação humana.
+                            Esta aprovação libera a Lume para uso assistido. Ela continuará sugerindo ações e respostas, mas não enviará mensagens nem alterará oportunidades sem aprovação humana.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="flex justify-end gap-2 pt-3">

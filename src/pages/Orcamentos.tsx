@@ -123,11 +123,11 @@ export default function Orcamentos() {
         toast.success("Desfeito.");
         return;
       }
-      // Fechou depois da retomada da EVA: o dinheiro que voltou, com o valor real.
+      // Fechou depois da retomada da Lume: o dinheiro que voltou, com o valor real.
       const item = board.data?.items.find((it) => it.id === vars.id);
       const voltou = vars.outcome === "won" && item?.followup_sent_at && item.amount;
       toast.success(
-        voltou ? `${brl(item.amount!)} de volta. Essa proposta fechou depois da retomada da EVA.` : vars.outcome === "won" ? "Marcado como fechado." : "Marcado como perdido.",
+        voltou ? `${brl(item.amount!)} de volta. Essa proposta fechou depois da retomada da Lume.` : vars.outcome === "won" ? "Marcado como fechado." : "Marcado como perdido.",
         { action: { label: "Desfazer", onClick: () => outcome.mutate({ id: vars.id, outcome: null }) } },
       );
     },
@@ -148,7 +148,7 @@ export default function Orcamentos() {
   })();
   const { pago, carregando: planoCarregando } = usePlano();
   // Conta nova: sem assinatura vai para o Raio-X automático (o grátis); quem
-  // assina cai uma vez na conversa de configuração da EVA, e quem adiou vê a
+  // assina cai uma vez na conversa de configuração da Lume, e quem adiou vê a
   // lista de primeiros passos. Super admin operando outra empresa nunca é levado.
   useEffect(() => {
     if (preview || !isAdmin || isSuperAdmin || planoCarregando) return;
@@ -400,7 +400,7 @@ function QuoteList({
 function emptyTabText(tab: Tab, days: number): string {
   switch (tab) {
     case "parked":
-      return "Nenhum orçamento parado. Quando um cliente não responder, ou responder e sumir, ele aparece aqui com a retomada da EVA.";
+      return "Nenhum orçamento parado. Quando um cliente não responder, ou responder e sumir, ele aparece aqui com a retomada da Lume.";
     case "your_turn":
       return "Ninguém esperando resposta sua. Quando um cliente escrever e ficar sem resposta, ele aparece aqui.";
     case "talking":
@@ -421,7 +421,7 @@ const SITUACAO: Record<QuoteState, { nome: string; tom?: "sol" | "ok" | "ruim" }
   closed: { nome: "Encerrado" },
 };
 
-// Dez marcas, uma por dia: a do 2º dia é amarela, porque é o dia em que a EVA avisa.
+// Dez marcas, uma por dia: a do 2º dia é amarela, porque é o dia em que a Lume avisa.
 function Marcas({ dias }: { dias: number }) {
   return (
     <span className="vp-marcas" aria-hidden="true">
@@ -440,7 +440,7 @@ function QuoteRow({
   const navigate = useNavigate();
   const target = q.conversation_id ? `/inbox?conversationId=${q.conversation_id}` : q.deal_id ? `/deals/${q.deal_id}` : null;
   const situacao = SITUACAO[q.state];
-  // No computador a linha abre o painel da EVA; no celular, sem painel, abre a conversa.
+  // No computador a linha abre o painel da Lume; no celular, sem painel, abre a conversa.
   const escolher = () => {
     if (window.matchMedia("(min-width: 1024px)").matches || !target) onAbrir();
     else navigate(target);
@@ -497,7 +497,7 @@ function PainelEva({ q, pending, onOutcome }: { q: QuoteItem; pending: boolean; 
   const card = q.deal_id ? `/deals/${q.deal_id}` : null;
 
   return (
-    <aside className="vp-painel hidden lg:block" aria-label={`A EVA sobre ${name}`}>
+    <aside className="vp-painel hidden lg:block" aria-label={`A Lume sobre ${name}`}>
       <div className="vp-painel__topo">
         <EvaBot size={56} state={q.draft_status === "pending" ? "talking" : q.state === "won" ? "happy" : "idle"} />
         <div>
@@ -612,7 +612,7 @@ function EmptyState({ days, connected, checking }: { days: number; connected: bo
           : "Assim que você enviar um orçamento pelo WhatsApp, em PDF ou numa mensagem com valor, ele aparece aqui."}
       </p>
       <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-[var(--vyz-text)]">
-        Se o cliente não responder em 2 dias, ou responder e sumir, a EVA prepara a retomada e manda pra você aprovar no
+        Se o cliente não responder em 2 dias, ou responder e sumir, a Lume prepara a retomada e manda pra você aprovar no
         seu WhatsApp. Nada sai sem o seu ok.
       </p>
       {checking ? null : connected ? (

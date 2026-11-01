@@ -5,16 +5,16 @@ import { EvaBot } from "@/components/eva/EvaBot";
 // ─────────────────────────────────────────────────────────────────────────────
 // EvaCommandBar (F4D.2.1, 2026-05-19)
 //
-// Camada operacional da EVA acoplada à Central da Operação. Input
+// Camada operacional da Lume acoplada à Central da Operação. Input
 // conversacional + chips de ações rápidas. NÃO é página separada, NÃO é card
 // decorativo — é a entrada de comando do CRM.
 //
-// REGRA "EVA inside Vyzon" (memory: feedback_eva_visual_rule):
+// REGRA "Lume inside Vyzon" (memory: feedback_eva_visual_rule):
 // Card branco, ring lilás sutil no avatar, selo "Preview" lilás micro,
 // botão "Enviar" AZUL Vyzon, chips em superfícies neutras com hover azul.
 //
 // Lógica é 100% PREVIEW: submit / chip → estado "Pensando..." 1.5s → mensagem
-// honesta "Análise indisponível em preview". F4D.4+ conecta com EVA real.
+// honesta "Análise indisponível em preview". F4D.4+ conecta com Lume real.
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface Suggestion {
@@ -77,7 +77,7 @@ export function EvaCommandBar() {
                 boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.045)",
             }}
         >
-            {/* Top accent line lilás muito sutil — assinatura EVA */}
+            {/* Top accent line lilás muito sutil — assinatura Lume */}
             <div
                 className="absolute top-0 inset-x-0 h-px pointer-events-none"
                 style={{
@@ -95,7 +95,7 @@ export function EvaCommandBar() {
                                 className="font-semibold text-[18px] sm:text-[20px]"
                                 style={{ color: "#0F1730", letterSpacing: "-0.018em" }}
                             >
-                                EVA Comercial
+                                Lume Comercial
                             </h3>
                             <span
                                 className="inline-flex items-center gap-1 text-[10px] uppercase px-2 py-0.5 rounded"
@@ -135,7 +135,7 @@ export function EvaCommandBar() {
                                 type="text"
                                 value={value}
                                 onChange={(e) => setValue(e.target.value)}
-                                placeholder="Pergunte para a EVA ou peça uma ação…"
+                                placeholder="Pergunte para a Lume ou peça uma ação…"
                                 className="w-full h-14 pl-5 pr-36 rounded-xl text-[14.5px] outline-none transition-colors"
                                 style={{
                                     background: "#F4F7FB",
@@ -220,7 +220,7 @@ export function EvaCommandBar() {
                                     letterSpacing: "0.08em",
                                 }}
                             >
-                                EVA analisando…
+                                Lume analisando…
                             </p>
                             <p className="text-[12.5px] truncate" style={{ color: "#0F1730" }}>
                                 {lastPrompt}
@@ -248,13 +248,13 @@ export function EvaCommandBar() {
                                     letterSpacing: "0.08em",
                                 }}
                             >
-                                Resposta EVA · Preview
+                                Resposta Lume · Preview
                             </p>
                             <p
                                 className="text-[13px] mb-1"
                                 style={{ color: "#0F1730", fontWeight: 500, lineHeight: 1.5 }}
                             >
-                                Em breve a EVA vai responder &quot;{lastPrompt}&quot; com base nos seus dados reais de pipeline, WhatsApp e CRM.
+                                Em breve a Lume vai responder &quot;{lastPrompt}&quot; com base nos seus dados reais de pipeline, WhatsApp e CRM.
                             </p>
                             <p className="text-[11.5px]" style={{ color: "#64748B", lineHeight: 1.55 }}>
                                 Esta interface é uma prévia da camada conversacional do Vyzon. A análise por IA com dados reais entra em produção em breve.

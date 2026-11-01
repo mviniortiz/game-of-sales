@@ -52,7 +52,7 @@ interface DealCardProps {
   onToggleSelect?: (dealId: string) => void;
   stageNeighbors?: StageNeighbors;
   onSwipeMove?: (deal: Deal, targetStageId: string) => void;
-  /** F5P.2 — contexto comercial enriquecido (conversa + EVA) */
+  /** F5P.2 — contexto comercial enriquecido (conversa + Lume) */
   context?: PipelineDealContext;
   /** F6T.2 — tags transversais (sistema F6T.1) carregadas batched no nível superior */
   tags?: Tag[];
@@ -60,10 +60,10 @@ interface DealCardProps {
   showAssignee?: boolean;
 }
 
-// LP-PIPE.2 "Fio da Conversa" — a leitura da EVA é texto curto, NÃO o conteúdo
+// LP-PIPE.2 "Fio da Conversa" — a leitura da Lume é texto curto, NÃO o conteúdo
 // da mensagem. Deriva da temperatura quando não há proxima_acao explícita.
 // REGRA DE PRIVACIDADE: nunca exibir trecho de mensagem do cliente — só a
-// interpretação que a EVA já produziu (temperature/proximaAcao/isStale).
+// interpretação que a Lume já produziu (temperature/proximaAcao/isStale).
 const EVA_DERIVED_READ: Record<string, string> = {
   quente: "Pronto pra avançar",
   morno: "Aquecendo",
@@ -655,21 +655,21 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
 
         </div>
 
-        {/* ── LP-PIPE.2 "Fio da Conversa": a leitura da EVA ──────
-            Mostra SÓ a interpretação da EVA (estado + próxima ação), nunca o
-            conteúdo das mensagens. Accent roxo fino = a camada da EVA. */}
+        {/* ── LP-PIPE.2 "Fio da Conversa": a leitura da Lume ──────
+            Mostra SÓ a interpretação da Lume (estado + próxima ação), nunca o
+            conteúdo das mensagens. Accent roxo fino = a camada da Lume. */}
         {context && (() => {
           const hasConv = !!context.conversationId;
 
           // Sem conversa vinculada, a etiqueta não tem o que dizer: exibia o
-          // selo "EVA" seguido de "Sem conversa vinculada", e sem nenhuma ação
+          // selo "Lume" seguido de "Sem conversa vinculada", e sem nenhuma ação
           // ao lado. Eram 6 dos 8 cards do pipeline anunciando ausência.
           // Melhor o card não ter a linha do que ter uma linha vazia de sentido.
           if (!hasConv) return null;
 
           // Texto da leitura: retomada do orçamento > stale > proxima_acao > temperatura.
           // Trunca elegante via line-clamp no JSX.
-          // O que a EVA já fez pelo orçamento vale mais que qualquer leitura.
+          // O que a Lume já fez pelo orçamento vale mais que qualquer leitura.
           let readText: string;
           const quoteEva = quote ? evaLine(quote) : null;
           if (quoteEva) {
@@ -696,13 +696,13 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
 
           return (
             <div className="mb-2.5 flex flex-col gap-1.5" onClick={e => e.stopPropagation()}>
-              {/* Leitura da EVA: superfície neutra, o roxo fica só no rótulo. */}
+              {/* Leitura da Lume: superfície neutra, o roxo fica só no rótulo. */}
               <div className="flex items-center gap-1.5 min-w-0">
                 <span
                   className={`inline-flex items-center gap-1.5 min-w-0 max-w-full pl-1 pr-2 py-1 rounded-md border text-[10.5px] leading-snug ${toneClass}`}
                   title={readText}
                 >
-                  <EvaBot size={16} still state={tone === "amber" ? "alert" : quoteEva ? "talking" : "idle"} label="EVA" className="self-center" />
+                  <EvaBot size={16} still state={tone === "amber" ? "alert" : quoteEva ? "talking" : "idle"} label="Lume" className="self-center" />
                   <span className="line-clamp-2 font-medium">{readText}</span>
                 </span>
               </div>

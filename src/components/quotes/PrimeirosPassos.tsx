@@ -1,5 +1,5 @@
 // Primeiros passos no topo de Orçamentos, até a pessoa fechar o ciclo uma vez:
-// a EVA conhece a empresa, o WhatsApp está conectado, a primeira retomada foi
+// a Lume conhece a empresa, o WhatsApp está conectado, a primeira retomada foi
 // aprovada e o primeiro orçamento foi marcado. Cada item mostra o que fazer, no
 // lugar onde se faz. Some sozinha quando os quatro estão feitos.
 import { Link } from "react-router-dom";
@@ -40,7 +40,7 @@ export function PrimeirosPassos({ companyId, configured, connected }: { companyI
     const itens: Item[] = [
         {
             feito: configured,
-            titulo: "A EVA conhece sua empresa",
+            titulo: "A Lume conhece sua empresa",
             como: "Uma conversa de 3 minutos para ela escrever do seu jeito.",
             acao: { label: "Começar", to: EVA_SETUP_PATH },
         },
@@ -53,7 +53,7 @@ export function PrimeirosPassos({ companyId, configured, connected }: { companyI
         {
             feito: q.data.aprovou,
             titulo: "Primeira retomada aprovada",
-            como: "Quando a EVA te mandar uma retomada no WhatsApp, responda 1. Ela sai do seu número.",
+            como: "Quando a Lume te mandar uma retomada no WhatsApp, responda 1. Ela sai do seu número.",
         },
         {
             feito: q.data.marcou,

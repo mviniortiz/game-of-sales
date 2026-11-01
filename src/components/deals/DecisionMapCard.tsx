@@ -5,7 +5,7 @@
 //   - Dados MANUAIS em deals.source_data.mapa_decisao. Sem busca externa,
 //     sem scraping de Google/LinkedIn, sem enriquecimento automático.
 //   - "Detalhe da pessoa" usa SÓ dados internos (conversas + notas do deal).
-//   - EVA SUGERE a partir da conversa; o time aprova antes de adicionar.
+//   - Lume SUGERE a partir da conversa; o time aprova antes de adicionar.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -89,7 +89,7 @@ function snippet(text: string, idx: number) {
     return (start > 0 ? "…" : "") + core + (end < text.length ? "…" : "");
 }
 
-// EVA: heurística de menções a quem decide. Por relação (o lead raramente cita
+// Lume: heurística de menções a quem decide. Por relação (o lead raramente cita
 // o nome), pra o humano completar. Nunca grava sozinha.
 const RELATION_PATTERNS: { re: RegExp; relacao: string; papel: string }[] = [
     { re: /\b(minha esposa|minha mulher|meu marido|meu esposo|c[ôo]njuge)\b/i, relacao: "Cônjuge", papel: "Decisor financeiro" },
@@ -344,7 +344,7 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
             </div>
             <p className="text-[12px] text-[var(--vyz-text-muted)] mb-3">Quem o cliente disse que participa da compra.</p>
 
-            {/* Sugestões da EVA — assistida, time aprova */}
+            {/* Sugestões da Lume — assistida, time aprova */}
             {suggestions.length > 0 && (
                 <div className="space-y-1.5 mb-3">
                     {suggestions.map((s, i) => (
@@ -353,8 +353,8 @@ export function DecisionMapCard({ dealId, companyId, sourceData }: { dealId: str
                             <div className="min-w-0 flex-1">
                                 <p className="text-[11px] text-[#0F1730] leading-snug">
                                     {s.relacao
-                                        ? <>A EVA notou menção a <strong className="font-semibold">{s.relacao.toLowerCase()}</strong> na conversa.</>
-                                        : <>A EVA notou alguém que pode influenciar a decisão.</>}
+                                        ? <>A Lume notou menção a <strong className="font-semibold">{s.relacao.toLowerCase()}</strong> na conversa.</>
+                                        : <>A Lume notou alguém que pode influenciar a decisão.</>}
                                 </p>
                                 <p className="text-[10.5px] text-slate-500 leading-snug mt-0.5">{ondeApareceu(s.kind, s.direction)} · {fmtDate(s.ts)}</p>
                             </div>

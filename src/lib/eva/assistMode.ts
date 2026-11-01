@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// EVA.INBOX.1 (2026-06-06) — Modo de assistência da lateral da EVA.
+// EVA.INBOX.1 (2026-06-06) — Modo de assistência da lateral da Lume.
 //
-// A tese: a EVA é uma máquina de resposta. Ela só mostra resposta pronta quando
+// A tese: a Lume é uma máquina de resposta. Ela só mostra resposta pronta quando
 // CONFIA na sugestão; sem contexto suficiente ela SE CALA e pede descoberta
 // (genérico atrapalha mais do que ajuda).
 //
@@ -14,7 +14,7 @@ import type { Qualification } from "@/lib/eva/qualificationSchema";
 
 export type AssistMode = "suggest" | "discover";
 
-/** Abaixo disso a EVA se cala e pede descoberta em vez de sugerir genérico. */
+/** Abaixo disso a Lume se cala e pede descoberta em vez de sugerir genérico. */
 export const EVA_SUGGESTION_CONFIDENCE_THRESHOLD = 0.6;
 
 export function deriveAssistMode(q: Qualification): AssistMode {

@@ -1188,7 +1188,7 @@ export default function CRM() {
   // Filter deals (vendedor multi + busca + avançados + status/ativo)
   const filteredDeals = useMemo(() => filterDeals(localDeals), [localDeals, filterDeals]);
 
-  // F5P.2 — Contexto comercial (conversa + EVA) por deal
+  // F5P.2 — Contexto comercial (conversa + Lume) por deal
   const pipelineContext = usePipelineContextData(
     useMemo(() => filteredDeals.map((d) => d.id), [filteredDeals]),
   );
@@ -1752,7 +1752,7 @@ export default function CRM() {
                   repetia, no topo, cards que já estavam nas colunas logo
                   abaixo, então a mesma negociação aparecia duas vezes na mesma
                   tela. A urgência continua legível no próprio card, pela
-                  leitura da EVA e pelo tempo parado. */
+                  leitura da Lume e pelo tempo parado. */
 
 }
 
@@ -1887,7 +1887,7 @@ export default function CRM() {
               </DragOverlay>
             </DndContext>
           ) : (
-            // pb-24 no celular: o botão "Perguntar à EVA" fica fixo embaixo e cobria a última linha
+            // pb-24 no celular: o botão "Perguntar à Lume" fica fixo embaixo e cobria a última linha
             <div className="p-4 pb-24 sm:p-6">
               {sortedDealsForList.length > 0 && (
                 <div className="rounded-xl border border-border bg-white dark:bg-card overflow-hidden">

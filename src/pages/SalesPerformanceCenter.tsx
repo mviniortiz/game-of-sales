@@ -259,7 +259,7 @@ const SalesPerformanceCenter = () => {
         [activeCompanyId],
     );
 
-    // ─── Leitura da EVA: única voz de insight (absorve a antiga "Atenção do gestor") ──
+    // ─── Leitura da Lume: única voz de insight (absorve a antiga "Atenção do gestor") ──
     const eva = useMemo(() => {
         const bullets: { tone: "eva" | "warn" | "muted"; text: React.ReactNode }[] = [];
         if (m.funnelReliable && m.bottleneck && m.bottleneck.pct !== null) {
@@ -375,7 +375,7 @@ const SalesPerformanceCenter = () => {
                     trend={trends.perf_forecast} goodWhenUp formatDelta={(a) => formatCurrencyCompact(a)} />
             </div>
 
-            {/* 4. Funil de conversão + Leitura da EVA */}
+            {/* 4. Funil de conversão + Leitura da Lume */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
                 <Panel className="lg:col-span-2">
                     <div className="flex items-start justify-between mb-4">
@@ -450,14 +450,14 @@ const SalesPerformanceCenter = () => {
                     )}
                 </Panel>
 
-                {/* Leitura da EVA — única voz de insight (gargalo + atenção, num lugar só) */}
+                {/* Leitura da Lume — única voz de insight (gargalo + atenção, num lugar só) */}
                 <Panel className="bg-[#FAF5FF] border-[#E9D5FF]">
                     <div className="flex items-center gap-2 mb-3">
                         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#7C3AED] text-white text-[8px] font-bold leading-none">E</span>
-                        <h2 className="text-[13px] font-semibold text-[#7C3AED]">Leitura da EVA</h2>
+                        <h2 className="text-[13px] font-semibold text-[#7C3AED]">Leitura da Lume</h2>
                     </div>
                     {m.openCount === 0 ? (
-                        <p className="text-[12.5px] text-slate-500">Quando houver oportunidades no funil, a EVA aponta o gargalo e o que destravar aqui.</p>
+                        <p className="text-[12.5px] text-slate-500">Quando houver oportunidades no funil, a Lume aponta o gargalo e o que destravar aqui.</p>
                     ) : (
                         <>
                             <p className="text-[13px] font-semibold text-[#0F1730] leading-snug mb-3">{eva.headline}</p>
@@ -474,7 +474,7 @@ const SalesPerformanceCenter = () => {
                             </button>
                         </>
                     )}
-                    <p className="text-[10px] text-[#7C3AED]/70 mt-3 pt-3 border-t border-[#E9D5FF]">A EVA aponta tendências. As decisões seguem com o time.</p>
+                    <p className="text-[10px] text-[#7C3AED]/70 mt-3 pt-3 border-t border-[#E9D5FF]">A Lume aponta tendências. As decisões seguem com o time.</p>
                 </Panel>
             </div>
 

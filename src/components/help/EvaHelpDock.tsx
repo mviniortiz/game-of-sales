@@ -1,8 +1,8 @@
-// EvaHelpDock — o botão flutuante de AJUDA do produto, com a EVA (a "Holly" do Vyzon, na voz
-// da EVA). Pill no canto → painel com chips + chat. Responde "como usar o Vyzon"
-// via edge function eva-help. NÃO é a EVA comercial (que lê pipeline/conversas).
+// EvaHelpDock — o botão flutuante de AJUDA do produto, com a Lume (a "Holly" do Vyzon, na voz
+// da Lume). Pill no canto → painel com chips + chat. Responde "como usar o Vyzon"
+// via edge function eva-help. NÃO é a Lume comercial (que lê pipeline/conversas).
 //
-// Regras de marca: botão de enviar = seta-pra-cima circular (NUNCA avião); a EVA
+// Regras de marca: botão de enviar = seta-pra-cima circular (NUNCA avião); a Lume
 // aqui usa o azul da marca; tema claro.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -24,7 +24,7 @@ const ROUTE_LABELS: { prefix: string; label: string }[] = [
     { prefix: "/integracoes", label: "Integrações" },
     { prefix: "/metas", label: "Metas" },
     { prefix: "/performance", label: "Performance" },
-    { prefix: "/eva", label: "EVA Studio" },
+    { prefix: "/eva", label: "Lume Studio" },
 ];
 
 export function labelForPath(pathname: string): string {
@@ -32,7 +32,7 @@ export function labelForPath(pathname: string): string {
     return hit?.label || "uma tela do Vyzon";
 }
 
-// Bolha da EVA com efeito "digitando" só na mensagem recém-chegada (as restauradas
+// Bolha da Lume com efeito "digitando" só na mensagem recém-chegada (as restauradas
 // do histórico aparecem inteiras). Rola o thread conforme o texto cresce.
 export function AssistantBubble({ content, animate, onTick }: { content: string; animate: boolean; onTick: () => void }) {
     const { displayed, done } = useTypewriter(content, { enabled: animate, speed: 10 });
@@ -61,7 +61,7 @@ export function AssistantBubble({ content, animate, onTick }: { content: string;
 // No computador o botão mora no cabeçalho do app: flutuando, ele cobria o
 // valor das linhas encostadas na direita (Orçamentos, Pipeline).
 const ABRIR_EVENTO = "vyz:eva-ajuda-abrir";
-// No Inbox a EVA tem painel próprio. No Início, o botão redondo flutuante
+// No Inbox a Lume tem painel próprio. No Início, o botão redondo flutuante
 // cobria a fila no celular, então lá só o do cabeçalho (computador) abre.
 const temLugarProprio = (pathname: string) => /^\/(inicio|dashboard|inbox)/.test(pathname);
 const temPainelProprio = (pathname: string) => /^\/inbox/.test(pathname);
@@ -76,7 +76,7 @@ export function PerguntarEvaCabecalho() {
             className="hidden sm:inline-flex h-9 items-center gap-2 rounded-full border border-[#E2E8F0] bg-white pl-1 pr-3.5 text-[13px] font-semibold text-[#0F1730] shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-[background-color,box-shadow] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#F8FAFC] hover:shadow-[0_2px_8px_-2px_rgba(15,23,42,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1556C0]"
         >
             <EvaBot size={28} still />
-            Perguntar à EVA
+            Perguntar à Lume
         </button>
     );
 }
@@ -129,8 +129,8 @@ export function EvaHelpDock() {
         { label: "Como conecto o WhatsApp?", q: "Como eu conecto o meu WhatsApp no Vyzon?" },
     ];
 
-    // No /inicio e no /inbox a EVA já tem lugar próprio (rail, painel ou sheet):
-    // esconde o botão de ajuda pra não ter dois "Perguntar à EVA" e não cobrir
+    // No /inicio e no /inbox a Lume já tem lugar próprio (rail, painel ou sheet):
+    // esconde o botão de ajuda pra não ter dois "Perguntar à Lume" e não cobrir
     // a lista e a sugestão no mobile.
     if (temLugarProprio(location.pathname) && !open) return null;
 
@@ -158,9 +158,9 @@ export function EvaHelpDock() {
                         >
                             {/* Header */}
                             <div className="flex items-center gap-2.5 px-4 py-3 border-b" style={{ borderColor: "#F1F5F9" }}>
-                                <EvaBot size={28} state={loading ? "thinking" : "idle"} label="EVA" />
+                                <EvaBot size={28} state={loading ? "thinking" : "idle"} label="Lume" />
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-[13.5px] font-bold leading-tight" style={{ color: "#0F1730" }}>EVA</p>
+                                    <p className="text-[13.5px] font-bold leading-tight" style={{ color: "#0F1730" }}>Lume</p>
                                     <p className="text-[11px] leading-tight" style={{ color: "#64748B" }}>Ajuda com o Vyzon</p>
                                 </div>
                                 {messages.length > 0 && (
@@ -190,7 +190,7 @@ export function EvaHelpDock() {
                             <div ref={threadRef} className="flex-1 overflow-y-auto px-4 py-3.5 flex flex-col gap-3">
                                 {messages.length === 0 && (
                                     <p className="text-[13px] leading-relaxed" style={{ color: "#475569" }}>
-                                        Oi! Sou a EVA. Posso te ajudar a usar o Vyzon, conectar o WhatsApp, configurar seu contexto e dar os primeiros passos. Pergunte o que quiser.
+                                        Oi! Sou a Lume. Posso te ajudar a usar o Vyzon, conectar o WhatsApp, configurar seu contexto e dar os primeiros passos. Pergunte o que quiser.
                                     </p>
                                 )}
                                 {messages.map((m, i) => (
@@ -278,7 +278,7 @@ export function EvaHelpDock() {
                             border: "1px solid #E2E8F0",
                             boxShadow: "0 10px 26px -8px rgba(15,23,42,0.28)",
                         }}
-                        aria-label="Perguntar à EVA"
+                        aria-label="Perguntar à Lume"
                     >
                         <EvaBot size={34} />
                     </motion.button>

@@ -126,7 +126,7 @@ interface NovaOportunidadeModalProps {
     leadSource?: string;
     titulo?: string;
     observacoes?: string;
-    /** EVA sugere o valor (ancorado no preço do serviço) e o serviço de
+    /** Lume sugere o valor (ancorado no preço do serviço) e o serviço de
      *  interesse, pra pré-preencher o valor e casar o produto cadastrado. */
     valorEstimado?: number | null;
     servicoInteresse?: string | null;
@@ -181,13 +181,13 @@ export const NovaOportunidadeModal = ({
       setClienteNome(prefillData?.clienteNome || "");
       setClienteTelefone(prefillData?.clienteTelefone || "");
       setLeadSource(prefillData?.leadSource || "");
-      // V1.1 — título/observações sugeridos (ex.: vindos da conversa/EVA)
+      // V1.1 — título/observações sugeridos (ex.: vindos da conversa/Lume)
       if (prefillData?.titulo) {
         setTitulo(prefillData.titulo);
         setTituloEditadoManualmente(true); // não sobrescrever ao escolher produto
       }
       if (prefillData?.observacoes) setObservacoes(prefillData.observacoes);
-      // EVA sugeriu valor (ancorado no preço do serviço) → pré-preenche, editável.
+      // Lume sugeriu valor (ancorado no preço do serviço) → pré-preenche, editável.
       if (prefillData?.valorEstimado != null && prefillData.valorEstimado > 0) {
         setValor(String(prefillData.valorEstimado));
         setValorFormatado(formatBRL(prefillData.valorEstimado));
@@ -242,9 +242,9 @@ export const NovaOportunidadeModal = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [produtoId]);
 
-  // EVA.OPP — casa o serviço de interesse (EVA) com um produto cadastrado quando
+  // EVA.OPP — casa o serviço de interesse (Lume) com um produto cadastrado quando
   // a lista carrega, pré-selecionando o dropdown. O valor vem do valor_estimado
-  // da EVA (prefill acima); aqui é só o match. Roda enquanto nada foi escolhido.
+  // da Lume (prefill acima); aqui é só o match. Roda enquanto nada foi escolhido.
   useEffect(() => {
     if (!open || produtoId || !prefillData?.servicoInteresse || !produtos?.length) return;
     const alvo = prefillData.servicoInteresse.trim().toLowerCase();
@@ -271,8 +271,8 @@ export const NovaOportunidadeModal = ({
       const additionalContacts =
         Object.keys(contatoExtra).length > 0 ? [contatoExtra] : [];
 
-      // Fase 2 (Analytics da EVA) — atribuição ao funil da EVA: se este deal
-      // nasce de uma conversa com sugestão da EVA (pending/accepted), vincula a
+      // Fase 2 (Analytics da Lume) — atribuição ao funil da Lume: se este deal
+      // nasce de uma conversa com sugestão da Lume (pending/accepted), vincula a
       // mais recente e resolve a pendente. Sem sugestão = null (honesto).
       // Best-effort: não bloqueia a criação do deal.
       const agentSuggestionId = conversationId
@@ -696,7 +696,7 @@ export const NovaOportunidadeModal = ({
             </div>
           </Section>
 
-          {/* Microaviso EVA assistida */}
+          {/* Microaviso Lume assistida */}
           <motion.div
             variants={sectionItem}
             className="flex items-start gap-2 rounded-lg px-3 py-2.5"
@@ -710,7 +710,7 @@ export const NovaOportunidadeModal = ({
               style={{ color: "#7C3AED" }}
             />
             <p className="text-[11.5px] leading-relaxed" style={{ color: "#475569" }}>
-              EVA continua assistida: ela sugere próximos passos depois que a oportunidade
+              Lume continua assistida: ela sugere próximos passos depois que a oportunidade
               entra no pipeline. Você aprova antes de qualquer ação automática.
             </p>
           </motion.div>

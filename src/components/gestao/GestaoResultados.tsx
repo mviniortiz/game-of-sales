@@ -94,7 +94,7 @@ export function GestaoResultados() {
     { label: "Fechado no mês", value: brl(wonMonth.value), sub: plural(wonMonth.count, "negócio ganho", "negócios ganhos") },
     { label: "Viraram venda", value: conversao != null ? `${conversao}%` : "Sem dados", sub: "Média do setor: 18%" },
     { label: "Parado agora", value: brl(totals?.parked_amount ?? 0), sub: plural(totals?.parked_count ?? 0, "orçamento sem resposta", "orçamentos sem resposta") },
-    { label: "Voltou com a EVA", value: brl(totals?.recovered_amount ?? 0), sub: plural(totals?.recovered_count ?? 0, "fechou depois da retomada", "fecharam depois da retomada") },
+    { label: "Voltou com a Lume", value: brl(totals?.recovered_amount ?? 0), sub: plural(totals?.recovered_count ?? 0, "fechou depois da retomada", "fecharam depois da retomada") },
   ];
 
   const etapas = [

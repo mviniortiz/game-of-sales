@@ -63,7 +63,7 @@ export const TrustNoteSection = () => {
                             porque o atendimento acontece no WhatsApp, o follow-up fica
                             espalhado e o pipeline não mostra o que realmente aconteceu na
                             conversa. O Vyzon nasce para fechar esse buraco entre atendimento
-                            e venda, com a EVA assistindo o time, não substituindo o vendedor.
+                            e venda, com a Lume assistindo o time, não substituindo o vendedor.
                         </p>
 
                         <div

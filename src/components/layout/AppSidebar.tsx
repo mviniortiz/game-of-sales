@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Sidebar (01/11/2026): azul-noite como as faixas da home e organizada pelo dia do
 // integrador. Hoje em cima; Orçamentos, Conversas, Funil e Agenda na venda;
-// Resultados e Configurações no pé, com a EVA como um cartão vivo.
+// Resultados e Configurações no pé, com a Lume como um cartão vivo.
 //
 // Os endereços continuam os antigos (/inicio, /inbox, /pipeline, /admin): o nome
 // mudou no menu, mas o plano, a demo embutida e o analytics dependem deles.
@@ -173,7 +173,7 @@ export function AppSidebar() {
     return true;
   };
 
-  // Analytics: clique manual em aba. Na demo a EVA navega por postMessage, então
+  // Analytics: clique manual em aba. Na demo a Lume navega por postMessage, então
   // qualquer clique na sidebar = a pessoa saindo do roteiro guiado (nav_off_flow).
   const handleNavClick = (item: NavItem) => {
     trackBehavior(DEMO_EVENTS.NAV_TAB_CLICK, { tab: item.url, title: item.title, from: location.pathname });
@@ -292,7 +292,7 @@ export function AppSidebar() {
                 to={isAdmin ? "/eva-studio" : "/inicio"}
                 className="vz-eva-card"
                 activeClassName=""
-                aria-label={`EVA: ${evaTexto}`}
+                aria-label={`Lume: ${evaTexto}`}
                 aria-current={evaAtiva ? "page" : undefined}
                 data-ativo={evaAtiva || undefined}
                 onClick={() => isMobile && setOpenMobile(false)}
@@ -302,7 +302,7 @@ export function AppSidebar() {
                 </span>
                 {!collapsed && (
                   <span className="vz-eva-card__texto">
-                    <b>EVA</b>
+                    <b>Lume</b>
                     <span>{evaTexto}</span>
                   </span>
                 )}

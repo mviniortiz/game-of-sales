@@ -7,12 +7,12 @@
 // Estados:
 //   - sem chat selecionado → EmptyPanel
 //   - chat sem mensagens → empty state pedindo conversa real
-//   - loading → skeleton "EVA analisando…"
+//   - loading → skeleton "Lume analisando…"
 //   - error → retry button
 //   - success → renderiza Resumo, Qualificação, Já sabemos / Falta,
 //               Próxima ação, Resposta sugerida, Lacunas
 //
-// REGRA: EVA continua assistida — nenhuma ação automática.
+// REGRA: Lume continua assistida — nenhuma ação automática.
 // `deve_criar_oportunidade` e `deve_fazer_handoff` são apenas callouts
 // recomendando ao humano. CTA "Criar oportunidade" continua manual.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -154,7 +154,7 @@ interface EvaPanelProps {
     /** PROSPECT.1 — quando presente, a resposta sugerida ganha "Enviar"
      *  (aprovar-e-enviar com 1 toque), além de Copiar. Usado na prospecção. */
     onSendReply?: (text: string) => Promise<void>;
-    /** PROSPECT.1 — objetivo da conversa repassado à EVA (ex.: marcar demo). */
+    /** PROSPECT.1 — objetivo da conversa repassado à Lume (ex.: marcar demo). */
     objective?: string;
     /** Coloca a resposta sugerida no campo de digitação (assistido: humano revisa
      *  e envia). No mobile também fecha o bottom sheet. */
@@ -173,7 +173,7 @@ export function EvaPanel({ chat, messages, onDealLinked, onSendReply, objective,
     return <PanelContent key={chat.id} chat={chat} messages={messages} onDealLinked={onDealLinked} onSendReply={onSendReply} objective={objective} onUseReply={onUseReply} onClose={onClose} quote={quote} />;
 }
 
-// Proposta desta conversa: valor, o que aconteceu e o que a EVA já fez. É o
+// Proposta desta conversa: valor, o que aconteceu e o que a Lume já fez. É o
 // fato mais útil do painel para o integrador, por isso vem logo abaixo do
 // vínculo com o card. Fechou/Perdeu marca o desfecho no placar sem sair daqui.
 function QuoteStatusCard({ quote }: { quote: QuoteItem }) {
@@ -208,7 +208,7 @@ function QuoteStatusCard({ quote }: { quote: QuoteItem }) {
             </p>
             {eva && (
                 <p className="mt-1.5 flex items-baseline gap-1.5 text-[11.5px] leading-snug text-[var(--vyz-text-strong)]">
-                    <span className="text-[9px] font-semibold uppercase tracking-wide text-[var(--vyz-eva)]">EVA</span>
+                    <span className="text-[9px] font-semibold uppercase tracking-wide text-[var(--vyz-eva)]">Lume</span>
                     {eva}
                 </p>
             )}
@@ -247,7 +247,7 @@ function SheetCloseButton({ onClose, absolute }: { onClose: () => void; absolute
         <button
             type="button"
             onClick={onClose}
-            aria-label="Fechar análise da EVA"
+            aria-label="Fechar análise da Lume"
             className={cn(
                 "h-10 w-10 md:h-7 md:w-7 rounded-full flex items-center justify-center shrink-0 transition-colors",
                 absolute && "absolute top-3 right-3 z-10",
@@ -263,9 +263,9 @@ function SheetCloseButton({ onClose, absolute }: { onClose: () => void; absolute
 
 function EmptyPanel({ reason, onClose }: { reason: "no-chat" | "no-messages"; onClose?: () => void }) {
     const messageMap = {
-        "no-chat": "A EVA mostra aqui a proposta, o que o cliente já contou e a próxima mensagem.",
+        "no-chat": "A Lume mostra aqui a proposta, o que o cliente já contou e a próxima mensagem.",
         "no-messages":
-            "Essa conversa ainda não tem mensagem. A EVA lê assim que o cliente escrever.",
+            "Essa conversa ainda não tem mensagem. A Lume lê assim que o cliente escrever.",
     };
     return (
         <div className="relative flex-1 flex flex-col items-center justify-center px-5 text-center">
@@ -289,7 +289,7 @@ function LoadingState({ message }: { message?: string }) {
         <div className="flex-1 flex flex-col items-center justify-center px-5 text-center">
             <EvaBot state="thinking" size={56} className="mb-4" />
             <p className="text-[13px] font-semibold mb-1" style={{ color: "#0F1730" }}>
-                {message || "EVA analisando conversa…"}
+                {message || "Lume analisando conversa…"}
             </p>
             <p
                 className="text-[11.5px]"
@@ -345,8 +345,8 @@ function ErrorState({
                 >
                     {isRateLimit
                         ? resetLabel
-                            ? `A EVA volta a analisar ${resetLabel}. As análises já salvas continuam visíveis.`
-                            : "A EVA volta a analisar amanhã. As análises já salvas continuam visíveis."
+                            ? `A Lume volta a analisar ${resetLabel}. As análises já salvas continuam visíveis.`
+                            : "A Lume volta a analisar amanhã. As análises já salvas continuam visíveis."
                         : msg}
                 </p>
             </div>
@@ -420,7 +420,7 @@ function PanelContent({
     const effectiveDealId = linkedDealId ?? matchedDealByPhone?.id ?? null;
     const matchedNotLinked = !hasLinkedOpportunity && !!matchedDealByPhone;
 
-    // Prefill da oportunidade a partir da conversa + EVA (sem inventar dado).
+    // Prefill da oportunidade a partir da conversa + Lume (sem inventar dado).
     const qual = insight.data?.qualification;
     const prefill = useMemo(() => {
         const safeName = sanitizeDisplayName(chat.name);
@@ -435,7 +435,7 @@ function PanelContent({
             : null;
         const observacoes = [
             "Origem: WhatsApp (conversa vinculada pela Inbox).",
-            proxima ? `Próxima ação sugerida pela EVA: ${proxima}.` : "",
+            proxima ? `Próxima ação sugerida pela Lume: ${proxima}.` : "",
         ]
             .filter(Boolean)
             .join(" ");
@@ -444,7 +444,7 @@ function PanelContent({
             clienteTelefone: chat.phone || "",
             titulo,
             observacoes,
-            // EVA sugere valor (ancorado no preço do serviço) + o serviço, pra o
+            // Lume sugere valor (ancorado no preço do serviço) + o serviço, pra o
             // modal casar o produto cadastrado e pré-preencher o valor. Editável.
             valorEstimado: qual?.valor_estimado ?? null,
             servicoInteresse: servico ?? null,
@@ -452,7 +452,7 @@ function PanelContent({
     }, [chat.name, chat.phone, qual?.servico_interesse, qual?.proxima_acao, qual?.valor_estimado]);
 
     // ── VYZON.AGENTS.2 (híbrido) — auto-criação de oportunidade ──────────────
-    // Quando a empresa optou pelo modo híbrido (auto_create_opportunity) E a EVA
+    // Quando a empresa optou pelo modo híbrido (auto_create_opportunity) E a Lume
     // (aprovada) recomenda criar oportunidade (deve_criar_oportunidade), criamos
     // o card no pipeline AUTOMATICAMENTE, com os campos qualificados, e
     // registramos em agent_suggestions. Mensagens de saída NUNCA passam por aqui
@@ -464,8 +464,8 @@ function PanelContent({
     const autoCreateFiredRef = useRef(false);
     const [quickCreating, setQuickCreating] = useState(false);
 
-    // ── Analytics da EVA — taxa de aprovação (agent_suggestions) ─────────────
-    // Quando a EVA produz uma leitura desta conversa (qualificação com próxima
+    // ── Analytics da Lume — taxa de aprovação (agent_suggestions) ─────────────
+    // Quando a Lume produz uma leitura desta conversa (qualificação com próxima
     // ação / resposta sugerida), registramos 1 sugestão pendente em
     // agent_suggestions. Dedup: no máx 1 por (conversa + analyzed_at). O
     // desfecho (accepted/adjusted) é gravado quando o humano USA a resposta
@@ -520,7 +520,7 @@ function PanelContent({
         pendingSuggestionResolvedRef.current = true;
         try {
             await agentLog.resolve({ id, status, appliedPayload: { text: finalText } });
-            // Analytics: a sugestão da EVA foi usada (aceita sem editar ou ajustada).
+            // Analytics: a sugestão da Lume foi usada (aceita sem editar ou ajustada).
             trackBehavior(
                 status === "accepted" ? DEMO_EVENTS.EVA_SUGGESTION_ACCEPTED : DEMO_EVENTS.EVA_SUGGESTION_ADJUSTED,
                 { outcome: status }
@@ -548,7 +548,7 @@ function PanelContent({
                     phone: prefill.clienteTelefone || null,
                     value: prefill.valorEstimado ?? undefined,
                     leadSource: "whatsapp",
-                    notes: `${prefill.observacoes} (Criado pela EVA a partir da conversa.)`,
+                    notes: `${prefill.observacoes} (Criado pela Lume a partir da conversa.)`,
                     conversationId,
                 });
                 setLocalLinkedDealId(dealId);
@@ -564,7 +564,7 @@ function PanelContent({
                         appliedPayload: { dealId, title: prefill.titulo, stage: "qualification" },
                     });
                 } catch { /* auditoria nunca quebra o fluxo */ }
-                toast.success("EVA adicionou ao pipeline", {
+                toast.success("Lume adicionou ao pipeline", {
                     description: prefill.titulo,
                     action: { label: "Abrir", onClick: () => navigate(`/deals/${dealId}`) },
                 });
@@ -590,7 +590,7 @@ function PanelContent({
         window.dispatchEvent(new CustomEvent("vyzon:open-nova-oportunidade"));
     };
 
-    // Nível 2 do upgrade de confiança: a EVA cria o card com 1 clique
+    // Nível 2 do upgrade de confiança: a Lume cria o card com 1 clique
     // (mini-confirma), reusando a mesma criação do modo híbrido, mas disparada
     // pelo humano. Registra como sugestão aceita (alimenta o score do Studio).
     const handleQuickCreate = async () => {
@@ -604,7 +604,7 @@ function PanelContent({
                 phone: prefill.clienteTelefone || null,
                 value: prefill.valorEstimado ?? undefined,
                 leadSource: "whatsapp",
-                notes: `${prefill.observacoes} (Adicionado ao pipeline pela EVA, confirmado por você.)`,
+                notes: `${prefill.observacoes} (Adicionado ao pipeline pela Lume, confirmado por você.)`,
                 conversationId,
             });
             setLocalLinkedDealId(dealId);
@@ -659,7 +659,7 @@ function PanelContent({
         : !insight.hasAnalysis
         ? "Ainda não leu esta conversa"
         : insight.isStaleByContext
-        ? "O contexto da EVA mudou"
+        ? "O contexto da Lume mudou"
         : insight.isStaleByMessages
         ? "Pode estar desatualizada"
         : insight.lastAnalyzedAt
@@ -714,9 +714,9 @@ function PanelContent({
             >
                 {/* Linha 1 — identidade + ações */}
                 <div className="flex items-center gap-3">
-                    <EvaBot state={insight.analyzing ? "thinking" : "idle"} size={36} className="shrink-0" label="EVA Comercial" />
+                    <EvaBot state={insight.analyzing ? "thinking" : "idle"} size={36} className="shrink-0" label="Lume Comercial" />
                     <p className="flex-1 min-w-0 truncate text-[14px] font-semibold leading-tight text-[var(--vyz-text-primary)]">
-                        EVA
+                        Lume
                     </p>
                     {insight.hasAnalysis && !insight.analyzing && (
                         <button
@@ -751,7 +751,7 @@ function PanelContent({
                     {insight.remaining !== null && insight.remaining <= 10 && (
                         <span
                             className="inline-flex items-center gap-1 text-[11.5px] px-1.5 py-0.5 rounded shrink-0 tabular-nums"
-                            title={`Restam ${insight.remaining} de ${insight.dailyLimit ?? "—"} análises da EVA hoje`}
+                            title={`Restam ${insight.remaining} de ${insight.dailyLimit ?? "—"} análises da Lume hoje`}
                             style={{
                                 background: insight.remaining <= 3 ? "rgba(220,38,38,0.10)" : "rgba(245,158,11,0.12)",
                                 color: insight.remaining <= 3 ? "#DC2626" : "#B45309",
@@ -1050,7 +1050,7 @@ function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
         <div className="flex flex-col items-center justify-center text-center py-8 px-2">
             <EvaBot state="idle" size={56} className="mb-4" />
             <p className="text-[13.5px] font-semibold mb-2" style={{ color: "#0F1730" }}>
-                A EVA ainda não analisou esta conversa.
+                A Lume ainda não analisou esta conversa.
             </p>
             <p
                 className="text-[11.5px] mb-5"
@@ -1067,7 +1067,7 @@ function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
                 Ler esta conversa
             </button>
             <p className="text-[10.5px] mt-3" style={{ color: "#94A3B8", lineHeight: 1.5, maxWidth: "260px" }}>
-                A EVA sugere; nada sai para o cliente sem o seu ok.
+                A Lume sugere; nada sai para o cliente sem o seu ok.
             </p>
         </div>
     );
@@ -1085,7 +1085,7 @@ function StaleBadge({
     label: string;
 }) {
     const title =
-        stale === "context" ? "O contexto da EVA mudou" : "Pode estar desatualizada";
+        stale === "context" ? "O contexto da Lume mudou" : "Pode estar desatualizada";
     const description =
         stale === "context"
             ? "Reanalise para usar as informações mais recentes da operação."
@@ -1151,13 +1151,13 @@ function RealContent({
     dealState: CrmDealState;
     onSendReply?: (text: string) => Promise<void>;
     createNudge?: JSX.Element | null;
-    /** Analytics da EVA — registra o desfecho (accepted/adjusted) da sugestão
+    /** Analytics da Lume — registra o desfecho (accepted/adjusted) da sugestão
      *  quando o humano usa a resposta. Best-effort, nunca quebra a UI. */
     onResolveSuggestion?: (status: "accepted" | "adjusted", finalText: string) => void | Promise<void>;
     onUseReply?: (text: string) => void;
 }) {
     const { analysis, qualification, legacy } = insight;
-    const summary = analysis.sentiment || "Análise da EVA disponível.";
+    const summary = analysis.sentiment || "Análise da Lume disponível.";
     // EVA.AUTO.1 — leitura feita automaticamente no 1º contato (carimbo do
     // modo serviço). Some quando o humano reanalisa manualmente.
     const autoQualified = Boolean((analysis as { auto_qualified?: boolean }).auto_qualified);
@@ -1191,7 +1191,7 @@ function RealContent({
 
     return (
         <Stack className="space-y-4" {...(stackProps as object)}>
-            {/* EVA.AUTO.1 — atribuição: a EVA leu sozinha quando o lead chegou */}
+            {/* EVA.AUTO.1 — atribuição: a Lume leu sozinha quando o lead chegou */}
             {autoQualified && (
                 <RevealItem
                     className="flex items-center gap-2 px-3 py-2 rounded-lg"
@@ -1199,7 +1199,7 @@ function RealContent({
                 >
                     <EvaBot size={16} still />
                     <p className="text-[11.5px] font-medium" style={{ color: "#6D28D9", lineHeight: 1.4 }}>
-                        A EVA leu esta conversa sozinha quando o lead chegou.
+                        A Lume leu esta conversa sozinha quando o lead chegou.
                     </p>
                 </RevealItem>
             )}
@@ -1237,7 +1237,7 @@ function RealContent({
                         // Fio roxo de 2px no topo: no meio de um painel todo
                         // branco, é o que diz "a decisão é aqui" antes de a
                         // pessoa ler qualquer palavra. Roxo só como acento,
-                        // igual à EVA logo abaixo.
+                        // igual à Lume logo abaixo.
                         borderTop: "2px solid #6D28D9",
                         boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 14px 36px -18px rgba(109,40,217,0.28)",
                     }}
@@ -1288,7 +1288,7 @@ function RealContent({
                     <RecommendationCallout
                         icon={UserCog}
                         tone="amber"
-                        title="A EVA sugere passar para um vendedor"
+                        title="A Lume sugere passar para um vendedor"
                         body="Esta conversa pede atenção de alguém do time antes da próxima resposta."
                     />
                 </RevealItem>
@@ -1330,7 +1330,7 @@ function RealContent({
 
                 {gaps.length > 0 && (
                     <DossierCard>
-                        <DossierRow title="O que deixa a EVA mais afiada" count={gaps.length}>
+                        <DossierRow title="O que deixa a Lume mais afiada" count={gaps.length}>
                             <KnowledgeGapsList gaps={gaps} />
                         </DossierRow>
                     </DossierCard>
@@ -1354,10 +1354,10 @@ function RealContent({
                 </DossierCard>
             </RevealItem>
 
-            {/* As regras do EVA Studio saíram daqui (2026-08-24): são iguais em
+            {/* As regras do Lume Studio saíram daqui (2026-08-24): são iguais em
                 toda conversa, então ocupavam o fim do painel repetindo a mesma
-                coisa a cada lead. Continuam visíveis no EVA Studio e no
-                DealCommandCenter, onde a pergunta é sobre a EVA e não sobre
+                coisa a cada lead. Continuam visíveis no Lume Studio e no
+                DealCommandCenter, onde a pergunta é sobre a Lume e não sobre
                 este lead. */}
         </Stack>
     );
@@ -1549,7 +1549,7 @@ function QualificationBlock({ qualification }: { qualification: Qualification })
                 className="text-[10.5px] uppercase mb-2.5"
                 style={{ color: "#64748B", fontWeight: 700, letterSpacing: "0.08em" }}
             >
-                Por que a EVA leu assim
+                Por que a Lume leu assim
             </p>
             {qualification.score_justificativa && (
                 <p className="text-[11.5px] mb-3" style={{ color: "#475569", lineHeight: 1.55 }}>
@@ -1704,7 +1704,7 @@ function SuggestedReply({
     onSend?: (text: string) => Promise<void>;
     onUseReply?: (text: string) => void;
     hasAction?: boolean;
-    /** Analytics da EVA — registra accepted (copiou/enviou sem editar) ou
+    /** Analytics da Lume — registra accepted (copiou/enviou sem editar) ou
      *  adjusted (editou o texto antes). Best-effort, nunca quebra o fluxo. */
     onResolveSuggestion?: (status: "accepted" | "adjusted", finalText: string) => void | Promise<void>;
 }) {
@@ -1712,8 +1712,8 @@ function SuggestedReply({
     const [sending, setSending] = useState(false);
     const display = edited ?? text;
 
-    // Analytics: a EVA apresentou uma resposta sugerida. Marca o evento e prioriza
-    // a gravação da sessão (momento de valor da EVA).
+    // Analytics: a Lume apresentou uma resposta sugerida. Marca o evento e prioriza
+    // a gravação da sessão (momento de valor da Lume).
     useEffect(() => {
         if (!text) return;
         trackBehavior(DEMO_EVENTS.EVA_SUGGESTION_SHOWN, {});
@@ -1937,9 +1937,9 @@ function KnowledgeGapsList({ gaps }: { gaps: KnowledgeGap[] }) {
     };
     return (
         <div>
-            {/* Enquadramento: insumo pra afinar a EVA, não erro. */}
+            {/* Enquadramento: insumo pra afinar a Lume, não erro. */}
             <p className="text-[11.5px] mb-2.5" style={{ color: "#64748B", lineHeight: 1.5 }}>
-                A EVA ainda não sabe isso sobre a sua empresa. Ela aprende com as próximas conversas.
+                A Lume ainda não sabe isso sobre a sua empresa. Ela aprende com as próximas conversas.
             </p>
             <ul className="space-y-2">
                 {gaps.map((g, i) => (
@@ -1986,7 +1986,7 @@ function KnowledgeGapsList({ gaps }: { gaps: KnowledgeGap[] }) {
 /**
  * F6T.3 — Marcadores comerciais (tags F6T.1) associados à conversa e/ou ao
  * deal vinculado. Read-only, dedupe por id. Deixa explícito que são marcadores
- * do time, não aplicados pela EVA (critério: EVA não aplica tags sozinha).
+ * do time, não aplicados pela Lume (critério: Lume não aplica tags sozinha).
  */
 function EvaTagsSection({
     conversationId,
@@ -2036,7 +2036,7 @@ function EvaTagsSection({
                 className="text-[10.5px] mt-2"
                 style={{ color: "#94A3B8", lineHeight: 1.4 }}
             >
-                Marcadores aplicados pelo time. A EVA não aplica tags sozinha.
+                Marcadores aplicados pelo time. A Lume não aplica tags sozinha.
             </p>
         </DossierRow>
         </DossierCard>

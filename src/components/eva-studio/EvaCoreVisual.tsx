@@ -1,5 +1,5 @@
-// EVA.STUDIO.1.1 — EvaCoreVisual (light, reativo ao estado da EVA)
-// A EVA como entidade abstrata: núcleo vivo de plasma/energia, NÃO um avatar.
+// EVA.STUDIO.1.1 — EvaCoreVisual (light, reativo ao estado da Lume)
+// A Lume como entidade abstrata: núcleo vivo de plasma/energia, NÃO um avatar.
 // Protagonista visual: glow amplo e suave, anéis visíveis, linhas CURVAS de
 // conexão, breathing lento. Reage ao estado: idle · analyzing · configuring ·
 // ready · attention. CSS + SVG inline (sem imagem/canvas/three/lottie/neon/
@@ -43,7 +43,7 @@ export const EvaCoreVisual = ({ className = "", state = "idle", showStatus = tru
             style={{ aspectRatio: "1 / 1" }}
             data-eva-state={state}
             role="img"
-            aria-label={`Núcleo de inteligência da EVA — estado: ${state}`}
+            aria-label={`Núcleo de inteligência da Lume — estado: ${state}`}
         >
             <style>{`
                 @keyframes evaMorphA {

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import "./evaBot.css";
 
-// A EVA como bot montado por peças: corpo, topo, olhos e cor. O padrão é a
+// A Lume como bot montado por peças: corpo, topo, olhos e cor. O padrão é a
 // cápsula azul com placa solar. Desenho e loops em CSS; aqui fica só o que precisa
 // de JS: encaixe no tamanho, olhos seguindo o ponteiro e o pulinho de troca de estado.
 //   idle      esperando, respira, pisca e olha em volta (sorri com o mouse em cima)
@@ -138,7 +138,7 @@ export function EvaBot({
         );
     }, [state, still]);
 
-    // Olhos seguindo o ponteiro, com atraso suave. Só roda enquanto a EVA está
+    // Olhos seguindo o ponteiro, com atraso suave. Só roda enquanto a Lume está
     // visível, em tela com mouse, e solta o olhar 2,5 s depois do mouse parar.
     useEffect(() => {
         const el = rootRef.current;
@@ -259,7 +259,7 @@ export function EvaBot({
 
 export type EvaBotStep = { state: EvaBotState; text: string };
 
-/** A EVA passando pelo trabalho dela, com a legenda de cada estado. Só anda
+/** A Lume passando pelo trabalho dela, com a legenda de cada estado. Só anda
  *  enquanto está na tela; com movimento reduzido, fica no primeiro passo. */
 export function EvaBotStage({ steps, size = 120, interval = 2400, renderText }: {
     steps: EvaBotStep[];

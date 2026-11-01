@@ -7,7 +7,7 @@ import { useWhatsappStatus, whatsappStatusKey } from "@/hooks/useWhatsappStatus"
 import "./whatsappStatus.css";
 
 // Pílula do topo do app com o estado real do WhatsApp. A queda do número é o que
-// mais custa ao dono sem ele perceber: a retomada da EVA não chega, a prospecção
+// mais custa ao dono sem ele perceber: a retomada da Lume não chega, a prospecção
 // para e as respostas dos clientes não entram. Em 16/10/2026 o chip caiu às 11h40
 // e só foi notado às 12h25. Referência visual: "Up to date" da bluma.design.
 
@@ -54,7 +54,7 @@ export function WhatsappStatusPill({ soProblema = false }: { soProblema?: boolea
     const titulo = estado === "conectado"
         ? [data.numero ? `Número ${data.numero}` : "", quando && quando !== "agora" ? `conectado ${quando}` : "", conferido].filter(Boolean).join(" · ")
         : estado === "desconectado"
-            ? `A EVA não manda retomada, a prospecção para e as respostas não chegam até reconectar. ${conferido}`.trim()
+            ? `A Lume não manda retomada, a prospecção para e as respostas não chegam até reconectar. ${conferido}`.trim()
             : conferido;
 
     return (

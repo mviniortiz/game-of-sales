@@ -29,8 +29,8 @@ import {
 // Hoje (/inicio) — responde o que o dono faz agora (redesenhada em 01/11/2026).
 //
 // Palco amarelo com o rascunho que espera o 1 (PalcoEva), a fila do dia
-// (PedemVoce) e, à direita, o dinheiro parado, a agenda e a EVA em 30 dias. O
-// mês, o funil e o tempo de resposta moram em Resultados; o diário, na aba EVA.
+// (PedemVoce) e, à direita, o dinheiro parado, a agenda e a Lume em 30 dias. O
+// mês, o funil e o tempo de resposta moram em Resultados; o diário, na aba Lume.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getHourlyGreeting(hour: number): string {
@@ -170,8 +170,8 @@ const Inicio = () => {
                             </div>
                         )}
                     </section>
-                    <section className="vp-cartao" aria-label="A EVA nos últimos 30 dias">
-                        <div className="vp-rotulo">A EVA em 30 dias</div>
+                    <section className="vp-cartao" aria-label="A Lume nos últimos 30 dias">
+                        <div className="vp-rotulo">A Lume em 30 dias</div>
                         <div className="vp-placar">
                             <div>
                                 <b>{qt?.recovered_count ?? 0}</b>

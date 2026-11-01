@@ -35,7 +35,7 @@ export interface PipelineDealContext {
     qualification: Qualification | null;
     temperature: EvaTemperature;
     proximaAcao: string | null;
-    /** EVA stale por mensagens novas (last_message_at > analyzed_at) */
+    /** Lume stale por mensagens novas (last_message_at > analyzed_at) */
     isStale: boolean;
     /** True quando há análise persistida útil */
     hasAnalysis: boolean;

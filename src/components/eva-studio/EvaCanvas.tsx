@@ -1,23 +1,23 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// EvaCanvas (EVA.CANVAS.3 "O dia da EVA", 2026-07-06) — o EVA Studio depois da
+// EvaCanvas (EVA.CANVAS.3 "O dia da Lume", 2026-07-06) — o Lume Studio depois da
 // ativação. Feedback do Markus na v2 (mapa de 4 blocos no meio): "o usuário não
 // vai entender o que tá acontecendo". Resposta: o protagonista agora é o
-// TRABALHO da EVA (feed real de agent_suggestions — leituras, sugestões,
+// TRABALHO da Lume (feed real de agent_suggestions — leituras, sugestões,
 // cards criados, aprovações), e a anatomia do agente vira um rail compacto à
 // esquerda (Escuta → Sabe → Regras → Entrega) com estado ✓/falta.
 //
 //   ┌ rail: quem é o agente ┬ feed: o que ele fez hoje ┐
 //   │ orb + ativa + prontidão│ 09:42 Marina · sugeri…  │
 //   │ mapa vertical 4 blocos │ 10:15 card no pipeline ✓│
-//   │ [Ver a EVA decidir]    │ 2 aguardando você → Inbox│
+//   │ [Ver a Lume decidir]    │ 2 aguardando você → Inbox│
 //   └────────────────────────┴─────────────────────────┘
 //
 // Blocos abrem MODAL CENTRAL com os editores que já existiam (nada de motor
-// novo). Test-run "Ver a EVA decidir" percorre o rail com um momento REAL das
+// novo). Test-run "Ver a Lume decidir" percorre o rail com um momento REAL das
 // conversas (useEvaReplayMoments) e o desfecho entra no topo do feed no padrão
 // aprovar-e-enviar; "Mandaria assim" grava julgamento.
 //
-// Privacidade: o feed mostra a LEITURA da EVA (proxima_acao, título do card),
+// Privacidade: o feed mostra a LEITURA da Lume (proxima_acao, título do card),
 // nunca a mensagem crua do lead.
 // Jornada (Criar→Ensinar→Provar→Ativar) segue sendo o first-run em EvaStudio.tsx.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -253,7 +253,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                         {/* Prontidão */}
                         <div className="mt-4">
                             <div className="flex items-center justify-between" style={{ fontSize: 11.5, color: SUB }}>
-                                <span>Prontidão da EVA</span>
+                                <span>Prontidão da Lume</span>
                                 <span style={{ fontWeight: 700, color: INK }}>{props.approval.score}%</span>
                             </div>
                             <div className="mt-1.5 h-1.5 overflow-hidden rounded-full" style={{ background: "rgba(11,18,32,0.07)" }}>
@@ -385,7 +385,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                     {runStep >= 4 && runMoment && (
                         <div className="vz-canvas-trace mb-5 rounded-2xl p-5" style={{ ...cardSoft, borderColor: "rgba(21,86,192,0.35)" }}>
                             <p style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: PURPLE }}>
-                                Sugestão da EVA · aguardando você
+                                Sugestão da Lume · aguardando você
                             </p>
                             <p className="mt-3" style={{ fontSize: 12.5, color: SUB }}>
                                 {runMoment.leadName} disse: “{runMoment.leadMessage}”
@@ -504,7 +504,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                 >
                     {modal === "escuta" && (
                         <ModalFrame icon={AudioLines} kicker="Entrada" title="O que ela escuta"
-                            desc="Os canais e sinais que alimentam a leitura da EVA. Ela só escuta o que estiver conectado.">
+                            desc="Os canais e sinais que alimentam a leitura da Lume. Ela só escuta o que estiver conectado.">
                             <div className="space-y-2.5">
                                 {props.sources.map((s) => (
                                     <div key={s.key} className="rounded-xl border px-4 py-3.5" style={{ borderColor: HAIR }}>
@@ -530,7 +530,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
 
                     {modal === "sabe" && sabeView === "hub" && (
                         <ModalFrame icon={BookOpen} kicker="Conhecimento" title="O que ela sabe"
-                            desc="Tudo que a EVA usa pra sugerir vem daqui. Você aprova cada coisa que entra.">
+                            desc="Tudo que a Lume usa pra sugerir vem daqui. Você aprova cada coisa que entra.">
                             {/* 1 · O que já está na cabeça dela */}
                             <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MUTE }}>
                                 Na cabeça dela hoje
@@ -617,7 +617,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                                     className="rounded-xl border px-4 py-3.5 text-left transition-colors hover:bg-black/[0.02]"
                                     style={{ borderColor: HAIR }}
                                 >
-                                    <span className="block" style={{ fontSize: 13.5, fontWeight: 600 }}>Conversar com a EVA</span>
+                                    <span className="block" style={{ fontSize: 13.5, fontWeight: 600 }}>Conversar com a Lume</span>
                                     <span className="block" style={{ fontSize: 12, color: SUB }}>Ela pergunta, você responde. O jeito mais fácil.</span>
                                 </button>
                                 <button
@@ -645,7 +645,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                                 O que ela sabe
                             </button>
                             <DialogTitle style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.01em", color: INK }}>
-                                {sabeView === "revisar" ? "Revisar o que ela extraiu" : sabeView === "conversar" ? "Conversar com a EVA" : "Colar um texto"}
+                                {sabeView === "revisar" ? "Revisar o que ela extraiu" : sabeView === "conversar" ? "Conversar com a Lume" : "Colar um texto"}
                             </DialogTitle>
                             <div className="mt-4">
                                 {sabeView === "revisar" && (
@@ -676,7 +676,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                                 {sabeView === "colar" && (
                                     <div>
                                         <p style={{ fontSize: 13, color: SUB, lineHeight: 1.55 }}>
-                                            Cole qualquer texto seu: proposta, página do site, pitch, FAQ. A EVA extrai os
+                                            Cole qualquer texto seu: proposta, página do site, pitch, FAQ. A Lume extrai os
                                             fatos e devolve como sugestões pra você carimbar — nada entra direto.
                                         </p>
                                         <textarea
@@ -699,7 +699,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                                                 className="inline-flex h-9 items-center rounded-full px-4 disabled:opacity-45"
                                                 style={{ background: "#080808", color: "#fff", fontSize: 13, fontWeight: 600 }}
                                             >
-                                                Enviar pra EVA extrair
+                                                Enviar pra Lume extrair
                                             </button>
                                         </div>
                                     </div>
@@ -710,11 +710,11 @@ export function EvaCanvas(props: EvaCanvasProps) {
 
                     {modal === "regras" && (
                         <ModalFrame icon={ShieldCheck} kicker="Limites" title="Regras do jogo"
-                            desc="Até onde a EVA vai sozinha. Mensagem pro lead, nunca: isso é sempre aprovar-e-enviar.">
+                            desc="Até onde a Lume vai sozinha. Mensagem pro lead, nunca: isso é sempre aprovar-e-enviar.">
                             <div className="rounded-xl border px-4 py-3.5" style={{ borderColor: HAIR }}>
                                 <p style={{ fontSize: 13.5, fontWeight: 600 }}>Mensagem de saída: sempre com você</p>
                                 <p className="mt-1" style={{ fontSize: 12.5, color: SUB, lineHeight: 1.5 }}>
-                                    Nenhum agente envia mensagem sozinho. A EVA prepara, você aprova. Isso não é configurável, é o princípio do produto.
+                                    Nenhum agente envia mensagem sozinho. A Lume prepara, você aprova. Isso não é configurável, é o princípio do produto.
                                 </p>
                             </div>
                             <div className="mt-2.5 flex items-start gap-4 rounded-xl border px-4 py-3.5" style={{ borderColor: HAIR }}>
@@ -774,7 +774,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                     )}
 
                     {modal === "memoria" && (
-                        <ModalFrame icon={BookOpen} kicker="Bastidores" title="Memória da EVA"
+                        <ModalFrame icon={BookOpen} kicker="Bastidores" title="Memória da Lume"
                             desc="Tudo que ela sabe e de onde veio.">
                             <EvaMemoryView memory={props.memory} loading={props.memoryLoading} />
                         </ModalFrame>
@@ -782,14 +782,14 @@ export function EvaCanvas(props: EvaCanvasProps) {
 
                     {modal === "insights" && (
                         <ModalFrame icon={ShieldCheck} kicker="Bastidores" title="Insights"
-                            desc="O que dá pra melhorar, na leitura da própria EVA.">
+                            desc="O que dá pra melhorar, na leitura da própria Lume.">
                             {props.insightsContent}
                         </ModalFrame>
                     )}
 
                     {modal === "julgar" && (
-                        <ModalFrame icon={ShieldCheck} kicker="Casos reais" title="Julgar as respostas da EVA"
-                            desc="Momentos reais das suas conversas: diga se a EVA mandou bem. É assim que ela aprende os seus limites.">
+                        <ModalFrame icon={ShieldCheck} kicker="Casos reais" title="Julgar as respostas da Lume"
+                            desc="Momentos reais das suas conversas: diga se a Lume mandou bem. É assim que ela aprende os seus limites.">
                             <GuidedSimulationReplay
                                 hideHeader
                                 hasReplays={props.moments.length > 0}

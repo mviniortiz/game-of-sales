@@ -50,7 +50,7 @@ export default function UpgradeLock() {
                     className="text-center mb-10 max-w-lg"
                 >
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2.5" style={{ color: "#0F1730" }}>
-                        Assine para a EVA agir
+                        Assine para a Lume agir
                     </h1>
                     <p className="text-[15px] leading-relaxed" style={{ color: "#64748B" }}>
                         O Raio-X das propostas paradas é grátis. O aviso no 2º dia, as

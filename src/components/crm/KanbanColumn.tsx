@@ -174,7 +174,7 @@ export const KanbanColumn = memo(({
                     <p className={`text-[10.5px] text-center leading-relaxed ${isOver ? "text-[var(--vyz-accent)] font-medium" : "text-muted-foreground/60"}`}>
                       {isOver
                         ? "Solte aqui"
-                        : "Arraste um card pra cá. A EVA também move quando a conversa avança."}
+                        : "Arraste um card pra cá. A Lume também move quando a conversa avança."}
                     </p>
                   </div>
                 ) : (

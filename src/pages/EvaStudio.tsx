@@ -1,12 +1,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// EVA Studio (EVA.CANVAS.2 integrado, 2026-07-06) — a página tem DOIS estados:
+// Lume Studio (EVA.CANVAS.2 integrado, 2026-07-06) — a página tem DOIS estados:
 //
 //   1. Agente ainda não ativado → jornada (EvaStudioJourney): Criar → Ensinar →
 //      Provar → Ativar. O first-run guiado continua igual.
 //   2. Agente ativado (eva_blueprints.status = approved_assisted) → EvaCanvas:
 //      o agente como mapa vivo de anatomia fixa (Escuta → Sabe → Regras →
 //      Entrega). Cada bloco abre em modal o editor que já existia; o test-run
-//      "Ver a EVA decidir" percorre os blocos com um momento REAL das conversas
+//      "Ver a Lume decidir" percorre os blocos com um momento REAL das conversas
 //      e o julgamento grava (mesmo caminho do Provar).
 //
 // Dados reais (iguais nos dois estados):
@@ -14,7 +14,7 @@
 //   Provar/Test-run → useEvaReplayMoments (momentos reais) + eva_simulation_results
 //   Regras → useEvaMemory (regras aprendidas) + useHybridAutoCreate
 //   Entrega → EvaAnalyticsPanel (edge eva-analytics-summary)
-//   Ativar → approveAssisted (gateia a EVA no Inbox)
+//   Ativar → approveAssisted (gateia a Lume no Inbox)
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -37,7 +37,7 @@ import { EvaAnalyticsPanel } from "@/components/eva-studio/EvaAnalyticsPanel";
 import type { AgentSourceInfo } from "@/components/eva-studio/AgentPurposeCreate";
 import type { LabJudgment, LabScenario } from "@/components/eva-studio/SimulationLab";
 
-// Fontes que alimentam a EVA — compartilhadas pela jornada (Criar) e pelo
+// Fontes que alimentam a Lume — compartilhadas pela jornada (Criar) e pelo
 // canvas (bloco "O que ela escuta").
 const SOURCES: AgentSourceInfo[] = [
     { key: "whatsapp", name: "Conversas do WhatsApp", detail: "O que os leads pedem, como falam e onde travam.", available: true, stateLabel: "conectado" },
@@ -106,7 +106,7 @@ export default function EvaStudio() {
         catch (e) { toast.error(`Não consegui processar: ${String((e as Error)?.message ?? e)}`); }
     };
     const handleJudge = async (moment: Parameters<typeof replay.judge>[0], judgment: Parameters<typeof replay.judge>[1]) => {
-        if (!requireEdit("Apenas administradores avaliam a EVA.")) return;
+        if (!requireEdit("Apenas administradores avaliam a Lume.")) return;
         try { await replay.judge(moment, judgment); }
         catch (e) { toast.error(`Não consegui salvar: ${String((e as Error)?.message ?? e)}`); }
     };
@@ -121,7 +121,7 @@ export default function EvaStudio() {
         try {
             await hybrid.setAutoCreate(v);
             toast.success(v
-                ? "Modo híbrido ligado: a EVA cria a oportunidade ao qualificar."
+                ? "Modo híbrido ligado: a Lume cria a oportunidade ao qualificar."
                 : "Modo híbrido desligado: criação volta a ser manual.");
         } catch (e) {
             toast.error(`Não consegui salvar: ${String((e as Error)?.message ?? e)}`);
@@ -130,7 +130,7 @@ export default function EvaStudio() {
 
     // ── Julgamento do Campo de Provas → eva_simulation_results (lab:*) ──
     const handleLabJudge = async (s: LabScenario, j: LabJudgment) => {
-        if (!requireEdit("Apenas administradores avaliam a EVA.")) return;
+        if (!requireEdit("Apenas administradores avaliam a Lume.")) return;
         try {
             await saveSim({
                 scenarioId: `lab:${s.id}`,
@@ -152,7 +152,7 @@ export default function EvaStudio() {
         );
     }
 
-    // ── Aba EVA: visão geral com o agente ativo; o Studio abre em "Ajustar a EVA" ──
+    // ── Aba Lume: visão geral com o agente ativo; o Studio abre em "Ajustar a Lume" ──
     if (isApproved && !ajustando) {
         return <EvaVisaoGeral aprendeu={ctxBuilder.suggestions[0] ?? null} aoResolver={handleResolve} />;
     }
@@ -163,7 +163,7 @@ export default function EvaStudio() {
             <div className="w-full">
                 {!canEdit && (
                     <p className="text-[11.5px] px-6 pt-4" style={{ color: "#94A3B8" }}>
-                        Modo leitura — apenas administradores editam a EVA.
+                        Modo leitura — apenas administradores editam a Lume.
                     </p>
                 )}
                 <EvaCanvas
@@ -198,7 +198,7 @@ export default function EvaStudio() {
         <div className="mx-auto w-full max-w-[1400px]">
             {!canEdit && (
                 <p className="text-[11.5px] px-6 pt-4" style={{ color: "#94A3B8" }}>
-                    Modo leitura — apenas administradores editam a EVA.
+                    Modo leitura — apenas administradores editam a Lume.
                 </p>
             )}
             <EvaStudioJourney
@@ -212,7 +212,7 @@ export default function EvaStudio() {
                 ]}
                 sources={SOURCES}
                 onCreate={async () => {
-                    if (!requireEdit("Apenas administradores criam a EVA.")) return;
+                    if (!requireEdit("Apenas administradores criam a Lume.")) return;
                     try { await save({ ...initial, status: "draft" }); toast.success("Agente criado. Agora me ensine o seu negócio."); }
                     catch (e) { toast.error(`Não consegui criar: ${String((e as Error)?.message ?? e)}`); }
                 }}
@@ -231,8 +231,8 @@ export default function EvaStudio() {
                 onRegenerateReplays={handleRegenerateReplays}
                 regeneratingReplays={replay.regenerating}
                 onActivate={async () => {
-                    if (!requireEdit("Apenas administradores aprovam a EVA.")) return;
-                    try { await approveAssisted(initial); setApprovedNow(true); toast.success("EVA aprovada para uso assistido. Ela já sugere no Inbox."); }
+                    if (!requireEdit("Apenas administradores aprovam a Lume.")) return;
+                    try { await approveAssisted(initial); setApprovedNow(true); toast.success("Lume aprovada para uso assistido. Ela já sugere no Inbox."); }
                     catch (e) { toast.error(`Não consegui aprovar: ${String((e as Error)?.message ?? e)}`); }
                 }}
                 memoryContent={<EvaMemoryView memory={memory} loading={memoryLoading} />}

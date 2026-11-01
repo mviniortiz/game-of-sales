@@ -1,5 +1,5 @@
 // MonthCard — o mês em reais: quanto fechou, quanto falta pra meta (um traço por
-// trinta avos da meta, sem barra abstrata) e o que a EVA trouxe de volta. Cada
+// trinta avos da meta, sem barra abstrata) e o que a Lume trouxe de volta. Cada
 // linha diz o próprio período: o fechado é do mês; o placar de orçamentos cobre
 // os orçamentos enviados nos últimos 30 dias.
 import { Link } from "react-router-dom";

@@ -1,5 +1,5 @@
-// A aba EVA: o que ela fez, o que aprendeu e até onde vai. O ajuste fino (ensinar,
-// provar, regras) continua no EVA Studio, um clique adiante.
+// A aba Lume: o que ela fez, o que aprendeu e até onde vai. O ajuste fino (ensinar,
+// provar, regras) continua no Lume Studio, um clique adiante.
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Check } from "@phosphor-icons/react";
@@ -11,7 +11,7 @@ import { useQuoteBoard } from "@/hooks/useQuoteBoard";
 import { OPEN_QUOTE_STATES } from "@/lib/quoteText";
 import { useReducedMotion } from "@/vendor/stageshow/reduced-motion";
 
-// Enquanto a aba está aberta a EVA mostra o que sabe fazer, do jeito do palco da home.
+// Enquanto a aba está aberta a Lume mostra o que sabe fazer, do jeito do palco da home.
 const CICLO: EvaBotState[] = ["idle", "thinking", "alert", "talking", "happy"];
 
 export function EvaVisaoGeral({
@@ -43,17 +43,17 @@ export function EvaVisaoGeral({
         <div className="vp-tela">
             <header className="vp-cabeca">
                 <div>
-                    <h1 className="vp-titulo">EVA</h1>
+                    <h1 className="vp-titulo">Lume</h1>
                     <p className="vp-sub">O que ela faz, o que ela sabe e até onde vai</p>
                 </div>
                 <Link to="/eva-studio?ajustar=1" className="vp-botao vp-botao--quieto">
-                    Ajustar a EVA
+                    Ajustar a Lume
                     <ArrowRight size={14} weight="bold" aria-hidden />
                 </Link>
             </header>
 
             <div className="vp-eva">
-                <section className="vp-eva__palco" aria-label="O trabalho da EVA">
+                <section className="vp-eva__palco" aria-label="O trabalho da Lume">
                     <div className="vp-eva__bot">
                         <EvaBot size={300} state={reduzido ? "idle" : CICLO[i]} />
                     </div>

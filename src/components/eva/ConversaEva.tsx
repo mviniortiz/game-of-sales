@@ -1,4 +1,4 @@
-// Balões da conversa com a EVA nas telas de primeiros passos e do Raio-X
+// Balões da conversa com a Lume nas telas de primeiros passos e do Raio-X
 // automático. "bloco" é um cartão solto no meio da conversa (ex.: o placar).
 import type { ReactNode } from "react";
 import { EvaBot } from "@/components/eva/EvaBot";

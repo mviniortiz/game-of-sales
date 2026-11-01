@@ -1,13 +1,13 @@
 import { BookOpen, Package, Target, MessageCircle, Ban, ArrowRight } from "lucide-react";
 
 // LP.1 2026-05-25: seção repurposed de "Ligações no CRM" para "Base de
-// Conhecimento" (ensinar a EVA como a agência vende). Export/prop mantidos
+// Conhecimento" (ensinar a Lume como a agência vende). Export/prop mantidos
 // (LigacoesSection / onSeePlansClick) pra não tocar imports da LandingPage.
 const KB_CARDS = [
     { icon: Package, title: "Serviços e ofertas", desc: "O que sua agência vende e para quem." },
     { icon: Target, title: "ICP e qualificação", desc: "Quem é bom fit e quem não vale o esforço." },
     { icon: MessageCircle, title: "Objeções e respostas", desc: "Como responder preço, timing, confiança e comparação." },
-    { icon: Ban, title: "Promessas proibidas", desc: "O que a EVA nunca deve sugerir." },
+    { icon: Ban, title: "Promessas proibidas", desc: "O que a Lume nunca deve sugerir." },
 ] as const;
 
 type Props = { onSeePlansClick: () => void };
@@ -28,12 +28,12 @@ export const LigacoesSection = ({ onSeePlansClick }: Props) => (
                     className="font-satoshi mb-4"
                     style={{ fontWeight: 700, fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)", lineHeight: 1.1, letterSpacing: "-0.04em", color: "#0A0A0A" }}
                 >
-                    Ensine a EVA <span className="text-blue-700">como sua agência vende.</span>
+                    Ensine a Lume <span className="text-blue-700">como sua agência vende.</span>
                 </h2>
 
                 <p className="max-w-xl mx-auto" style={{ fontSize: "1.0625rem", color: "rgba(10,10,10,0.5)" }}>
                     Adicione scripts, FAQs, serviços, objeções, tom de voz e playbooks.
-                    A EVA transforma esse material em sugestões de contexto para sua aprovação.
+                    A Lume transforma esse material em sugestões de contexto para sua aprovação.
                 </p>
             </div>
 
@@ -60,7 +60,7 @@ export const LigacoesSection = ({ onSeePlansClick }: Props) => (
 
             <div className="text-center">
                 <p className="text-xs mb-4" style={{ fontWeight: 500, color: "rgba(10,10,10,0.65)" }}>
-                    Nada entra no contexto da EVA sem aprovação humana.
+                    Nada entra no contexto da Lume sem aprovação humana.
                 </p>
                 <button
                     onClick={onSeePlansClick}

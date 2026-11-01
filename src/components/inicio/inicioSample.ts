@@ -10,7 +10,7 @@ const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString
 export const AGORA_SAMPLE_PRIORITIES: DailyPriority[] = [
     {
         id: "s1", title: "Responda Carla Ribeiro agora", description: "Última mensagem recebida há 54h.",
-        reason: "Alta intenção segundo a EVA, sem resposta", priority: "critical", actionLabel: "Abrir conversa",
+        reason: "Alta intenção segundo a Lume, sem resposta", priority: "critical", actionLabel: "Abrir conversa",
         href: "/inbox", source: "conversation", conversationId: "c-p1", contactName: "Carla Ribeiro",
         createdAt: hoursAgo(54), chatJid: "5521999990001@s.whatsapp.net",
     },

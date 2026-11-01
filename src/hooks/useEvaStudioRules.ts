@@ -1,6 +1,6 @@
 // EVA.STUDIO.7 — useEvaStudioRules
-// Lê as regras aplicadas pelo EVA Studio (eva_business_context.playbooks com
-// source='eva_studio'). Somente leitura — orienta a sugestão visual da EVA,
+// Lê as regras aplicadas pelo Lume Studio (eva_business_context.playbooks com
+// source='eva_studio'). Somente leitura — orienta a sugestão visual da Lume,
 // não dispara nenhuma ação. Scoped por company (RLS).
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";

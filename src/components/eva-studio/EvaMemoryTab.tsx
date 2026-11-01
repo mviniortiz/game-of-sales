@@ -1,4 +1,4 @@
-// EVA.STUDIO.8A — Aba Memória: "com base em que a EVA orienta as sugestões?"
+// EVA.STUDIO.8A — Aba Memória: "com base em que a Lume orienta as sugestões?"
 // Só leitura.
 //
 // EVA.STUDIO.JOURNEY: separado em EvaMemoryView (presentational, dados via
@@ -34,7 +34,7 @@ export function EvaMemoryView({ memory, loading }: { memory: EvaMemory | null; l
 
     const summary = [
         { k: "Playbooks ativos", v: memory?.playbooksCount ?? 0 },
-        { k: "Regras do EVA Studio", v: memory?.evaStudioCount ?? 0 },
+        { k: "Regras do Lume Studio", v: memory?.evaStudioCount ?? 0 },
         { k: "Lacunas abertas", v: memory?.gapsOpenCount ?? 0 },
         { k: "Fontes conectadas", v: SOURCES.length },
     ];
@@ -58,8 +58,8 @@ export function EvaMemoryView({ memory, loading }: { memory: EvaMemory | null; l
             {empty && (
                 <div className="rounded-2xl p-8 text-center" style={cardSoft}>
                     <Layers className="w-7 h-7 mx-auto mb-2" style={{ color: PURPLE }} />
-                    <p className="text-[13px] font-medium" style={{ color: INK }}>A memória da EVA ainda está vazia</p>
-                    <p className="text-[12px] mt-1" style={{ color: SUB }}>Adicione regras, playbooks ou lacunas para fortalecer a memória da EVA.</p>
+                    <p className="text-[13px] font-medium" style={{ color: INK }}>A memória da Lume ainda está vazia</p>
+                    <p className="text-[12px] mt-1" style={{ color: SUB }}>Adicione regras, playbooks ou lacunas para fortalecer a memória da Lume.</p>
                 </div>
             )}
 
@@ -78,15 +78,15 @@ export function EvaMemoryView({ memory, loading }: { memory: EvaMemory | null; l
                                         <div key={i} className="flex items-start justify-between gap-3 rounded-xl px-3.5 py-2.5" style={{ background: "#F8FAFC", border: "1px solid #EEF2F7" }}>
                                             <span className="text-[12.5px] flex-1" style={{ color: INK }}>{r.text}</span>
                                             <div className="flex items-center gap-1.5 shrink-0">
-                                                <span className="text-[10px] px-1.5 py-0.5 rounded" style={r.origin === "EVA Studio" ? { background: "#F5F3FF", color: "#6D28D9" } : { background: "#F1F5F9", color: SUB }}>{r.origin}</span>
+                                                <span className="text-[10px] px-1.5 py-0.5 rounded" style={r.origin === "Lume Studio" ? { background: "#F5F3FF", color: "#6D28D9" } : { background: "#F1F5F9", color: SUB }}>{r.origin}</span>
                                                 <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: GREEN }}><span className="w-1.5 h-1.5 rounded-full" style={{ background: GREEN }} /> ativa</span>
                                             </div>
                                         </div>
                                     ))}
-                                    <p className="text-[10.5px] pt-1" style={{ color: MUTE }}>Impacta: sugestões da EVA no Inbox e no Deal.</p>
+                                    <p className="text-[10.5px] pt-1" style={{ color: MUTE }}>Impacta: sugestões da Lume no Inbox e no Deal.</p>
                                 </div>
                             ) : (
-                                <p className="text-[12px]" style={{ color: SUB }}>Nenhuma regra ativa ainda. Aplique regras pelo EVA Studio.</p>
+                                <p className="text-[12px]" style={{ color: SUB }}>Nenhuma regra ativa ainda. Aplique regras pelo Lume Studio.</p>
                             )}
                         </div>
 
@@ -126,7 +126,7 @@ export function EvaMemoryView({ memory, loading }: { memory: EvaMemory | null; l
                                 </div>
                             ))}
                         </div>
-                        <p className="text-[10.5px] mt-2 px-1 flex items-center gap-1" style={{ color: MUTE }}><Share2 className="w-3 h-3" /> Fontes alimentam o contexto da EVA.</p>
+                        <p className="text-[10.5px] mt-2 px-1 flex items-center gap-1" style={{ color: MUTE }}><Share2 className="w-3 h-3" /> Fontes alimentam o contexto da Lume.</p>
                     </aside>
                 </div>
             )}

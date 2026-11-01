@@ -2,7 +2,7 @@
 // ConversationalStudio (EVA.STUDIO.CONVO) — criar o agente CONVERSANDO, não
 // preenchendo formulário.
 //
-// Visão (Markus): o gestor não preenche campos — ele CONVERSA com a EVA (texto,
+// Visão (Markus): o gestor não preenche campos — ele CONVERSA com a Lume (texto,
 // VOZ ou arquivo) e ela entrevista, montando o agente à direita em tempo real.
 //
 // Cada agente especialista (qualificação, follow-up, propostas, reativação) tem
@@ -14,7 +14,7 @@
 //
 // Composer: microfone (Web Speech API, pt-BR) + seta-pra-cima circular + anexo.
 // Acoplamento (JOURNEY): header da casca (hideHeader); CTA → Provar (onProceed)
-// e onComplete entrega os campos pra persistir no contexto da EVA.
+// e onComplete entrega os campos pra persistir no contexto da Lume.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useRef, useState, useEffect, useCallback } from "react";
 import { ArrowUp, Check, Mic, Paperclip, FileImage, X, ArrowLeft, Loader2 } from "lucide-react";
@@ -29,7 +29,7 @@ export interface ConversationalStudioProps {
     agentKey?: SpecialistKey;
     /** Dentro da casca de jornada (EvaStudioShell), o header é da casca. */
     hideHeader?: boolean;
-    /** "Testar a EVA nos meus casos" → passo Provar da jornada. */
+    /** "Testar a Lume nos meus casos" → passo Provar da jornada. */
     onProceed?: () => void;
     /** Disparado quando a entrevista termina, com os campos montados. */
     onComplete?: (fields: StudioFields) => void;
@@ -47,7 +47,7 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
     const [transcribing, setTranscribing] = useState(false);
     const [attachment, setAttachment] = useState<string | null>(null);
     const [micError, setMicError] = useState<string | null>(null);
-    // Recap: quando a entrevista fecha, a EVA recapitula e o gestor confirma
+    // Recap: quando a entrevista fecha, a Lume recapitula e o gestor confirma
     // ANTES de entregar os campos (onComplete). "confirmed" = já gravou.
     const [recapConfirmed, setRecapConfirmed] = useState(false);
 
@@ -255,7 +255,7 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <h1 className="vz-convo-title">Me conta como a sua agência vende</h1>
                         <p className="vz-convo-sub">
-                            Quatro perguntas curtas. Depois a EVA sugere no Inbox e você aprova cada mensagem.
+                            Quatro perguntas curtas. Depois a Lume sugere no Inbox e você aprova cada mensagem.
                         </p>
                     </div>
                 </div>
@@ -452,7 +452,7 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                         })}
                     </div>
 
-                    {/* RECAP antes de gravar: a EVA recapitula e o gestor confirma.
+                    {/* RECAP antes de gravar: a Lume recapitula e o gestor confirma.
                         Só após confirmar o onComplete dispara (via confirmRecap). */}
                     {showRecap && (
                         <div className="vz-cvs-recap" style={{ marginTop: 16 }}>
@@ -468,7 +468,7 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                                     <span style={{ lineHeight: 0 }}>
                                         <EvaBot state="idle" size={18} />
                                     </span>
-                                    Confira o que a EVA entendeu:
+                                    Confira o que a Lume entendeu:
                                 </p>
                                 <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
                                     {fieldsView.map((f, i) => {

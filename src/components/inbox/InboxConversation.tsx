@@ -34,10 +34,10 @@ import { formatPhone } from "@/lib/formatPhone";
 //  - Empty state premium quando sem chat selecionado
 //  - Header comercial com origem/status/score (mock Preview) + ações rápidas
 //  - Thread de mensagens reais (text/audio/image/video) via componentes /whatsapp
-//  - Sugestão EVA Preview acima do composer (mock contextual com Usar/Editar/Ignorar)
+//  - Sugestão Lume Preview acima do composer (mock contextual com Usar/Editar/Ignorar)
 //  - Composer texto + áudio (AudioRecorder existente). Mídia placeholder até F4C.4.
 //
-// REGRA "EVA inside Vyzon": roxo só em selos/avatar ring. Azul Vyzon em ações
+// REGRA "Lume inside Vyzon": roxo só em selos/avatar ring. Azul Vyzon em ações
 // e mensagens enviadas. Verde reservado pra status "Demo marcada"/qualificado.
 // Nada se executa automaticamente — todas as ações dependem de clique do usuário.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -84,9 +84,9 @@ interface InboxConversationProps {
     statusChecked?: boolean;
     /** Abre o fluxo de (re)conexão do número (QR). */
     onReconnect?: () => void;
-    /** Mobile: abre a EVA (bottom sheet). No desktop a EVA é a coluna direita. */
+    /** Mobile: abre a Lume (bottom sheet). No desktop a Lume é a coluna direita. */
     onOpenEva?: () => void;
-    /** Texto que a EVA mandou pro composer ("Usar resposta"). Quando muda pra um
+    /** Texto que a Lume mandou pro composer ("Usar resposta"). Quando muda pra um
      *  valor não-nulo, vai pro campo de digitação; onInjectConsumed zera depois. */
     injectText?: string | null;
     onInjectConsumed?: () => void;
@@ -166,7 +166,7 @@ function EmptyConversation() {
                     Selecione uma conversa para começar
                 </h3>
                 <p className="text-[12.5px]" style={{ color: "#64748B", lineHeight: 1.6 }}>
-                    A EVA pode analisar o contexto, sugerir resposta e ajudar a mover o lead pro próximo passo.
+                    A Lume pode analisar o contexto, sugerir resposta e ajudar a mover o lead pro próximo passo.
                 </p>
             </div>
         </div>
@@ -274,7 +274,7 @@ function ConversationView({
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Sugestão REAL da EVA inline na conversa (lê a análise salva; o react-query
+    // Sugestão REAL da Lume inline na conversa (lê a análise salva; o react-query
     // compartilha o cache com o EvaPanel, sem disparar análise extra).
     const evaInsight = useEvaInsight({ chatPhone: chat.phone || chat.id, contactName: chat.name, messages });
     const evaSuggestionText: string = evaInsight.data
@@ -282,7 +282,7 @@ function ConversationView({
         : "";
     const [suggestionDismissed, setSuggestionDismissed] = useState(false);
 
-    // MOBILE — estado compacto da EVA pro botão do header virar um STATUS VIVO
+    // MOBILE — estado compacto da Lume pro botão do header virar um STATUS VIVO
     // (não uma pílula muda): "Lendo…", temperatura, ou "Análise pronta". É o que
     // faz o usuário perceber que ali tem algo a abrir.
     const evaHeaderState: EvaHeaderState = {
@@ -336,7 +336,7 @@ function ConversationView({
         setMediaCaption("");
     }, [chat.id]);
 
-    // "Usar resposta" da EVA: coloca o texto no composer (substitui o rascunho),
+    // "Usar resposta" da Lume: coloca o texto no composer (substitui o rascunho),
     // foca o campo e avisa o pai pra zerar. O humano revisa e envia (assistido).
     useEffect(() => {
         const t = (injectText || "").trim();
@@ -473,7 +473,7 @@ function ConversationView({
             />
 
             {/* V1.0.1 — EvaSuggestionBox removido (sugestão era mock determinístico
-                do nome do contato, não da IA). A análise real da EVA já vive no
+                do nome do contato, não da IA). A análise real da Lume já vive no
                 EvaPanel à direita via useEvaInsight. */}
 
             {/* INBOX.MEDIA — input escondido, sempre montado */}
@@ -512,8 +512,8 @@ function ConversationView({
                 </div>
             )}
 
-            {/* Sugestão da EVA inline (balão no fim da conversa): só no celular, onde
-                o painel da EVA fica numa gaveta (onOpenEva). No desktop o painel ao
+            {/* Sugestão da Lume inline (balão no fim da conversa): só no celular, onde
+                o painel da Lume fica numa gaveta (onOpenEva). No desktop o painel ao
                 lado já mostra a mesma resposta com o mesmo botão. */}
             {onOpenEva && evaSuggestionText && !suggestionDismissed && !pendingMedia && !showAudio && (
                 <EvaInlineSuggestion
@@ -580,9 +580,9 @@ function ConversationView({
 
 // ─── Header comercial ────────────────────────────────────────────────────
 
-// MOBILE — sinal compacto da EVA pro botão do header. Sem coluna própria no
+// MOBILE — sinal compacto da Lume pro botão do header. Sem coluna própria no
 // celular, o botão precisa comunicar (a) que abre um painel e (b) que tem algo
-// a abrir. Daí virar um status vivo em vez de uma pílula "EVA" muda.
+// a abrir. Daí virar um status vivo em vez de uma pílula "Lume" muda.
 interface EvaHeaderState {
     analyzing: boolean;
     hasAnalysis: boolean;
@@ -605,7 +605,7 @@ const EVA_TEMP_COLOR: Record<NonNullable<EvaHeaderState["temperature"]>, string>
 
 const EVA_HINT_KEY = "vyz_eva_mobile_hint_seen";
 
-// Botão de acesso à EVA no header (só mobile). Status vivo + caret pra cima
+// Botão de acesso à Lume no header (só mobile). Status vivo + caret pra cima
 // (afford de "abre um painel de baixo") + coachmark de 1ª vez explicando.
 function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: () => void }) {
     const [showHint, setShowHint] = useState(false);
@@ -643,7 +643,7 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
         ? EVA_TEMP_LABEL[temp]
         : hasAnalysis
         ? "Análise"
-        : "EVA";
+        : "Lume";
     const labelColor = !analyzing && temp ? EVA_TEMP_COLOR[temp] : "#6D28D9";
 
     return (
@@ -653,15 +653,15 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                 onClick={handleOpen}
                 className="h-10 pl-2 pr-2.5 rounded-full flex items-center gap-1.5 transition-colors"
                 style={{ background: "rgba(109,40,217,0.08)", border: "1px solid rgba(109,40,217,0.18)" }}
-                aria-label="Abrir análise da EVA"
-                title="Análise da EVA"
+                aria-label="Abrir análise da Lume"
+                title="Análise da Lume"
             >
                 {analyzing ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: "#6D28D9" }} />
                 ) : (
                     <EvaBot size={24} />
                 )}
-                {/* Ponto de temperatura: prova visual de que a EVA leu (e o quê). */}
+                {/* Ponto de temperatura: prova visual de que a Lume leu (e o quê). */}
                 {!analyzing && temp && (
                     <span className="h-1.5 w-1.5 rounded-full" style={{ background: EVA_TEMP_COLOR[temp] }} />
                 )}
@@ -687,7 +687,7 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                         boxShadow: "0 1px 2px rgba(15,23,42,0.06), 0 16px 36px -16px rgba(109,40,217,0.45)",
                     }}
                     role="dialog"
-                    aria-label="Dica sobre a EVA"
+                    aria-label="Dica sobre a Lume"
                 >
                     {/* Setinha apontando o botão */}
                     <span
@@ -698,7 +698,7 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                         <EvaBot size={20} className="mt-0.5 shrink-0" />
                         <div className="flex-1 min-w-0">
                             <p className="text-[12px] font-semibold mb-0.5" style={{ color: "#0F1730" }}>
-                                A análise da EVA fica aqui
+                                A análise da Lume fica aqui
                             </p>
                             <p className="text-[11px]" style={{ color: "#64748B", lineHeight: 1.45 }}>
                                 Toque para ver a leitura da conversa e a resposta sugerida.
@@ -719,7 +719,7 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                         onClick={handleOpen}
                         className="mt-2.5 w-full h-10 rounded-full text-[12px] font-semibold inline-flex items-center justify-center gap-1.5 bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                     >
-                        Ver análise da EVA
+                        Ver análise da Lume
                         <ArrowUp className="h-3.5 w-3.5" />
                     </button>
                 </div>
@@ -840,7 +840,7 @@ function ConversationHeader({
                 </button>
             )}
 
-            {/* EVA — mobile: no celular a EVA não tem coluna própria, então o
+            {/* Lume — mobile: no celular a Lume não tem coluna própria, então o
                 acesso à análise dela vive aqui (abre o bottom sheet). Status vivo
                 + caret + coachmark de 1ª vez resolvem a descoberta. */}
             {onOpenEva && <EvaHeaderButton eva={eva} onOpenEva={onOpenEva} />}
@@ -1135,8 +1135,8 @@ const MessageBubble = memo(function MessageBubble({
 
 // ─── Media preview (estilo WhatsApp: prévia + legenda antes de enviar) ──────
 
-// Balão da EVA no FIM da conversa: a resposta sugerida aparece "no meio do chat"
-// (não só no painel lateral). Visual de mensagem da EVA (roxo, rabinho à esquerda).
+// Balão da Lume no FIM da conversa: a resposta sugerida aparece "no meio do chat"
+// (não só no painel lateral). Visual de mensagem da Lume (roxo, rabinho à esquerda).
 // "Usar resposta" joga no composer; o humano revisa e envia (assistido).
 function EvaInlineSuggestion({ text, onUse, onDismiss }: { text: string; onUse: () => void; onDismiss: () => void }) {
     return (
@@ -1154,7 +1154,7 @@ function EvaInlineSuggestion({ text, onUse, onDismiss }: { text: string; onUse: 
                     <div className="flex items-center gap-1.5 px-3.5 pt-2.5">
                         <EvaBot size={17} still />
                         <span className="text-[10px] uppercase font-bold text-[var(--vyz-text-muted)]" style={{ letterSpacing: "0.08em" }}>
-                            Sugestão da EVA
+                            Sugestão da Lume
                         </span>
                         <button
                             type="button"
@@ -1369,7 +1369,7 @@ function Composer({
     const [focused, setFocused] = useState(false);
 
     // Auto-cresce com o conteúdo (digitado OU injetado pela "Usar resposta" da
-    // EVA), até um teto (~128px). Sem isto, texto longo virava uma caixa de 1
+    // Lume), até um teto (~128px). Sem isto, texto longo virava uma caixa de 1
     // linha com scrollbar (as setas ▲▼). Só mostra scroll quando passa do teto.
     useEffect(() => {
         const el = inputRef.current;

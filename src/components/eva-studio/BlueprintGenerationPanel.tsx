@@ -1,4 +1,4 @@
-// EVA.STUDIO.9 — painel "EVA montando o blueprint".
+// EVA.STUDIO.9 — painel "Lume montando o blueprint".
 // Explica o processo (lendo contexto, regras, lacunas) antes de revelar o
 // blueprint revisável. NÃO esconde loading nem simula processamento longo:
 // é a janela curta (700–1200ms) de reveal. Substitui o conteúdo do card de
@@ -19,7 +19,7 @@ export function BlueprintGenerationPanel({
     mode = "initial",
     durationMs = 1100,
 }: { mode?: "initial" | "regenerate"; durationMs?: number }) {
-    const title = mode === "regenerate" ? "EVA regenerando sugestão" : "EVA montando o blueprint";
+    const title = mode === "regenerate" ? "Lume regenerando sugestão" : "Lume montando o blueprint";
     return (
         <div className="py-1">
             <div className="flex items-center gap-2 mb-1">
@@ -35,7 +35,7 @@ export function BlueprintGenerationPanel({
                 <ProgressChecklist items={STEPS} running durationMs={durationMs} />
             </div>
             <p className="text-[11px] mt-3" style={{ color: MUTE }}>
-                A EVA monta uma sugestão inicial. Você revisa antes de aplicar.
+                A Lume monta uma sugestão inicial. Você revisa antes de aplicar.
             </p>
             {mode === "regenerate" && (
                 <p className="text-[11px] mt-1 font-medium" style={{ color: PURPLE }}>

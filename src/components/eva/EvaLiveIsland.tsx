@@ -1,7 +1,7 @@
-// EvaLiveIsland — o que a EVA fez hoje, visível em qualquer tela do app.
+// EvaLiveIsland — o que a Lume fez hoje, visível em qualquer tela do app.
 //
 // O Diário no /inicio já conta o dia, mas some assim que a pessoa navega. Como
-// a EVA trabalha sozinha (cron das 9h) e a maior parte do uso acontece no Inbox
+// a Lume trabalha sozinha (cron das 9h) e a maior parte do uso acontece no Inbox
 // e no Pipeline, o trabalho dela ficava invisível justamente onde a pessoa
 // passa o dia. Esta pílula no header carrega o placar e abre o resumo sem sair
 // da tela.
@@ -39,7 +39,7 @@ export function EvaLiveIsland() {
     const deHoje = diary.eventos.filter((e) => e.quando.toDateString() === hoje);
     const acoes = deHoje.length;
 
-    // Conta parada não ganha pílula: uma EVA anunciando que não fez nada é pior
+    // Conta parada não ganha pílula: uma Lume anunciando que não fez nada é pior
     // que silêncio.
     if (acoes === 0 && esperando === 0) return null;
 
@@ -56,7 +56,7 @@ export function EvaLiveIsland() {
                 type="button"
                 onClick={() => setAberta((v) => !v)}
                 aria-expanded={aberta}
-                aria-label={`EVA: ${resumoCurto}. Abrir resumo do dia`}
+                aria-label={`Lume: ${resumoCurto}. Abrir resumo do dia`}
                 className="block"
             >
                 <DynamicIsland
@@ -100,7 +100,7 @@ export function EvaLiveIsland() {
                         <span className="flex items-center gap-2 mb-2">
                             <EvaBot size={16} still />
                             <span className="text-[12px] font-semibold" style={{ color: "var(--vyz-text-strong)" }}>
-                                O dia da EVA
+                                O dia da Lume
                             </span>
                         </span>
 

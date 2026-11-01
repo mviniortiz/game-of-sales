@@ -51,9 +51,9 @@ const CASES: readonly Case[] = [
         tag: "Vendedor",
         title: "Próximo passo claro em cada conversa.",
         description:
-            "Abra a conversa certa, veja o resumo da EVA e saiba o próximo passo antes de responder.",
+            "Abra a conversa certa, veja o resumo da Lume e saiba o próximo passo antes de responder.",
         cards: [
-            { icon: Sparkle, label: "Resumo da EVA" },
+            { icon: Sparkle, label: "Resumo da Lume" },
             { icon: MessageCircle, label: "Conversa certa" },
             { icon: Calendar, label: "Próximo passo" },
         ],

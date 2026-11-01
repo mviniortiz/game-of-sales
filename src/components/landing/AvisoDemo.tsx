@@ -8,7 +8,7 @@ import "./avisoDemo.css";
 
 // O aviso no WhatsApp do dono, no formato da aprovação real
 // (_shared/whatsappApproval.ts), simplificado para "responda 1" sem o código
-// curto nem nome interno. A EVA lê, acha a proposta parada, o aviso chega, o dono
+// curto nem nome interno. A Lume lê, acha a proposta parada, o aviso chega, o dono
 // responde 1 e a mensagem sai. Dados de exemplo. Feito com o kit Stageshow.
 type Cena = { eva: EvaBotState; selo: boolean; aviso: boolean; um: boolean; enviada: boolean };
 

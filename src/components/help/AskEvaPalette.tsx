@@ -1,6 +1,6 @@
-// AskEvaPalette — "Pergunte à EVA" via ⌘J/Ctrl+J, em qualquer tela do app.
+// AskEvaPalette — "Pergunte à Lume" via ⌘J/Ctrl+J, em qualquer tela do app.
 // Command palette (estilo Ask-AI do Mintlify): input no topo, sugestões
-// animadas, e ao perguntar vira o chat de ajuda da EVA (mesma conversa do
+// animadas, e ao perguntar vira o chat de ajuda da Lume (mesma conversa do
 // EvaHelpDock — hook useEvaHelpChat + localStorage compartilhados).
 //
 // Regras de marca: enviar = seta-pra-cima circular (NUNCA avião); azul da
@@ -91,7 +91,7 @@ export function AskEvaPalette() {
         return [
             {
                 icon: <EvaBot state="idle" size={18} />,
-                label: "Perguntar à EVA",
+                label: "Perguntar à Lume",
                 desc: typed ? `“${typed}”` : "Digite sua pergunta",
                 run: () => { if (typed) { ask(typed); setInput(""); } },
                 disabled: !typed,
@@ -135,7 +135,7 @@ export function AskEvaPalette() {
                     onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
                     role="dialog"
                     aria-modal="true"
-                    aria-label="Pergunte à EVA"
+                    aria-label="Pergunte à Lume"
                 >
                     <motion.div
                         initial={reduce ? false : { opacity: 0, y: 10, scale: 0.98 }}
@@ -153,8 +153,8 @@ export function AskEvaPalette() {
                         {/* Header do modo chat */}
                         {inChat && (
                             <div className="flex items-center gap-2.5 px-4 py-2.5 border-b" style={{ borderColor: "#F1F5F9" }}>
-                                <EvaBot state={loading ? "thinking" : "idle"} size={24} className="shrink-0" label="EVA" />
-                                <p className="flex-1 text-[13px] font-bold" style={{ color: "#0F1730" }}>EVA · ajuda com o Vyzon</p>
+                                <EvaBot state={loading ? "thinking" : "idle"} size={24} className="shrink-0" label="Lume" />
+                                <p className="flex-1 text-[13px] font-bold" style={{ color: "#0F1730" }}>Lume · ajuda com o Vyzon</p>
                                 <button
                                     type="button"
                                     onClick={() => { reset(); setInput(""); inputRef.current?.focus(); }}
@@ -214,7 +214,7 @@ export function AskEvaPalette() {
                                 value={input}
                                 onChange={(e) => { setInput(e.target.value); setSelected(0); }}
                                 onKeyDown={onInputKey}
-                                placeholder={inChat ? "Pergunte qualquer coisa…" : "Pergunte à EVA como usar o Vyzon…"}
+                                placeholder={inChat ? "Pergunte qualquer coisa…" : "Pergunte à Lume como usar o Vyzon…"}
                                 disabled={loading}
                                 className="w-full h-12 bg-transparent text-[14px] outline-none disabled:opacity-70"
                                 style={{ color: "#0F1730" }}

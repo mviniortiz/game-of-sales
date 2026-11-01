@@ -1,5 +1,9 @@
 # CLAUDE.md — Vyzon (game-of-sales)
 
+> **Nome (01/11/2026):** a EVA virou Lume no que o usuário lê. Código, tabelas,
+> edges e os prompts do WhatsApp ainda dizem EVA; `EVA_PREFIX` identifica as
+> mensagens dela, não renomear sem mexer no webhook.
+>
 > **Vyzon é para integradores de energia solar que vendem pelo WhatsApp.**
 > A EVA acompanha cada proposta que sai do WhatsApp, avisa no 2º dia sem
 > resposta e entrega a retomada pronta; o dono responde 1 e ela sai do número

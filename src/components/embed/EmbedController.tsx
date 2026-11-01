@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 // LP.8 (v2) — controlador da demo embutida. Roda DENTRO do iframe (app real) e
 // recebe comandos da landing (parent) por postMessage, restritos à MESMA origem
-// e a uma allowlist (navegar/destacar). Mostra o cursor fantasma da EVA se
+// e a uma allowlist (navegar/destacar). Mostra o cursor fantasma da Lume se
 // movendo até o item da sidebar e "clicando", + selo "Live". Sem executar nada
 // arbitrário: só react-router navigate pra rotas conhecidas.
 const NAV_URL: Record<string, string> = {
@@ -34,7 +34,7 @@ export function EmbedController() {
     const [visible, setVisible] = useState(false);
     const [clicking, setClicking] = useState(false);
     const [flash, setFlash] = useState<{ label: string; n: number } | null>(null);
-    // Tour core da landing: bloqueia clique do usuário; navigate()/el.click() da EVA seguem.
+    // Tour core da landing: bloqueia clique do usuário; navigate()/el.click() da Lume seguem.
     const [interactionLocked, setInteractionLocked] = useState(false);
     const timers = useRef<number[]>([]);
     const flashN = useRef(0);
@@ -102,13 +102,13 @@ export function EmbedController() {
             }
 
             // "inbox-analise" = abrir a 1ª conversa (a mais recente) no Inbox e
-            // deixar o painel da EVA aparecer. Resolve o id por query (a demo usa
+            // deixar o painel da Lume aparecer. Resolve o id por query (a demo usa
             // ids gerados), move o cursor no 1º item e navega com deep link.
             if (d.screen === "inbox-analise") {
                 clearTimers();
                 const open = (cid: string | null) => {
                     const has = moveTo("[data-demo-inbox-item]");
-                    if (!has) showFlash("EVA · análise");
+                    if (!has) showFlash("Lume · análise");
                     timers.current.push(window.setTimeout(() => {
                         if (has) { setClicking(true); timers.current.push(window.setTimeout(() => setClicking(false), 240)); }
                         navigate(cid ? `/inbox?conversationId=${cid}` : "/inbox");
@@ -119,7 +119,7 @@ export function EmbedController() {
                 return;
             }
 
-            // "eva-studio-criar" = dentro do EVA Studio, a EVA escolhe o agente de
+            // "eva-studio-criar" = dentro do Lume Studio, a Lume escolhe o agente de
             // Qualificação e entra no chat de criação (clique REAL no DOM, com
             // retry até a galeria montar). Não navega — já estamos em /eva-studio.
             if (d.screen === "eva-studio-criar") {
@@ -174,7 +174,7 @@ export function EmbedController() {
 
     return (
         <>
-            {/* Trava interação do usuário durante o tour guiado (cursor/navigate da EVA passam). */}
+            {/* Trava interação do usuário durante o tour guiado (cursor/navigate da Lume passam). */}
             {interactionLocked && (
                 <div
                     style={{
@@ -186,7 +186,7 @@ export function EmbedController() {
                         background: "transparent",
                     }}
                     aria-hidden="true"
-                    title="A EVA está conduzindo a demo"
+                    title="A Lume está conduzindo a demo"
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
                     onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
                     onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
@@ -202,7 +202,7 @@ export function EmbedController() {
                 Live
             </div>
 
-            {/* cursor fantasma da EVA */}
+            {/* cursor fantasma da Lume */}
             <div
                 style={{ position: "fixed", left: 0, top: 0, transform: `translate(${pos.x}px, ${pos.y}px)`, transition: "transform 0.72s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease", zIndex: 2147483600, pointerEvents: "none", opacity: visible ? 1 : 0, willChange: "transform" }}
                 aria-hidden="true"
@@ -226,7 +226,7 @@ export function EmbedController() {
                     aria-hidden="true"
                 >
                     <span style={{ width: 7, height: 7, borderRadius: 999, background: "#1556C0" }} />
-                    EVA · {flash.label}
+                    Lume · {flash.label}
                 </div>
             )}
 

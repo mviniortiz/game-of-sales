@@ -165,7 +165,7 @@ export const CopilotSidebar = ({
         }
     };
 
-    // ── EVA como máquina de resposta (EVA.INBOX.1 integrado) ──
+    // ── Lume como máquina de resposta (EVA.INBOX.1 integrado) ──
     // A análise do whatsapp-copilot vira EvaAssistData: CONFIA (resposta pronta)
     // quando há sugestão com confiança razoável; SE CALA (descoberta) quando não.
     const qual = (aiSuggestion?.qualification ?? {}) as Record<string, any>;
@@ -260,7 +260,7 @@ export const CopilotSidebar = ({
                                 <PanelRightOpen className="h-4 w-4" />
                             </button>
                         </TooltipTrigger>
-                        <TooltipContent side="left" className="text-[10px]">Abrir Eva</TooltipContent>
+                        <TooltipContent side="left" className="text-[10px]">Abrir Lume</TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
             </div>
@@ -275,7 +275,7 @@ export const CopilotSidebar = ({
                     <div className="flex items-center gap-2">
                         <EvaBot state="idle" size={24} />
                         <div className="flex flex-col leading-none">
-                            <span className="text-[12px] font-semibold text-foreground tracking-tight">EVA</span>
+                            <span className="text-[12px] font-semibold text-foreground tracking-tight">Lume</span>
                             <span className="text-[10px] text-muted-foreground/50 mt-0.5">copiloto</span>
                         </div>
                     </div>
@@ -297,12 +297,12 @@ export const CopilotSidebar = ({
     // ─── Full sidebar ───
     return (
         <div className={`${containerClassName || 'hidden md:flex'} w-[320px] shrink-0 flex-col border-l border-border bg-background overflow-hidden`}>
-            {/* ── Header: EVA brand ── */}
+            {/* ── Header: Lume brand ── */}
             <div className="flex items-center justify-between px-4 h-14 border-b border-border shrink-0">
                 <div className="flex items-center gap-2">
                     <EvaBot state={aiThinking ? "thinking" : aiSuggestion ? "talking" : "idle"} size={24} />
                     <div className="flex flex-col leading-none">
-                        <span className="text-[12px] font-semibold text-foreground tracking-tight">EVA</span>
+                        <span className="text-[12px] font-semibold text-foreground tracking-tight">Lume</span>
                         <span className="text-[10px] text-muted-foreground/50 mt-0.5">
                             {aiThinking ? "lendo a conversa…" : "copiloto"}
                         </span>
@@ -364,7 +364,7 @@ export const CopilotSidebar = ({
                         )}
                     </div>
 
-                    {/* ── EVA: zona de resposta (a máquina de resposta, EVA.INBOX.1) ── */}
+                    {/* ── Lume: zona de resposta (a máquina de resposta, EVA.INBOX.1) ── */}
                     <div className="px-3 py-3 border-b border-border">
                         {aiThinking ? (
                             <div className="flex items-center gap-2.5 px-1 py-1">
@@ -411,7 +411,7 @@ export const CopilotSidebar = ({
                                     {rateLimited ? (
                                         <><AlertCircle className="w-3.5 h-3.5" /> Limite atingido (10/dia)</>
                                     ) : (
-                                        "Analisar com a EVA"
+                                        "Analisar com a Lume"
                                     )}
                                 </button>
                             </div>

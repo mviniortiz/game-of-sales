@@ -16,7 +16,7 @@ const MODULES = [
     },
     {
         n: "02",
-        title: "EVA Comercial",
+        title: "Lume Comercial",
         body: "Analisa intenção, fit, urgência e objeções, e aponta quem está pronto pra avançar.",
         note: "leitura assistida",
     },
@@ -91,7 +91,7 @@ export const AgentStudioSection = ({ onCTAClick }: AgentStudioSectionProps) => {
                             maxWidth: "640px",
                         }}
                     >
-                        O Vyzon reúne a operação comercial da agência em um fluxo simples: conversa entra, EVA analisa, o time aprova o próximo passo e a oportunidade segue no pipeline.
+                        O Vyzon reúne a operação comercial da agência em um fluxo simples: conversa entra, Lume analisa, o time aprova o próximo passo e a oportunidade segue no pipeline.
                     </p>
 
                     <LandingButton

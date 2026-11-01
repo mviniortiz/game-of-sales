@@ -99,7 +99,7 @@ export const useReportAgent = () => {
         if (response.status === 401) {
           addAssistantMessage("Sessão expirada. Recarregue a página e tente novamente.", "alert");
         } else if (response.status === 403 && body.code === "PLAN_REQUIRED") {
-          addAssistantMessage("A Eva está disponível nos planos **Plus** e **Pro**. Faça upgrade para desbloquear.", "alert");
+          addAssistantMessage("A Lume está disponível nos planos **Plus** e **Pro**. Faça upgrade para desbloquear.", "alert");
         } else if (response.status === 403) {
           addAssistantMessage(body.error || "Acesso restrito a administradores.", "alert");
         } else if (response.status === 429) {

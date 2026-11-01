@@ -168,7 +168,7 @@
     font-size: 14px;
 }
 
-/* A EVA sentada na borda de cima do cartão, como na home. */
+/* A Lume sentada na borda de cima do cartão, como na home. */
 .vp-sentada {
     position: absolute;
     right: 22px;
@@ -724,7 +724,7 @@
     font-variant-numeric: tabular-nums;
 }
 
-/* ─── EVA ─────────────────────────────────────────────────────────────────── */
+/* ─── Lume ─────────────────────────────────────────────────────────────────── */
 .vp-eva {
     display: grid;
     gap: 20px;

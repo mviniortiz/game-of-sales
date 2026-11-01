@@ -1,4 +1,4 @@
-// A seção é a única superfície onde a pessoa vê o que a EVA fez sozinha. Os dois
+// A seção é a única superfície onde a pessoa vê o que a Lume fez sozinha. Os dois
 // estados que importam: conta vazia (o que ela VAI fazer) e conta trabalhando.
 import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";

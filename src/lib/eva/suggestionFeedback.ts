@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // EVA.INBOX.2 (2026-06-06) — Loop de aprendizado da resposta sugerida.
 //
-// FUNDAÇÃO DO FUTURO, não cosmético: cada envio a partir da sugestão da EVA
+// FUNDAÇÃO DO FUTURO, não cosmético: cada envio a partir da sugestão da Lume
 // vira um sinal gravado em `eva_suggestion_feedback`:
 //   - enviou DIRETO        → outcome "accepted" (similarity 1.0)
 //   - EDITOU antes de enviar → outcome "edited" + delta (sugestão vs. enviado)
@@ -26,7 +26,7 @@ export interface SuggestionOutcome {
     sentText: string;
 }
 
-/** Levenshtein iterativo (duas linhas). Textos da EVA têm ≤1200 chars, ok no clique. */
+/** Levenshtein iterativo (duas linhas). Textos da Lume têm ≤1200 chars, ok no clique. */
 function levenshtein(a: string, b: string): number {
     if (a === b) return 0;
     if (a.length === 0) return b.length;

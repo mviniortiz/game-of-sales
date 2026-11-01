@@ -1,5 +1,5 @@
 // Preview isolado do card "Novo lead pronto pro pipeline" (EvaCreateDealNudge),
-// para validar o visual sem depender de uma conversa real qualificada pela EVA.
+// para validar o visual sem depender de uma conversa real qualificada pela Lume.
 // Rota: /eva-nudge-preview
 import { EvaCreateDealNudge } from "@/components/inbox/EvaCreateDealNudge";
 import { toast } from "sonner";
@@ -15,10 +15,10 @@ export default function EvaNudgePreview() {
                 </h1>
                 <p className="text-sm mb-6" style={{ color: "#64748B" }}>
                     É o card do nível 2 do upgrade de confiança, renderizado no painel da
-                    EVA (Inbox) quando ela qualifica intenção de compra fora do pipeline.
+                    Lume (Inbox) quando ela qualifica intenção de compra fora do pipeline.
                 </p>
 
-                {/* Coluna estreita simulando o painel da EVA */}
+                {/* Coluna estreita simulando o painel da Lume */}
                 <div className="flex flex-col gap-5" style={{ background: "#FFFFFF", padding: 16, borderRadius: 12, border: "1px solid #E5EAF1" }}>
                     <Label>Completo (nome, telefone, serviço, score, orçamento)</Label>
                     <EvaCreateDealNudge

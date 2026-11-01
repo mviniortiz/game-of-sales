@@ -47,7 +47,7 @@ const maskPhone = (v: string) => {
     .replace(/(\d{5})(\d)/, "$1-$2");
 };
 
-// A EVA liga o pacote solar pela chave exata (blueprint.ts). Os demais valores
+// A Lume liga o pacote solar pela chave exata (blueprint.ts). Os demais valores
 // são rótulos: continuam gravados como texto, como sempre foram.
 const SEGMENT_OPTIONS = [
   { value: SOLAR_SEGMENT, label: "Energia solar" },
@@ -301,7 +301,7 @@ export default function Organizacao() {
                 </SelectContent>
               </Select>
               {companySegment === SOLAR_SEGMENT && (
-                <p className="text-[11px] text-muted-foreground">A EVA usa o pacote de energia solar.</p>
+                <p className="text-[11px] text-muted-foreground">A Lume usa o pacote de energia solar.</p>
               )}
             </div>
 

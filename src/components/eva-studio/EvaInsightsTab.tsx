@@ -1,4 +1,4 @@
-// EVA.STUDIO.8A — Aba Insights: o que melhorar na EVA. Recomendações derivadas
+// EVA.STUDIO.8A — Aba Insights: o que melhorar na Lume. Recomendações derivadas
 // (local/demo) de regras, lacunas e simulações. Não executa nada.
 import { AlertTriangle, Check, FlaskConical, ShieldAlert, ShieldCheck, ArrowRight } from "lucide-react";
 import type { ApprovalResult } from "@/lib/eva/approval";
@@ -23,7 +23,7 @@ export function EvaInsightsTab({ approval, memory, lastSimAt, hideHeader }: { ap
     const gaps = memory?.gapsOpenCount ?? 0;
     const cards: { tone: Tone; title: string; text: string }[] = [
         gaps > 0
-            ? { tone: "warn", title: "Lacunas críticas", text: `Há ${gaps} lacuna(s) aberta(s). Complete-as antes de ativar a EVA: cada lacuna é uma pergunta que ela não sabe responder.` }
+            ? { tone: "warn", title: "Lacunas críticas", text: `Há ${gaps} lacuna(s) aberta(s). Complete-as antes de ativar a Lume: cada lacuna é uma pergunta que ela não sabe responder.` }
             : { tone: "ok", title: "Lacunas críticas", text: "Sem lacunas abertas. Bom para aprovação." },
         approval.testedCount < 5
             ? { tone: "warn", title: "Casos pendentes", text: `Ainda há casos sem julgamento. Julgue pelo menos 5 no passo Provar (${approval.testedCount}/5).` }
@@ -39,11 +39,11 @@ export function EvaInsightsTab({ approval, memory, lastSimAt, hideHeader }: { ap
     const nextStep = !approval.hasHandoff
         ? "Configure o handoff humano nas regras."
         : gaps > 0
-            ? "Complete as lacunas abertas antes de ativar a EVA."
+            ? "Complete as lacunas abertas antes de ativar a Lume."
             : approval.testedCount < 5
                 ? "Julgue pelo menos 5 casos no passo Provar."
                 : approval.readiness === "ready"
-                    ? "A EVA está pronta para uso assistido, mas não para automação."
+                    ? "A Lume está pronta para uso assistido, mas não para automação."
                     : "Revise os critérios pendentes para elevar o score de validação.";
 
     const topRules = memory?.rules.slice(0, 3) ?? [];
@@ -52,8 +52,8 @@ export function EvaInsightsTab({ approval, memory, lastSimAt, hideHeader }: { ap
         <div className="space-y-6">
             {!hideHeader && (
                 <div>
-                    <h2 className="text-[16px] font-bold" style={{ color: INK }}>Insights da EVA</h2>
-                    <p className="text-[13px] mt-0.5" style={{ color: SUB }}>O que melhorar antes de liberar a EVA para uso assistido.</p>
+                    <h2 className="text-[16px] font-bold" style={{ color: INK }}>Insights da Lume</h2>
+                    <p className="text-[13px] mt-0.5" style={{ color: SUB }}>O que melhorar antes de liberar a Lume para uso assistido.</p>
                 </div>
             )}
 
@@ -96,18 +96,18 @@ export function EvaInsightsTab({ approval, memory, lastSimAt, hideHeader }: { ap
                         {topRules.map((r, i) => (
                             <li key={i} className="flex items-start gap-2 text-[12.5px]" style={{ color: INK }}>
                                 <span className="mt-[6px] w-1.5 h-1.5 rounded-full shrink-0" style={{ background: PURPLE }} />
-                                <span>{r.text}<span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded" style={r.origin === "EVA Studio" ? { background: "#F5F3FF", color: "#6D28D9" } : { background: "#F1F5F9", color: MUTE }}>{r.origin}</span></span>
+                                <span>{r.text}<span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded" style={r.origin === "Lume Studio" ? { background: "#F5F3FF", color: "#6D28D9" } : { background: "#F1F5F9", color: MUTE }}>{r.origin}</span></span>
                             </li>
                         ))}
                     </ul>
                 ) : (
-                    <p className="text-[12px]" style={{ color: SUB }}>Nenhuma regra ativa ainda. Aplique regras pelo EVA Studio para orientar a EVA.</p>
+                    <p className="text-[12px]" style={{ color: SUB }}>Nenhuma regra ativa ainda. Aplique regras pelo Lume Studio para orientar a Lume.</p>
                 )}
             </div>
 
             <p className="text-[11px]" style={{ color: MUTE }}>Última simulação: {fmtSim(lastSimAt)}.</p>
             <p className="text-[11px] flex items-center gap-1.5" style={{ color: MUTE }}>
-                <FlaskConical className="w-3.5 h-3.5" /> Score e recomendações são uma validação para uso assistido. A EVA não age sozinha.
+                <FlaskConical className="w-3.5 h-3.5" /> Score e recomendações são uma validação para uso assistido. A Lume não age sozinha.
             </p>
         </div>
     );

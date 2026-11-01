@@ -2,7 +2,7 @@
 //
 // Espelha EXATAMENTE o insert comprovado do NovaOportunidadeModal (deals +
 // vínculo channel_conversations.deal_id), mas como hook reutilizável e SEM UI,
-// para o caminho híbrido: a EVA cria o card no pipeline ao recomendar
+// para o caminho híbrido: a Lume cria o card no pipeline ao recomendar
 // (deve_criar_oportunidade) num lead inbound. O modal manual segue intocado
 // (zero regressão). NÃO envia nenhuma mensagem — só cria/atualiza o card.
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export interface CreateOpportunityInput {
   customerName: string;
   title: string;
-  /** 'lead' (triagem) ou 'qualification' (interesse confirmado pela EVA) */
+  /** 'lead' (triagem) ou 'qualification' (interesse confirmado pela Lume) */
   stage?: "lead" | "qualification";
   phone?: string | null;
   email?: string | null;
@@ -23,8 +23,8 @@ export interface CreateOpportunityInput {
   conversationId?: string | null;
 }
 
-// Analytics da EVA — Fase 2. Dada uma conversa, acha a sugestão mais recente da
-// EVA (pending ou accepted) para atribuir o deal a ela. Se a sugestão ainda
+// Analytics da Lume — Fase 2. Dada uma conversa, acha a sugestão mais recente da
+// Lume (pending ou accepted) para atribuir o deal a ela. Se a sugestão ainda
 // estava pending, marca accepted (o humano materializou a sugestão num card).
 // Best-effort: se a coluna/tabela não existir ou falhar, devolve null e o fluxo
 // de criação de deal segue intacto (vínculo apenas não é gravado).
@@ -77,7 +77,7 @@ export function useCreateOpportunityFromConversation() {
       if (input.phone) contato.phone = input.phone;
       const additionalContacts = Object.keys(contato).length > 0 ? [contato] : [];
 
-      // Fase 2 — atribuição à EVA: se a conversa tem sugestão (pending/accepted),
+      // Fase 2 — atribuição à Lume: se a conversa tem sugestão (pending/accepted),
       // vincula o deal a ela e resolve a pending. Sem sugestão = null (honesto).
       const agentSuggestionId = input.conversationId
         ? await resolveAgentSuggestionForConversation(input.conversationId, user.id)

@@ -1,4 +1,4 @@
-/* EvaBot: a EVA como bot montado por peças, feito só com CSS. O desenho vive
+/* EvaBot: a Lume como bot montado por peças, feito só com CSS. O desenho vive
    numa caixa de 240x240 (.eva-bot__palco) e o tamanho real vem de scale(), então
    as medidas abaixo são da caixa e o mesmo bot vale de 16px a 240px.
    Só transform e opacity animam: o navegador entrega isso na placa de vídeo, a

@@ -1,5 +1,5 @@
 /* Pílula de status do WhatsApp (WhatsappStatusPill). Mesmo desenho em dois tons da
-   pílula de "EVA pensando": miolo neutro com anel claro. */
+   pílula de "Lume pensando": miolo neutro com anel claro. */
 .wa-status {
     --wa-cor: var(--vyz-success, #008a52);
     display: inline-flex;

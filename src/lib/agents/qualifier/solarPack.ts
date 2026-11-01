@@ -2,7 +2,7 @@
 //
 // Mesmo papel do AGENCY_PACK: é o blueprint com que a empresa "nasce" quando
 // companies.segment = 'energia_solar' (cadastro via /criar-conta?segmento=energia_solar).
-// No estado `seeded` a EVA já sugere desde o dia 1; nada é enviado, gravado ou
+// No estado `seeded` a Lume já sugere desde o dia 1; nada é enviado, gravado ou
 // criado sem aprovação humana. O pipeline aqui espelha os títulos que o
 // set_deal_default_pipeline cria para empresa solar (migration 20260929b).
 import type { Blueprint } from "@/lib/eva/blueprint";

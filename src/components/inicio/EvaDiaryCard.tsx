@@ -1,4 +1,4 @@
-// EvaDiaryCard — "O que a EVA fez" no /inicio.
+// EvaDiaryCard — "O que a Lume fez" no /inicio.
 //
 // O produto age sozinho no interno (abre card, move etapa, agenda retomada) e
 // escreve rascunhos. Sem registro visível, autonomia vira susto. A seção mostra
@@ -18,7 +18,7 @@ function quando(d: Date): string {
     return `${dia} ${HORA.format(d)}`;
 }
 
-/** O que a EVA faz quando ainda não fez nada. Nomeia a ação exata, porque
+/** O que a Lume faz quando ainda não fez nada. Nomeia a ação exata, porque
  *  promessa vaga assusta mais que silêncio. */
 const VAI_FAZER = [
     "Ler cada conversa que chegar no seu WhatsApp",
@@ -32,7 +32,7 @@ export function EvaDiaryCard({ diary }: { diary: EvaDiary }) {
 
     return (
         <section aria-labelledby="eva-fez" className="flex min-w-0 flex-col gap-3">
-            <h2 id="eva-fez" className="text-[16px] font-semibold text-[var(--vyz-text-primary)]">O que a EVA fez</h2>
+            <h2 id="eva-fez" className="text-[16px] font-semibold text-[var(--vyz-text-primary)]">O que a Lume fez</h2>
 
             {diary.rascunhos.length > 0 && (
                 <div className="rounded-[12px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-4 py-3">
@@ -65,7 +65,7 @@ export function EvaDiaryCard({ diary }: { diary: EvaDiary }) {
             )}
 
             {diary.loading ? (
-                <div aria-busy="true" aria-label="Carregando o que a EVA fez" className="h-[132px] rounded-[12px] bg-[var(--vyz-surface-3)] motion-safe:animate-pulse" />
+                <div aria-busy="true" aria-label="Carregando o que a Lume fez" className="h-[132px] rounded-[12px] bg-[var(--vyz-surface-3)] motion-safe:animate-pulse" />
             ) : diary.eventos.length > 0 ? (
                 <ol className="flex flex-col">
                     {diary.eventos.map((e) => (

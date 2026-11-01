@@ -5,7 +5,7 @@ import { Workflow, Check, MessageCircle, Sparkle, ArrowRight } from "lucide-reac
 const BULLETS = [
     "Veja oportunidades por etapa e valor.",
     "Abra a conversa direto do card.",
-    "Entenda se a EVA já analisou o lead.",
+    "Entenda se a Lume já analisou o lead.",
     "Identifique oportunidades paradas.",
     "Acompanhe próximos passos sem sair do fluxo.",
 ] as const;
@@ -57,7 +57,7 @@ export const PipelineSection = () => {
                         className="mb-7 max-w-md"
                         style={{ fontSize: "1.0625rem", lineHeight: 1.6, color: "rgba(10,10,10,0.55)" }}
                     >
-                        Cada card mostra mais que etapa e valor. Veja canal, status da EVA, tags, próxima ação e conversa vinculada.
+                        Cada card mostra mais que etapa e valor. Veja canal, status da Lume, tags, próxima ação e conversa vinculada.
                     </p>
 
                     <ul className="flex flex-col gap-3">
@@ -116,7 +116,7 @@ export const PipelineSection = () => {
                         <div className="flex flex-wrap gap-1.5 mb-4">
                             <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md" style={{ background: "rgba(124,58,237,0.1)", color: "#6D28D9", fontWeight: 600 }}>
                                 <Sparkle className="h-2.5 w-2.5" strokeWidth={2.5} />
-                                EVA analisou
+                                Lume analisou
                             </span>
                             <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md" style={{ background: "rgba(16,185,129,0.1)", color: "#047857", fontWeight: 600 }}>
                                 Fit: bom

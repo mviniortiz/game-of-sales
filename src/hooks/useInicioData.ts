@@ -7,7 +7,7 @@
 //   - useAgendaHoje:     agendamentos de hoje (lista) + count da semana atual
 //
 // Cards ainda mockados (Inbox conversations, Performance ranking, KPIs
-// "Tempo médio de resposta" e "Qualificados pela EVA") seguem com placeholder
+// "Tempo médio de resposta" e "Qualificados pela Lume") seguem com placeholder
 // marcado MOCK_F4I no Inicio.tsx — documentado nas pendências F4I v2.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useMemo } from "react";

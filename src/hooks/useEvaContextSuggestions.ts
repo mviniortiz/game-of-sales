@@ -10,7 +10,7 @@
 //         de eva_knowledge_gaps (status=open).
 //
 //   GRAVA → as resoluções, com a PONTE pro eva_business_context (é de lá que o
-//           whatsapp-copilot lê; sem isso, aprovar não muda nada na EVA):
+//           whatsapp-copilot lê; sem isso, aprovar não muda nada na Lume):
 //             confirm  → suggestion.status=approved + merge no contexto
 //             correct  → idem, com o texto corrigido (sinal de aprendizado)
 //             dismiss  → suggestion.status=rejected
@@ -33,19 +33,19 @@ import type {
 
 // "O que muda ao confirmar" — causa e efeito por tipo (o DB não guarda isso).
 const EFFECT_BY_TYPE: Record<ContextSuggestionType, string> = {
-    agency: "A EVA passa a conhecer esse fato da sua empresa.",
+    agency: "A Lume passa a conhecer esse fato da sua empresa.",
     service: "As respostas sobre esse serviço param de ser genéricas.",
     icp: "A lista do Inbox passa a separar fit bom de fit fraco.",
-    playbook: "A EVA passa a seguir esse passo na hora de vender.",
-    tone: "A EVA passa a falar no seu tom.",
-    forbidden_promise: "A EVA fica proibida de prometer isso nas sugestões.",
+    playbook: "A Lume passa a seguir esse passo na hora de vender.",
+    tone: "A Lume passa a falar no seu tom.",
+    forbidden_promise: "A Lume fica proibida de prometer isso nas sugestões.",
     faq: "Essa pergunta passa a ter resposta pronta.",
     objection: "Essa objeção ganha uma resposta sua, não inventada.",
 };
 
 // O que fica travado sem a lacuna, derivado do alvo do conserto.
 const GAP_BLOCKS_BY_TARGET: Record<string, string> = {
-    agency: "o que a EVA sabe da sua empresa",
+    agency: "o que a Lume sabe da sua empresa",
     services: "respostas sobre serviço e preço",
     icp: "qualificação de fit",
     playbooks: "o passo a passo da venda",

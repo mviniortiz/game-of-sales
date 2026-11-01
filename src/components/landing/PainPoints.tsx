@@ -1,10 +1,10 @@
 // LP.4 2026-06-09: PROBLEMA em formato razão (ledger) editorial — as 4 dores
 // em Sentient itálica (voz humana, a realidade bagunçada) separadas por
-// hairlines, cada uma anotada pela EVA em mono à direita (voz da máquina).
+// hairlines, cada uma anotada pela Lume em mono à direita (voz da máquina).
 // Copy LP.3 intocada.
 // LP.5 2026-06-12: reveals por scroll (Rise) e razão interativa — o hover
-// risca a dor (linha azul) e a anotação da EVA troca pela resolução em verde.
-// A página encena o produto: a EVA resolvendo cada dor diante do gestor.
+// risca a dor (linha azul) e a anotação da Lume troca pela resolução em verde.
+// A página encena o produto: a Lume resolvendo cada dor diante do gestor.
 // LP.5.1 2026-06-12: em telas de toque (sem hover) cada linha se risca sozinha
 // ao entrar na viewport, com stagger — o efeito-chave passa a existir no mobile.
 import { useEffect, useRef } from "react";
@@ -20,13 +20,13 @@ const PAINS = [
         n: "01",
         title: "Lead quente fica sem resposta.",
         note: "tempo de resposta > 4h",
-        fix: "com EVA: prioridade no inbox",
+        fix: "com Lume: prioridade no inbox",
     },
     {
         n: "02",
         title: "Follow-up depende de cobrança no grupo.",
         note: "follow-up: na memória",
-        fix: "com EVA: follow-up agendado",
+        fix: "com Lume: follow-up agendado",
     },
     {
         n: "03",
@@ -38,7 +38,7 @@ const PAINS = [
         n: "04",
         title: "Você só descobre que o lead esfriou quando já era.",
         note: "esfriou · detectado tarde",
-        fix: "com EVA: alerta enquanto dá tempo",
+        fix: "com Lume: alerta enquanto dá tempo",
     },
 ];
 

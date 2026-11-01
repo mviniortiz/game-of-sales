@@ -24,7 +24,7 @@ const EvaPaywallInline = ({ onClose }: { onClose: () => void }) => {
 
         <div className="space-y-2">
           <h2 className="text-lg font-bold text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
-            Conheça a Eva
+            Conheça a Lume
           </h2>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
             Sua analista de vendas com IA. Pergunte sobre faturamento, metas, ranking, produtos — ela responde com seus dados reais.
@@ -69,7 +69,7 @@ export const EvaSidechat = ({ open, onOpenChange }: EvaSidechatProps) => {
         )}
       >
         <VisuallyHidden.Root>
-          <SheetTitle>Eva — analista com IA</SheetTitle>
+          <SheetTitle>Lume — analista com IA</SheetTitle>
         </VisuallyHidden.Root>
 
         {/* Action bar fina no topo — só com botões de ação, sem título duplicado */}
@@ -88,7 +88,7 @@ export const EvaSidechat = ({ open, onOpenChange }: EvaSidechatProps) => {
           <button
             onClick={() => onOpenChange(false)}
             className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            aria-label="Fechar Eva"
+            aria-label="Fechar Lume"
           >
             <X className="h-4 w-4" />
           </button>

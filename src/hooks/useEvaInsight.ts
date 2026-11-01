@@ -205,14 +205,14 @@ export function useEvaInsight({
           /* corpo não-JSON ou já consumido — cai no fallback abaixo */
         }
         if (body?.code === "RATE_LIMITED") {
-          const e = new Error(body.error || "Limite diário de análises da EVA atingido.");
+          const e = new Error(body.error || "Limite diário de análises da Lume atingido.");
           (e as RateLimitError).code = "RATE_LIMITED";
           (e as RateLimitError).resetAt = body.resetAt ?? null;
           throw e;
         }
-        throw new Error(body?.error || error.message || "Falha ao chamar EVA");
+        throw new Error(body?.error || error.message || "Falha ao chamar Lume");
       }
-      if (!data?.success || !data.analysis) throw new Error("Resposta inválida da EVA");
+      if (!data?.success || !data.analysis) throw new Error("Resposta inválida da Lume");
 
       const analysis = data.analysis;
       const hasQualification =

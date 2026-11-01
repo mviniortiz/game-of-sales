@@ -29,7 +29,7 @@ type NavItem =
 // F2.12 2026-05-20: "Funcionalidades" removida (redundante com "Como funciona").
 const NAV_LINKS: NavItem[] = [
     { kind: "anchor", label: "Como funciona", anchor: "how-it-works" },
-    { kind: "anchor", label: "Eva", anchor: "eva" },
+    { kind: "anchor", label: "Lume", anchor: "eva" },
     { kind: "anchor", label: "Preços", anchor: "pricing" },
 ];
 

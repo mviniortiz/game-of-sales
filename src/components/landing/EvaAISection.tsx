@@ -2,7 +2,7 @@
 // F2.10.2 (2026-05-20) — EvaAISection v3 (camada operacional, não BI)
 // LP.4 (2026-06-09) — v4 "O Fio da Conversa": reskin editorial-técnico.
 //   - Sem framer-motion (CSS-only landing-fade, seção é lazy)
-//   - EvaBot pequeno como marca da EVA
+//   - EvaBot pequeno como marca da Lume
 //   - Conector do fluxo vira o fio pontilhado da página
 //   - Copy LP.3 intocada; frase canônica = 2ª e última ocorrência
 // ─────────────────────────────────────────────────────────────────────────────
@@ -55,7 +55,7 @@ export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
               maxWidth: "760px",
             }}
           >
-            A EVA entende sua agência{" "}
+            A Lume entende sua agência{" "}
             <span className="lp-serif" style={{ color: "var(--lp-eva)", fontWeight: 500 }}>
               antes de sugerir qualquer coisa.
             </span>
@@ -64,7 +64,7 @@ export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
             className="mt-5 text-[15px] sm:text-[17px]"
             style={{ color: "var(--lp-ink-70)", lineHeight: 1.6, maxWidth: "640px" }}
           >
-            Cadastre serviços, ICP, tom de voz, objeções e playbooks. A EVA usa
+            Cadastre serviços, ICP, tom de voz, objeções e playbooks. A Lume usa
             esse contexto para analisar conversas e sugerir próximos passos mais
             consistentes.
           </p>
@@ -74,7 +74,7 @@ export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
             style={{ fontSize: "1.0625rem", color: "var(--lp-ink-70)" }}
           >
             <EvaBot size={18} still />
-            A EVA sugere. Seu time aprova.
+            A Lume sugere. Seu time aprova.
           </p>
         </div>
 
@@ -132,7 +132,7 @@ export function EvaAISection({ onCTAClick }: { onCTAClick?: () => void }) {
                   fontWeight: 600,
                 }}
               >
-                Ver a EVA em ação
+                Ver a Lume em ação
                 <ArrowRight className="h-4 w-4" />
               </button>
             )}
@@ -197,7 +197,7 @@ function FlowMock() {
       <FlowCard
         index={1}
         accent="#1556C0"
-        eyebrow="Contexto da EVA"
+        eyebrow="Contexto da Lume"
         title="Memória comercial carregada"
         items={[
           { label: "Serviços cadastrados", value: "12 ativos" },
@@ -344,7 +344,7 @@ function FlowCard({
             </div>
           )}
 
-          {/* Pills (análise EVA) */}
+          {/* Pills (análise Lume) */}
           {pills && (
             <div className="flex flex-wrap gap-1.5">
               {pills.map((p) => (
@@ -415,7 +415,7 @@ function Connector() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AnalysisPill — pill mono pra análise da EVA
+// AnalysisPill — pill mono pra análise da Lume
 // ─────────────────────────────────────────────────────────────────────────────
 
 function AnalysisPill({

@@ -129,7 +129,7 @@ const STATUS_DOT: Record<ConvStatus["tone"], string> = {
     idle: "bg-[var(--ibx-line-strong)]",
 };
 
-// O orçamento aberto deste card no placar: valor, situação e o que a EVA já
+// O orçamento aberto deste card no placar: valor, situação e o que a Lume já
 // fez. Substitui o "Status e saúde", que dizia "Saudável" com cliente há dias
 // sem responder ao orçamento.
 const QUOTE_TOM: Partial<Record<QuoteItem["state"], { dot: string; bg: string; border: string; text: string }>> = {
@@ -339,7 +339,7 @@ const groupTimeline = (events: TimelineEvent[]): TimelineLine[] => {
     return out;
 };
 
-// Ações recomendadas: a EVA sugere (proxima_acao da análise); o time executa,
+// Ações recomendadas: a Lume sugere (proxima_acao da análise); o time executa,
 // edita ou conclui. Origem fica explícita no card.
 type NextAction = {
     title: string;
@@ -361,7 +361,7 @@ const ACTION_RESULTS: ReadonlyArray<{ key: string; label: string; next: string }
     { key: "sem_fit",        label: "Sem fit agora",              next: "Nutrir ou arquivar o lead" },
 ];
 
-/** Focus card: a próxima ação (da EVA, do cadastro ou do time) e, embaixo, quem
+/** Focus card: a próxima ação (da Lume, do cadastro ou do time) e, embaixo, quem
  *  falou por último. Ao concluir, o time registra o RESULTADO, que define o
  *  próximo passo sugerido. */
 const FocusCard = ({ action, status, conversationHref, onOpenConversation, onComplete, onExecute }: {
@@ -405,7 +405,7 @@ const FocusCard = ({ action, status, conversationHref, onOpenConversation, onCom
                         Próxima ação
                         <span className="mx-1.5 text-[var(--ibx-line-strong)]" aria-hidden>·</span>
                         <span className={isEva ? "text-[var(--vyz-eva)]" : undefined}>
-                            {isEva ? "sugerida pela EVA" : action.source === "deal" ? "do cadastro" : "passo do time"}
+                            {isEva ? "sugerida pela Lume" : action.source === "deal" ? "do cadastro" : "passo do time"}
                         </span>
                     </p>
                     <div className="mt-0.5 flex items-center gap-2 flex-wrap">
@@ -425,7 +425,7 @@ const FocusCard = ({ action, status, conversationHref, onOpenConversation, onCom
                             <button
                                 onClick={onExecute}
                                 className={`inline-flex items-center gap-1.5 h-10 sm:h-9 px-4 rounded-full text-[13px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 ${PRESS}`}
-                                title={action.suggestedReply ? "Abre a conversa com a resposta sugerida pela EVA" : "Abrir a conversa"}
+                                title={action.suggestedReply ? "Abre a conversa com a resposta sugerida pela Lume" : "Abrir a conversa"}
                             >
                                 <WhatsAppIcon className="h-3.5 w-3.5" />
                                 Responder
@@ -765,7 +765,7 @@ export default function DealCommandCenter() {
 
     // â"€â"€ Derived â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
-    // Próxima ação recomendada pela EVA (proxima_acao da análise da conversa).
+    // Próxima ação recomendada pela Lume (proxima_acao da análise da conversa).
     // Fallback: ação registrada no deal (imobiliário) e depois genérica.
     // useDealContextData compartilha cache com o bloco de contexto (sem fetch duplo).
     const dealCtx = useDealContextData(id, (deal as any)?.company_id);
@@ -1023,11 +1023,11 @@ export default function DealCommandCenter() {
                                 ctx={dealCtx}
                                 probability={deal.probability ?? null}
                                 decisionHint={getDecisionMap((deal as any).source_data).some((p) => p.papel === "Decisor financeiro" && (p.origem || "").toLowerCase().includes("mencionad"))
-                                    ? "A EVA identificou possível decisor financeiro mencionado na conversa. Revise antes de adicionar ao mapa de decisão."
+                                    ? "A Lume identificou possível decisor financeiro mencionado na conversa. Revise antes de adicionar ao mapa de decisão."
                                     : null}
                             />
 
-                            {/* EVA.STUDIO.7.1 — regras do EVA Studio orientando a recomendação (só leitura) */}
+                            {/* EVA.STUDIO.7.1 — regras do Lume Studio orientando a recomendação (só leitura) */}
                             <EvaStudioRules />
 
                             {/* Atividade */}
@@ -1276,7 +1276,7 @@ export default function DealCommandCenter() {
                                     </div>
                                 </section>
 
-                                {/* Mapa de decisão: editável em qualquer deal; a EVA sugere da conversa */}
+                                {/* Mapa de decisão: editável em qualquer deal; a Lume sugere da conversa */}
                                 <DecisionMapCard dealId={id!} companyId={(deal as any).company_id ?? null} sourceData={(deal as any).source_data} />
                             </div>
                         </aside>
@@ -1330,7 +1330,7 @@ export default function DealCommandCenter() {
     );
 }
 
-// ─── Leitura da EVA: chance de fechar, o que ela já sabe e o que falta saber ───
+// ─── Leitura da Lume: chance de fechar, o que ela já sabe e o que falta saber ───
 
 function EvaReadingCard({
     ctx,
@@ -1360,7 +1360,7 @@ function EvaReadingCard({
         : null;
     const temperature = getQualificationTemperature(qualification);
     const objection = getQualificationObjection(qualification);
-    // Chance de fechar: a do card; sem ela, o score da EVA.
+    // Chance de fechar: a do card; sem ela, o score da Lume.
     const score = getQualificationScore(qualification);
     const chance = Math.max(0, Math.min(100,
         Math.round(typeof probability === "number" ? probability : (typeof score === "number" ? score : 0))));
@@ -1373,11 +1373,11 @@ function EvaReadingCard({
     const proxima = qualification?.proxima_acao ? proximaAcaoLabel(qualification.proxima_acao) : null;
 
     return (
-        <section className={`${CARD} p-4 sm:p-5`} aria-label="Leitura da EVA">
+        <section className={`${CARD} p-4 sm:p-5`} aria-label="Leitura da Lume">
             <div className="flex items-center justify-between gap-3 mb-4">
                 <div className="flex items-center gap-2">
                     <EvaBot size={20} still />
-                    <p className={CARD_TITLE}>Leitura da EVA</p>
+                    <p className={CARD_TITLE}>Leitura da Lume</p>
                 </div>
                 {hasAnalysis && (
                     <span className={`text-[11px] ${isStaleByMessages ? "text-[var(--vyz-warning)]" : "text-[var(--vyz-text-muted)]"}`}>
@@ -1388,7 +1388,7 @@ function EvaReadingCard({
 
             {!hasAnalysis ? (
                 <p className="text-[13px] text-[var(--vyz-text-muted)] leading-relaxed">
-                    A EVA ainda não leu conversa suficiente para esta oportunidade.
+                    A Lume ainda não leu conversa suficiente para esta oportunidade.
                 </p>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-[minmax(150px,0.8fr)_1fr_1fr] gap-5 sm:gap-6">
@@ -1411,7 +1411,7 @@ function EvaReadingCard({
                     </div>
 
                     <div>
-                        <p className={`${EYEBROW} mb-2`}>O que a EVA já sabe</p>
+                        <p className={`${EYEBROW} mb-2`}>O que a Lume já sabe</p>
                         <ul className="space-y-1.5">
                             {sabe.length > 0 ? sabe.slice(0, 3).map((m, i) => (
                                 <li key={i} className="flex gap-2 text-[12.5px] text-[var(--vyz-text-strong)] leading-snug">
@@ -1440,7 +1440,7 @@ function EvaReadingCard({
                 <div className="mt-4 pt-3.5 border-t border-[var(--ibx-line-soft)] space-y-2">
                     {proxima && (
                         <p className="text-[12.5px] text-[var(--vyz-text-muted)]">
-                            Próxima sugestão da EVA: <span className="font-medium text-[var(--vyz-text-primary)]">{proxima}</span>
+                            Próxima sugestão da Lume: <span className="font-medium text-[var(--vyz-text-primary)]">{proxima}</span>
                         </p>
                     )}
                     {decisionHint && (
@@ -1451,7 +1451,7 @@ function EvaReadingCard({
                     )}
                 </div>
             )}
-            <p className="mt-3.5 text-[11px] text-[var(--vyz-text-muted)]">A EVA sugere e prioriza. Quem decide e aprova é o seu time.</p>
+            <p className="mt-3.5 text-[11px] text-[var(--vyz-text-muted)]">A Lume sugere e prioriza. Quem decide e aprova é o seu time.</p>
         </section>
     );
 }

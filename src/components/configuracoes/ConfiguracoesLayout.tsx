@@ -26,7 +26,7 @@ type NavItem = {
 
 type NavGroup = { label: string; items: NavItem[] };
 
-// Menu do produto de hoje (out/2026): WhatsApp, aprovação da EVA e leads.
+// Menu do produto de hoje (out/2026): WhatsApp, aprovação da Lume e leads.
 // Integrações de infoproduto (Hotmart, Kiwify) e Relatórios públicos saíram do
 // menu por falta de uso; Equipe mora na Gestão.
 const GROUPS: NavGroup[] = [
@@ -48,7 +48,7 @@ const GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "EVA",
+    label: "Lume",
     items: [{ id: "aprovacao", label: "Aprovação no WhatsApp", path: "/configuracoes/aprovacao", icon: CheckCircle, adminOnly: true }],
   },
   {
@@ -64,9 +64,9 @@ const GROUPS: NavGroup[] = [
 const TITLES: Record<string, { title: string; subtitle: string }> = {
   perfil: { title: "Perfil", subtitle: "Seu nome e sua foto no Vyzon" },
   seguranca: { title: "Segurança", subtitle: "Senha e acesso à conta" },
-  organizacao: { title: "Organização", subtitle: "Dados da empresa e o segmento que a EVA usa" },
+  organizacao: { title: "Organização", subtitle: "Dados da empresa e o segmento que a Lume usa" },
   faturamento: { title: "Plano e faturamento", subtitle: "Seu plano, o uso e as cobranças" },
-  aprovacao: { title: "Aprovação no WhatsApp", subtitle: "Como os rascunhos da EVA chegam até você" },
+  aprovacao: { title: "Aprovação no WhatsApp", subtitle: "Como os rascunhos da Lume chegam até você" },
   integracoes: { title: "Integrações", subtitle: "Conecte as ferramentas que você já usa" },
   "webhooks-leads": { title: "Receber leads", subtitle: "Leads do seu site e dos anúncios entram direto no funil" },
   tags: { title: "Tags", subtitle: "Marcadores para oportunidades, conversas e contatos" },

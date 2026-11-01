@@ -2,7 +2,7 @@
 // Markus, 25 mil mensagens em uns 3 minutos (07/10/2026), com as conversas
 // criadas bem antes das mensagens terminarem. Por isso a espera olha as
 // MENSAGENS: conta a cada 3 s e devolve quando param de subir (ou em 3 min).
-// Também expõe o que dá para mostrar ao vivo enquanto a EVA lê: conversas,
+// Também expõe o que dá para mostrar ao vivo enquanto a Lume lê: conversas,
 // mensagens, PDFs que a empresa mandou e os nomes dos contatos que chegaram.
 // Usado pelo Raio-X automático e pelos primeiros passos.
 import { useCallback, useEffect, useRef, useState } from "react";

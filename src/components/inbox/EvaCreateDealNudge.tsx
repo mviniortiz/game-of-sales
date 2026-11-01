@@ -1,10 +1,10 @@
 // VYZON.AGENTS.2 — Degrau do "upgrade de confiança" (nível 2: sugere e faz).
 //
-// Quando a EVA qualifica intenção de compra (deve_criar_oportunidade) numa
+// Quando a Lume qualifica intenção de compra (deve_criar_oportunidade) numa
 // conversa que está FORA do pipeline e o modo híbrido automático NÃO está ligado,
 // ela se oferece proativamente para criar o card — com um mini-confirma (o gestor
 // vê os dados que ela usaria) e 1 clique. É o passo entre "sugere resposta" e
-// "cria sozinha", para o gestor ganhar confiança vendo a EVA acertar.
+// "cria sozinha", para o gestor ganhar confiança vendo a Lume acertar.
 //
 // Presentacional puro: toda a lógica de criação vive no EvaPanel.
 import { Check, ArrowRight, Loader2, Pencil } from "lucide-react";
@@ -59,7 +59,7 @@ export function EvaCreateDealNudge({
             }}
         >
             <div className="px-4 pt-3.5 pb-3">
-                {/* Cabeçalho: marca EVA + selo do modelo assistido */}
+                {/* Cabeçalho: marca Lume + selo do modelo assistido */}
                 <div className="flex items-center justify-between gap-2 mb-2">
                     <p
                         className="text-[10px] uppercase inline-flex items-center gap-1.5"
@@ -72,12 +72,12 @@ export function EvaCreateDealNudge({
                         className="text-[9.5px] uppercase px-1.5 py-0.5 rounded"
                         style={{ background: "rgba(109,40,217,0.1)", color: "#6D28D9", fontWeight: 700, letterSpacing: "0.06em" }}
                     >
-                        EVA sugere · você confirma
+                        Lume sugere · você confirma
                     </span>
                 </div>
 
                 <p className="text-[12.5px] mb-2.5" style={{ color: "#334155", lineHeight: 1.5 }}>
-                    A EVA detectou intenção de compra. Posso adicionar este lead ao pipeline
+                    A Lume detectou intenção de compra. Posso adicionar este lead ao pipeline
                     com os dados abaixo.
                 </p>
 

@@ -1,4 +1,4 @@
-// useEvaDiary — o que a EVA fez desde ontem, em linguagem de gente.
+// useEvaDiary — o que a Lume fez desde ontem, em linguagem de gente.
 //
 // O agente age sozinho no interno (abre card, move etapa, agenda retomada) e
 // escreve rascunhos que o dono aprova no WhatsApp. Este hook junta isso numa
@@ -31,7 +31,7 @@ export interface EventoEva {
     id: string;
     quando: Date;
     texto: string;
-    /** Rascunho escrito pela EVA: ganha o ponto roxo. */
+    /** Rascunho escrito pela Lume: ganha o ponto roxo. */
     rascunho: boolean;
 }
 
@@ -40,9 +40,9 @@ export interface RascunhoPendente {
     codigo: string | null;
     quem: string;
     noWhatsapp: boolean;
-    /** A mensagem que a EVA escreveu. */
+    /** A mensagem que a Lume escreveu. */
     texto: string | null;
-    /** Por que agora, na voz da EVA. */
+    /** Por que agora, na voz da Lume. */
     porque: string | null;
 }
 
@@ -219,7 +219,7 @@ async function buscarDiario(companyId: string): Promise<Omit<EvaDiary, "loading"
     }
 
     // Trace por execução: o dado sempre esteve em agent_steps. É o que responde
-    // "como ela chegou nessa conclusão" sem exigir que a pessoa confie na EVA.
+    // "como ela chegou nessa conclusão" sem exigir que a pessoa confie na Lume.
     const porRun = new Map<string, Step[]>();
     for (const st of steps) {
         if (!st.run_id) continue;

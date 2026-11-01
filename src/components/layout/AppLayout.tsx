@@ -21,8 +21,8 @@ const getPageTitle = (pathname: string) => {
   if (pathname.startsWith("/inbox") || pathname.startsWith("/pulse") || pathname.startsWith("/whatsapp")) return "Conversas";
   if (pathname.startsWith("/pipeline") || pathname.startsWith("/crm")) return "Funil";
   if (pathname.startsWith("/agenda") || pathname.startsWith("/calendario")) return "Agenda";
-  if (pathname.startsWith("/eva-studio")) return "EVA";
-  if (pathname.startsWith("/eva") || pathname.startsWith("/agente")) return "EVA";
+  if (pathname.startsWith("/eva-studio")) return "Lume";
+  if (pathname.startsWith("/eva") || pathname.startsWith("/agente")) return "Lume";
   if (pathname.startsWith("/performance")) return "Resultados";
   if (pathname.startsWith("/calls")) return "Resultados · Calls";
   if (pathname.startsWith("/metas")) return "Resultados · Metas";
@@ -52,7 +52,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
     document.title = `Vyzon | ${title}`;
   }, [location.pathname, conectando]);
 
-  // Sem assinatura, o grátis é o Raio-X e o placar; as telas em que a EVA age
+  // Sem assinatura, o grátis é o Raio-X e o placar; as telas em que a Lume age
   // mostram o caminho para assinar.
 
   return (
@@ -85,9 +85,9 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
           </main>
           <AbasCelular />
         </div>
-        {/* Orb flutuante de ajuda (a "Holly" do Vyzon, na voz da EVA) — global. */}
+        {/* Orb flutuante de ajuda (a "Holly" do Vyzon, na voz da Lume) — global. */}
         <EvaHelpDock />
-        {/* Pergunte à EVA via ⌘J/Ctrl+J: o ⌘K é a busca de clientes. */}
+        {/* Pergunte à Lume via ⌘J/Ctrl+J: o ⌘K é a busca de clientes. */}
         <AskEvaPalette />
       </div>
     </SidebarProvider>

@@ -29,7 +29,7 @@ export function GestaoFunil() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[13px] text-[var(--vyz-text-muted)]">
-          As etapas que a EVA e a equipe usam para mover as oportunidades.
+          As etapas que a Lume e a equipe usam para mover as oportunidades.
         </p>
         <button
           type="button"

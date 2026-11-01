@@ -76,7 +76,7 @@ export const CHANNEL_SPECS: Record<ChannelPlatform, ChannelSpec> = {
 };
 
 const EVENTS: { id: string; label: string; description: string; icon: React.ElementType }[] = [
-  { id: "sale_closed", label: "Venda fechada", description: "A cada venda aprovada, a EVA comemora no canal", icon: ShoppingCart },
+  { id: "sale_closed", label: "Venda fechada", description: "A cada venda aprovada, a Lume comemora no canal", icon: ShoppingCart },
   { id: "goal_reached", label: "Meta batida", description: "Quando um vendedor atinge a meta do mês", icon: Target },
 ];
 

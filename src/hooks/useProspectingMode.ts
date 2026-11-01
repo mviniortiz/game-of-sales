@@ -2,9 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-// PROSPECT.1 — objetivo passado à EVA quando a conversa é de prospecção fria.
+// PROSPECT.1 — objetivo passado à Lume quando a conversa é de prospecção fria.
 // Orienta a resposta sugerida (consultiva, rumo a marcar demo) sem perder o
-// caráter assistido (a EVA sugere, o humano aprova e envia).
+// caráter assistido (a Lume sugere, o humano aprova e envia).
 export const PROSPECTING_OBJECTIVE =
   "Esta é uma empresa integradora de energia solar abordada a frio para prospecção do Vyzon. " +
   "O objetivo é marcar a conversa de 20 minutos do Raio-X grátis das propostas paradas. " +
