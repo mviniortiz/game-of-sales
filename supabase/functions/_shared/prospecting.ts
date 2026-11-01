@@ -8,6 +8,7 @@
 import { evolutionRequest, normalizeNumber } from "./whatsappApproval.ts";
 import { saveNotice } from "./ownerGroups.ts";
 import { llmChat } from "./llm.ts";
+import { contextoDaLeitura, perfilDoNicho } from "./prospectNichos.ts";
 import { PREFIXO_AUDIO } from "./transcribe.ts";
 import { AUTO_ENVIO_MS, dividirMensagens, firstMessage, ehDistribuidora, IMAGEM_RETOMADA, MARCA_IMAGEM, nextSlots, parseProspectCommand, pausaEntreMensagens, portaJaFoi, RAIO_X_LINK, randomCode, respostaPorta, tempoDigitando } from "./prospectingText.ts";
 export { firstMessage, followupMessage, nextSlots, parseProspectCommand, randomCode } from "./prospectingText.ts";
@@ -131,6 +132,8 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
   const system = [
     "Você ajuda o Markus, fundador da Vyzon (Florianópolis), a conversar com donos de integradoras de energia solar.",
     // Mesmo produto visto do lado da distribuidora: as regras abaixo continuam valendo com outro vocabulário.
+    // Nicho novo (vidraçaria em diante): mesmas regras, vocabulário dele, sem print.
+    ...(perfilDoNicho(row.niche) ? [contextoDaLeitura(perfilDoNicho(row.niche)!)] : []),
     ...(ehDistribuidora(row.niche) ? [
       "ESTA EMPRESA É UMA DISTRIBUIDORA de equipamento solar (vende kits, painéis e inversores para integradoras), não uma integradora. Em todas as regras abaixo, leia 'integradora' como a distribuidora, 'cliente' como o integrador que recebeu a cotação, 'proposta' e 'orçamento' como cotação, e 'o dono' como o dono ou o vendedor. Nos modelos de frase, troque assim: 'Tô montando uma ferramenta pra distribuidora: quando uma cotação fica 2 dias sem resposta do integrador, ela avisa o vendedor no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.' No preço, diga 'as 10 primeiras empresas' em vez de 'as 10 primeiras integradoras'. fora_do_perfil também inclui quem vende direto para o consumidor final (é integradora) e quem só fabrica.",
     ] : []),
@@ -346,7 +349,7 @@ export async function cardDoProspect(
   instanceName: string,
   texto: string,
 ): Promise<string | null> {
-  const nome = row.agency_name || (row.phone_e164 ? `+${row.phone_e164}` : "Integradora");
+  const nome = row.agency_name || (row.phone_e164 ? `+${row.phone_e164}` : perfilDoNicho(row.niche)?.singular || "Integradora");
   const socio = (row.metadata?.socio as string | undefined)?.trim();
   const { data: deal, error } = await admin.from("deals").insert({
     title: `${nome} · prospecção`,
@@ -406,7 +409,8 @@ export async function onProspectInbound(
   // Áudio transcrito nunca dispara envio sozinho: a transcrição pode ter errado.
   // Só abriu a porta e ainda não viu o print: a resposta padrão sai sozinha pelo
   // prospect-run (RESPOSTA_PORTA). Mensagem nova antes disso reescreve ou cancela.
-  const porta = lido.kind === "duvida" && lido.porta && args.text.length <= 80 && !args.text.startsWith(PREFIXO_AUDIO) &&
+  // Nicho novo não tem essa exceção: a resposta espera o 👍 do dono como as outras.
+  const porta = !perfilDoNicho(row.niche) && lido.kind === "duvida" && lido.porta && args.text.length <= 80 && !args.text.startsWith(PREFIXO_AUDIO) &&
     !portaJaFoi(row.last_reply, row.niche, row.variant);
   // Modo automático (prospecting_instances.auto_ate, decisão do Markus em 19/10/2026 para
   // a hora do almoço): a sugestão sai sozinha como a resposta padrão. Áudio transcrito
@@ -500,7 +504,7 @@ async function escreverLembrete(row: ProspectRow): Promise<string> {
       {
         role: "system",
         content: [
-          `Você escreve pelo Markus, fundador da Vyzon (Florianópolis), no WhatsApp de uma ${ehDistribuidora(row.niche) ? "distribuidora de equipamento solar" : "integradora de energia solar"}.`,
+          `Você escreve pelo Markus, fundador da Vyzon (Florianópolis), no WhatsApp de uma ${perfilDoNicho(row.niche)?.singular ?? (ehDistribuidora(row.niche) ? "distribuidora de equipamento solar" : "integradora de energia solar")}.`,
           "A empresa parou de responder há um dia, depois da última mensagem do Markus. Escreva UM lembrete de uma frase só, fácil de responder com sim, não ou um número, que retome a última pergunta dele.",
           "No máximo 20 palavras, uma pergunta só. Sem cobrar, sem repetir o que a ferramenta faz, sem oferecer nada novo, sem pedir desculpa, sem emoji, sem travessão. Tom de quem digita no WhatsApp com alguém da região ('pra', 'tá'). Se a última mensagem propôs horário, pergunte se algum dos horários serve.",
           "Nunca pergunte quantas propostas ou cotações, quanto vale ou números do mês: a pergunta de quantidade travou conversas em 14/10/2026. Se a última pergunta do Markus foi de quantidade, troque por uma de sim ou não ('Isso acontece aí ou é raro?').",

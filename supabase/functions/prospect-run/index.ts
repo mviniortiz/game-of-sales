@@ -29,6 +29,7 @@ import {
 import { chipAquecendo, DISTRIBUIDORA_PAUSADA_ATE, ehDistribuidora, NICHO_DISTRIBUIDORA, nextVariant, TESTE_DORES_DESDE, tetoComSinal, tetoDoChip, VARIANTS, type ProspectVariant } from "../_shared/prospectingText.ts";
 import { groupJid } from "../_shared/ownerGroups.ts";
 import { CORTE_ENCAIXE } from "../_shared/prospectFit.ts";
+import { perfilDoNicho } from "../_shared/prospectNichos.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -190,15 +191,17 @@ Deno.serve(async (req) => {
         for (const c of validos) {
           // Contato que voltou de lote expirado mantém versão e texto juntos: a
           // versão decide a resposta da IA (raiox oferece link) e o placar do teste.
-          const jaTinha = Boolean(c.variant && c.first_message);
-          const variant: ProspectVariant = jaTinha ? c.variant : nextVariant(contagem);
-          if (!jaTinha) contagem[variant] = (contagem[variant] || 0) + 1;
+          // Nicho novo (prospectNichos.ts) tem um texto só e fica fora do teste de dores.
+          const novoNicho = Boolean(perfilDoNicho(c.niche));
+          const jaTinha = Boolean((c.variant || novoNicho) && c.first_message);
+          const variant: ProspectVariant | null = novoNicho ? null : jaTinha ? c.variant : nextVariant(contagem);
+          if (!jaTinha && variant) contagem[variant] = (contagem[variant] || 0) + 1;
           c.variant = variant;
           await admin.from("prospecting_allowlist").update({
             status: auto ? "aprovado" : "aguardando_aprovacao",
             ...(auto ? { approved_at: agora.toISOString() } : {}),
             variant,
-            first_message: jaTinha ? c.first_message : firstMessage(c, variant),
+            first_message: jaTinha ? c.first_message : firstMessage(c, variant ?? undefined),
             followup_message: followupMessage(c),
           }).eq("id", c.id);
         }
@@ -209,7 +212,8 @@ Deno.serve(async (req) => {
         });
         const lista = validos.map((c: any, i: number) => {
           const motivos = ((c.metadata?.qualif?.motivos ?? []) as string[]).slice(0, 2).join(", ");
-          return `${i + 1}. ${c.agency_name}${c.city ? ` (${c.city})` : ""}${ehDistribuidora(c.niche) ? " · distribuidora (teste)" : ""} · nota ${c.fit_score}${motivos ? ` · ${motivos}` : ""}`;
+          const rotulo = perfilDoNicho(c.niche)?.singular ?? (ehDistribuidora(c.niche) ? "distribuidora (teste)" : null);
+          return `${i + 1}. ${c.agency_name}${c.city ? ` (${c.city})` : ""}${rotulo ? ` · ${rotulo}` : ""} · nota ${c.fit_score}${motivos ? ` · ${motivos}` : ""}`;
         }).join("\n");
         const destino = (await groupJid(admin, instanceName, "prospeccao")) || ownerNumber;
         if (auto) {
