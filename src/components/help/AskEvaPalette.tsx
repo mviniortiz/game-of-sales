@@ -1,4 +1,4 @@
-// AskEvaPalette — "Pergunte à EVA" via ⌘K/Ctrl+K, em qualquer tela do app.
+// AskEvaPalette — "Pergunte à EVA" via ⌘J/Ctrl+J, em qualquer tela do app.
 // Command palette (estilo Ask-AI do Mintlify): input no topo, sugestões
 // animadas, e ao perguntar vira o chat de ajuda da EVA (mesma conversa do
 // EvaHelpDock — hook useEvaHelpChat + localStorage compartilhados).
@@ -32,10 +32,10 @@ export function AskEvaPalette() {
         if (threadRef.current) threadRef.current.scrollTop = threadRef.current.scrollHeight;
     };
 
-    // Ctrl/Cmd+K abre/fecha de qualquer tela (não rouba o atalho de quem digita).
+    // Ctrl/Cmd+J abre/fecha de qualquer tela (não rouba o atalho de quem digita).
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "j") {
                 const t = e.target as HTMLElement | null;
                 const tag = t?.tagName?.toLowerCase();
                 const isTyping = (tag === "input" || tag === "textarea" || t?.isContentEditable) && !open;

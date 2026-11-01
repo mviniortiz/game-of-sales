@@ -1,5 +1,5 @@
 // Lógica do chat de AJUDA da EVA (edge eva-help), compartilhada entre o
-// EvaHelpDock (orb flutuante) e o AskEvaPalette (⌘K). Cada UI tem a própria
+// EvaHelpDock (orb flutuante) e o AskEvaPalette (⌘J). Cada UI tem a própria
 // instância do hook; o histórico vive no localStorage (por usuário) e
 // reloadFromStorage() ao abrir mantém as duas entradas na mesma conversa.
 import { useCallback, useEffect, useState } from "react";

@@ -1,34 +1,30 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// F2.6 (2026-05-19) — Sidebar visual polish
+// Sidebar (01/11/2026): azul-noite como as faixas da home e organizada pelo dia do
+// integrador. Hoje em cima; Orçamentos, Conversas, Funil e Agenda na venda;
+// Resultados e Configurações no pé, com a EVA como um cartão vivo.
 //
-// Mudanças vs F2.5:
-//   - Ícones: Phosphor weight="duotone" (mais presença que Lucide stroke)
-//   - Drop do AnimatedIcon (estava com glow emerald fora do brand)
-//   - Item ativo: pill azul + ícone azul Vyzon
-//   - CTA "Novo lead": 40px, radius 12px, gradient + sombra
-//   - Footer: avatar menor, Admin badge ámbar discreto, Pro badge azul
-//   - Gestão fica no footer, sem ficar parecendo nav principal
-//
-// Sem mudança de: rotas, auth, RLS, lógica de roles/feature flags.
+// Os endereços continuam os antigos (/inicio, /inbox, /pipeline, /admin): o nome
+// mudou no menu, mas o plano, a demo embutida e o analytics dependem deles.
 // ─────────────────────────────────────────────────────────────────────────────
 import { lazy, Suspense, useState, useEffect } from "react";
 import type { ComponentType } from "react";
 import {
-  House,
+  CalendarBlank,
   ChatCircleText,
-  Kanban as KanbanIcon,
-  GearSix,
-  ShieldCheck,
-  ChartLineUp,
-  Lifebuoy as LifeBuoyIcon,
-  Plus,
   CaretUpDown,
-  UserCircleGear,
-  Question,
-  SignOut,
-  Star,
-  Receipt,
+  ChartLineUp,
+  CreditCard,
   FlowArrow,
+  GearSix,
+  Kanban as KanbanIcon,
+  Lifebuoy as LifeBuoyIcon,
+  MagnifyingGlass,
+  Question,
+  Receipt,
+  SidebarSimple,
+  SignOut,
+  SunHorizon,
+  UserCircleGear,
   type IconProps,
 } from "@phosphor-icons/react";
 import {
@@ -45,168 +41,96 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { usePlan } from "@/hooks/usePlan";
+import { useContagensMenu } from "@/hooks/useContagensMenu";
 import { CONTACT, whatsappUrl } from "@/config/contact";
-import { supabase } from "@/integrations/supabase/client";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
+import { EvaBot } from "@/components/eva/EvaBot";
+import { WhatsappStatusPill } from "@/components/whatsapp/WhatsappStatusPill";
+import { Count } from "@/vendor/stageshow/motion/Count";
+import { BuscaClientes } from "./BuscaClientes";
+import "./lateral.css";
 const NovaVendaModal = lazy(() => import("@/components/vendas/NovaVendaModal").then((m) => ({ default: m.NovaVendaModal })));
 // F4G 2026-05-19: modal "Criar oportunidade" separado, grava em deals
 const NovaOportunidadeModal = lazy(() => import("@/components/deals/NovaOportunidadeModal").then((m) => ({ default: m.NovaOportunidadeModal })));
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion, useReducedMotion } from "framer-motion";
 
 // Phosphor icon component type
 type PhosphorIcon = ComponentType<IconProps>;
+type Contagem = "hoje" | "orcamentos" | "conversas";
 
-// ─── Menu ────────────────────────────────────────────────────────────────────
-// Operação em cima (Orçamentos, Início, Inbox, Pipeline); empresa e conta num
-// grupo próprio no rodapé. Agenda, EVA Studio e Performance seguem na busca
-// (Ctrl+K) e nos links contextuais, fora do menu.
 type NavItem = {
   title: string;
   url: string;
   icon: PhosphorIcon;
-  badge?: "rotting";
+  conta?: Contagem;
   requires?: "admin" | "super_admin";
 };
 
-const mainNavItems: NavItem[] = [
-  { title: "Orçamentos", url: "/orcamentos", icon: Receipt },
-  { title: "Início", url: "/inicio", icon: House },
-  { title: "Inbox", url: "/inbox", icon: ChatCircleText },
-  { title: "Pipeline", url: "/pipeline", icon: KanbanIcon, badge: "rotting" },
+const hojeItem: NavItem = { title: "Hoje", url: "/inicio", icon: SunHorizon, conta: "hoje" };
+
+const vendaItems: NavItem[] = [
+  { title: "Orçamentos", url: "/orcamentos", icon: Receipt, conta: "orcamentos" },
+  { title: "Conversas", url: "/inbox", icon: ChatCircleText, conta: "conversas" },
+  { title: "Funil", url: "/pipeline", icon: KanbanIcon },
+  { title: "Agenda", url: "/agenda", icon: CalendarBlank },
 ];
 
-const accountNavItems: NavItem[] = [
-  { title: "Gestão", url: "/admin", icon: ChartLineUp, requires: "admin" },
-  { title: "Automações", url: "/automacoes", icon: FlowArrow, requires: "super_admin" },
+const contaItems: NavItem[] = [
+  { title: "Resultados", url: "/admin", icon: ChartLineUp, requires: "admin" },
   { title: "Configurações", url: "/configuracoes", icon: GearSix },
+  // Ferramentas do Vyzon, nunca do cliente.
+  { title: "Automações", url: "/automacoes", icon: FlowArrow, requires: "super_admin" },
   { title: "Suporte", url: "/admin/suporte", icon: LifeBuoyIcon, requires: "super_admin" },
 ];
 
-function SidebarCta({ collapsed, onClick }: { collapsed: boolean; onClick: () => void }) {
-  const button = (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label="Novo lead"
-      className={`relative w-full flex items-center justify-center gap-1.5 h-9 rounded-full border border-[#E2E8F0] bg-white text-[#0B1220] text-[13px] font-semibold tracking-[-0.01em] transition-[transform,box-shadow,background-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#F8FAFC] active:scale-[0.97] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.3)] shadow-[0_1px_2px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-white/5 dark:text-white`}
-    >
-      <Plus size={15} weight="bold" aria-hidden />
-      {!collapsed && <span>Novo lead</span>}
-    </button>
-  );
-  if (!collapsed) return button;
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent side="right" className="text-[11px]">Novo lead</TooltipContent>
-    </Tooltip>
-  );
-}
-
 interface UserMenuProps {
   collapsed: boolean;
-  profile: { nome?: string | null; avatar_url?: string | null } | null;
-  user: { email?: string | null } | null;
-  isAdmin: boolean;
-  isProfileActive: boolean;
+  nome: string;
+  empresa: string;
+  planoRotulo?: string;
   navigate: (path: string) => void;
   signOut: () => void;
-  getInitials: (nome: string) => string;
 }
 
-function UserMenu({
-  collapsed, profile, user, isProfileActive,
-  navigate, signOut, getInitials,
-}: UserMenuProps) {
-
-  const trigger = collapsed ? (
-    <button
-      aria-label="Abrir menu da conta"
-      className={`p-1 rounded-md transition-colors ${
-        isProfileActive ? "bg-[var(--vyz-surface-2)]" : "hover:bg-[var(--vyz-surface-2)]"
-      }`}
-    >
-      <Avatar className="h-7 w-7 rounded-md">
-        {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" className="rounded-md" />}
-        <AvatarFallback className="bg-[var(--vyz-surface-2)] text-[var(--vyz-text-muted)] text-[10px] font-semibold rounded-md">
-          {profile?.nome ? getInitials(profile.nome) : "U"}
-        </AvatarFallback>
-      </Avatar>
-    </button>
-  ) : (
-    <button
-      aria-label="Abrir menu da conta"
-      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg transition-colors ${
-        isProfileActive ? "bg-[var(--vyz-surface-2)]" : "hover:bg-[var(--vyz-surface-2)]"
-      }`}
-    >
-      <Avatar className="h-7 w-7 shrink-0 rounded-md">
-        {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" className="rounded-md" />}
-        <AvatarFallback className="bg-[var(--vyz-surface-2)] text-[var(--vyz-text-muted)] text-[10.5px] font-semibold rounded-md">
-          {profile?.nome ? getInitials(profile.nome) : "U"}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex flex-col items-start text-left flex-1 min-w-0 leading-tight">
-        <span className="text-[12.5px] font-semibold text-[var(--vyz-text-primary)] truncate w-full tracking-tight">
-          {profile?.nome || "Usuário"}
-        </span>
-        <span className="text-[10.5px] text-[var(--vyz-text-muted)] truncate w-full mt-0.5">
-          {user?.email || ""}
-        </span>
-      </div>
-      <CaretUpDown size={14} weight="bold" className="text-[var(--vyz-text-soft)] shrink-0" />
-    </button>
-  );
-
+function UserMenu({ collapsed, nome, empresa, planoRotulo, navigate, signOut }: UserMenuProps) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
-      <DropdownMenuContent
-        side={collapsed ? "right" : "top"}
-        align={collapsed ? "start" : "center"}
-        sideOffset={8}
-        className="w-56"
-      >
-        <DropdownMenuItem onClick={() => navigate("/configuracoes/perfil")} className="text-[12.5px]">
-          <UserCircleGear size={16} weight="duotone" className="mr-2 text-muted-foreground" />
+      <DropdownMenuTrigger asChild>
+        <button type="button" aria-label="Abrir menu da conta" className="vz-conta" style={collapsed ? { justifyContent: "center", padding: 6 } : undefined}>
+          {collapsed ? (
+            <UserCircleGear size={20} aria-hidden />
+          ) : (
+            <>
+              <span className="vz-conta__texto">
+                <span className="vz-conta__nome">{nome}</span>
+                {empresa && <span className="vz-conta__empresa">{empresa}</span>}
+              </span>
+              <CaretUpDown size={14} weight="bold" aria-hidden style={{ opacity: 0.6, flex: "none" }} />
+            </>
+          )}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side={collapsed ? "right" : "top"} align={collapsed ? "start" : "center"} sideOffset={8} className="w-56">
+        <DropdownMenuItem onClick={() => navigate("/configuracoes/perfil")} className="text-[13px]">
+          <UserCircleGear size={16} className="mr-2 text-muted-foreground" aria-hidden />
           Minha conta
         </DropdownMenuItem>
-
-        <DropdownMenuSeparator />
-
+        <DropdownMenuItem onClick={() => navigate("/configuracoes/faturamento")} className="text-[13px]">
+          <CreditCard size={16} className="mr-2 text-muted-foreground" aria-hidden />
+          Plano{planoRotulo ? ` ${planoRotulo}` : ""}
+        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => window.open(whatsappUrl(CONTACT.defaultMessage), "_blank", "noopener,noreferrer")}
-          className="text-[12.5px]"
+          className="text-[13px]"
         >
-          <Question size={16} weight="duotone" className="mr-2 text-muted-foreground" />
-          Ajuda & suporte
+          <Question size={16} className="mr-2 text-muted-foreground" aria-hidden />
+          Ajuda e suporte
         </DropdownMenuItem>
-
         <DropdownMenuSeparator />
-
-        <DropdownMenuItem
-          onClick={signOut}
-          className="text-[12.5px] text-rose-600 focus:text-rose-700 focus:bg-rose-50"
-        >
-          <SignOut size={16} weight="duotone" className="mr-2" />
+        <DropdownMenuItem onClick={signOut} className="text-[13px] text-destructive focus:text-destructive">
+          <SignOut size={16} className="mr-2" aria-hidden />
           Sair
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -215,48 +139,19 @@ function UserMenu({
 }
 
 export function AppSidebar() {
-  const { state } = useSidebar();
-  const { user, isAdmin, isSuperAdmin, signOut, profile, companyId } = useAuth();
-  const { activeCompanyId } = useTenant();
-  const { currentPlan, planInfo } = usePlan();
+  const { state, toggleSidebar, isMobile, setOpenMobile } = useSidebar();
+  const { user, isAdmin, isSuperAdmin, signOut, profile } = useAuth();
+  const { companies, activeCompanyId } = useTenant();
+  const { planInfo } = usePlan();
   const location = useLocation();
   const navigate = useNavigate();
-  const collapsed = state === "collapsed";
+  const collapsed = state === "collapsed" && !isMobile;
   const reduceMotion = useReducedMotion();
+  const contagens = useContagensMenu();
+  const [buscaAberta, setBuscaAberta] = useState(false);
   const [isNovaVendaOpen, setIsNovaVendaOpen] = useState(false);
   // F4G: estado separado pro modal de oportunidade (event diferente)
   const [isNovaOportunidadeOpen, setIsNovaOportunidadeOpen] = useState(false);
-  const [rottingDealsCount, setRottingDealsCount] = useState(0);
-
-  const effectiveCompanyId = isSuperAdmin ? activeCompanyId : companyId;
-
-  useEffect(() => {
-    if (!effectiveCompanyId) {
-      setRottingDealsCount(0);
-      return;
-    }
-
-    const fetchRottingCount = async () => {
-      const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-      const cutoff = threeDaysAgo.toISOString();
-
-      const { count, error } = await supabase
-        .from("deals")
-        .select("id", { count: "exact", head: true })
-        .eq("company_id", effectiveCompanyId)
-        .lt("updated_at", cutoff)
-        .not("stage", "in", "(closed_won,closed_lost)");
-
-      if (!error && count !== null) {
-        setRottingDealsCount(count);
-      }
-    };
-
-    fetchRottingCount();
-    const interval = setInterval(fetchRottingCount, 60000);
-    return () => clearInterval(interval);
-  }, [effectiveCompanyId]);
 
   // F4G: dois eventos separados. 'open-nova-venda' (legado) abre o modal que
   // grava em vendas/metas/performance. 'open-nova-oportunidade' abre o modal
@@ -272,25 +167,11 @@ export function AppSidebar() {
     };
   }, []);
 
-  const filteredAccountItems = accountNavItems.filter((item) => {
+  const permitido = (item: NavItem) => {
     if (item.requires === "admin") return isAdmin;
     if (item.requires === "super_admin") return isSuperAdmin;
     return true;
-  });
-
-  const getInitials = (nome: string) => {
-    return nome
-      .split(" ")
-      .map((n) => n.charAt(0))
-      .join("")
-      .substring(0, 2)
-      .toUpperCase();
   };
-
-  // Item no padrão de sidebar da Apple: ícone em contorno parado, preenchido
-  // e azul quando ativo; o realce ativo desliza entre itens (layoutId).
-  const itemClass =
-    "group relative flex items-center gap-3 h-9 px-2.5 rounded-[10px] text-[13.5px] font-medium tracking-[-0.01em] outline-none transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.28)]";
 
   // Analytics: clique manual em aba. Na demo a EVA navega por postMessage, então
   // qualquer clique na sidebar = a pessoa saindo do roteiro guiado (nav_off_flow).
@@ -302,184 +183,145 @@ export function AppSidebar() {
       trackBehavior(DEMO_EVENTS.NAV_OFF_FLOW, { tab: item.url, title: item.title });
       clarityUpgrade("nav_off_flow");
     }
+    if (isMobile) setOpenMobile(false);
+  };
+
+  const estaAtivo = (url: string) => {
+    if (url === "/admin") return location.pathname === "/admin";
+    return location.pathname === url || location.pathname.startsWith(`${url}/`);
   };
 
   const renderNavItem = (item: NavItem) => {
-    const isActive =
-      location.pathname === item.url ||
-      (item.url !== "/inicio" && location.pathname.startsWith(item.url + "/")) ||
-      (item.url === "/admin" && location.pathname === "/admin");
-    const showBadge = item.badge === "rotting" && rottingDealsCount > 0;
+    const ativo = estaAtivo(item.url);
     const Icon = item.icon;
+    const numero = item.conta ? contagens[item.conta] : 0;
 
-    const linkContent = (
+    const link = (
       <NavLink
         to={item.url}
         end={item.url === "/inicio" || item.url === "/admin"}
-        className={`${itemClass} ${
-          isActive
-            ? "text-[var(--vyz-text-primary)]"
-            : "text-[var(--vyz-text-muted)] hover:text-[var(--vyz-text-primary)] hover:bg-[var(--vyz-surface-2)]"
-        } ${collapsed ? "justify-center px-0" : ""}`}
+        className="vz-nav"
         activeClassName=""
         aria-label={item.title}
-        aria-current={isActive ? "page" : undefined}
+        aria-current={ativo ? "page" : undefined}
+        data-ativo={ativo || undefined}
         data-demo-nav={item.url}
         onClick={() => handleNavClick(item)}
       >
-        {isActive &&
+        {ativo &&
           (reduceMotion ? (
-            <span className="absolute inset-0 rounded-[10px] pointer-events-none bg-[var(--vyz-accent-soft-10)]" aria-hidden />
+            <span className="vz-nav__pilula" aria-hidden />
           ) : (
-            <motion.span
-              layoutId="sidebar-active-pill"
-              transition={{ type: "spring", stiffness: 460, damping: 38 }}
-              className="absolute inset-0 rounded-[10px] pointer-events-none bg-[var(--vyz-accent-soft-10)]"
-              aria-hidden
-            />
+            <motion.span layoutId="sidebar-active-pill" transition={{ type: "spring", stiffness: 460, damping: 38 }} className="vz-nav__pilula" aria-hidden />
           ))}
-
-        <span className="relative shrink-0 inline-flex">
-          <Icon
-            size={19}
-            weight={isActive ? "fill" : "regular"}
-            className={isActive ? "text-[var(--vyz-accent)]" : "text-[var(--vyz-text-muted)] group-hover:text-[var(--vyz-text-primary)]"}
-            aria-hidden
-          />
-          {showBadge && collapsed && (
-            <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[15px] h-[15px] px-1 rounded-full bg-[#D97706] text-white text-[9px] font-semibold leading-none ring-2 ring-[var(--vyz-surface-1)]">
-              {rottingDealsCount > 99 ? "99+" : rottingDealsCount}
-            </span>
-          )}
+        <span className="vz-nav__icone">
+          <Icon size={19} weight={ativo ? "fill" : "regular"} aria-hidden />
         </span>
-
-        {!collapsed && (
-          <>
-            <span className="relative flex-1 truncate">{item.title}</span>
-            {showBadge && (
-              <span
-                className="relative inline-flex items-center justify-center min-w-[22px] h-[19px] px-1.5 rounded-full text-[11px] font-semibold tabular-nums bg-[rgba(217,119,6,0.12)] text-[#B45309]"
-                title={`${rottingDealsCount} oportunidades paradas`}
-              >
-                {rottingDealsCount}
-              </span>
-            )}
-          </>
+        {!collapsed && <span className="vz-nav__nome">{item.title}</span>}
+        {numero > 0 && (
+          <span className="vz-nav__conta" data-forte={item.conta === "hoje" || undefined}>
+            <Count value={numero} format={(n) => (n > 99 ? "99+" : String(Math.round(n)))} duration={420} />
+          </span>
         )}
       </NavLink>
     );
 
-    if (collapsed) {
-      return (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <SidebarMenuButton asChild>{linkContent}</SidebarMenuButton>
-          </TooltipTrigger>
-          <TooltipContent side="right" className="font-medium">
-            {item.title}
-            {showBadge && ` (${rottingDealsCount} parados)`}
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
-
-    return <SidebarMenuButton asChild>{linkContent}</SidebarMenuButton>;
+    if (!collapsed) return <div key={item.url}>{link}</div>;
+    return (
+      <Tooltip key={item.url}>
+        <TooltipTrigger asChild>{link}</TooltipTrigger>
+        <TooltipContent side="right" className="font-medium">
+          {item.title}
+        </TooltipContent>
+      </Tooltip>
+    );
   };
 
-  const isProfileActive = location.pathname.startsWith("/configuracoes");
+  const nome = profile?.nome || user?.email || "Conta";
+  const empresa = companies.find((c) => c.id === activeCompanyId)?.name ?? "";
+  const evaAtiva = location.pathname.startsWith("/eva-studio");
+  const evaTexto =
+    contagens.hoje > 0
+      ? `${contagens.hoje} esperando o seu 1`
+      : contagens.acompanhando > 0
+        ? `De olho em ${contagens.acompanhando} ${contagens.acompanhando === 1 ? "orçamento" : "orçamentos"}`
+        : "De olho no seu WhatsApp";
 
   return (
     <TooltipProvider delayDuration={300}>
-      <Sidebar
-        collapsible="icon"
-        className="text-[var(--vyz-text-primary)]"
-        style={{ background: "var(--vyz-surface-1)", borderRight: "1px solid var(--vyz-border)" }}
-      >
-        <SidebarContent className="gap-0">
-          <div className={`pt-5 pb-4 ${collapsed ? "px-2 justify-center" : "pl-4 pr-3 justify-between"} flex items-center gap-2`}>
-            {collapsed ? <ThemeLogo iconOnly className="h-7 w-7" /> : <ThemeLogo className="h-[22px] w-auto" />}
-            {!collapsed && <ReminderBell />}
-          </div>
-
-          <div className="px-3 pb-3">
-            <SidebarCta collapsed={collapsed} onClick={() => setIsNovaOportunidadeOpen(true)} />
-          </div>
-
-          {collapsed && (
-            <div className="px-3 pb-2 flex items-center justify-center">
-              <ReminderBell />
+      <Sidebar collapsible="icon">
+        <SidebarContent className="gap-0 overflow-hidden">
+          <div className="vz-lateral" data-recolhida={collapsed || undefined}>
+            <div className="vz-lateral__topo">
+              {collapsed ? <ThemeLogo iconOnly className="h-7 w-7" /> : <ThemeLogo variant="inverse" className="h-[22px] w-auto" />}
+              <div className="vz-lateral__acoes">
+                {!collapsed && <ReminderBell />}
+                <button type="button" className="vz-lateral__icone" aria-label={collapsed ? "Abrir menu" : "Recolher menu"} onClick={toggleSidebar}>
+                  <SidebarSimple size={18} aria-hidden />
+                </button>
+              </div>
             </div>
-          )}
 
-          <SidebarGroup className="py-1 px-2">
-            <SidebarGroupContent>
-              <SidebarMenu className="gap-px">
-                {mainNavItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>{renderNavItem(item)}</SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
+            <button type="button" className="vz-busca" aria-label="Buscar cliente" onClick={() => setBuscaAberta(true)}>
+              <MagnifyingGlass size={16} aria-hidden />
+              {!collapsed && (
+                <>
+                  <span>Buscar cliente</span>
+                  <kbd>⌘K</kbd>
+                </>
+              )}
+            </button>
 
-        <SidebarFooter className="mt-auto p-0" style={{ borderTop: "1px solid var(--vyz-border)" }}>
-          <div className={collapsed ? "p-2" : "px-2 pt-2"}>
-            <SidebarMenu className="gap-px">
-              {filteredAccountItems.map((item) => (
-                <SidebarMenuItem key={item.title}>{renderNavItem(item)}</SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </div>
+            <div className="vz-grupo vz-grupo--limpo">{renderNavItem(hojeItem)}</div>
 
-          {/* User menu + plan badges */}
-          <div className={collapsed ? "p-2 flex justify-center" : "p-2.5 space-y-1.5"}>
-            <UserMenu
-              collapsed={collapsed}
-              profile={profile}
-              user={user}
-              isAdmin={isAdmin}
-              isProfileActive={isProfileActive}
-              navigate={navigate}
-              signOut={signOut}
-              getInitials={getInitials}
-            />
-            {/* F2.7: badges mais discretos — sem bg colorido berrante, só
-                texto + ícone com cor sutil. Plano vira link com underline-hover. */}
-            {!collapsed && (isAdmin || planInfo) && (
-              <div className="flex items-center gap-3 px-2 pt-0.5">
-                {isAdmin && (
-                  <span
-                    className="inline-flex items-center gap-1 text-[10.5px] font-medium text-[var(--vyz-text-muted)]"
-                    aria-label="Você é admin"
-                  >
-                    <ShieldCheck size={11} weight="duotone" className="text-[#B45309]/80" />
-                    Admin
+            <div className="vz-grupo">
+              {!collapsed && <div className="vz-grupo__rotulo">Venda</div>}
+              {vendaItems.filter(permitido).map(renderNavItem)}
+            </div>
+
+            <div className="vz-lateral__pe">
+              <div className="vz-grupo vz-grupo--limpo">{contaItems.filter(permitido).map(renderNavItem)}</div>
+
+              {!collapsed && (
+                <div className="vz-lateral__aviso">
+                  <WhatsappStatusPill soProblema />
+                </div>
+              )}
+
+              <NavLink
+                to={isAdmin ? "/eva-studio" : "/inicio"}
+                className="vz-eva-card"
+                activeClassName=""
+                aria-label={`EVA: ${evaTexto}`}
+                aria-current={evaAtiva ? "page" : undefined}
+                data-ativo={evaAtiva || undefined}
+                onClick={() => isMobile && setOpenMobile(false)}
+              >
+                <span className="vz-eva-card__bot">
+                  <EvaBot size={44} state={contagens.hoje > 0 ? "alert" : "idle"} tema="sol" />
+                </span>
+                {!collapsed && (
+                  <span className="vz-eva-card__texto">
+                    <b>EVA</b>
+                    <span>{evaTexto}</span>
                   </span>
                 )}
-                {planInfo && (
-                  <button
-                    onClick={() => navigate("/configuracoes/faturamento")}
-                    aria-label={`Plano ${planInfo.label} — abrir faturamento`}
-                    className="inline-flex items-center gap-1 text-[10.5px] font-medium text-[var(--vyz-text-muted)] hover:text-[var(--vyz-text-primary)] transition-colors"
-                    title="Ver faturamento"
-                  >
-                    <Star
-                      size={11}
-                      weight="fill"
-                      className={
-                        currentPlan !== "free"
-                          ? "text-[var(--vyz-accent)]"
-                          : "text-[var(--vyz-text-soft)]"
-                      }
-                    />
-                    {planInfo.label}
-                  </button>
-                )}
-              </div>
-            )}
+              </NavLink>
+
+              <UserMenu
+                collapsed={collapsed}
+                nome={nome}
+                empresa={empresa}
+                planoRotulo={planInfo?.label}
+                navigate={navigate}
+                signOut={signOut}
+              />
+            </div>
           </div>
-        </SidebarFooter>
+        </SidebarContent>
       </Sidebar>
+
+      <BuscaClientes aberta={buscaAberta} aoMudar={setBuscaAberta} />
 
       {isNovaVendaOpen && (
         <Suspense fallback={null}>

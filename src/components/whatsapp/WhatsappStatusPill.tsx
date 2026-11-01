@@ -25,7 +25,7 @@ function hora(iso: string | null): string {
     return iso ? new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
 }
 
-export function WhatsappStatusPill() {
+export function WhatsappStatusPill({ soProblema = false }: { soProblema?: boolean }) {
     const { data } = useWhatsappStatus();
     const [qrAberto, setQrAberto] = useState(false);
     const queryClient = useQueryClient();
@@ -34,6 +34,8 @@ export function WhatsappStatusPill() {
 
     // Sem dado do vigia ainda: melhor não mostrar nada do que chutar "conectado".
     if (!data || data.estado === "verificando") return null;
+    // Na sidebar a pílula só aparece quando o número pede atenção.
+    if (soProblema && data.estado === "conectado") return null;
 
     const { estado } = data;
     const quando = haQuanto(data.desde);

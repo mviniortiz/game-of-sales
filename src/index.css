@@ -66,47 +66,54 @@
      LIGHT é default em :root. DARK override em .dark logo abaixo.
      Brand azul #2563EB (substituiu emerald #00E37A na migração de paleta).
   ──────────────────────────────────────────────────────────────────────── */
-  --vyz-bg: #F3F6FA;
+  --vyz-bg: #F3EFE4;
+  /* Mesmos valores da home (.lp-solar): amarelo só para o que importa na tela. */
+  --vyz-sol: #FFC933;
+  --vyz-sol-soft: #FFF3CC;
+  --vyz-sol-line: #C99400;
+  --vyz-noite: #0F1730;
+  --vyz-noite-2: #1C2748;
+  --vyz-noite-3: #24305A;
   --vyz-surface-1: #FFFFFF;
-  --vyz-surface-2: #F1F5F9;
-  --vyz-surface-3: #E2E8F0;
-  --vyz-surface-elevated: rgba(255,255,255,0.95);
+  --vyz-surface-2: #EAE5D7;
+  --vyz-surface-3: #DCD6C8;
+  --vyz-surface-elevated: rgba(255,255,255,0.96);
 
-  --vyz-border-subtle: #EEF2F7;
-  --vyz-border: #E6EDF5;
-  --vyz-border-strong: #D7DEE9;
+  --vyz-border-subtle: #EAE5D7;
+  --vyz-border: #DCD6C8;
+  --vyz-border-strong: #CCC5B4;
 
-  --vyz-text-primary: #0B1220;
-  --vyz-text-strong: #1F2A3B;
-  --vyz-text: #334155;
-  --vyz-text-muted: #64748B;
-  --vyz-text-soft: #94A3B8;
-  --vyz-text-dim: #CBD5E1;
+  --vyz-text-primary: #0F1730;
+  --vyz-text-strong: #1C2748;
+  --vyz-text: #3B4560;
+  --vyz-text-muted: #566079;
+  --vyz-text-soft: #5F6980;
+  --vyz-text-dim: #8A92A3;
 
-  --vyz-accent: #2563EB;
-  --vyz-accent-light: #4A8CE8;
-  --vyz-accent-dark: #1D4ED8;
-  --vyz-brand-blue: #2563EB;
-  --vyz-brand-blue-light: #4A8CE8;
-  --vyz-accent-soft-4: rgba(37,99,235,0.04);
-  --vyz-accent-soft-6: rgba(37,99,235,0.06);
-  --vyz-accent-soft-8: rgba(37,99,235,0.08);
-  --vyz-accent-soft-10: rgba(37,99,235,0.10);
-  --vyz-accent-soft-12: rgba(37,99,235,0.12);
-  --vyz-accent-border: rgba(37,99,235,0.22);
-  --vyz-accent-border-strong: rgba(37,99,235,0.32);
-  --vyz-accent-text: #2563EB;
+  --vyz-accent: #1556C0;
+  --vyz-accent-light: #2F6FD8;
+  --vyz-accent-dark: #124AA6;
+  --vyz-brand-blue: #1556C0;
+  --vyz-brand-blue-light: #2F6FD8;
+  --vyz-accent-soft-4: rgba(21,86,192,0.04);
+  --vyz-accent-soft-6: rgba(21,86,192,0.06);
+  --vyz-accent-soft-8: rgba(21,86,192,0.08);
+  --vyz-accent-soft-10: rgba(21,86,192,0.10);
+  --vyz-accent-soft-12: rgba(21,86,192,0.12);
+  --vyz-accent-border: rgba(21,86,192,0.22);
+  --vyz-accent-border-strong: rgba(21,86,192,0.32);
+  --vyz-accent-text: #1556C0;
 
-  --vyz-gradient-accent: linear-gradient(135deg, #2563EB, #4A8CE8);
-  --vyz-gradient-hero-text: linear-gradient(135deg, #4A8CE8, #2563EB, #1D4ED8);
-  --vyz-gradient-dual: linear-gradient(135deg, #2563EB 0%, #4A8CE8 55%, #7C3AED 100%);
-  --vyz-gradient-top-glow: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(37,99,235,0.10) 0%, rgba(37,99,235,0.04) 30%, transparent 65%);
-  --vyz-gradient-section-glow: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(37,99,235,0.06) 0%, transparent 70%);
+  --vyz-gradient-accent: linear-gradient(135deg, #1556C0, #2F6FD8);
+  --vyz-gradient-hero-text: linear-gradient(135deg, #2F6FD8, #1556C0, #1D4ED8);
+  --vyz-gradient-dual: linear-gradient(135deg, #1556C0 0%, #2F6FD8 55%, #7C3AED 100%);
+  --vyz-gradient-top-glow: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(21,86,192,0.10) 0%, rgba(21,86,192,0.04) 30%, transparent 65%);
+  --vyz-gradient-section-glow: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(21,86,192,0.06) 0%, transparent 70%);
 
-  --vyz-shadow-cta: 0 0 0 1px rgba(37,99,235,0.20), 0 4px 24px rgba(37,99,235,0.18);
-  --vyz-shadow-cta-sm: 0 4px 18px rgba(37,99,235,0.18);
-  --vyz-shadow-panel: 0 24px 60px -20px rgba(11,18,32,0.12), 0 0 0 1px rgba(11,18,32,0.04) inset;
-  --vyz-shadow-mock: 0 24px 60px -20px rgba(11,18,32,0.10);
+  --vyz-shadow-cta: 0 0 0 1px rgba(21,86,192,0.20), 0 4px 24px rgba(21,86,192,0.18);
+  --vyz-shadow-cta-sm: 0 4px 18px rgba(21,86,192,0.18);
+  --vyz-shadow-panel: 0 24px 60px -20px rgba(15,23,48,0.12), 0 0 0 1px rgba(15,23,48,0.04) inset;
+  --vyz-shadow-mock: 0 24px 60px -20px rgba(15,23,48,0.10);
 }
 
 /* ─── Vyzon tokens — DARK MODE OVERRIDE ──────────────────────────────────
@@ -168,39 +175,39 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Light mode — clean, professional, high contrast */
-    --background: 0 0% 98%;
-    --foreground: 222 47% 11%;
+    --background: 44 38% 92%;
+    --foreground: 225 52% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 225 52% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 225 52% 12%;
 
-    --primary: 221 83% 53%;
+    --primary: 217 80% 42%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 44 31% 88%;
+    --secondary-foreground: 225 52% 12%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 44 31% 88%;
+    --muted-foreground: 223 17% 41%;
 
-    --accent: 220 14% 96%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 44 31% 88%;
+    --accent-foreground: 225 52% 12%;
 
-    --success: 142 76% 36%;
+    --success: 157 78% 27%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 222 47% 11%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 5 77% 40%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 90%;
-    --input: 220 13% 90%;
-    --ring: 221 83% 53%;
+    --border: 42 22% 82%;
+    --input: 42 22% 82%;
+    --ring: 217 80% 42%;
 
     --radius: 0.75rem;
 
@@ -213,14 +220,14 @@ All colors MUST be HSL.
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 220 13% 90%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-background: 225 52% 12%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 44 100% 60%;
+    --sidebar-primary-foreground: 225 52% 12%;
+    --sidebar-accent: 224 44% 20%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 224 44% 20%;
+    --sidebar-ring: 44 100% 60%;
   }
 
   .dark {
@@ -1283,14 +1290,14 @@ All colors MUST be HSL.
    Texto segue ink/slate (neutro, coerente sobre papel quente).
    ───────────────────────────────────────────────────────────────────────── */
 :root {
-  --ibx-paper: #F6F4EF;        /* base/recessed: thread, corpo do painel, empty */
+  --ibx-paper: #F3EFE4;        /* base/recessed: thread, corpo do painel, empty */
   --ibx-card: #FFFFFF;         /* raised: lista, headers, composer, bolha recebida */
-  --ibx-sunken: #F1EDE5;       /* poços: inputs, busca, wells dentro de cards */
-  --ibx-line: #E7E1D5;         /* hairline primária (warm, ex-#D9E2EC) */
-  --ibx-line-soft: #EFEAE0;    /* divisória suave (ex-#E5EAF1/#EEF2F6) */
-  --ibx-line-strong: #DDD5C5;  /* borda forte */
-  --ibx-sel: #ECF1FE;          /* fundo da linha/aba selecionada (acento leve) */
-  --ibx-sel-bar: #2563EB;      /* âncora de acento da selecionada */
+  --ibx-sunken: #EAE5D7;       /* poços: inputs, busca, wells dentro de cards */
+  --ibx-line: #DCD6C8;         /* hairline primária (warm, ex-#D9E2EC) */
+  --ibx-line-soft: #EAE5D7;    /* divisória suave (ex-#E5EAF1/#EEF2F6) */
+  --ibx-line-strong: #CCC5B4;  /* borda forte */
+  --ibx-sel: #E3ECFA;          /* fundo da linha/aba selecionada (acento leve) */
+  --ibx-sel-bar: #1556C0;      /* âncora de acento da selecionada */
 }
 
 /* EVA no header mobile — selo "desatualizada" (pulso) + coachmark de 1ª vez.
@@ -5304,12 +5311,12 @@ html.lenis, html.lenis body { height: auto; }
    ========================================================================= */
 :root {
   --vyz-surface-0: #f3f4f6;       /* page bg FRIA — cards brancos (surface-1) levantam por contraste */
-  --vyz-success: #008a52;
-  --vyz-success-bg: #e4f4ec;
-  --vyz-warning: #b45309;
-  --vyz-warning-bg: #fbeede;
-  --vyz-danger: #c0362c;
-  --vyz-danger-bg: #fbeceb;
+  --vyz-success: #0f7a4f;
+  --vyz-success-bg: #e2f1e9;
+  --vyz-warning: #a14b05;
+  --vyz-warning-bg: #fff3cc;
+  --vyz-danger: #b42318;
+  --vyz-danger-bg: #fbe4e0;
   --vyz-eva: #6d28d9;
   --vyz-eva-bg: #efeafc;
   --vyz-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -5317,7 +5324,7 @@ html.lenis, html.lenis body { height: auto; }
   --vyz-dur-reveal: 600ms;
   --vyz-radius: 10px;
   --vyz-radius-pill: 9999px;
-  --vyz-btn-solid: #080808;
+  --vyz-btn-solid: #1556c0;
   --vyz-btn-on: #ffffff;
 }
 .dark {
