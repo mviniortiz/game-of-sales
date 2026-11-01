@@ -33,7 +33,7 @@ export default function AvisoDemo() {
     return (
         <Stage
             width={420}
-            height={640}
+            height={600}
             compact={{ below: 400, width: 343, height: 600 }}
             initial={inicio}
             poster={poster}

@@ -36,7 +36,7 @@ Leia antes do primeiro frame.
     objetos. Molde: `video-factory/molde-vyzon-solar`. Substitui o antigo Papel.
   - **EVA em campo** (padrão desde 01/11/2026, mesmo sistema da home, bloco LP.9
     de `src/index.css`): a EVA grande em cor chapada, sol
-    `#ffc933`, noite `#0f1730` e creme `#f3efe4`, Gabarito como família única.
+    `#ffc933`, noite `#0f1730` e creme `#f3efe4`, Geist como família única.
     Molde: `molde-vyzon-solar` mais `molde-eva-campo/tema.css`.
   - **Noite azul** (aprovado em 17/10/2026): azul-noite, borda acesa, um brilho
     por cena. O molde ficou no PC antigo e não foi refeito no Mac.

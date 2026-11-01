@@ -1,20 +1,20 @@
 /* Registro "EVA em campo" (conceito A, 01/11/2026): a EVA é a estrela, em cor
    chapada. Vem depois do base.css do molde-vyzon-solar e troca só os tokens.
    Sol #ffc933 e noite #0f1730 dão os fundos fortes, creme #f3efe4 as cenas de
-   conversa. Gabarito é a família única. Marca-texto em fundo sol é branco. */
+   conversa. Geist, a fonte do app e da home, em tudo. Marca-texto em fundo sol é branco. */
 :root {
   --paper: #f3efe4; --ink: #0f1730; --muted: #3b4560; --subtle: #566079; --line: #dcd6c8;
   --blue: #1556c0; --marker: #ffc933; --sol: #ffc933; --noite: #0f1730;
-  --f-display: 'Gabarito', system-ui, sans-serif;
-  --f-num: 'Gabarito', system-ui, sans-serif;
-  --f-ui: 'Gabarito', system-ui, sans-serif;
+  --f-display: 'Geist', system-ui, sans-serif;
+  --f-num: 'Geist', system-ui, sans-serif;
+  --f-ui: 'Geist', system-ui, sans-serif;
 }
-.hl { font-weight: 900; letter-spacing: -.02em; }
-.num { font-weight: 900; }
+.hl { font-weight: 600; letter-spacing: -.04em; }
+.num { font-weight: 600; }
 .cena--sol { background: var(--sol); --marker: #fff; }
 .cena--noite { background: var(--noite); color: #fff; }
 .cena--creme { background: var(--paper); }
 #legenda { color: var(--ink); }
-#legenda .leg { color: inherit; font-weight: 900; }
+#legenda .leg { color: inherit; font-weight: 600; }
 /* a EVA sentada na borda de cima de um cartão */
 .sentada { position: absolute; z-index: 2; }

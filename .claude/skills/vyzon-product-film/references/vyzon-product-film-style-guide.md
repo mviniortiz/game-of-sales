@@ -18,7 +18,7 @@ A tela do produto é a heroína. Tipografia é a coadjuvante. O resto desaparece
 
 O mesmo sistema da home (bloco LP.9 de `src/index.css`). Fundos chapados por cena:
 sol `#FFC933` no gancho e no payoff, noite `#0F1730` na virada e no CTA, creme
-`#F3EFE4` nas conversas. Gabarito como família única, marca-texto branco em fundo
+`#F3EFE4` nas conversas. Geist, a fonte do app e da home, em tudo, marca-texto branco em fundo
 sol. A EVA é a estrela: grande no gancho e no payoff, sentada nos cartões no meio.
 Exemplo: `films/eva-campo`.
 

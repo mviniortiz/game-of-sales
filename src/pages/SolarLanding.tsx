@@ -276,7 +276,7 @@ const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void;
             {/* Letra forte em vez da serifa editorial: as páginas que convertem com
                 integrador (Heliux, Azume, InfinitePay) falam alto e direto. */}
             <h1
-                className="vs-display mt-4 landing-fade-in-up-lg landing-delay-100"
+                className="vs-display mt-4 max-w-[530px] landing-fade-in-up-lg landing-delay-100"
                 style={{ fontSize: "clamp(2.25rem, 3.75vw, 3.2rem)", lineHeight: 1.04, textWrap: "pretty" }}
             >
                 {copy.h1} <span className="vs-marca vs-marca--draw">{copy.h1Accent}</span>
@@ -314,7 +314,7 @@ const WhatsappCta = ({ placement, sol, children }: { placement: () => void; sol?
 // A caixa reserva o espaço do palco, sem CLS.
 const AvisoNoWhatsApp = () => (
     <figure className="vs-palco mx-auto w-full max-w-[420px] self-end landing-fade-in-up-lg landing-delay-200" aria-label="Exemplo: o aviso que chega no seu WhatsApp no 2º dia">
-        <div className="relative aspect-[420/640]">
+        <div className="relative aspect-[420/640] md:aspect-[420/600]">
             <Suspense fallback={null}>
                 <AvisoDemo />
             </Suspense>

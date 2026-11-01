@@ -15,7 +15,7 @@ const mark = await read("vyzon-mark.svg");
 const iconFullBleed = icon.replace(/<rect width="100" height="100" rx="22.5"/g, '<rect width="100" height="100" rx="0"');
 
 const FONTS =
-    '<link href="https://fonts.googleapis.com/css2?family=Geist:wght@500;600&family=Gabarito:wght@500;700;900&family=Newsreader:ital,wght@0,400;1,400&display=block" rel="stylesheet">';
+    '<link href="https://fonts.googleapis.com/css2?family=Geist:wght@500;600&family=Newsreader:ital,wght@0,400;1,400&display=block" rel="stylesheet">';
 const PAPER = "#faf9f5";
 const INK = "#0d1421";
 
@@ -72,10 +72,10 @@ await shot(
     "og-image.jpg",
     1200,
     630,
-    `<div style="position:relative;box-sizing:border-box;width:1200px;height:630px;padding:64px 72px;overflow:hidden;background:#ffc933;color:#0f1730;font-family:Gabarito">
+    `<div style="position:relative;box-sizing:border-box;width:1200px;height:630px;padding:64px 72px;overflow:hidden;background:#ffc933;color:#0f1730;font-family:Geist">
       ${lockup(46, "#0f1730")}
-      <div style="margin-top:52px;max-width:760px;font-size:92px;line-height:1;font-weight:900;letter-spacing:-0.02em">Mandou a proposta e o cliente sumiu?</div>
-      <div style="position:absolute;left:72px;bottom:60px;font-size:30px;font-weight:700">Raio-X grátis em vyzon.com.br</div>
+      <div style="margin-top:52px;max-width:760px;font-size:92px;line-height:1.02;font-weight:600;letter-spacing:-0.04em">Mandou a proposta e o cliente sumiu?</div>
+      <div style="position:absolute;left:72px;bottom:60px;font-size:30px;font-weight:600">Raio-X grátis em vyzon.com.br</div>
       <div style="position:absolute;right:-30px;bottom:-34px">${eva(460)}</div>
     </div>`,
     { transparent: false, type: "jpeg" },
