@@ -1,9 +1,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// APPROVAL.1 (2026-08-24) — Aprovar o rascunho da EVA pelo WhatsApp do dono.
+// APPROVAL.1 (2026-08-24) — Aprovar o rascunho da Lume pelo WhatsApp do dono.
 //
 // Medido antes de escrever isto: 162 de 175 agent_suggestions estavam 'pending'.
 // A fila não andava porque aprovar exigia abrir o app. Aqui a aprovação vai até
-// onde o dono já está: a EVA manda o rascunho no WhatsApp dele com um código
+// onde o dono já está: a Lume manda o rascunho no WhatsApp dele com um código
 // curto, ele responde 1 (envia), 2 (descarta) ou escreve o texto corrigido.
 //
 // A regra de produto continua: NENHUMA mensagem sai sem decisão humana. Só muda
@@ -11,16 +11,16 @@
 //
 // Usado por: edge eva-approval (notificação), edge evolution-message-webhook
 // (resposta do dono no próprio chat) e edge kapso-webhook (resposta do dono no
-// número oficial da EVA).
+// número oficial da Lume).
 //
-// Dois canais entre a EVA e o dono:
-//   - Número oficial da EVA (API oficial do WhatsApp, via Kapso), quando
+// Dois canais entre a Lume e o dono:
+//   - Número oficial da Lume (API oficial do WhatsApp, via Kapso), quando
 //     EVA_WHATSAPP_PHONE_NUMBER_ID está configurado. O aviso chega como
 //     mensagem de outro contato, com notificação, e tem botões Enviar e
 //     Descartar.
 //   - Sem ele, o próprio número do dono manda o aviso para ele mesmo.
 // Nos dois casos a retomada para o lead sai do número do integrador. O número
-// da EVA só conversa com o dono.
+// da Lume só conversa com o dono.
 
 import { KAPSO_WHATSAPP, kapsoFetch } from "./kapso.ts";
 // ─────────────────────────────────────────────────────────────────────────────
@@ -36,10 +36,12 @@ function evolutionEnv(): { url?: string; key?: string } {
     };
 }
 
-/** Toda mensagem que a EVA escreve no chat do dono começa assim. Serve de
+/** Toda mensagem que a Lume escreve no chat do dono começa assim. Serve de
  *  âncora visual e, principalmente, impede que a própria confirmação volte pelo
  *  webhook e seja lida como comando. */
-export const EVA_PREFIX = "EVA";
+export const EVA_PREFIX = "Lume";
+/** Mensagens já enviadas com o nome antigo ainda podem voltar pelo webhook. */
+const PREFIXO_ANTIGO = "EVA";
 
 export type ApprovalOutcome = {
     handled: boolean;
@@ -124,7 +126,7 @@ async function sendText(instanceName: string, number: string, text: string): Pro
     return resp?.key?.id || null;
 }
 
-/** Grupo de WhatsApp só do dono para os rascunhos da EVA (owner_notify_groups),
+/** Grupo de WhatsApp só do dono para os rascunhos da Lume (owner_notify_groups),
  *  ou null quando ele aprova no chat com ele mesmo. */
 async function evaGroupJid(admin: any, instanceName: string): Promise<string | null> {
     const { data } = await admin.from("owner_notify_groups").select("jid")
@@ -132,7 +134,7 @@ async function evaGroupJid(admin: any, instanceName: string): Promise<string | n
     return data?.jid || null;
 }
 
-// ── Número oficial da EVA ───────────────────────────────────────────────────
+// ── Número oficial da Lume ───────────────────────────────────────────────────
 
 function envGet(key: string): string | undefined {
     return (globalThis as { Deno?: { env: { get(k: string): string | undefined } } }).Deno?.env?.get(key);
@@ -158,7 +160,7 @@ export function sameNumber(a: string, b: string): boolean {
     return brNumberVariants(a).some((v) => other.has(v));
 }
 
-/** Conversa com o número oficial da EVA não é lead: não entra na Inbox do
+/** Conversa com o número oficial da Lume não é lead: não entra na Inbox do
  *  cliente nem abre rastreio de orçamento. */
 export function isEvaOfficialNumber(raw: string): boolean {
     const eva = envGet("EVA_WHATSAPP_NUMBER");
@@ -278,7 +280,7 @@ export async function connectionState(instanceName: string): Promise<string | nu
 
 /** Descobre o WhatsApp do dono da instância e cacheia em
  *  channel_connections.metadata.owner_jid. Ordem: cache, Evolution, telefone do
- *  perfil. Sem isso a EVA não tem pra onde mandar o rascunho. */
+ *  perfil. Sem isso a Lume não tem pra onde mandar o rascunho. */
 export async function resolveOwnerNumber(
     admin: any,
     instanceName: string,
@@ -349,7 +351,7 @@ export function buildDraftMessage(params: {
     stage: string | null;
     why: string | null;
     text: string;
-    /** No grupo da EVA o dono decide reagindo no aviso; o código some do texto. */
+    /** No grupo da Lume o dono decide reagindo no aviso; o código some do texto. */
     noGrupo?: boolean;
 }): string {
     const linhas = [params.noGrupo ? "Rascunho pronto" : `${EVA_PREFIX} [${params.code}] rascunho pronto`, ""];
@@ -378,7 +380,7 @@ export function buildAmbiguousReply(rows: { approval_code: string | null; sugges
     ].join("\n");
 }
 
-/** Janela de vida de um rascunho. Depois disso a EVA não leva mais pro dono:
+/** Janela de vida de um rascunho. Depois disso a Lume não leva mais pro dono:
  *  o contexto da conversa já mudou. */
 const MAX_DRAFT_AGE_HOURS = 48;
 
@@ -585,8 +587,9 @@ export function parseOwnerCommand(rawText: string): ParsedCommand {
     const raw = String(rawText || "").trim();
     if (!raw) return { code: null, intent: "none" };
 
-    // Nunca reagir à própria confirmação da EVA voltando pelo webhook.
-    if (stripAccents(raw).toLowerCase().startsWith(EVA_PREFIX.toLowerCase())) {
+    // Nunca reagir à própria confirmação da Lume voltando pelo webhook.
+    const inicio = stripAccents(raw).toLowerCase();
+    if (inicio.startsWith(EVA_PREFIX.toLowerCase()) || inicio.startsWith(PREFIXO_ANTIGO.toLowerCase())) {
         return { code: null, intent: "none" };
     }
 
@@ -623,11 +626,11 @@ export async function handleOwnerCommand(
         companyId: string | null;
         ownerNumber: string;
         text: string;
-        /** Por onde a EVA responde ao dono. Padrão: o chat dele com ele mesmo. */
+        /** Por onde a Lume responde ao dono. Padrão: o chat dele com ele mesmo. */
         replyVia?: (text: string) => Promise<void>;
         /** Rascunho já identificado (resposta citando o aviso). */
         targetSuggestionId?: string | null;
-        /** No grupo da EVA o sucesso vira ✅ em vez de mensagem de confirmação. */
+        /** No grupo da Lume o sucesso vira ✅ em vez de mensagem de confirmação. */
         confirmar?: () => Promise<void>;
     },
 ): Promise<ApprovalOutcome> {
@@ -846,11 +849,11 @@ export async function enviarAgendadosVencidos(admin: any): Promise<number> {
     return n;
 }
 
-// ── Resposta do dono no número oficial da EVA ───────────────────────────────
+// ── Resposta do dono no número oficial da Lume ───────────────────────────────
 
-const EVA_OI = "Oi! Aqui é a EVA, do Vyzon. Quando uma proposta ficar sem resposta, eu te mando aqui a retomada pronta para você aprovar.";
+const EVA_OI = "Oi! Aqui é a Lume, do Vyzon. Quando uma proposta ficar sem resposta, eu te mando aqui a retomada pronta para você aprovar.";
 
-/** O número da EVA é público: qualquer pessoa pode escrever "A2 1" nele. Só
+/** O número da Lume é público: qualquer pessoa pode escrever "A2 1" nele. Só
  *  vira comando o que vem do número dono de uma conexão do Vyzon, e só sobre
  *  rascunho da empresa dessa conexão. */
 export async function handleEvaInbound(
@@ -876,7 +879,7 @@ export async function handleEvaInbound(
         .not("metadata->>owner_jid", "is", null);
     const minhas = ((conns || []) as any[]).filter((c) => sameNumber(String(c.metadata?.owner_jid || ""), from));
     if (minhas.length === 0) {
-        await reply("Oi! Aqui é a EVA, do Vyzon. Não encontrei uma conta ligada a este número.");
+        await reply("Oi! Aqui é a Lume, do Vyzon. Não encontrei uma conta ligada a este número.");
         return { handled: true, action: "help" };
     }
 

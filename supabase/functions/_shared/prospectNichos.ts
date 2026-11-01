@@ -6,7 +6,7 @@
 // contatos, seguimento do dia 4) vale do mesmo jeito.
 //
 // Diferenças de propósito para nicho novo:
-// - sem o print da EVA (a imagem atual mostra um caso de solar);
+// - sem o print da Lume (a imagem atual mostra um caso de solar);
 // - a resposta a quem só disse "pode falar" NÃO sai sozinha: espera o 👍 do dono,
 //   como qualquer outra (a exceção de 15/10/2026 foi decidida para solar);
 // - sem a qualificação por CNPJ: quem traz a empresa é o Vendedor (OpenBot),

@@ -1,4 +1,4 @@
-// Decide se uma mensagem recebida justifica a EVA reler a conversa (EVA.READ.1).
+// Decide se uma mensagem recebida justifica a Lume reler a conversa (EVA.READ.1).
 // Mensagem sem conteúdo ("ok", "kkk", figurinha) não muda a leitura e só
 // gastaria uma chamada de IA.
 

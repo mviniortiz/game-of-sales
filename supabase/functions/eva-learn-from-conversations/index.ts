@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// LEARN.1 (2026-08-24) — A EVA aprende o negócio lendo as conversas.
+// LEARN.1 (2026-08-24) — A Lume aprende o negócio lendo as conversas.
 //
 // Medido em 24/08/2026: 3 de 30 empresas tinham eva_business_context
 // preenchido. O formulário existe desde sempre e quase ninguém preenche, porque
@@ -10,7 +10,7 @@
 // Esta edge lê os resumos de conversa e as mensagens que a própria agência
 // enviou, e propõe o contexto. Não grava em eva_business_context: entra na fila
 // eva_context_suggestions com status 'pending', que já tem UI de aprovar. A
-// regra continua sendo a EVA sugere, o humano aprova.
+// regra continua sendo a Lume sugere, o humano aprova.
 //
 // Toda sugestão carrega 'evidence': a frase da conversa que originou aquilo.
 // Sem evidência é achismo, e achismo sobre o negócio do outro é pior que nada.
@@ -213,7 +213,7 @@ serve(async (req) => {
 
         const limite = Math.min(Math.max(Number(body.limit) || 25, 5), 60);
 
-        // Matéria-prima: a leitura que a EVA já fez de cada conversa, mais o que
+        // Matéria-prima: a leitura que a Lume já fez de cada conversa, mais o que
         // a própria empresa escreveu (é de onde sai o tom de voz).
         const [resumosRes, enviadasRes] = await Promise.all([
             supabase

@@ -148,7 +148,7 @@ async function handleConnected(body: { phone_number_id?: string; customer?: { id
     return `conectado ${phoneNumberId} → empresa ${customer.company_id}`;
 }
 
-/** Número oficial da EVA: só o dono escreve nele, para aprovar rascunho. Não
+/** Número oficial da Lume: só o dono escreve nele, para aprovar rascunho. Não
  *  tem conexão de cliente e nada dele vai para a Inbox. Áudio e mídia ficam de
  *  fora de propósito: transcrição errada não pode virar mensagem para o lead. */
 async function handleEvaMessage(ev: KapsoMessageEvent): Promise<void> {
@@ -160,12 +160,12 @@ async function handleEvaMessage(ev: KapsoMessageEvent): Promise<void> {
     console.log("[eva] resposta do dono:", r.action || "ignorada");
 }
 
-/** Aviso da EVA que a Meta não entregou (template pausado, número inválido...). */
+/** Aviso da Lume que a Meta não entregou (template pausado, número inválido...). */
 async function handleEvaStatus(event: string, ev: KapsoMessageEvent): Promise<void> {
     if (event !== "whatsapp.message.failed" || !ev.message?.id) return;
     await admin
         .from("agent_suggestions")
-        .update({ notify_error: `entrega falhou no número da EVA (${ev.message.kapso?.status || "failed"})` })
+        .update({ notify_error: `entrega falhou no número da Lume (${ev.message.kapso?.status || "failed"})` })
         .eq("notify_message_id", ev.message.id);
 }
 

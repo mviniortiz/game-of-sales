@@ -62,7 +62,7 @@ function firstName(full?: string | null): string {
   return full.trim().split(/\s+/)[0];
 }
 
-// ──────────────── Copy da EVA (com fallback template) ────────────────
+// ──────────────── Copy da Lume (com fallback template) ────────────────
 async function evaWriteSaleMessage(ctx: {
   vendedor: string;
   cliente: string;
@@ -81,7 +81,7 @@ async function evaWriteSaleMessage(ctx: {
 
   try {
     const sys =
-      "Você é a EVA, copiloto comercial do Vyzon. Escreva uma notificação curta (1 frase, no máximo 2) " +
+      "Você é a Lume, copiloto comercial do Vyzon. Escreva uma notificação curta (1 frase, no máximo 2) " +
       "para o canal interno do time comemorar uma venda. Tom direto e positivo, sem ser piegas. " +
       "Sem emojis. Sem travessão (—), use vírgula ou ponto. Não invente dados além dos fornecidos. " +
       "Pode citar ritmo (quantidade de vendas no mês) e progresso da meta se fizer sentido.";
@@ -185,7 +185,7 @@ serve(async (req) => {
         platform,
         webhook_url,
         "Vyzon conectado",
-        "Tudo certo. Quando uma venda for fechada, a EVA avisa o time por aqui.",
+        "Tudo certo. Quando uma venda for fechada, a Lume avisa o time por aqui.",
         "Mensagem de teste enviada pelo Vyzon",
         "blue",
       );
@@ -225,7 +225,7 @@ serve(async (req) => {
     const cliente = sale.cliente_nome || "cliente";
     const produto = sale.produto_nome || "produto";
 
-    // Contexto extra pra EVA: nº de vendas do vendedor no mês + % da meta
+    // Contexto extra pra Lume: nº de vendas do vendedor no mês + % da meta
     let vendasNoMes = 0;
     let pctMeta: number | null = null;
     if (sale.user_id) {

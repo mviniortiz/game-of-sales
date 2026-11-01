@@ -4,7 +4,7 @@ import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 
 // generate-demo-agent — recebe a URL do site do lead, faz scraping do PRÓPRIO
 // site dele (consentido; não é enriquecimento externo de terceiros) e gera um
-// "agente demo" (blueprint de contexto) com o mesmo LLM da EVA (gpt-5.4-nano).
+// "agente demo" (blueprint de contexto) com o mesmo LLM da Lume (gpt-5.4-nano).
 // Pública (a landing é pública), com SSRF guard, timeout, rate-limit fail-open
 // e fallback "thin" quando o site bloqueia/vem pobre. NÃO clona ambiente nem
 // cria usuário — devolve só a PRÉVIA; o ambiente completo fica no fluxo de demo
@@ -128,7 +128,7 @@ async function scrape(u: URL): Promise<string> {
     }
 }
 
-const SYSTEM_PROMPT = `Você analisa o site de uma agência/empresa que vende por conversa e monta o contexto de um agente comercial (a EVA) especializado em QUALIFICAÇÃO. Responda SOMENTE com JSON válido neste formato:
+const SYSTEM_PROMPT = `Você analisa o site de uma agência/empresa que vende por conversa e monta o contexto de um agente comercial (a Lume) especializado em QUALIFICAÇÃO. Responda SOMENTE com JSON válido neste formato:
 {
   "empresa": "nome da empresa (string curta)",
   "segmento": "nicho/segmento em poucas palavras",
@@ -136,7 +136,7 @@ const SYSTEM_PROMPT = `Você analisa o site de uma agência/empresa que vende po
   "servicos": ["3 a 5 serviços/ofertas principais"],
   "icp": "quem é o cliente ideal, 1 frase",
   "tom_de_voz": "tom sugerido em poucas palavras (ex: consultivo e direto)",
-  "perguntas_qualificacao": ["3 a 4 perguntas que a EVA faria para qualificar um lead dessa empresa"]
+  "perguntas_qualificacao": ["3 a 4 perguntas que a Lume faria para qualificar um lead dessa empresa"]
 }
 Regras: use só o que dá pra inferir do conteúdo; não invente números, preços, prêmios nem clientes; português do Brasil; objetivo e comercial.`;
 

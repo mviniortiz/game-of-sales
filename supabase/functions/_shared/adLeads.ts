@@ -1,5 +1,5 @@
 // AUTO.1 — Leads que chegam pelo anúncio de conversa no WhatsApp. A cada mensagem
-// do lead a EVA relê a conversa inteira, atualiza a qualificação (é integrador?
+// do lead a Lume relê a conversa inteira, atualiza a qualificação (é integrador?
 // quantas propostas? cidade?) e escreve a próxima resposta do dono. Nada sai para
 // o lead sem o código do dono: "LK4 1" envia, "LK4 2" descarta, "LK4 <texto>"
 // envia o texto dele. Se ele responder o lead direto pelo celular, o rascunho cai.

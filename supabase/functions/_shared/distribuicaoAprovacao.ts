@@ -1,5 +1,5 @@
 // DIST.0 (2026-10-22) — Aviso e decisão do time interno de distribuição no
-// WhatsApp do Markus. Separado da aprovação da EVA (whatsappApproval.ts) de
+// WhatsApp do Markus. Separado da aprovação da Lume (whatsappApproval.ts) de
 // propósito: daqui não sai mensagem para ninguém além do próprio Markus, e
 // nada aqui mexe em agent_suggestions nem no fluxo dos clientes. Só reaproveita
 // o transporte (Evolution) e a descoberta do número do dono.
@@ -129,7 +129,7 @@ export async function avisarPendentes(
 
 /** Lê "DK4 1", "DK4 2" ou "DK4 <texto>" no chat do Markus com ele mesmo.
  *  Devolve false quando não é comando do time, e aí o webhook segue para os
- *  fluxos da EVA e da prospecção como sempre. */
+ *  fluxos da Lume e da prospecção como sempre. */
 export async function tratarComandoDistribuicao(
     admin: any,
     params: {

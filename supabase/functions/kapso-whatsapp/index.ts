@@ -14,7 +14,7 @@
 //                   sobrar página, chama a si mesma com o cursor.
 //                   Estado em channel_connections.metadata.history_import.
 //   setup_eva       (super_admin ou service_role) Prepara o número oficial da
-//                   EVA (EVA_WHATSAPP_PHONE_NUMBER_ID): registra este webhook
+//                   Lume (EVA_WHATSAPP_PHONE_NUMBER_ID): registra este webhook
 //                   no número, cria o template do aviso de rascunho e devolve o
 //                   número exibido, para gravar em EVA_WHATSAPP_NUMBER.
 //                   Pode rodar de novo: só cria o que falta.
@@ -85,7 +85,7 @@ async function resolveCaller(req: Request, body: Body): Promise<Caller | Respons
 
 async function setupEva(): Promise<Response> {
     const phoneId = evaPhoneNumberId();
-    if (!phoneId) return json(400, { error: "Grave o secret EVA_WHATSAPP_PHONE_NUMBER_ID com o id do número da EVA na Kapso" });
+    if (!phoneId) return json(400, { error: "Grave o secret EVA_WHATSAPP_PHONE_NUMBER_ID com o id do número da Lume na Kapso" });
 
     const info = await kapsoFetch(`${KAPSO_PLATFORM}/whatsapp/phone_numbers/${phoneId}`);
     const numero = info?.data || {};

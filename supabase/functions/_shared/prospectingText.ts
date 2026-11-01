@@ -45,7 +45,7 @@ const PERGUNTA_DOR_DISTRIBUIDORA =
 
 export const RAIO_X_LINK = "https://vyzon.com.br/criar-conta?segmento=energia_solar&utm_source=prospeccao&utm_content=raiox";
 
-/** Linha do rascunho que vira o print da EVA no envio. Fica visível no aviso do grupo,
+/** Linha do rascunho que vira o print da Lume no envio. Fica visível no aviso do grupo,
  *  para o dono saber que a imagem vai junto. A imagem segue o aviso real
  *  (conteudo/prospeccao/eva-retomada.html). */
 export const MARCA_IMAGEM = "[imagem]";

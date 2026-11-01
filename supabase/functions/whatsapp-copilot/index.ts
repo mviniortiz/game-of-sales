@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// F4E.4.2 (2026-05-20) — EVA Insight real (whatsapp-copilot estendido)
+// F4E.4.2 (2026-05-20) — Lume Insight real (whatsapp-copilot estendido)
 //
 // O que mudou vs versão anterior:
 //   - Lê eva_business_context (agency/services/icp/version) por company_id
@@ -15,7 +15,7 @@
 //     objections/nextAction/learnings continuam no response.
 //
 // Tudo continua ASSISTIDO: nenhuma ação automática (sem envio, sem mover
-// pipeline, sem agendar). EVA só sugere, humano aprova.
+// pipeline, sem agendar). Lume só sugere, humano aprova.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -64,10 +64,10 @@ function json(status: number, body: unknown) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SYSTEM PROMPT — EVA Comercial assistida
+// SYSTEM PROMPT — Lume Comercial assistida
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `Você é a EVA, IA Comercial do Vyzon, um CRM para empresas brasileiras que vendem pelo WhatsApp.
+const SYSTEM_PROMPT = `Você é a Lume, IA Comercial do Vyzon, um CRM para empresas brasileiras que vendem pelo WhatsApp.
 
 Seu papel:
 - Analisar a conversa entre o vendedor da empresa e o contato.
@@ -80,7 +80,7 @@ PRIMEIRO, DECIDA SE A CONVERSA É UMA OPORTUNIDADE DE VENDA:
 - Na dúvida (pouca mensagem, contato novo que ainda não disse o que quer), trate como oportunidade em fase inicial.
 - Cliente que JÁ COMPROU é sempre conversa comercial, nunca "não é oportunidade", mesmo que o assunto fuja dos serviços cadastrados: entrega, instalação, cobrança de parcela, ajustes, pós-venda e chance de vender de novo. Use "e_oportunidade": true, stage "Cliente ativo" e sugira o próximo passo da relação (fit_sugerido pode ser baixo).
 
-REGRAS DURAS — A EVA É ASSISTIDA:
+REGRAS DURAS — A Lume É ASSISTIDA:
 - NUNCA prometa ação automática.
 - NUNCA diga que enviou mensagem, marcou demo, criou oportunidade ou moveu pipeline.
 - NUNCA invente preço, serviço, prazo ou política que não esteja no contexto cadastrado.
@@ -251,7 +251,7 @@ async function peekRateLimit(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EVA business context — F4E.4.2
+// Lume business context — F4E.4.2
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface EvaBusinessContext {
@@ -699,7 +699,7 @@ serve(async (req) => {
             }
         }
 
-        // ─── EVA business context ────────────────────────────────────────────
+        // ─── Lume business context ────────────────────────────────────────────
         const evaContext = companyId
             ? await fetchEvaBusinessContext(adminSupabase, companyId)
             : null;
@@ -797,7 +797,7 @@ serve(async (req) => {
             })
             .join("\n");
 
-        // ─── EVA Memory (legado, preservado) ─────────────────────────────────
+        // ─── Lume Memory (legado, preservado) ─────────────────────────────────
         let memoryContext = "";
         try {
             if (companyId) {
@@ -822,7 +822,7 @@ serve(async (req) => {
                         parts.push(`Sobre a empresa:\n${companyMems.map(formatMem).join("\n")}`);
                     }
                     if (parts.length > 0) {
-                        memoryContext = `\n\nMEMORIA DA EVA (use para personalizar tom e abordagem):\n${parts.join("\n\n")}`;
+                        memoryContext = `\n\nMEMORIA DA Lume (use para personalizar tom e abordagem):\n${parts.join("\n\n")}`;
                     }
                     const memIds = memories.map((m: any) => m.id).filter(Boolean);
                     if (memIds.length > 0) {
@@ -837,7 +837,7 @@ serve(async (req) => {
             console.warn("[whatsapp-copilot] memory fetch failed:", memErr);
         }
 
-        // ─── EVA business context block (F4E.4.2) ────────────────────────────
+        // ─── Lume business context block (F4E.4.2) ────────────────────────────
         const contextBlock = buildContextBlock(evaContext);
         const contextEmpty = !evaContext || contextBlock.trim().length === 0;
 
@@ -946,7 +946,7 @@ Analise a conversa e retorne o JSON estrito com sua análise e o objeto qualific
             context_version_used: contextVersion,
             context_present: !contextEmpty,
             // EVA.AUTO.1 — marca a leitura feita sozinha (1º contato auto). O front
-            // mostra "a EVA leu sozinha". Reanálise manual sobrescreve com false.
+            // mostra "a Lume leu sozinha". Reanálise manual sobrescreve com false.
             auto_qualified: serviceMode,
         };
 
@@ -994,7 +994,7 @@ Analise a conversa e retorne o JSON estrito com sua análise e o objeto qualific
                     console.log("[eva-persist] ✅ summary upserted", contactPhone, "v", contextVersion);
                 }
 
-                // ─── EVA Memory learnings (legado, preservado) ───────────────
+                // ─── Lume Memory learnings (legado, preservado) ───────────────
                 if (Array.isArray(analysis.learnings) && (analysis.learnings as unknown[]).length > 0) {
                     const validTypes = ["fact", "preference", "tone_sample", "objection_pattern", "learning"];
                     const validLearnings = (analysis.learnings as Array<Record<string, unknown>>)

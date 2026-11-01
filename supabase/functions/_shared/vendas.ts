@@ -2,7 +2,7 @@
 // próprio Vyzon como CRM das vendas do Vyzon. Docs em docs/distribuicao/openbot.
 //
 // Regra de uso: lista fria fica no banco do OpenBot; só quem respondeu de
-// verdade vira card aqui. Card parado 3 dias faz a EVA sugerir a retomada e
+// verdade vira card aqui. Card parado 3 dias faz a Lume sugerir a retomada e
 // pedir aprovação ao Markus no WhatsApp; card para cada contato frio viraria
 // uma enxurrada de aprovações.
 //

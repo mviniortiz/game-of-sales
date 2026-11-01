@@ -130,7 +130,7 @@ async function ensureWebhook(instanceName: string): Promise<{ ok: boolean; error
   }
 }
 
-// ── Blindagem anti-ban (EVA guardiã do número) ───────────────────────────────
+// ── Blindagem anti-ban (Lume guardiã do número) ───────────────────────────────
 // Ritmo humano: a Evolution exibe "digitando/gravando" durante `delay` ms antes
 // de entregar a mensagem. Um atraso proporcional ao texto (teto 3.5s) tira o
 // padrão de bot que dispara banimento — o número parece uma pessoa digitando.
