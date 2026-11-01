@@ -172,11 +172,11 @@ const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
 
 // Sistema "EVA em campo" (bloco LP.9 do index.css; referência em
 // https://claude.ai/artifact/L2qfp4yTM3RBvSL3yN5mjo): a EVA é a estrela, sobre
-// faixas chapadas de sol e noite, com Gabarito como família única e a fatura e a
+// creme e faixas chapadas de sol e noite, com Geist, a fonte do app, em tudo e a fatura e a
 // conversa de WhatsApp como objetos gráficos.
 
 const Header = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
-    <div className="vs-sol">
+    <div className="vs-topo">
         <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between px-4 py-5 sm:px-5 md:px-8">
             <Link to="/" aria-label="Vyzon, início">
                 <ThemeLogo className="h-[22px] w-auto" />
@@ -269,7 +269,7 @@ const WaIcon = () => (
 // Texto à esquerda e, à direita, o aviso que chega no WhatsApp do dono: o
 // produto inteiro numa olhada. O fim do título leva o marca-texto da tela.
 const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void; onWhatsapp: () => void }) => (
-    <section className="vs-sol overflow-hidden" aria-label="Topo">
+    <section className="vs-topo overflow-hidden" aria-label="Topo">
         <div className="mx-auto grid w-full max-w-[1120px] items-center gap-10 px-4 pt-4 sm:px-5 md:grid-cols-[1.12fr_0.88fr] md:gap-12 md:px-8 md:pt-10">
         <div className="md:pb-24">
             <p className="text-[16px] font-bold landing-fade-in-up-lg">{copy.kicker}</p>
@@ -277,7 +277,7 @@ const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void;
                 integrador (Heliux, Azume, InfinitePay) falam alto e direto. */}
             <h1
                 className="vs-display mt-4 landing-fade-in-up-lg landing-delay-100"
-                style={{ fontSize: "clamp(2.1rem, 4.1vw, 3.5rem)", lineHeight: 1 }}
+                style={{ fontSize: "clamp(2.25rem, 3.75vw, 3.2rem)", lineHeight: 1.04, textWrap: "pretty" }}
             >
                 {copy.h1} <span className="vs-marca vs-marca--draw">{copy.h1Accent}</span>
             </h1>
@@ -313,7 +313,7 @@ const WhatsappCta = ({ placement, sol, children }: { placement: () => void; sol?
 // A demo do topo vem em pedaço separado: o título, que é o LCP, não espera por ela.
 // A caixa reserva o espaço do palco, sem CLS.
 const AvisoNoWhatsApp = () => (
-    <figure className="mx-auto w-full max-w-[420px] self-end landing-fade-in-up-lg landing-delay-200" aria-label="Exemplo: o aviso que chega no seu WhatsApp no 2º dia">
+    <figure className="vs-palco mx-auto w-full max-w-[420px] self-end landing-fade-in-up-lg landing-delay-200" aria-label="Exemplo: o aviso que chega no seu WhatsApp no 2º dia">
         <div className="relative aspect-[420/640]">
             <Suspense fallback={null}>
                 <AvisoDemo />
@@ -329,7 +329,7 @@ const PriceLine = ({ className = "" }: { className?: string }) => (
     <p className={`flex items-start gap-3 text-[14.5px] leading-snug ${className}`} style={{ color: "var(--lp-ink-muted)" }}>
         <span className="vs-carimbo vs-carimbo--neutro mt-[1px]">Fundador</span>
         <span>
-            <strong className="vs-num text-[17px] font-black" style={{ color: "var(--lp-ink)" }}>
+            <strong className="vs-num text-[17px] font-semibold" style={{ color: "var(--lp-ink)" }}>
                 R$ 97 por mês
             </strong>{" "}
             nos 3 primeiros meses para as 10 primeiras integradoras. Depois, R$ 197 por mês. Sem contrato.
@@ -350,7 +350,7 @@ const Numbers = () => (
         <ul className="vs-prova">
             {NUMBERS.map(([n, texto, fonte]) => (
                 <li key={n} className="vs-prova__item">
-                    <p className="vs-num vs-azul text-[72px] font-black leading-none md:text-[88px]">{n}</p>
+                    <p className="vs-num vs-azul text-[72px] font-semibold leading-none md:text-[88px]">{n}</p>
                     <p className="mt-3 max-w-[440px] text-[16px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
                         {texto}
                     </p>
@@ -457,7 +457,7 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                         <p className="text-[14.5px]" style={{ color: "var(--lp-ink-muted)" }}>
                             O que ficou pelo caminho
                         </p>
-                        <p className="vs-num mt-1 text-[48px] font-black leading-none md:text-[60px]">
+                        <p className="vs-num mt-1 text-[48px] font-semibold leading-none md:text-[60px]">
                             <span className="vs-marca">{brl(total)}</span>
                         </p>
                         <p className="mt-3 text-[14.5px]" style={{ color: "var(--lp-ink-muted)" }}>
@@ -484,7 +484,7 @@ const Contador = ({ rotulo, valor, muda, className }: { rotulo: string; valor: n
             <button type="button" aria-label={`${rotulo}: menos um`} onClick={() => muda(-1)} className={stepperCls}>
                 −
             </button>
-            <output className="vs-num w-16 text-center text-[38px] font-black" style={{ color: "var(--lp-sol)" }} aria-live="polite">
+            <output className="vs-num w-16 text-center text-[38px] font-semibold" style={{ color: "var(--lp-sol)" }} aria-live="polite">
                 {valor}
             </output>
             <button type="button" aria-label={`${rotulo}: mais um`} onClick={() => muda(1)} className={stepperCls}>
@@ -563,7 +563,7 @@ const Offer = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
             <div className="vs-preco vs-noite mt-4 self-start md:mt-0">
                 <span className="vs-preco__etiqueta">Preço de fundador</span>
                 <p className="flex items-baseline gap-2">
-                    <span className="vs-num text-[80px] font-black leading-[0.95]" style={{ color: "var(--lp-sol)" }}>R$ 97</span>
+                    <span className="vs-num text-[80px] font-semibold leading-[0.95]" style={{ color: "var(--lp-sol)" }}>R$ 97</span>
                     <span className="text-[16px]" style={{ color: "var(--lp-ink-muted)" }}>
                         por mês
                     </span>

@@ -17,7 +17,7 @@
 [data-layout="compact"] .ad-eva { right: 24px; }
 .ad-topo { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: #fff; color: #0f1730; font-size: 15px; line-height: 1.2; }
 .ad-topo small { display: block; font-size: 12px; color: #566079; }
-.ad-avatar { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; background: #1556c0; color: #fff; font-weight: 900; }
+.ad-avatar { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; background: #1556c0; color: #fff; font-weight: 700; }
 .ad-thread { padding: 10px 10px 0; }
 .ad-aviso { display: grid; gap: 4px; }
 .ad-aviso small { font-size: 13px; color: #3b4560; }

@@ -30,8 +30,8 @@ Tokens live in `src/index.css`. Always use tokens, never hardcode hex when a tok
 - Home solar (LP.9, sistema EVA em campo, escopo `.lp-solar`): `--lp-sol`,
   `--lp-noite`, `--lp-marker` (só marca-texto atrás de `--lp-ink`),
   `--lp-ink-muted`, `--lp-ink-subtle`, `--lp-whatsapp` (só ícone), `--lp-chat-bg`,
-  `--lp-chat-out`, `--lp-wait`, `--lp-ok` e `--lp-font-display` (Gabarito). Na
-  home, os valores de papel e tinta mudam e Gabarito substitui Satoshi e Sentient.
+  `--lp-chat-out`, `--lp-wait`, `--lp-ok` e `--lp-font-display` (Geist). Na
+  home, os valores de papel e tinta mudam e Geist substitui Satoshi e Sentient.
   Regras na skill `vyzon-landing-art-director`.
 
 ## Tokens — App (`--vyz-*`)

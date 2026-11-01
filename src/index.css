@@ -3650,8 +3650,8 @@ All colors MUST be HSL.
   --lp-chat-out: #d9fdd3;
   --lp-wait: #a14a07;
   --lp-ok: #0f7b4f;
-  --lp-font-display: 'Gabarito', system-ui, sans-serif;
-  --lp-font-num: 'Gabarito', system-ui, sans-serif;
+  --lp-font-display: 'Geist', 'Inter', system-ui, sans-serif;
+  --lp-font-num: 'Geist', 'Inter', system-ui, sans-serif;
   /* LP.6 (v2) — tipografia editorial, usada apenas via .lp-v2 (não afeta a /) */
   --font-display: 'Newsreader', 'Georgia', serif;
   --font-geist: 'Geist', 'Inter', system-ui, sans-serif;
@@ -3662,7 +3662,7 @@ All colors MUST be HSL.
    Referência aprovada: https://claude.ai/artifact/L2qfp4yTM3RBvSL3yN5mjo
    Substitui o Vyzon Solar (LP.8). A EVA é o que nenhum concorrente tem, então
    ela é a estrela. Faixas chapadas de sol (.vs-sol) e noite (.vs-noite) sobre
-   creme, cartões brancos sem sombra e Gabarito como família única. A conversa
+   creme, cartões brancos sem sombra e Geist, a fonte do app, em tudo. A conversa
    e a fatura seguem como objetos. Marca-texto em fundo sol é branco.
    Escopo .lp-solar: não mexe nas outras páginas da landing.
    ══════════════════════════════════════════════════════════════════════ */
@@ -3686,6 +3686,19 @@ All colors MUST be HSL.
   background: var(--lp-sol);
 }
 .lp-solar .vs-sol .vs-azul { color: var(--lp-ink); }
+/* Topo: texto sobre creme e o amarelo só como palco do celular e da EVA. */
+@media (min-width: 768px) {
+  .lp-solar .vs-topo { background: linear-gradient(90deg, var(--lp-paper) calc(50% + 40px), var(--lp-sol) 0); }
+}
+@media (max-width: 767px) {
+  .lp-solar .vs-palco {
+    margin-inline: -16px;
+    max-width: none;
+    width: auto;
+    padding-inline: 16px;
+    background: linear-gradient(transparent 180px, var(--lp-sol) 0);
+  }
+}
 .lp-solar .vs-noite {
   --lp-ink-muted: rgba(255, 255, 255, 0.8);
   --lp-ink-subtle: rgba(255, 255, 255, 0.72);
@@ -3714,8 +3727,8 @@ All colors MUST be HSL.
 }
 .lp-solar .vs-display {
   font-family: var(--lp-font-display);
-  font-weight: 900;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  letter-spacing: -0.04em;
   text-wrap: balance;
 }
 .lp-solar .vs-num {
@@ -3774,8 +3787,8 @@ All colors MUST be HSL.
   border-radius: 999px;
   background: var(--lp-ink);
   color: var(--lp-white);
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
   line-height: 1.1;
   text-align: center;
   text-decoration: none;
@@ -3850,7 +3863,7 @@ All colors MUST be HSL.
   color: var(--lp-white);
   font-family: var(--lp-font-display);
   font-size: 15px;
-  font-weight: 900;
+  font-weight: 700;
 }
 .lp-solar .vs-conversa__avatar--cliente { background: var(--lp-ink-subtle); }
 .lp-solar .vs-conversa__nome { font-weight: 600; }

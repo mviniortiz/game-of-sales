@@ -1,6 +1,6 @@
 ---
 name: vyzon-landing-art-director
-description: Use ao criar, refatorar ou polir a home do Vyzon (src/pages/SolarLanding.tsx) e as páginas por ângulo /raio-x/:angulo. Fixa o público (dono de integradora solar que vende pelo WhatsApp), a ordem das seções, a direção visual do sistema EVA em campo (a EVA como estrela, faixas de sol e noite, Gabarito, fatura e conversa) e o que as páginas brasileiras de referência fazem e o Vyzon não copia.
+description: Use ao criar, refatorar ou polir a home do Vyzon (src/pages/SolarLanding.tsx) e as páginas por ângulo /raio-x/:angulo. Fixa o público (dono de integradora solar que vende pelo WhatsApp), a ordem das seções, a direção visual do sistema EVA em campo (a EVA como estrela, creme, faixas de sol e noite, Geist, fatura e conversa) e o que as páginas brasileiras de referência fazem e o Vyzon não copia.
 ---
 
 # Diretor de arte da landing do Vyzon
@@ -83,12 +83,14 @@ tem personagem, então a EVA é a estrela.
 - A demo do topo (`src/components/landing/AvisoDemo.tsx`) usa o kit Stageshow de
   Benji Taylor (MIT), copiado em `src/vendor/stageshow`, e carrega em pedaço
   separado. Tela de produto ilustrada segue as regras dessa skill.
-- Ritmo de fundo, sempre em cor chapada: sol `.vs-sol` (topo), creme, noite
-  `.vs-noite` (calculadora), creme, sol (objeções), creme. Faixas iguais nunca
+- Topo em creme com o amarelo só como palco do celular e da EVA (`.vs-topo`).
+  Amarelo na tela inteira foi rejeitado pelo Markus em 01/11/2026.
+- Ritmo de fundo, sempre em cor chapada: topo, creme, noite `.vs-noite`
+  (calculadora), creme, sol `.vs-sol` (objeções), creme. Faixas iguais nunca
   ficam coladas. Cartão branco sem sombra, raio de 22px, volta às cores do papel
   sozinho (`.vs-fatura`, `.vs-conversa`, `.vs-cartao`).
-- Gabarito é a família única: 900 nos títulos (`.vs-display`) e nos números
-  grandes (`.vs-num`), regular no texto.
+- Geist, a mesma fonte do app, em tudo: 600 com letras fechadas nos títulos
+  (`.vs-display`) e nos números grandes (`.vs-num`), regular no texto.
 - Marca-texto `.vs-marca` atrás de texto `--lp-ink`, uma vez por tela: branco em
   sol, sol em branco. Azul `.vs-azul` só na segunda metade de título sobre creme,
   em links e no corpo da EVA.
