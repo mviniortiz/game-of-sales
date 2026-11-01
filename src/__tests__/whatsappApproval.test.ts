@@ -11,7 +11,33 @@ import {
     brNumberVariants,
     sameNumber,
     templateParam,
+    buildDraftMessage,
+    buildAmbiguousReply,
 } from "../../supabase/functions/_shared/whatsappApproval";
+
+describe("texto do aviso ao dono", () => {
+    const rascunho = { code: "A2", contactName: "Carlos", stage: null, why: null, text: "Oi, Carlos" };
+
+    it("pede só 1 ou 2, sem o código", () => {
+        const texto = buildDraftMessage(rascunho);
+        expect(texto).toContain("Responda 1 para enviar, 2 para descartar, ou escreva o texto corrigido.");
+        expect(texto).not.toContain("A2 1");
+    });
+
+    it("mantém o código no cabeçalho, para quando houver mais de um aberto", () => {
+        expect(buildDraftMessage(rascunho)).toContain("[A2]");
+    });
+
+    it("com dois abertos, mostra quem é cada um", () => {
+        const texto = buildAmbiguousReply([
+            { approval_code: "A2", suggestion: { contact_name: "Carlos" } },
+            { approval_code: "A3", suggestion: {} },
+        ]);
+        expect(texto).toContain("Tem 2 rascunhos abertos.");
+        expect(texto).toContain("A2 1 para Carlos");
+        expect(texto).toContain("A3 1");
+    });
+});
 
 describe("parseOwnerCommand", () => {
     it("entende o aprovar de um toque", () => {
