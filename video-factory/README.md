@@ -16,6 +16,7 @@ video-factory/
   package.json            só o hyperframes@0.8.92
   molde-vyzon-solar/      base.css (tokens LP.8, conversa, fatura, preço, EvaBot, legenda)
                           base.js (batidas, curvas, atalhos de movimento seek-safe)
+  molde-eva-campo/        tema.css (registro EVA em campo: tokens por cima do molde-vyzon-solar)
   molde-rosto/            index.html, rosto.css, rosto.js (reel com rosto: faixa + legenda)
   scripts/
     rosto/                prepara, importa-palavras, corta, mixa-rosto, render-rosto.sh,

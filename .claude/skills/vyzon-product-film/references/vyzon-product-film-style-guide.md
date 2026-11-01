@@ -28,7 +28,7 @@ creme (`#FAF9F5`): creme + azul-noite + âmbar é a identidade da SolarMarket.
 | Marca-texto | `#FFD84A` | só atrás de texto `#0D1421`, uma vez por cena, desenhado da esquerda |
 | Conversa | `#EFEAE2` fundo, `#D9FDD3` saída, branco entrada, ✓✓ `#53BDEB` | o WhatsApp como objeto |
 | Carimbos | espera `#A14A07`, ok `#0F7B4F` | estado, sempre com a palavra |
-| EVA | EvaBot (cores de `src/components/eva/evaBot.css`), ponto `#A78BFA` | nunca área grande |
+| EVA | EvaBot (cores de `src/components/eva/evaBot.css`) | avatar e apoio; grande só no registro EVA em campo |
 
 Fontes: Archivo 800 nos títulos (118–132 px, tracking -0.035em), Barlow
 Condensed 700 nos números, Geist na UI e no corpo. Objetos: a conversa de
@@ -82,11 +82,13 @@ nada de neon, partícula ou orbe.
 
 ## 5. A EVA em cena
 
-EvaBot em HTML (mesmas cores do app): bola com gradiente `#34508A → #1B2B4E →
-#0B1220`, dois olhos brancos em pílula, pontinho `#A78BFA` no canto (âmbar quando
-acha algo). Estados por GSAP: lendo = olhos achatados (scaleY .3) varrendo de um
-lado ao outro; alerta = olhos abertos e pontinho âmbar. Ao lado dela, a pílula
-"Lendo as conversas" (grade 3×3 em onda pela diagonal), igual ao `EvaThinking` do app.
+EvaBot em HTML, mesmo desenho do app: cápsula azul, visor azul-noite, olhos âmbar
+e placa solar. Basta um `<div class="eva">` com `--s` no CSS: `VF.montar()` desenha.
+Movimento só por GSAP, com os estados do app em `VF.evaEstado`: `olho`, `lendo`
+(olhos em barra varrendo, via `evaLendo`), `alerta` (pulinho, células acesas),
+`escrevendo` (pontos, via `evaDigita`) e `saiu` (olhos em arco, painel aceso). Entre
+eles, `evaVive`, `evaPisca` e `evaOlhar`. Em fundo escuro use `.eva--noite`. No
+registro EVA em campo ela senta na borda de cima dos cartões (`.sentada`).
 
 ## 6. Motion
 

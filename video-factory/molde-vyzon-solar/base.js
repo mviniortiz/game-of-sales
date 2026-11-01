@@ -30,7 +30,29 @@
     const $$ = (s, r = document) => (typeof s === "string" ? [...r.querySelectorAll(s)] : [s].flat());
     const ir = { immediateRender: false };
 
+    const pecas = (sel, c) => $$(sel).flatMap((el) => [...el.querySelectorAll(c)]);
+
+    // Mesmo desenho e mesmos estados de src/components/eva/ (cápsula e placa).
+    const EVA_OLHO = { lendo: { scaleX: 1.5, scaleY: 0.32 }, alerta: { scaleY: 1.3 }, saiu: { opacity: 0, scaleX: 0.4, scaleY: 0.2 } };
+    const EVA_LUZ = { alerta: [1, 2, 3, 5, 6, 7, 8], saiu: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] };
+    const EVA_CELULA = '<i><b class="eva__luz"></b></i>'.repeat(10);
+    const EVA_OLHO_HTML = '<div class="eva__olho"><b class="eva__pilula"></b><b class="eva__sorriso"></b></div>';
+    const EVA_HTML = `<div class="eva__palco"><div class="eva__vivo"><div class="eva__corpo">
+        <div class="eva__topo"><div class="eva__haste"></div><div class="eva__placa">${EVA_CELULA}</div></div>
+        <div class="eva__orelha"></div><div class="eva__orelha"></div><div class="eva__casco"></div><div class="eva__visor"></div>
+        <div class="eva__rosto"><div class="eva__olhos">${EVA_OLHO_HTML}${EVA_OLHO_HTML}</div><div class="eva__boca"><i></i><i></i><i></i></div></div>
+    </div></div></div>`;
+    /** Desenha cada .eva vazia no tamanho que o CSS deu a ela. */
+    function montaEvas() {
+        $$(".eva").forEach((el) => {
+            if (el.children.length) return;
+            el.innerHTML = EVA_HTML;
+            el.querySelector(".eva__palco").style.transform = `scale(${el.offsetWidth / 240})`;
+        });
+    }
+
     function montar() {
+        montaEvas();
         const tl = gsap.timeline({ paused: true, defaults: { ease: "settle" } });
         // Estado inicial de tudo que entra depois (seek-safe: set na posição 0).
         if (document.querySelector(".cena:not(#c1)")) tl.set(".cena:not(#c1)", { autoAlpha: 0 }, 0);
@@ -95,18 +117,50 @@
         visto(tl, sel, t) {
             tl.fromTo($$(sel).flatMap((el) => [...el.querySelectorAll("path")]), { stroke: "#8696a0" }, { stroke: "#53bdeb", duration: 0.18, ease: "snap", ...ir }, t);
         },
-        /** Olhos da EVA: lendo (achatados varrendo), alerta (abertos, ponto âmbar), feliz. */
-        evaLendo(tl, sel, t, dur) {
-            const olhos = $$(sel).flatMap((el) => [...el.querySelectorAll(".eva__olho")]);
-            const grupo = $$(sel).map((el) => el.querySelector(".eva__olhos"));
-            tl.to(olhos, { scaleY: 0.32, duration: 0.18, ease: "snap" }, t);
-            for (let k = 0; k * 0.8 < dur; k++) tl.to(grupo, { x: k % 2 ? -6 : 6, duration: 0.4, ease: "drift", yoyo: true, repeat: 1 }, t + k * 0.8);
+        /** EVA, mesmos estados do app: olho, lendo, alerta, escrevendo, saiu. */
+        evaEstado(tl, sel, estado, t) {
+            const p = (c) => pecas(sel, c);
+            const d = { duration: 0.22, ease: "settle" };
+            tl.to(p(".eva__pilula"), { scaleX: 1, scaleY: 1, opacity: 1, ...d, ...(EVA_OLHO[estado] || {}) }, t);
+            tl.to(p(".eva__sorriso"), { opacity: estado === "saiu" ? 1 : 0, ...d }, t);
+            tl.to(p(".eva__olhos"), { x: estado === "olho" ? 12 : 0, y: estado === "escrevendo" ? -12 : 0, ...d }, t);
+            tl.to(p(".eva__boca"), { opacity: estado === "escrevendo" ? 1 : 0, ...d }, t);
+            const acesas = EVA_LUZ[estado] || [];
+            tl.to(p(".eva__luz"), { opacity: (i) => (acesas.includes(i % 10) ? 1 : 0), duration: 0.18, ease: "snap", stagger: { each: 0.02 } }, t);
+            if (estado !== "alerta" && estado !== "saiu") return;
+            tl.to(p(".eva__corpo"), { keyframes: [
+                { scaleX: 1.08, scaleY: 0.9, y: 0, duration: 0.12 },
+                { scaleX: 0.95, scaleY: 1.06, y: -20, duration: 0.2 },
+                { scaleX: 1.04, scaleY: 0.96, y: 0, duration: 0.2 },
+                { scaleX: 1, scaleY: 1, y: 0, duration: 0.18 },
+            ], ease: "drift" }, t);
+            if (estado === "alerta") tl.to(p(".eva__placa"), { keyframes: [
+                { rotation: -11, duration: 0.16 }, { rotation: -3, duration: 0.18 }, { rotation: -9, duration: 0.16 }, { rotation: -7, duration: 0.16 },
+            ], ease: "drift" }, t);
         },
-        evaAlerta(tl, sel, t) {
-            const el = $$(sel);
-            tl.to(el.flatMap((e) => [...e.querySelectorAll(".eva__olho")]), { scaleY: 1.1, duration: 0.22, ease: "snap" }, t);
-            tl.to(el.map((e) => e.querySelector(".eva__olhos")), { x: 0, duration: 0.2 }, t);
-            tl.to(el.map((e) => e.querySelector(".eva__ponto")), { backgroundColor: "#f5b454", scale: 1.3, duration: 0.25, ease: "snap" }, t);
+        /** Lendo: olhos em barra varrendo de um lado ao outro por `dur` segundos. */
+        evaLendo(tl, sel, t, dur) {
+            api.evaEstado(tl, sel, "lendo", t);
+            const olhos = pecas(sel, ".eva__olhos");
+            for (let k = 0; k * 0.5 < dur; k++) tl.to(olhos, { x: k % 2 ? -16 : 16, duration: 0.5, ease: "drift" }, t + k * 0.5);
+        },
+        /** Escrevendo: os três pontos sobem um de cada vez por `dur` segundos. */
+        evaDigita(tl, sel, t, dur) {
+            api.evaEstado(tl, sel, "escrevendo", t);
+            const pontos = pecas(sel, ".eva__boca i");
+            for (let k = 0; k * 0.9 < dur; k++) tl.to(pontos, { y: -8, duration: 0.14, ease: "drift", yoyo: true, repeat: 1, stagger: 0.12 }, t + k * 0.9);
+        },
+        evaPisca(tl, sel, t) {
+            tl.to(pecas(sel, ".eva__pilula"), { scaleY: 0.08, duration: 0.07, ease: "none", yoyo: true, repeat: 1 }, t);
+        },
+        evaOlhar(tl, sel, x, t, { dur = 0.3 } = {}) {
+            tl.to(pecas(sel, ".eva__olhos"), { x, duration: dur, ease: "drift" }, t);
+        },
+        /** Respiração e balanço da placa entre t e t2. */
+        evaVive(tl, sel, t, t2) {
+            const vivo = pecas(sel, ".eva__vivo"), topo = pecas(sel, ".eva__topo");
+            for (let k = 0; t + k * 1.7 < t2; k++) tl.to(vivo, { y: k % 2 ? 0 : -4, duration: 1.7, ease: "drift" }, t + k * 1.7);
+            for (let k = 0; t + k * 2.1 < t2; k++) tl.to(topo, { rotation: k % 2 ? -1.4 : 1.4, duration: 2.1, ease: "drift" }, t + k * 2.1);
         },
         /** Câmera: respiração lenta (≤1,04) e um empurrão na virada. */
         respira(tl, dur) { tl.fromTo("#camera", { scale: 1 }, { scale: 1.025, duration: dur, ease: "none" }, 0); },

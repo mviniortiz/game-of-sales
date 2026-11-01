@@ -1,0 +1,135 @@
+/* Molde "Vyzon Solar" dos product films verticais (1080x1920).
+   Tokens copiados do bloco LP.8 de src/index.css (design system Vyzon Solar):
+   azul #1556c0 é a cor dona; o marca-texto #ffd84a só vai atrás de texto
+   #0d1421, uma vez por cena; Archivo nos títulos, Barlow Condensed nos números;
+   a conversa de WhatsApp e a fatura são os objetos. Papel neutro frio, não creme.
+   Tudo que mexe é animado pela timeline GSAP (base.js), nunca por CSS. */
+:root {
+  --paper: #f6f7f9; --white: #fff; --ink: #0d1421; --muted: #4a5363; --subtle: #5f6776;
+  --line: #d9dde4; --blue: #1556c0; --blue-deep: #0e3e8a; --tint: #e8effb; --marker: #ffd84a;
+  --wa: #25d366; --chat: #efeae2; --out: #d9fdd3; --wait: #a14a07; --ok: #0f7b4f;
+  --tick-blue: #53bdeb; --eva: #a78bfa;
+  --f-display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;
+  --f-num: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --f-ui: 'Geist', 'Inter', system-ui, sans-serif;
+  --shadow: 0 2px 4px rgba(13,20,33,.06), 0 40px 80px -40px rgba(13,20,33,.45);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; background: var(--paper); overflow: hidden; }
+body { font-family: var(--f-ui); color: var(--ink); -webkit-font-smoothing: antialiased; }
+#root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: var(--paper); }
+#camera { position: absolute; inset: 0; transform-origin: 50% 46%; }
+.cena { position: absolute; inset: 0; visibility: hidden; }
+#c1 { visibility: visible; }          /* o gancho existe no quadro 0 */
+#c1 .depois { visibility: hidden; }   /* o que entra depois dentro do gancho */
+
+/* ── Tipografia ─────────────────────────────────────────────────────────── */
+.hl { font-family: var(--f-display); font-weight: 800; font-size: 118px; line-height: 1.02; letter-spacing: -0.035em; color: var(--ink); }
+.hl--m { font-size: 96px; }
+.hl--s { font-size: 76px; }
+.kicker { font-family: var(--f-ui); font-weight: 600; font-size: 34px; letter-spacing: .08em; text-transform: uppercase; color: var(--subtle); }
+.sub { font-size: 44px; line-height: 1.32; color: var(--muted); font-weight: 500; }
+.num { font-family: var(--f-num); font-variant-numeric: tabular-nums lining-nums; font-weight: 700; letter-spacing: 0; }
+.azul { color: var(--blue); }
+/* linha mascarada: o texto sobe de baixo (yPercent no GSAP) */
+.ln { display: block; overflow: hidden; padding-bottom: .08em; margin-bottom: -.08em; }
+.ln > span { display: inline-block; will-change: transform; }
+/* marca-texto: só atrás de --ink; o GSAP desenha com background-size */
+.marca { background-image: linear-gradient(transparent 0 56%, var(--marker) 56% 92%, transparent 92%);
+  background-repeat: no-repeat; background-size: 0% 100%; -webkit-box-decoration-break: clone; box-decoration-break: clone; padding: 0 .05em; color: var(--ink); }
+.carimbo { display: inline-flex; align-items: center; border: 4px solid currentColor; border-radius: 10px; padding: 6px 16px;
+  font-size: 30px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; line-height: 1.15; }
+.carimbo--espera { color: var(--wait); } .carimbo--ok { color: var(--ok); } .carimbo--azul { color: var(--blue); } .carimbo--neutro { color: var(--subtle); }
+
+/* ── Conversa: o WhatsApp como objeto ────────────────────────────────────── */
+.conversa { position: absolute; left: 90px; width: 900px; border: 2px solid var(--line); border-radius: 28px; overflow: hidden;
+  background: var(--white); box-shadow: var(--shadow); }
+.conversa__topo { display: flex; align-items: center; gap: 24px; padding: 24px 30px; border-bottom: 2px solid var(--line); background: var(--white); }
+.conversa__avatar { width: 76px; height: 76px; flex-shrink: 0; border-radius: 999px; display: flex; align-items: center; justify-content: center;
+  background: var(--subtle); color: var(--white); font: 800 34px var(--f-display); }
+.conversa__nome { font-size: 38px; font-weight: 600; line-height: 1.15; }
+.conversa__status { font-size: 30px; color: var(--subtle); line-height: 1.2; }
+.conversa__corpo { position: relative; display: flex; flex-direction: column; gap: 18px; padding: 30px 26px 34px; background: var(--chat); }
+.conversa__dia { align-self: center; padding: 6px 18px; border-radius: 12px; background: var(--white); color: var(--subtle); font-size: 30px; }
+.bolha { position: relative; max-width: 88%; align-self: flex-start; padding: 16px 22px 10px; border-radius: 20px; background: var(--white);
+  box-shadow: 0 1px 1px rgba(13,20,33,.12); font-size: 40px; line-height: 1.34; transform-origin: 0% 100%; }
+.bolha--saida { align-self: flex-end; background: var(--out); transform-origin: 100% 100%; }
+.bolha__hora { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 4px; font-size: 30px; color: var(--subtle); }
+.bolha__rascunho { margin: 8px 0; padding-left: 18px; border-left: 6px solid var(--blue); }
+.bolha__meta { color: var(--muted); font-size: 36px; }
+.bolha strong { font-weight: 600; }
+.ticks { position: relative; display: inline-block; width: 44px; height: 30px; }
+.ticks svg { position: absolute; inset: 0; }
+.pdf { display: flex; align-items: center; gap: 20px; padding: 16px 18px; margin-bottom: 8px; border-radius: 14px; background: rgba(13,20,33,.05); }
+.pdf__icone { width: 62px; height: 76px; border-radius: 8px; background: #e5484d; color: #fff; font: 700 22px var(--f-ui); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; }
+.pdf__nome { font-size: 36px; font-weight: 600; line-height: 1.2; }
+.pdf__meta { font-size: 30px; color: var(--subtle); }
+.digitando { display: inline-flex; gap: 10px; padding: 22px 26px; }
+.digitando i { width: 16px; height: 16px; border-radius: 50%; background: var(--subtle); display: block; }
+
+/* ── Fatura: a conta do dinheiro parado, no molde da conta de luz ────────── */
+.fatura { position: absolute; left: 90px; width: 900px; background: var(--white); border: 2px solid var(--line); border-radius: 26px;
+  box-shadow: var(--shadow); padding: 48px 50px; color: var(--ink); }
+.fatura__topo { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; padding-bottom: 26px; border-bottom: 3px dashed var(--line); }
+.fatura__titulo { font: 800 44px var(--f-display); letter-spacing: -.02em; }
+.fatura__ref { font-size: 30px; color: var(--subtle); }
+.fatura__linha { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 18px 0; border-bottom: 2px solid #eef0f3; }
+.fatura__quem { font-size: 38px; font-weight: 600; line-height: 1.2; }
+.fatura__quem small { display: block; font-size: 30px; font-weight: 400; color: var(--subtle); margin-top: 2px; }
+.fatura__valor { font-size: 58px; line-height: 1; }
+.fatura__total { display: flex; justify-content: space-between; align-items: flex-end; padding-top: 28px; margin-top: 10px; border-top: 3px dashed var(--line); }
+.fatura__total-rotulo { font-size: 34px; font-weight: 600; color: var(--muted); }
+.fatura__total-valor { font-size: 132px; line-height: .9; color: var(--blue); }
+
+/* ── Preço ───────────────────────────────────────────────────────────────── */
+.preco { position: absolute; left: 90px; width: 900px; border: 4px solid var(--ink); border-radius: 26px; background: var(--white); padding: 76px 56px 52px; }
+.preco__etiqueta { position: absolute; top: -30px; left: 52px; padding: 8px 18px; border-radius: 10px; background: var(--marker); color: var(--ink);
+  font-size: 32px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+
+/* ── Botão WhatsApp (BotaoWhatsApp da landing) ───────────────────────────── */
+.btn { display: inline-flex; align-items: center; gap: 22px; padding: 0 52px; height: 120px; border-radius: 999px; background: var(--ink); color: var(--white);
+  font-size: 42px; font-weight: 600; white-space: nowrap; }
+.btn__wa { width: 58px; height: 58px; border-radius: 999px; background: var(--wa); display: flex; align-items: center; justify-content: center; }
+
+/* ── Marca Vyzon (wordmark de texto, só no fechamento) ───────────────────── */
+.wordmark { font: 800 88px var(--f-display); letter-spacing: -.04em; color: var(--ink); }
+.wordmark i { font-style: normal; color: var(--blue); }
+
+/* ── EvaBot (mesmo desenho de src/components/eva/evaBot.css: cápsula e placa) ─
+   Caixa de 240x240, ajustada a --s por VF.montar(). Parado aqui; todo movimento
+   vem de VF.evaEstado e dos outros atalhos da timeline. .eva--noite é para fundo
+   escuro. As medidas são da caixa de 240. */
+.eva { --s: 240px; --corpo: #1556c0; --visor: #0f1730; --olho: #ffc933; --peca: #0f1730; --cel: #2c62c4;
+  position: relative; width: var(--s); height: var(--s); flex-shrink: 0; }
+.eva--noite { --peca: #2a3a66; }
+.eva__palco { position: absolute; left: 0; top: 0; width: 240px; height: 240px; transform-origin: 0 0; }
+.eva__vivo, .eva__corpo, .eva__topo, .eva__rosto, .eva__olhos { position: absolute; inset: 0; }
+.eva__corpo { transform-origin: 120px 224px; }
+.eva__topo { transform-origin: 120px 76px; }
+.eva__haste { position: absolute; left: 115px; top: 46px; width: 10px; height: 36px; border-radius: 5px; background: var(--peca); }
+.eva__placa { position: absolute; left: 54px; top: 8px; width: 132px; height: 48px; padding: 5px; border-radius: 8px; background: var(--peca);
+  transform: rotate(-7deg); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; }
+.eva__placa i { position: relative; display: block; border-radius: 2px; background: var(--cel); }
+.eva__luz { position: absolute; inset: 0; border-radius: 2px; background: var(--olho); opacity: 0; }
+.eva__orelha { position: absolute; left: 14px; top: 125px; width: 20px; height: 50px; border-radius: 10px; background: var(--peca); }
+.eva__orelha + .eva__orelha { left: 206px; }
+.eva__casco { position: absolute; left: 24px; top: 76px; width: 192px; height: 148px; border-radius: 62px; background: var(--corpo); }
+.eva__visor { position: absolute; left: 44px; top: 100px; width: 152px; height: 96px; border-radius: 42px; background: var(--visor); }
+.eva__olhos { transform: translateX(12px); }
+.eva__olho { position: absolute; left: 77.5px; top: 126px; width: 24px; height: 44px; }
+.eva__olho + .eva__olho { left: 138.5px; }
+.eva__pilula { position: absolute; inset: 0; border-radius: 12px; background: var(--olho); }
+.eva__sorriso { position: absolute; left: -11px; top: 10px; width: 46px; height: 26px; border: 11px solid var(--olho); border-bottom: 0;
+  border-radius: 46px 46px 0 0; opacity: 0; }
+.eva__boca { position: absolute; left: 120px; top: 170px; display: flex; gap: 7px; transform: translateX(-50%); opacity: 0; }
+.eva__boca i { display: block; width: 9px; height: 9px; border-radius: 50%; background: var(--olho); }
+
+/* ── Revisão: tempo queimado (só no render -rev) ─────────────────────────── */
+#tc { position: absolute; right: 24px; top: 24px; z-index: 99; display: none; padding: 6px 14px; border-radius: 8px; background: rgba(13,20,33,.82);
+  color: #fff; font: 600 34px/1 ui-monospace, Menlo, monospace; }
+.rev #tc { display: block; }
+
+/* ── Legenda da narração (sem som, a maioria assiste assim) ──────────────── */
+#legenda { position: absolute; left: 150px; right: 150px; top: 1460px; height: 140px; z-index: 50; pointer-events: none; }
+#legenda .leg { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center;
+  font: 800 54px/1.12 var(--f-display); letter-spacing: -.02em; color: var(--ink); visibility: hidden; text-wrap: balance; }

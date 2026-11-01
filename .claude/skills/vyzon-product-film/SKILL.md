@@ -35,6 +35,9 @@ Leia antes do primeiro frame.
     marca-texto `#ffd84a` só atrás de texto `#0d1421`, Archivo nos títulos,
     Barlow Condensed nos números, a conversa de WhatsApp e a fatura como
     objetos. Molde: `video-factory/molde-vyzon-solar`. Substitui o antigo Papel.
+  - **EVA em campo** (conceito A, 01/11/2026): a EVA grande em cor chapada, sol
+    `#ffc933`, noite `#0f1730` e creme `#f3efe4`, Gabarito como família única.
+    Molde: `molde-vyzon-solar` mais `molde-eva-campo/tema.css`.
   - **Noite azul** (aprovado em 17/10/2026): azul-noite, borda acesa, um brilho
     por cena. O molde ficou no PC antigo e não foi refeito no Mac.
   Um registro por filme; nunca misturar.
@@ -57,7 +60,8 @@ video-factory/scripts/        audiomap.mjs · apara-frases.mjs · gera-legendas.
                               render-filme.sh (tudo de um filme)
 ~/Movies/vyzon-film/          trilha/ · sfx/ · voz/ · transcrever/
 ```
-Filmes no Mac: `dia-2` (virada, 23 s) e `parado` (Raio-X + preço, 24 s).
+Filmes no Mac: `dia-2` (virada, 23 s), `parado` (Raio-X + preço, 24 s) e
+`eva-campo` (a virada no registro EVA em campo, 23 s).
 Reel com o Markus falando para a câmera (faixa da pergunta de 0 a 4 s, legenda
 palavra por palavra, corte de silêncio): `video-factory/molde-rosto` e
 `scripts/rosto/`, passo a passo no README ("Reel com rosto"). Rosto real
@@ -94,7 +98,7 @@ Regras: nunca começar pelo logo; uma grande ideia visual por filme.
 
 1. `source video-factory/env.sh`. Copie `molde-vyzon-solar/base.css` e `base.js`
    (batidas, curvas, atalhos entra/sai/lineIn/lineOut/marca/bolha/digitando/
-   visto/evaLendo/evaAlerta/legendas, todos gravando o estado inicial no tempo 0)
+   visto/evaEstado/evaLendo/evaDigita/evaPisca/evaOlhar/evaVive/legendas, todos gravando o estado inicial no tempo 0)
    para `films/<slug>/`; `films/dia-2` é o exemplo. O verificador quer
    `window.__timelines` no HTML: deixe a linha que só inicializa o objeto.
 2. Batidas: `node scripts/audiomap.mjs <trilha.mp3> -o x.audiomap.json` (BPM e

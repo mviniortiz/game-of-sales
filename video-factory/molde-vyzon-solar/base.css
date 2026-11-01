@@ -95,15 +95,34 @@ body { font-family: var(--f-ui); color: var(--ink); -webkit-font-smoothing: anti
 .wordmark { font: 800 88px var(--f-display); letter-spacing: -.04em; color: var(--ink); }
 .wordmark i { font-style: normal; color: var(--blue); }
 
-/* ── EvaBot (mesmo desenho de src/components/eva/evaBot.css) ─────────────── */
-.eva { --s: 76px; position: relative; width: var(--s); height: var(--s); flex-shrink: 0; }
-.eva__corpo { position: absolute; inset: 0; border-radius: 50%;
-  background: radial-gradient(circle at 30% 24%, rgba(255,255,255,.22) 0%, rgba(255,255,255,0) 32%), radial-gradient(circle at 38% 30%, #34508a 0%, #1b2b4e 48%, #0b1220 100%);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.1), inset 0 calc(var(--s) * -.05) calc(var(--s) * .1) rgba(0,0,0,.35), 0 calc(var(--s) * .06) calc(var(--s) * .14) rgba(13,20,33,.26); }
-.eva__ponto { position: absolute; top: 13%; right: 19%; width: calc(var(--s) * .085); height: calc(var(--s) * .085); border-radius: 50%; background: var(--eva);
-  box-shadow: 0 0 0 calc(var(--s) * .018) rgba(11,18,32,.6); }
-.eva__olhos { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: calc(var(--s) * .13); padding-top: calc(var(--s) * .02); }
-.eva__olho { width: calc(var(--s) * .16); height: calc(var(--s) * .25); border-radius: calc(var(--s) * .08); background: #fff; box-shadow: 0 0 calc(var(--s) * .05) rgba(255,255,255,.25); }
+/* ── EvaBot (mesmo desenho de src/components/eva/evaBot.css: cápsula e placa) ─
+   Caixa de 240x240, ajustada a --s por VF.montar(). Parado aqui; todo movimento
+   vem de VF.evaEstado e dos outros atalhos da timeline. .eva--noite é para fundo
+   escuro. As medidas são da caixa de 240. */
+.eva { --s: 240px; --corpo: #1556c0; --visor: #0f1730; --olho: #ffc933; --peca: #0f1730; --cel: #2c62c4;
+  position: relative; width: var(--s); height: var(--s); flex-shrink: 0; }
+.eva--noite { --peca: #2a3a66; }
+.eva__palco { position: absolute; left: 0; top: 0; width: 240px; height: 240px; transform-origin: 0 0; }
+.eva__vivo, .eva__corpo, .eva__topo, .eva__rosto, .eva__olhos { position: absolute; inset: 0; }
+.eva__corpo { transform-origin: 120px 224px; }
+.eva__topo { transform-origin: 120px 76px; }
+.eva__haste { position: absolute; left: 115px; top: 46px; width: 10px; height: 36px; border-radius: 5px; background: var(--peca); }
+.eva__placa { position: absolute; left: 54px; top: 8px; width: 132px; height: 48px; padding: 5px; border-radius: 8px; background: var(--peca);
+  transform: rotate(-7deg); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; }
+.eva__placa i { position: relative; display: block; border-radius: 2px; background: var(--cel); }
+.eva__luz { position: absolute; inset: 0; border-radius: 2px; background: var(--olho); opacity: 0; }
+.eva__orelha { position: absolute; left: 14px; top: 125px; width: 20px; height: 50px; border-radius: 10px; background: var(--peca); }
+.eva__orelha + .eva__orelha { left: 206px; }
+.eva__casco { position: absolute; left: 24px; top: 76px; width: 192px; height: 148px; border-radius: 62px; background: var(--corpo); }
+.eva__visor { position: absolute; left: 44px; top: 100px; width: 152px; height: 96px; border-radius: 42px; background: var(--visor); }
+.eva__olhos { transform: translateX(12px); }
+.eva__olho { position: absolute; left: 77.5px; top: 126px; width: 24px; height: 44px; }
+.eva__olho + .eva__olho { left: 138.5px; }
+.eva__pilula { position: absolute; inset: 0; border-radius: 12px; background: var(--olho); }
+.eva__sorriso { position: absolute; left: -11px; top: 10px; width: 46px; height: 26px; border: 11px solid var(--olho); border-bottom: 0;
+  border-radius: 46px 46px 0 0; opacity: 0; }
+.eva__boca { position: absolute; left: 120px; top: 170px; display: flex; gap: 7px; transform: translateX(-50%); opacity: 0; }
+.eva__boca i { display: block; width: 9px; height: 9px; border-radius: 50%; background: var(--olho); }
 
 /* ── Revisão: tempo queimado (só no render -rev) ─────────────────────────── */
 #tc { position: absolute; right: 24px; top: 24px; z-index: 99; display: none; padding: 6px 14px; border-radius: 8px; background: rgba(13,20,33,.82);
