@@ -1205,11 +1205,20 @@ serve(async (req) => {
             }
           }
           try {
+            // Resposta em cima do aviso: a citação já diz qual é o rascunho.
+            const citado = msg.contextInfo?.stanzaId || msg.message?.extendedTextMessage?.contextInfo?.stanzaId;
+            let targetSuggestionId: string | null = null;
+            if (citado && companyId) {
+              const { data: avisado } = await admin.from("agent_suggestions").select("id")
+                .eq("company_id", companyId).eq("notify_message_id", citado).maybeSingle();
+              targetSuggestionId = avisado?.id ?? null;
+            }
             const outcome = await handleOwnerCommand(admin, {
               instanceName,
               companyId,
               ownerNumber,
               text: commandText,
+              targetSuggestionId,
             });
             if (outcome.handled) {
               skipped.push(`approval_${outcome.action || "handled"}`);

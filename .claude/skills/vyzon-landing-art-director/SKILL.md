@@ -1,6 +1,6 @@
 ---
 name: vyzon-landing-art-director
-description: Use ao criar, refatorar ou polir a home do Vyzon (src/pages/SolarLanding.tsx) e as páginas por ângulo /raio-x/:angulo. Fixa o público (dono de integradora solar que vende pelo WhatsApp), a ordem das seções, a direção visual do design system Vyzon Solar (azul de marca, Archivo, números em Barlow Condensed, fatura e conversa) e o que as páginas brasileiras de referência fazem e o Vyzon não copia.
+description: Use ao criar, refatorar ou polir a home do Vyzon (src/pages/SolarLanding.tsx) e as páginas por ângulo /raio-x/:angulo. Fixa o público (dono de integradora solar que vende pelo WhatsApp), a ordem das seções, a direção visual do sistema EVA em campo (a EVA como estrela, creme, faixas de sol e noite, Geist, fatura e conversa) e o que as páginas brasileiras de referência fazem e o Vyzon não copia.
 ---
 
 # Diretor de arte da landing do Vyzon
@@ -35,30 +35,32 @@ topo (Raio-X, EVA, placar, rascunho, aprovação A2).
    sumiu?"), título com promessa e prazo ("No 2º dia sem resposta, a
    mensagem pra chamar de volta chega pronta no seu WhatsApp"), subtítulo
    com o mecanismo (responde 1, sai do seu número, nada vai sem aprovar).
-   Depois vêm o botão principal "Falar com o Markus no WhatsApp" e quem
-   responde ("Quem responde é o Markus, que criou o Vyzon. Sem compromisso").
+   Depois vêm o botão principal "Me mostra quanto tá parado" e a linha "Abre no
+   seu WhatsApp. Quem responde é o Markus, que criou o Vyzon."
    Logo abaixo, a linha de preço de fundador e, por último, um link discreto
-   para o Raio-X automático.
+   para a calculadora, que não pede conexão.
    À direita (abaixo, no celular), o **aviso no WhatsApp do dono** (objeto
    Conversa): mensagem pronta para o Carlos, "Responda 1", o 1 e "Enviada".
 2. **Números de mercado com fonte** (NumeroComFonte): 18% de conversão e 25
    orçamentos por mês, Greener 1º semestre de 2026, no lugar de depoimento.
    Só número de fora, com estudo e período.
-3. **Calculadora** em faixa azul: o dono informa quantos orçamentos ficaram
-   sem resposta no último mês e o valor médio; o resultado sai na Fatura
-   ("Sua conta do último mês"). A conta vai na mensagem do WhatsApp para o
-   Markus. É a pergunta que valida o ICP. Evento `calc_use`.
+3. **Calculadora** em faixa noite (`#conta`), o caminho sem conectar nada: o dono
+   informa quantos orçamentos manda por mês, quantos viram venda e o valor médio,
+   números que ele sabe de cabeça. Começa na média da Greener e o resultado sai na
+   Fatura. A conta vai na mensagem do WhatsApp para o Markus. Evento `calc_use`.
 4. **Mock do produto**, claro: lista de propostas com carimbos de estado e a
    conversa do Carlos depois da aprovação.
-5. **Como funciona como linha do tempo da proposta**: uma vez (conecta o
+5. **Conheça a EVA**: cartão noite largo, bot grande cortado pela borda, passando
+   pelos estados com legenda. É aqui que o nome EVA é apresentado.
+6. **Como funciona como linha do tempo da proposta**: uma vez (conecta o
    WhatsApp), dia 0 (manda orçamento como sempre), dia 1 (cliente visualiza
-   e não responde), dia 2 (chega o aviso, único marco em azul).
-6. **Incluso + cartão de preço**: só o que existe no app. Preço de fundador
+   e não responde), dia 2 (chega o aviso, único cartão noite).
+7. **Incluso + cartão de preço**: só o que existe no app. Preço de fundador
    R$ 97/mês nos 3 primeiros meses para as 10 primeiras integradoras, depois
    R$ 197/mês. Sem contrato (confirmado pelo Markus em 19/10/2026).
-7. **Objeções reais**, com as frases acima e a resposta de cada uma.
-8. **FAQ**, espelhado no FAQPage do `index.html`.
-9. **Bloco final do Markus**: "20 minutos comigo pelo WhatsApp", a
+8. **Objeções reais**, com as frases acima e a resposta de cada uma.
+9. **FAQ**, espelhado no FAQPage do `index.html`.
+10. **Bloco final do Markus**: "20 minutos comigo pelo WhatsApp", a
    apresentação dele, o botão do WhatsApp e o formulário "Quero que o Markus
    me chame" (`demo_requests`, source `orcamento_teste`).
 
@@ -67,36 +69,40 @@ Conectar o WhatsApp num site recém-conhecido é pedir demais para o primeiro
 contato: na campanha de out/2026 foram 115 visitas, 9 cliques no botão e 0
 cadastros.
 
-## Direção visual: design system "Vyzon Solar" (LP.8, 22/10/2026)
+## Direção visual: sistema "EVA em campo" (LP.9, 01/11/2026)
 
-A fonte de verdade é o design system aprovado pelo Markus:
-https://claude.ai/artifact/Rm4n5dnbf8nPTb961BbsA2 (livro da marca, tokens e
-componentes). No código, o bloco LP.8 de `src/index.css` (escopo `.lp-solar`,
-classes `vs-*`) e `src/pages/SolarLanding.tsx`. Base da pesquisa de mercado:
-`docs/pesquisa/reports/Integradores solares e comunicação.md`.
+A fonte de verdade é o conceito A aprovado pelo Markus:
+https://claude.ai/artifact/L2qfp4yTM3RBvSL3yN5mjo. No código, o bloco LP.9 de
+`src/index.css` (escopo `.lp-solar`, classes `vs-*`) e
+`src/pages/SolarLanding.tsx`. Pesquisa de marcas de 01/11/2026: a categoria no
+Brasil é escura com âmbar ou neon (SolarMarket, Solfácil) e nenhum concorrente
+tem personagem, então a EVA é a estrela.
 
-- Azul `--lp-blue` é a cor dona: segunda metade do título de seção
-  (`.vs-azul`), links, faixa da calculadora, Dia 2, anel de foco.
-- Amarelo `--lp-marker` só como marca-texto (`.vs-marca`) atrás de texto
-  `--lp-ink`, uma vez por tela: fim do título do topo, total da Fatura,
-  etiqueta do preço de fundador.
-- Papel neutro frio (`--lp-paper` #f6f7f9 dentro de `.lp-solar`). Nada de
-  creme, âmbar ou Satoshi: papel creme + azul-noite + âmbar + Satoshi é a
-  identidade da SolarMarket, que vende para o mesmo dono.
-- Títulos em Archivo 800 (`.vs-display`), texto em Geist, todo número que o
-  dono lê como número (R$, dias, kWp, %) em Barlow Condensed (`.vs-num`).
-- Objetos gráficos: Fatura (`.vs-fatura`), Conversa (`.vs-conversa`,
-  `.vs-bolha`), LinhaDoTempo (`.vs-tempo`), carimbo de estado
-  (`.vs-carimbo--espera|ok|neutro`, sempre com a palavra).
-- Botão principal `.vs-btn`: pill `--lp-ink`, ícone do WhatsApp em círculo
-  verde, sombra dura azul no hover. Sobre azul, `.vs-btn--claro`.
-- Sem foto de banco, sem telhado com painel, sem sol como ícone: foto de
-  cliente que não existe é depoimento inventado. Foto real (do Markus, de
-  integradora parceira com autorização) entra quando existir.
+- A EVA (`EvaBot`) aparece em toda faixa forte, sentada na borda de cima de um
+  cartão (`EvaSentada`). A seção `ConhecaEva` a apresenta de perto.
+- A demo do topo (`src/components/landing/AvisoDemo.tsx`) usa o kit Stageshow de
+  Benji Taylor (MIT), copiado em `src/vendor/stageshow`, e carrega em pedaço
+  separado. Tela de produto ilustrada segue as regras dessa skill.
+- Topo em creme com o amarelo só como palco do celular e da EVA (`.vs-topo`).
+  Amarelo na tela inteira foi rejeitado pelo Markus em 01/11/2026.
+- Ritmo de fundo, sempre em cor chapada: topo, creme, noite `.vs-noite`
+  (calculadora), creme, sol `.vs-sol` (objeções), creme. Faixas iguais nunca
+  ficam coladas. Cartão branco sem sombra, raio de 22px, volta às cores do papel
+  sozinho (`.vs-fatura`, `.vs-conversa`, `.vs-cartao`).
+- Geist, a mesma fonte do app, em tudo: 600 com letras fechadas nos títulos
+  (`.vs-display`) e nos números grandes (`.vs-num`), regular no texto.
+- Marca-texto `.vs-marca` atrás de texto `--lp-ink`, uma vez por tela: branco em
+  sol, sol em branco. Azul `.vs-azul` só na segunda metade de título sobre creme,
+  em links e no corpo da EVA.
+- Objetos gráficos: Fatura, Conversa, LinhaDoTempo com a EVA em cada dia (só o
+  Dia 2 em noite) e carimbo de estado, sempre com a palavra.
+- Botão principal `.vs-btn`: pill `--lp-ink`, ícone do WhatsApp em círculo verde,
+  sombra dura azul no hover. Sobre noite, `.vs-btn--sol`.
+- Foto real (do Markus, de integradora parceira com autorização) entra quando
+  existir. A EVA ocupa esse lugar até lá; banco de imagem e telhado com painel
+  ficam de fora, porque foto de cliente que não existe é depoimento inventado.
 - Todas as seções na mesma grade: `max-w-[1120px]`, `px-4 sm:px-5 md:px-8`,
   título alinhado à esquerda.
-- Ritmo de fundo: papel, faixa azul (calculadora), papel, faixa `--lp-ink`
-  (objeções), papel. Nunca duas faixas escuras coladas.
 - Mobile primeiro: CTA visível na primeira tela, nada de rolagem lateral,
   inputs com 16px ou mais, botão que não cabe vira largura total.
 

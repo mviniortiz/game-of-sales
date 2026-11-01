@@ -27,11 +27,11 @@ Tokens live in `src/index.css`. Always use tokens, never hardcode hex when a tok
 - `--lp-blue: #1556c0` (CTA/acento) · `--lp-blue-deep: #0e3e8a`
 - `--lp-eva: #6d28d9` (IA/EVA) · `--lp-live: #008a52` (status ao vivo)
 - `--lp-line` / `--lp-line-soft` (hairlines) · `--lp-radius: 10px`
-- Home solar (LP.8, design system Vyzon Solar, escopo `.lp-solar`): `--lp-marker`
-  (só marca-texto atrás de `--lp-ink`), `--lp-ink-muted`, `--lp-ink-subtle`,
-  `--lp-blue-tint`, `--lp-whatsapp` (só ícone), `--lp-chat-bg`, `--lp-chat-out`,
-  `--lp-wait`, `--lp-ok`, `--lp-font-display` (Archivo) e `--lp-font-num`
-  (Barlow Condensed). Na home, Archivo e Barlow substituem Satoshi e Sentient.
+- Home solar (LP.9, sistema EVA em campo, escopo `.lp-solar`): `--lp-sol`,
+  `--lp-noite`, `--lp-marker` (só marca-texto atrás de `--lp-ink`),
+  `--lp-ink-muted`, `--lp-ink-subtle`, `--lp-whatsapp` (só ícone), `--lp-chat-bg`,
+  `--lp-chat-out`, `--lp-wait`, `--lp-ok` e `--lp-font-display` (Geist). Na
+  home, os valores de papel e tinta mudam e Geist substitui Satoshi e Sentient.
   Regras na skill `vyzon-landing-art-director`.
 
 ## Tokens — App (`--vyz-*`)
@@ -75,12 +75,15 @@ Tokens live in `src/index.css`. Always use tokens, never hardcode hex when a tok
 
 ## EVA (importante)
 
-Desde 08/10/2026 a EVA é um **ícone vivo no jeito do Grok Bot**, decisão do Markus:
-`EvaBot` (`src/components/eva/EvaBot.tsx` + `evaBot.css`), corpo redondo e olhos que
-mudam por estado (idle, thinking, alert, talking, happy). É o único desenho da EVA:
-orbe, malha, glifo e avatares antigos foram apagados. Em listas cheias use `still`.
-Estados de telas antigas passam por `evaBotFrom()`. Nunca personagem com rosto realista,
-corpo ou estilo anime.
+Desde 01/11/2026 a EVA é um **bot montado por peças**, decisão do Markus:
+`EvaBot` (`src/components/eva/EvaBot.tsx` + `evaBot.css`). Padrão: cápsula azul com
+placa solar; `corpo`, `topo`, `olhos` e `tema` trocam as peças, e os olhos mudam por
+estado (idle, thinking, pondering, alert, talking, happy). As cores vivem nos temas
+de `evaBot.css`. Abaixo de 48px saem topo e orelhas e abaixo de 28px sai o visor, com
+um ponto no lugar do painel. Em fundo escuro use `tema="sol"`. É o único desenho da
+EVA: orbe, malha, glifo e avatares antigos foram apagados. Em listas cheias use
+`still`. Estados de telas antigas passam por `evaBotFrom()`. Rosto realista e estilo
+anime continuam fora.
 
 ## Acessibilidade & Performance
 

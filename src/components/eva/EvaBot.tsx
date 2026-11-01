@@ -1,17 +1,37 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import "./evaBot.css";
 
-// A EVA como ícone vivo (no jeito do Grok Bot): corpo redondo e dois olhos que
-// mudam de forma conforme o que ela está fazendo. Desenho e loops em CSS; aqui
-// fica só o que precisa de JS: olhos seguindo o ponteiro e o pulinho de troca
-// de estado.
+// A EVA como bot montado por peças: corpo, topo, olhos e cor. O padrão é a
+// cápsula azul com placa solar. Desenho e loops em CSS; aqui fica só o que precisa
+// de JS: encaixe no tamanho, olhos seguindo o ponteiro e o pulinho de troca de estado.
 //   idle      esperando, respira, pisca e olha em volta (sorri com o mouse em cima)
-//   thinking  lendo as conversas, olhos varrem de um lado pro outro
-//   pondering pensando: olha pra cima, aperta um olho e solta bolinhas de pensamento
-//   alert     achou proposta parada, pulinho, onda e ponto âmbar
+//   thinking  lendo as conversas, olhos varrem e uma onda passa pelo painel
+//   pondering pensando: olha pra cima e solta bolinhas de pensamento
+//   alert     achou proposta parada, pulinho e células do painel acesas
 //   talking   escrevendo a retomada, boquinha de digitando
-//   happy     retomada enviada ou negócio fechado, olhos em arco e onda verde
+//   happy     retomada enviada ou negócio fechado, olhos em arco e painel aceso
 export type EvaBotState = "idle" | "thinking" | "pondering" | "alert" | "talking" | "happy";
+export type EvaBotCorpo = "capsula" | "bolinha" | "tela";
+export type EvaBotTopo = "placa" | "capacete" | "fone" | "antena" | "nada";
+export type EvaBotOlhos = "pilula" | "bolinha" | "pixel";
+export type EvaBotTema = "vyzon" | "noite" | "sol" | "empresa";
+
+// Largura do corpo e centro dele na caixa de 240 do desenho (ver evaBot.css).
+const CORPOS: Record<EvaBotCorpo, { w: number; cx: number; cy: number }> = {
+    capsula: { w: 192, cx: 120, cy: 150 },
+    bolinha: { w: 168, cx: 120, cy: 148 },
+    tela: { w: 200, cx: 120, cy: 140 },
+};
+
+// Abaixo de 48px topo e orelhas viram ruído; abaixo de 28px o visor também. Nesses
+// tamanhos o corpo ocupa o quadro inteiro.
+function encaixe(size: number, corpo: EvaBotCorpo) {
+    const tam = size <= 28 ? "minimo" : size <= 48 ? "pequeno" : "cheio";
+    if (tam === "cheio") return { tam, k: size / 240, tx: 0, ty: 0 };
+    const b = CORPOS[corpo];
+    const k = size / (b.w + 8);
+    return { tam, k, tx: size / 2 - b.cx * k, ty: size / 2 - b.cy * k };
+}
 
 // Nomes de estado que telas e hooks mais antigos ainda usam.
 const LEGACY: Record<string, EvaBotState> = {
@@ -57,6 +77,11 @@ export function EvaBot({
     still = false,
     className = "",
     label,
+    corpo = "capsula",
+    topo = "placa",
+    olhos = "pilula",
+    tema = "vyzon",
+    corEmpresa,
 }: {
     state?: EvaBotState;
     size?: number;
@@ -65,6 +90,12 @@ export function EvaBot({
     className?: string;
     /** Texto para leitor de tela; sem ele o ícone é decorativo. */
     label?: string;
+    corpo?: EvaBotCorpo;
+    topo?: EvaBotTopo;
+    olhos?: EvaBotOlhos;
+    tema?: EvaBotTema;
+    /** Cor do corpo com tema="empresa". Ainda não é opção do produto: nenhuma tela usa. */
+    corEmpresa?: string;
 }) {
     const rootRef = useRef<HTMLSpanElement>(null);
     const faceRef = useRef<HTMLSpanElement>(null);
@@ -93,6 +124,20 @@ export function EvaBot({
         );
     }, [state, still]);
 
+    // Antes de mudar de expressão ela pisca: a troca de forma some dentro da piscada
+    // e parece uma reação, não uma transição.
+    const estadoAnterior = useRef(state);
+    useEffect(() => {
+        if (estadoAnterior.current === state) return;
+        estadoAnterior.current = state;
+        const eyes = faceRef.current?.querySelector<HTMLElement>(".eva-bot__eyes");
+        if (!eyes || still || !canMove() || typeof eyes.animate !== "function") return;
+        eyes.animate(
+            [{ transform: "scaleY(1)" }, { transform: "scaleY(0.08)", offset: 0.4 }, { transform: "scaleY(1)" }],
+            { duration: 200, easing: "ease-in-out", composite: "add" },
+        );
+    }, [state, still]);
+
     // Olhos seguindo o ponteiro, com atraso suave. Só roda enquanto a EVA está
     // visível, em tela com mouse, e solta o olhar 2,5 s depois do mouse parar.
     useEffect(() => {
@@ -104,7 +149,8 @@ export function EvaBot({
         let visible = false;
         let cx = 0;
         let cy = 0;
-        const max = size * 0.08;
+        // O rosto mora na caixa de 240, então o alcance do olhar é medido nela.
+        const max = 19;
         const tick = () => {
             const r = el.getBoundingClientRect();
             const active = performance.now() - pointer.t < 2500;
@@ -137,37 +183,76 @@ export function EvaBot({
         };
     }, [size, still]);
 
+    const { tam, k, tx, ty } = encaixe(size, corpo);
+    const cheio = tam === "cheio";
+
     return (
         <span
             ref={rootRef}
             className={`eva-bot ${className}`}
             data-state={state}
             data-still={still || undefined}
-            style={{ ["--s" as string]: `${size}px` }}
+            data-corpo={corpo}
+            data-topo={topo}
+            data-olhos={olhos}
+            data-tema={tema}
+            data-tam={tam}
+            style={{
+                ["--s" as string]: `${size}px`,
+                ["--k" as string]: k,
+                ["--tx" as string]: `${tx}px`,
+                ["--ty" as string]: `${ty}px`,
+                ...(corEmpresa ? { ["--cor-empresa" as string]: corEmpresa } : {}),
+            }}
             role={label ? "img" : undefined}
             aria-label={label}
             aria-hidden={label ? undefined : true}
         >
-            <span className="eva-bot__ring" />
             <span className="eva-bot__thought">
                 <i />
                 <i />
                 <i />
             </span>
-            <span className="eva-bot__body">
-                <span className="eva-bot__dot" />
-                <span ref={faceRef} className="eva-bot__face">
-                    <span className="eva-bot__eyes">
-                        <span className="eva-bot__eye" />
-                        <span className="eva-bot__eye" />
+            <span className="eva-bot__palco">
+                <span className="eva-bot__body">
+                    {cheio && topo === "placa" && (
+                        <span className="eva-bot__topo">
+                            <span className="eva-bot__haste" />
+                            <span className="eva-bot__placa">
+                                {Array.from({ length: 10 }, (_, i) => <i key={i} />)}
+                            </span>
+                        </span>
+                    )}
+                    {cheio && topo === "antena" && (
+                        <span className="eva-bot__topo">
+                            <span className="eva-bot__haste" />
+                            <span className="eva-bot__lampada" />
+                        </span>
+                    )}
+                    {cheio && topo === "fone" && <span className="eva-bot__arco" />}
+                    {cheio && corpo === "tela" && <span className="eva-bot__base" />}
+                    {cheio && <span className="eva-bot__orelha" />}
+                    {cheio && <span className="eva-bot__orelha" />}
+                    <span className="eva-bot__casco" />
+                    {tam !== "minimo" && <span className="eva-bot__visor" />}
+                    <span ref={faceRef} className="eva-bot__face">
+                        <span className="eva-bot__eyes">
+                            <span className="eva-bot__eye" />
+                            <span className="eva-bot__eye" />
+                        </span>
+                        {tam !== "minimo" && (
+                            <span className="eva-bot__mouth">
+                                <i />
+                                <i />
+                                <i />
+                            </span>
+                        )}
                     </span>
-                    <span className="eva-bot__mouth">
-                        <i />
-                        <i />
-                        <i />
-                    </span>
+                    {cheio && topo === "capacete" && <span className="eva-bot__capacete"><i /></span>}
+                    {cheio && topo === "fone" && <span className="eva-bot__microfone" />}
                 </span>
             </span>
+            {!cheio && <span className="eva-bot__dot" />}
         </span>
     );
 }

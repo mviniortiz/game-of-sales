@@ -3640,42 +3640,95 @@ All colors MUST be HSL.
   --lp-serif: 'Sentient', 'Georgia', serif;
   --lp-mono: 'Cascadia Mono', 'SFMono-Regular', ui-monospace, 'Consolas', monospace;
   --lp-radius: 10px;
-  /* LP.8 (2026-10-22) — design system Vyzon Solar (ver bloco LP.8 abaixo) */
+  /* LP.9 (2026-11-01) — sistema EVA em campo (ver bloco LP.9 abaixo) */
   --lp-ink-muted: #4a5363;
   --lp-ink-subtle: #5f6776;
   --lp-blue-tint: #e8effb;
-  --lp-marker: #ffd84a;
+  --lp-marker: #ffc933;
   --lp-whatsapp: #25d366;
   --lp-chat-bg: #efeae2;
   --lp-chat-out: #d9fdd3;
   --lp-wait: #a14a07;
   --lp-ok: #0f7b4f;
-  --lp-font-display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;
-  --lp-font-num: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --lp-font-display: 'Geist', 'Inter', system-ui, sans-serif;
+  --lp-font-num: 'Geist', 'Inter', system-ui, sans-serif;
   /* LP.6 (v2) — tipografia editorial, usada apenas via .lp-v2 (não afeta a /) */
   --font-display: 'Newsreader', 'Georgia', serif;
   --font-geist: 'Geist', 'Inter', system-ui, sans-serif;
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   LP.8 (2026-10-22) — DESIGN SYSTEM "VYZON SOLAR" · home do integrador
-   Referência aprovada: https://claude.ai/artifact/Rm4n5dnbf8nPTb961BbsA2
-   Azul (--lp-blue) é a cor dona; amarelo (--lp-marker) só marca-texto atrás
-   de --lp-ink; números em família própria (Barlow Condensed); a fatura e a
-   conversa de WhatsApp são os objetos gráficos. Papel neutro frio, não creme:
-   creme + azul-noite + âmbar é a identidade da SolarMarket.
+   LP.9 (2026-11-01) — SISTEMA "EVA EM CAMPO" · home do integrador
+   Referência aprovada: https://claude.ai/artifact/L2qfp4yTM3RBvSL3yN5mjo
+   Substitui o Vyzon Solar (LP.8). A EVA é o que nenhum concorrente tem, então
+   ela é a estrela. Faixas chapadas de sol (.vs-sol) e noite (.vs-noite) sobre
+   creme, cartões brancos sem sombra e Geist, a fonte do app, em tudo. A conversa
+   e a fatura seguem como objetos. Marca-texto em fundo sol é branco.
    Escopo .lp-solar: não mexe nas outras páginas da landing.
-   ════════════════════════════════════════════════════════════════════════ */
-.lp-solar {
-  --lp-paper: #f6f7f9;
-  --lp-line: #d9dde4;
+   ══════════════════════════════════════════════════════════════════════ */
+.lp-v2.lp-solar {
+  --lp-ink: #0f1730;
+  --lp-ink-muted: #3b4560;
+  --lp-ink-subtle: #566079;
+  --lp-paper: #f3efe4;
+  --lp-line: #dcd6c8;
+  --lp-sol: #ffc933;
+  --lp-noite: #0f1730;
   background: var(--lp-paper);
   color: var(--lp-ink);
+  font-family: var(--lp-font-display);
+}
+.lp-solar .vs-sol {
+  --lp-ink-muted: #2a3048;
+  --lp-ink-subtle: #2a3048;
+  --lp-marker: #fff;
+  --lp-line: rgba(15, 23, 48, 0.22);
+  background: var(--lp-sol);
+}
+.lp-solar .vs-sol .vs-azul { color: var(--lp-ink); }
+/* Topo: texto sobre creme e o amarelo só como palco do celular e da EVA. */
+@media (min-width: 768px) {
+  .lp-solar .vs-topo { background: linear-gradient(90deg, var(--lp-paper) calc(50% + 40px), var(--lp-sol) 0); }
+}
+@media (max-width: 767px) {
+  .lp-solar .vs-palco {
+    margin-inline: -16px;
+    max-width: none;
+    width: auto;
+    padding-inline: 16px;
+    background: linear-gradient(transparent 180px, var(--lp-sol) 0);
+  }
+}
+.lp-solar .vs-noite {
+  --lp-ink-muted: rgba(255, 255, 255, 0.8);
+  --lp-ink-subtle: rgba(255, 255, 255, 0.72);
+  --lp-line: rgba(255, 255, 255, 0.18);
+  background: var(--lp-noite);
+  color: #fff;
+}
+/* orelhas e haste da EVA somem no azul-noite */
+.lp-solar .vs-noite .eva-bot { --peca: #2a3a66; --fone: #2a3a66; }
+/* cartão branco volta às cores do papel, em qualquer faixa */
+.lp-solar .vs-fatura,
+.lp-solar .vs-conversa,
+.lp-solar .vs-cartao {
+  --lp-ink-muted: #3b4560;
+  --lp-ink-subtle: #566079;
+  --lp-marker: #ffc933;
+  --lp-line: #dcd6c8;
+}
+/* EVA sentada na borda de cima de um cartão: a base dela fica a 224/240 da caixa */
+.lp-solar .vs-sentada {
+  position: absolute;
+  z-index: 1;
+  right: 28px;
+  bottom: calc(100% - var(--s-eva) * 0.075);
+  line-height: 0;
 }
 .lp-solar .vs-display {
   font-family: var(--lp-font-display);
-  font-weight: 800;
-  letter-spacing: -0.022em;
+  font-weight: 600;
+  letter-spacing: -0.04em;
   text-wrap: balance;
 }
 .lp-solar .vs-num {
@@ -3684,15 +3737,13 @@ All colors MUST be HSL.
   letter-spacing: 0;
 }
 .lp-solar .vs-label {
-  font-size: 12.5px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--lp-ink-subtle);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--lp-ink-muted);
 }
 .lp-solar .vs-azul { color: var(--lp-blue); }
 
-/* Marca-texto: só atrás de texto --lp-ink, uma vez por tela. */
+/* Marca-texto: só atrás de texto --lp-ink, uma vez por tela; branco no sol. */
 .lp-solar .vs-marca {
   background-image: linear-gradient(transparent 0 56%, var(--lp-marker) 56% 92%, transparent 92%);
   background-repeat: no-repeat;
@@ -3712,20 +3763,19 @@ All colors MUST be HSL.
   display: inline-flex;
   align-items: center;
   border: 2px solid currentColor;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 3px 8px;
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 700;
   line-height: 1.2;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 .lp-solar .vs-carimbo--espera { color: var(--lp-wait); }
 .lp-solar .vs-carimbo--ok { color: var(--lp-ok); }
-.lp-solar .vs-carimbo--neutro { color: var(--lp-ink-subtle); }
+.lp-solar .vs-carimbo--neutro { color: var(--lp-ink-muted); }
 
-/* BotaoWhatsApp: pill --lp-ink, ícone em círculo verde, sombra dura azul no hover. */
+/* BotaoWhatsApp: pill --lp-ink, ícone em círculo verde, sombra dura azul no hover.
+   Sobre noite, --sol. */
 .lp-solar .vs-btn {
   display: inline-flex;
   align-items: center;
@@ -3748,8 +3798,9 @@ All colors MUST be HSL.
 .lp-solar .vs-btn:active { transform: none; box-shadow: none; }
 .lp-solar .vs-btn:focus-visible { outline: 3px solid var(--lp-blue); outline-offset: 3px; }
 .lp-solar .vs-btn:disabled { opacity: 0.5; cursor: default; transform: none; box-shadow: none; }
-.lp-solar .vs-btn--claro { background: var(--lp-white); color: var(--lp-ink); border-color: var(--lp-white); }
-.lp-solar .vs-btn--claro:hover { box-shadow: 4px 4px 0 0 var(--lp-ink); }
+.lp-solar .vs-btn--sol { background: var(--lp-sol); color: var(--lp-ink); border-color: var(--lp-sol); }
+.lp-solar .vs-btn--sol:hover { box-shadow: 4px 4px 0 0 #fff; }
+.lp-solar .vs-btn--sol:focus-visible { outline-color: #fff; }
 .lp-solar .vs-btn--vazado { background: transparent; color: var(--lp-ink); }
 .lp-solar .vs-btn__wa {
   display: inline-flex;
@@ -3767,9 +3818,7 @@ All colors MUST be HSL.
 /* Fatura: a conta do dinheiro parado, no molde da conta de luz. */
 .lp-solar .vs-fatura {
   background: var(--lp-white);
-  border: 1px solid var(--lp-line);
-  border-radius: 10px;
-  box-shadow: 0 1px 2px rgba(13, 20, 33, 0.05), 0 14px 32px -18px rgba(13, 20, 33, 0.35);
+  border-radius: 22px;
   padding: 24px;
   color: var(--lp-ink);
 }
@@ -3795,11 +3844,9 @@ All colors MUST be HSL.
 /* Conversa: o WhatsApp como objeto. */
 .lp-solar .vs-conversa {
   overflow: hidden;
-  border: 1px solid var(--lp-line);
-  border-radius: 10px;
+  border-radius: 22px;
   background: var(--lp-white);
-  box-shadow: 0 1px 2px rgba(13, 20, 33, 0.05), 0 14px 32px -18px rgba(13, 20, 33, 0.35);
-  font-size: 14.5px;
+  font-size: 15px;
   line-height: 1.4;
   color: var(--lp-ink);
 }
@@ -3816,7 +3863,7 @@ All colors MUST be HSL.
   color: var(--lp-white);
   font-family: var(--lp-font-display);
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 700;
 }
 .lp-solar .vs-conversa__avatar--cliente { background: var(--lp-ink-subtle); }
 .lp-solar .vs-conversa__nome { font-weight: 600; }
@@ -3833,50 +3880,41 @@ All colors MUST be HSL.
 }
 .lp-solar .vs-bolha--saida { justify-self: end; background: var(--lp-chat-out); }
 .lp-solar .vs-bolha__hora { display: block; margin-top: 2px; text-align: right; font-size: 11px; color: var(--lp-ink-subtle); }
-.lp-solar .vs-bolha__rascunho { margin: 4px 0; padding-left: 8px; border-left: 3px solid var(--lp-blue); }
+.lp-solar .vs-bolha__rascunho { margin: 6px 0; padding: 8px 10px; border-radius: 10px; background: #fff3cc; font-weight: 500; }
 
-/* LinhaDoTempo: dias da proposta; só o Dia 2 em azul. */
-.lp-solar .vs-tempo { position: relative; display: grid; gap: 28px; margin: 0; padding: 0; list-style: none; }
-.lp-solar .vs-tempo::before { content: ""; position: absolute; left: 19px; top: 20px; bottom: 20px; width: 2px; background: var(--lp-line); }
-.lp-solar .vs-tempo__passo { position: relative; min-width: 0; padding-left: 60px; }
-.lp-solar .vs-tempo__dia {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 40px;
-  height: 40px;
-  padding: 0 6px;
-  border: 2px solid var(--lp-ink-subtle);
-  border-radius: 999px;
-  background: var(--lp-paper);
-  font-size: 22px;
-  font-weight: 700;
-}
-.lp-solar .vs-tempo__passo--aviso .vs-tempo__dia { border-color: var(--lp-blue); background: var(--lp-blue); color: var(--lp-white); }
-.lp-solar .vs-tempo__passo--aviso .vs-label { color: var(--lp-blue); }
+/* LinhaDoTempo: a EVA em cada dia da proposta; só o Dia 2 em noite. */
+.lp-solar .vs-tempo { display: grid; gap: 12px; padding: 0; list-style: none; }
+.lp-solar .vs-tempo__passo { min-width: 0; padding: 20px; border-radius: 22px; background: var(--lp-white); }
+.lp-solar .vs-tempo__passo.vs-noite { background: var(--lp-noite); }
 @media (min-width: 768px) {
-  .lp-solar .vs-tempo { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
-  .lp-solar .vs-tempo::before { left: 0; right: 0; top: 19px; bottom: auto; width: auto; height: 2px; }
-  .lp-solar .vs-tempo__passo { padding: 56px 0 0; }
+  .lp-solar .vs-tempo { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
-/* Preço: etiqueta de fundador cortando a borda, sem contrato com peso. */
-.lp-solar .vs-preco { position: relative; border: 2px solid var(--lp-ink); border-radius: 10px; background: var(--lp-white); padding: 32px 24px 24px; }
+/* Preço: cartão noite, etiqueta de fundador cortando a borda, sem contrato com peso. */
+.lp-solar .vs-preco { position: relative; border-radius: 22px; padding: 32px 24px 24px; }
 .lp-solar .vs-preco__etiqueta {
   position: absolute;
-  top: -14px;
+  top: -16px;
   left: 24px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: var(--lp-marker);
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: var(--lp-sol);
   color: var(--lp-ink);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* Conheça a EVA: cartão largo, bot grande cortado pela borda. */
+.lp-solar .vs-conheca { position: relative; overflow: clip; border-radius: 28px; padding: 40px 24px 300px; }
+.lp-solar .vs-conheca__bot { position: absolute; right: 50%; bottom: -60px; transform: translateX(50%); line-height: 0; }
+@media (min-width: 768px) {
+  .lp-solar .vs-conheca { min-height: 460px; padding: 64px 56px; }
+  .lp-solar .vs-conheca__bot { right: -40px; bottom: -70px; transform: none; }
+}
+.lp-solar .vs-conheca__fala { animation: vs-fala 220ms cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes vs-fala {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
 }
 
 /* NumeroComFonte: faixa de dois números com hairlines. */
@@ -3891,6 +3929,7 @@ All colors MUST be HSL.
 
 @media (prefers-reduced-motion: reduce) {
   .lp-solar .vs-marca--draw { animation: none; }
+  .lp-solar .vs-conheca__fala { animation: none; }
   .lp-solar .vs-btn,
   .lp-solar .vs-btn:hover { transition: none; transform: none; }
 }

@@ -1,0 +1,16 @@
+# Só código e documento entram no git. Mídia é pesada e regenerável:
+# trilha, voz e efeitos ficam em ~/Movies/vyzon-film/, renders em films/<slug>/renders/.
+node_modules/
+renders/
+.hyperframes/
+*.mp4
+*.mov
+*.webm
+*.wav
+*.mp3
+*.png
+*.jpg
+bin/full/
+films/*/transcricao/
+films/*/midia/
+films/*/snapshots/

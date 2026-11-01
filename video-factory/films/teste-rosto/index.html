@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Vyzon · reel com rosto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=Barlow+Condensed:wght@600;700&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/CustomEase.min.js"></script>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="rosto.css">
+</head>
+<body>
+<div id="root" data-composition-id="root" data-start="0" data-duration="12.15" data-width="1080" data-height="1920">
+  <!-- clipes:inicio -->
+  <video id="v1" src="midia/bruto.mp4" muted playsinline data-start="0" data-duration="2.53" data-media-start="0.64" data-track-index="0"></video>
+  <video id="v2" src="midia/bruto.mp4" muted playsinline data-start="2.53" data-duration="2.48" data-media-start="3.89" data-track-index="0"></video>
+  <video id="v3" src="midia/bruto.mp4" muted playsinline data-start="5.01" data-duration="2.77" data-media-start="10.93" data-track-index="0"></video>
+  <video id="v4" src="midia/bruto.mp4" muted playsinline data-start="7.78" data-duration="2.51" data-media-start="14.15" data-track-index="0"></video>
+  <video id="v5" src="midia/bruto.mp4" muted playsinline data-start="10.29" data-duration="1.86" data-media-start="18.58" data-track-index="0"></video>
+  <!-- clipes:fim -->
+  <div id="sombra"></div>
+  <div id="faixa"><span class="tarja"></span></div>
+  <div id="legenda-rosto"></div>
+  <div id="tc"></div>
+</div>
+<script src="rosto-dados.js"></script>
+<script src="base.js"></script>
+<script>window.__timelines = window.__timelines || {}; // o lint do HyperFrames procura esta linha</script>
+<script src="rosto.js"></script>
+</body>
+</html>

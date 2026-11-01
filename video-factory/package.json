@@ -1,0 +1,9 @@
+{
+  "name": "vyzon-video-factory",
+  "private": true,
+  "type": "module",
+  "description": "Pipeline dos product films verticais do Vyzon (HyperFrames + voz ElevenLabs + master -14 LUFS). Fora do app.",
+  "dependencies": {
+    "hyperframes": "0.8.92"
+  }
+}

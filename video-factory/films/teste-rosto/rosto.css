@@ -1,0 +1,24 @@
+/* Molde "rosto": o Markus falando para a câmera, um plano só. Por cima, só duas
+   coisas: a faixa com a pergunta (0 a 4 s) e a legenda palavra por palavra em
+   caixa alta. Tokens do design system Vyzon Solar (base.css): marca-texto
+   #ffd84a só atrás de texto #0d1421. Nada de logo, moldura ou efeito. */
+#root { background: #0d1421; }
+#root video { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; object-fit: cover; }
+/* leve escurecimento embaixo e em cima: a legenda e a faixa leem sobre qualquer fundo */
+#sombra { position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  background: linear-gradient(180deg, rgba(13,20,33,.38) 0%, rgba(13,20,33,0) 22%, rgba(13,20,33,0) 52%, rgba(13,20,33,.42) 100%); }
+
+/* Faixa: a pergunta polêmica no marca-texto, caixa alta */
+/* visível no quadro 0: é o gancho de quem rola o feed sem som */
+#faixa { position: absolute; left: 70px; right: 70px; top: 270px; z-index: 20; text-align: center; }
+#faixa .tarja { display: inline; background: var(--marker); color: var(--ink); padding: .08em .22em; line-height: 1.32;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  font: 800 74px var(--f-display); letter-spacing: -.01em; text-transform: uppercase; }
+
+/* Legenda: grupos de até 3 palavras, a palavra falada acende no marca-texto */
+#legenda-rosto { position: absolute; left: 90px; right: 150px; top: 1180px; height: 260px; z-index: 20; pointer-events: none; }
+#legenda-rosto .grupo { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; visibility: hidden;
+  font: 800 92px/1.12 var(--f-display); letter-spacing: -.015em; text-transform: uppercase; text-wrap: balance; }
+#legenda-rosto .pal { display: inline-block; padding: 0 .12em; margin: 0 -.02em; border-radius: .12em; color: #fff;
+  -webkit-text-stroke: 14px var(--ink); paint-order: stroke fill; text-shadow: 0 6px 18px rgba(13,20,33,.45); }
+#legenda-rosto .pal.ativa { background: var(--marker); color: var(--ink); -webkit-text-stroke: 0; text-shadow: none; }

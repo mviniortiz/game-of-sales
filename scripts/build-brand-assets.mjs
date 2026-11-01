@@ -54,23 +54,29 @@ await shot("apple-touch-icon.png", 180, 180, sized(iconFullBleed, 180));
 // E-mails (templates do Supabase e sdr-auto-outreach) mostram a 140px de largura.
 await shot("logo.png", 560, 154, lockup(154));
 
-// Imagem de compartilhamento: a mesma promessa da home solar (SolarLanding.tsx).
+// A EVA na pose padrão, com as medidas de src/components/eva/evaBot.css.
+const eva = (px) => {
+    const cel = Array.from({ length: 10 }, (_, i) => `<rect x="${5 + (i % 5) * 24.6}" y="${5 + Math.floor(i / 5) * 19.5}" width="22" height="17" rx="2" fill="#2c62c4"/>`).join("");
+    return `<svg viewBox="0 0 240 240" width="${px}" height="${px}" style="display:block">
+      <rect x="115" y="46" width="10" height="36" rx="5" fill="#0f1730"/>
+      <g transform="translate(54 8) rotate(-7 66 24)"><rect width="132" height="48" rx="8" fill="#0f1730"/>${cel}</g>
+      <rect x="14" y="125" width="20" height="50" rx="10" fill="#0f1730"/><rect x="206" y="125" width="20" height="50" rx="10" fill="#0f1730"/>
+      <rect x="24" y="76" width="192" height="148" rx="62" fill="#1556c0"/><rect x="44" y="100" width="152" height="96" rx="42" fill="#0f1730"/>
+      <rect x="89.5" y="126" width="24" height="44" rx="12" fill="#ffc933"/><rect x="150.5" y="126" width="24" height="44" rx="12" fill="#ffc933"/>
+    </svg>`;
+};
+
+// Imagem de compartilhamento: a mesma promessa e o mesmo sistema da home solar
+// (SolarLanding.tsx, bloco LP.9 do index.css).
 await shot(
     "og-image.jpg",
     1200,
     630,
-    `<div style="box-sizing:border-box;width:1200px;height:630px;padding:72px 80px;display:flex;justify-content:space-between;align-items:stretch;background:${PAPER};color:${INK};font-family:Geist">
-      <div style="display:flex;flex-direction:column;justify-content:space-between;max-width:680px">
-        ${lockup(46)}
-        <div>
-          <div style="font-family:Newsreader;font-size:78px;line-height:1.02;letter-spacing:-0.03em">Mandou a proposta e o cliente <i>sumiu?</i></div>
-          <div style="margin-top:26px;font-size:28px;line-height:1.35;color:rgba(13,20,33,0.7);font-weight:500">O Vyzon mostra quais propostas de energia solar pararam no seu WhatsApp e entrega a retomada pronta.</div>
-        </div>
-        <div style="font-size:24px;font-weight:600;color:rgba(13,20,33,0.55)">Raio-X grátis em vyzon.com.br</div>
-      </div>
-      <div style="display:flex;align-items:center">
-        <div style="filter:drop-shadow(0 30px 50px rgba(13,20,33,0.22)) drop-shadow(0 4px 10px rgba(13,20,33,0.12))">${sized(icon, 300)}</div>
-      </div>
+    `<div style="position:relative;box-sizing:border-box;width:1200px;height:630px;padding:64px 72px;overflow:hidden;background:#ffc933;color:#0f1730;font-family:Geist">
+      ${lockup(46, "#0f1730")}
+      <div style="margin-top:52px;max-width:760px;font-size:92px;line-height:1.02;font-weight:600;letter-spacing:-0.04em">Mandou a proposta e o cliente sumiu?</div>
+      <div style="position:absolute;left:72px;bottom:60px;font-size:30px;font-weight:600">Raio-X grátis em vyzon.com.br</div>
+      <div style="position:absolute;right:-30px;bottom:-34px">${eva(460)}</div>
     </div>`,
     { transparent: false, type: "jpeg" },
 );

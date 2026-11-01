@@ -1,0 +1,33 @@
+{
+  "slug": "teste-rosto",
+  "bruto": "~/Movies/vyzon-film/brutos/teste-rosto-girado.mp4",
+  "faixa": {
+    "texto": "Quem visualiza e some não tem interesse?",
+    "de": 0,
+    "ate": 4
+  },
+  "silencio": {
+    "min": 0.35,
+    "folga_antes": 0.1,
+    "folga_depois": 0.16
+  },
+  "cortar": [
+    [
+      7.5,
+      10.6
+    ]
+  ],
+  "palavras": "palavras.json",
+  "legenda": {
+    "max_palavras": 3,
+    "pausa_quebra": 0.32
+  },
+  "master": {
+    "lufs": -14,
+    "true_peak": -1.5
+  },
+  "troca": {
+    "Marcos": "Markus",
+    "Whatsapp": "WhatsApp"
+  }
+}

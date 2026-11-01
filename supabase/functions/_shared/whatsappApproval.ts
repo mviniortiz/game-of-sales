@@ -343,7 +343,7 @@ async function nextApprovalCode(admin: any, companyId: string): Promise<string> 
 
 // ── Notificação ─────────────────────────────────────────────────────────────
 
-function buildDraftMessage(params: {
+export function buildDraftMessage(params: {
     code: string;
     contactName: string | null;
     stage: string | null;
@@ -359,8 +359,23 @@ function buildDraftMessage(params: {
     linhas.push("", params.text, "");
     linhas.push(params.noGrupo
         ? "👍 envia · 👎 descarta · ou responda esta mensagem com o texto corrigido"
-        : `Responda ${params.code} 1 para enviar, ${params.code} 2 para descartar, ou escreva o texto corrigido.`);
+        : "Responda 1 para enviar, 2 para descartar, ou escreva o texto corrigido.");
     return linhas.join("\n");
+}
+
+/** Mais de um rascunho aberto: o "1" solto não diz qual lead, e mandar para o
+ *  lead errado não tem volta. Mostra quem está aberto em vez de escolher. */
+export function buildAmbiguousReply(rows: { approval_code: string | null; suggestion?: any }[]): string {
+    const opcoes = rows
+        .filter((r) => r.approval_code)
+        .map((r) => {
+            const nome = r.suggestion?.contact_name;
+            return nome ? `${r.approval_code} 1 para ${nome}` : `${r.approval_code} 1`;
+        });
+    return [
+        `Tem ${rows.length} rascunhos abertos. Responda 1 em cima do aviso do lead, ou mande:`,
+        ...opcoes,
+    ].join("\n");
 }
 
 /** Janela de vida de um rascunho. Depois disso a EVA não leva mais pro dono:
@@ -684,12 +699,11 @@ export async function handleOwnerCommand(
             .not("notified_at", "is", null)
             .gte("notified_at", since)
             .order("notified_at", { ascending: false })
-            .limit(2);
+            .limit(5);
         const rows = (data || []) as any[];
         if (rows.length === 0) return { handled: false };
         if (rows.length > 1) {
-            await reply("Tem mais de um rascunho aberto. Responda com o código na frente, por exemplo: A2 1",
-            );
+            await reply(buildAmbiguousReply(rows));
             return { handled: true, action: "help" };
         }
         target = rows[0];

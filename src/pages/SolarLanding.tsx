@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent, trackDemoConversion, FUNNEL_EVENTS } from "@/lib/analytics";
@@ -7,6 +7,7 @@ import { logLandingEvent } from "@/lib/landingFunnel";
 import { whatsappUrl } from "@/config/contact";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
+import { EvaBot, type EvaBotState } from "@/components/eva/EvaBot";
 
 // Home de produção: integradores de energia solar. O botão principal é a
 // conversa de 20 min com o Markus no WhatsApp; o Raio-X automático fica como
@@ -18,6 +19,8 @@ import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 // Cadastro vai pra demo_requests com source='orcamento_teste': o trigger do SDR
 // automático ignora essa origem (migration 20260914_sdr_outreach_skip_orcamento),
 // senão o dono do negócio receberia o pitch de agência. O contato é manual.
+
+const AvisoDemo = lazy(() => import("@/components/landing/AvisoDemo"));
 
 const SOURCE = "orcamento_teste";
 // Raio-X automático: cadastro e, depois, /raio-x no app.
@@ -61,7 +64,7 @@ const DESCRIPTION =
 
 // Tem que conter o prefill da automação de leads (automations, 20261009_automations_ad_leads):
 // é essa frase que faz a conversa virar lead do anúncio, lida pela EVA e avisada no grupo.
-const WHATSAPP_MESSAGE = "Oi, Markus. Vi o site e topo os 20 minutos. Quero ver quanto está parado nos meus orçamentos de energia solar.";
+const WHATSAPP_MESSAGE = "Oi, Markus. Vi o site. Quero ver quanto está parado nos meus orçamentos de energia solar.";
 
 type FormState = {
     name: string;
@@ -155,6 +158,7 @@ const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
                 <Numbers />
                 <Calculator angle={angle} onWhatsapp={() => trackWhatsappClick("calc")} />
                 <ProductMock />
+                <ConhecaEva />
                 <HowItWorks />
                 <Offer onWhatsapp={() => trackWhatsappClick("oferta")} />
                 <Objections />
@@ -166,33 +170,95 @@ const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
     );
 };
 
-// Design system "Vyzon Solar" (bloco LP.8 do index.css; referência em
-// https://claude.ai/artifact/Rm4n5dnbf8nPTb961BbsA2): azul é a cor dona,
-// marca-texto amarelo uma vez por tela, números em Barlow Condensed (.vs-num)
-// e a fatura e a conversa de WhatsApp como objetos gráficos.
+// Sistema "EVA em campo" (bloco LP.9 do index.css; referência em
+// https://claude.ai/artifact/L2qfp4yTM3RBvSL3yN5mjo): a EVA é a estrela, sobre
+// creme e faixas chapadas de sol e noite, com Geist, a fonte do app, em tudo e a fatura e a
+// conversa de WhatsApp como objetos gráficos.
 
 const Header = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
-    <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between px-4 py-5 sm:px-5 md:px-8">
-        <Link to="/" aria-label="Vyzon, início">
-            <ThemeLogo className="h-[22px] w-auto" />
-        </Link>
-        <div className="flex items-center gap-4">
-            <Link to="/auth" className="text-sm" style={{ color: "var(--lp-ink-muted)" }}>
-                Entrar
+    <div className="vs-topo">
+        <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between px-4 py-5 sm:px-5 md:px-8">
+            <Link to="/" aria-label="Vyzon, início">
+                <ThemeLogo className="h-[22px] w-auto" />
             </Link>
-            <a
-                href={whatsappUrl(WHATSAPP_MESSAGE)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="vs-btn"
-                style={{ minHeight: 40, padding: "0 16px", fontSize: 14 }}
-                onClick={onWhatsapp}
-            >
-                Falar com o Markus
-            </a>
-        </div>
-    </header>
+            <div className="flex items-center gap-4">
+                <Link to="/auth" className="text-sm font-medium" style={{ color: "var(--lp-ink-muted)" }}>
+                    Entrar
+                </Link>
+                <a
+                    href={whatsappUrl(WHATSAPP_MESSAGE)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="vs-btn"
+                    style={{ minHeight: 40, padding: "0 16px", fontSize: 14 }}
+                    onClick={onWhatsapp}
+                >
+                    Falar com o Markus
+                </a>
+            </div>
+        </header>
+    </div>
 );
+
+// A EVA sentada na borda de cima de um cartão. O pai precisa ser relative.
+const EvaSentada = ({ size, state, children }: { size: number; state?: EvaBotState; children?: ReactNode }) => (
+    <span className="vs-sentada" style={{ ["--s-eva" as string]: `${size}px` }}>
+        {children ?? <EvaBot size={size} state={state} />}
+    </span>
+);
+
+// A EVA passa pelo dia da proposta enquanto está na tela. Com movimento
+// reduzido, fica no primeiro estado.
+const DIA_DA_EVA: { estado: EvaBotState; fala: string }[] = [
+    { estado: "idle", fala: "Proposta enviada. Ela fica de olho." },
+    { estado: "thinking", fala: "Lendo a conversa." },
+    { estado: "alert", fala: "Dois dias sem resposta. Ela te avisa." },
+    { estado: "talking", fala: "Escrevendo a mensagem de retomada." },
+    { estado: "happy", fala: "Você aprovou. Saiu do seu número." },
+];
+const useDiaDaEva = () => {
+    const ref = useRef<HTMLSpanElement>(null);
+    const [i, setI] = useState(0);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        let id = 0;
+        const io = new IntersectionObserver(([entry]) => {
+            window.clearInterval(id);
+            if (entry.isIntersecting) id = window.setInterval(() => setI((n) => (n + 1) % DIA_DA_EVA.length), 2800);
+        });
+        io.observe(el);
+        return () => {
+            io.disconnect();
+            window.clearInterval(id);
+        };
+    }, []);
+    return { ref, ...DIA_DA_EVA[i] };
+};
+
+// A EVA apresentada de perto, depois que a página já mostrou o que ela entrega.
+const ConhecaEva = () => {
+    const { ref, estado, fala } = useDiaDaEva();
+    return (
+        <section className="mx-auto w-full max-w-[1120px] px-4 pt-20 sm:px-5 md:px-8 md:pt-32" aria-label="Conheça a EVA">
+            <div className="vs-conheca vs-noite">
+                <div className="relative z-[1] max-w-[520px]">
+                    <p className="vs-label">Quem faz isso por você</p>
+                    <h2 className="vs-display mt-3 text-[40px] leading-[1.02] md:text-[64px]">Conheça a EVA</h2>
+                    <p className="mt-4 text-[17px] leading-relaxed md:text-[19px]" style={{ color: "var(--lp-ink-muted)" }}>
+                        Ela acompanha cada proposta que sai do seu WhatsApp, te avisa quando o cliente para de responder e deixa a mensagem pronta. Quem decide o que sai é você.
+                    </p>
+                    <p key={fala} className="vs-conheca__fala mt-6 text-[19px] font-bold" style={{ color: "var(--lp-sol)" }} aria-live="polite">
+                        {fala}
+                    </p>
+                </div>
+                <span ref={ref} className="vs-conheca__bot">
+                    <EvaBot size={420} state={estado} />
+                </span>
+            </div>
+        </section>
+    );
+};
 
 const WaIcon = () => (
     <span className="vs-btn__wa" aria-hidden="true">
@@ -203,17 +269,15 @@ const WaIcon = () => (
 // Texto à esquerda e, à direita, o aviso que chega no WhatsApp do dono: o
 // produto inteiro numa olhada. O fim do título leva o marca-texto da tela.
 const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void; onWhatsapp: () => void }) => (
-    <section
-        className="mx-auto grid w-full max-w-[1120px] items-center gap-12 px-4 pb-16 pt-4 sm:px-5 md:grid-cols-[1.12fr_0.88fr] md:px-8 md:pb-24 md:pt-14"
-        aria-label="Topo"
-    >
-        <div>
-            <p className="text-[15px] font-semibold landing-fade-in-up-lg">{copy.kicker}</p>
-            {/* Archivo 800 em vez da serifa editorial: as páginas que convertem com
+    <section className="vs-topo overflow-hidden" aria-label="Topo">
+        <div className="mx-auto grid w-full max-w-[1120px] items-center gap-10 px-4 pt-4 sm:px-5 md:grid-cols-[1.12fr_0.88fr] md:gap-12 md:px-8 md:pt-10">
+        <div className="md:pb-24">
+            <p className="text-[16px] font-bold landing-fade-in-up-lg">{copy.kicker}</p>
+            {/* Letra forte em vez da serifa editorial: as páginas que convertem com
                 integrador (Heliux, Azume, InfinitePay) falam alto e direto. */}
             <h1
-                className="vs-display mt-4 landing-fade-in-up-lg landing-delay-100"
-                style={{ fontSize: "clamp(2rem, 3.7vw, 3.05rem)", lineHeight: 1.04 }}
+                className="vs-display mt-4 max-w-[530px] landing-fade-in-up-lg landing-delay-100"
+                style={{ fontSize: "clamp(2.25rem, 3.75vw, 3.2rem)", lineHeight: 1.04, textWrap: "pretty" }}
             >
                 {copy.h1} <span className="vs-marca vs-marca--draw">{copy.h1Accent}</span>
             </h1>
@@ -224,66 +288,37 @@ const Hero = ({ copy, onCta, onWhatsapp }: { copy: AngleCopy; onCta: () => void;
                 {copy.sub}
             </p>
             <div className="mt-7 flex flex-col items-stretch gap-3 landing-fade-in-up-lg landing-delay-300 sm:items-start md:mt-8">
-                <WhatsappCta placement={onWhatsapp}>Falar com o Markus no WhatsApp</WhatsappCta>
+                <WhatsappCta placement={onWhatsapp}>Me mostra quanto tá parado</WhatsappCta>
                 <p className="text-[14px]" style={{ color: "var(--lp-ink-subtle)" }}>
-                    Quem responde é o Markus, que criou o Vyzon. Sem compromisso.
+                    Abre no seu WhatsApp. Quem responde é o Markus, que criou o Vyzon.
                 </p>
             </div>
             <PriceLine className="mt-7 max-w-[520px]" />
-            <Link to={RAIO_X_AUTO} className="vs-azul mt-4 inline-block text-[14px] underline underline-offset-4" onClick={onCta}>
-                Prefere ver sozinho? Veja em 3 minutos o que ficou sem resposta
-            </Link>
+            <a href="#conta" className="vs-azul mt-4 inline-block text-[14px] underline underline-offset-4" onClick={onCta}>
+                Prefere fazer a conta sozinho? Leva 30 segundos e não precisa conectar nada
+            </a>
         </div>
         <AvisoNoWhatsApp />
+        </div>
     </section>
 );
 
-const WhatsappCta = ({ placement, children }: { placement: () => void; children: ReactNode }) => (
-    <a href={whatsappUrl(WHATSAPP_MESSAGE)} target="_blank" rel="noopener noreferrer" className="vs-btn" onClick={placement}>
+const WhatsappCta = ({ placement, sol, children }: { placement: () => void; sol?: boolean; children: ReactNode }) => (
+    <a href={whatsappUrl(WHATSAPP_MESSAGE)} target="_blank" rel="noopener noreferrer" className={`vs-btn${sol ? " vs-btn--sol" : ""}`} onClick={placement}>
         <WaIcon />
         <span>{children}</span>
     </a>
 );
 
-// O aviso no WhatsApp do dono, no formato da aprovação real
-// (supabase/functions/_shared/whatsappApproval.ts), simplificado para "responda
-// 1" sem o código curto nem nome interno. Dados de exemplo.
+// A demo do topo vem em pedaço separado: o título, que é o LCP, não espera por ela.
+// A caixa reserva o espaço do palco, sem CLS.
 const AvisoNoWhatsApp = () => (
-    <figure className="mx-auto w-full max-w-[420px] landing-fade-in-up-lg landing-delay-200" aria-label="Exemplo: o aviso que chega no seu WhatsApp no 2º dia">
-        <div className="vs-conversa">
-            <div className="vs-conversa__topo">
-                <span className="vs-conversa__avatar" aria-hidden="true">
-                    V
-                </span>
-                <div className="min-w-0">
-                    <p className="vs-conversa__nome">Aviso do Vyzon</p>
-                    <p className="vs-conversa__status">no seu WhatsApp</p>
-                </div>
-            </div>
-            <div className="vs-conversa__corpo">
-                <span className="vs-conversa__dia">Quarta</span>
-                <div className="vs-bolha">
-                    <p className="font-semibold">Mensagem pronta para o Carlos</p>
-                    <p className="text-[13px]" style={{ color: "var(--lp-ink-muted)" }}>
-                        Residência Oliveira · proposta de <span className="vs-num text-[15px] font-semibold">R$ 24.900</span> sem resposta há 2 dias
-                    </p>
-                    <p className="vs-bolha__rascunho">
-                        Oi, Carlos, conseguiu olhar a proposta? Se ajudar, te mando a simulação com financiamento pra comparar com a sua conta de luz.
-                    </p>
-                    <p style={{ color: "var(--lp-ink-muted)" }}>Responda 1 e ela sai do seu número.</p>
-                    <span className="vs-bolha__hora">09:02</span>
-                </div>
-                <div className="vs-bolha vs-bolha--saida">
-                    1<span className="vs-bolha__hora">09:03</span>
-                </div>
-                <div className="vs-bolha">
-                    Enviada para o Carlos.<span className="vs-bolha__hora">09:03</span>
-                </div>
-            </div>
+    <figure className="vs-palco mx-auto w-full max-w-[420px] self-end landing-fade-in-up-lg landing-delay-200" aria-label="Exemplo: o aviso que chega no seu WhatsApp no 2º dia">
+        <div className="relative aspect-[420/640] md:aspect-[420/600]">
+            <Suspense fallback={null}>
+                <AvisoDemo />
+            </Suspense>
         </div>
-        <figcaption className="mt-3 text-right text-[12px]" style={{ color: "var(--lp-ink-subtle)" }}>
-            Exemplo
-        </figcaption>
     </figure>
 );
 
@@ -294,7 +329,7 @@ const PriceLine = ({ className = "" }: { className?: string }) => (
     <p className={`flex items-start gap-3 text-[14.5px] leading-snug ${className}`} style={{ color: "var(--lp-ink-muted)" }}>
         <span className="vs-carimbo vs-carimbo--neutro mt-[1px]">Fundador</span>
         <span>
-            <strong className="vs-num text-[17px]" style={{ color: "var(--lp-ink)" }}>
+            <strong className="vs-num text-[17px] font-semibold" style={{ color: "var(--lp-ink)" }}>
                 R$ 97 por mês
             </strong>{" "}
             nos 3 primeiros meses para as 10 primeiras integradoras. Depois, R$ 197 por mês. Sem contrato.
@@ -311,11 +346,11 @@ const NUMBERS = [
 ] as const;
 
 const Numbers = () => (
-    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-24" aria-label="Números">
+    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-32" aria-label="Números">
         <ul className="vs-prova">
             {NUMBERS.map(([n, texto, fonte]) => (
                 <li key={n} className="vs-prova__item">
-                    <p className="vs-num text-[56px] font-bold leading-none md:text-[64px]">{n}</p>
+                    <p className="vs-num vs-azul text-[72px] font-semibold leading-none md:text-[88px]">{n}</p>
                     <p className="mt-3 max-w-[440px] text-[16px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
                         {texto}
                     </p>
@@ -328,15 +363,16 @@ const Numbers = () => (
     </section>
 );
 
-// A conta que o dono faz sozinho: o número é dele, não nosso. É também a
-// pergunta que valida o ICP (quantas propostas ficaram sem resposta no último
-// mês e quanto somam), e a resposta vai junto na mensagem do WhatsApp. Mantém o
-// prefill da automação de leads.
+// A conta que o dono faz sozinho, sem conectar nada: quantos orçamentos manda e
+// quantos fecha ele sabe de cabeça, e "quantos ficaram sem resposta" não. Começa na
+// média da Greener (25 por mês, 18% viram venda) e os números passam a ser dele. A
+// conta vai junto na mensagem do WhatsApp. Mantém o prefill da automação de leads.
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const TICKETS = [15000, 25000, 40000, 80000];
 
 const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () => void }) => {
-    const [qtd, setQtd] = useState(8);
+    const [orcamentos, setOrcamentos] = useState(25);
+    const [vendas, setVendas] = useState(5);
     const [ticket, setTicket] = useState(25000);
     const usou = useRef(false);
     const marcar = () => {
@@ -344,37 +380,31 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
         usou.current = true;
         logLandingEvent(FUNNEL_PAGE, angle, "calc_use");
     };
-    const total = qtd * ticket;
-    const msg = `${WHATSAPP_MESSAGE} Pela minha conta: ${qtd} orçamentos sem resposta no último mês, uns ${brl(total)}.`;
-    const step = (d: number) => {
+    const semVenda = Math.max(0, orcamentos - vendas);
+    const total = semVenda * ticket;
+    const msg = `${WHATSAPP_MESSAGE} Pela minha conta: ${orcamentos} orçamentos por mês, ${vendas} fechados, uns ${brl(total)} que não viraram venda.`;
+    const mudaOrcamentos = (d: number) => {
         marcar();
-        setQtd((q) => Math.min(200, Math.max(0, q + d)));
+        const novo = Math.min(500, Math.max(1, orcamentos + d));
+        setOrcamentos(novo);
+        setVendas((v) => Math.min(v, novo));
+    };
+    const mudaVendas = (d: number) => {
+        marcar();
+        setVendas((v) => Math.min(orcamentos, Math.max(0, v + d)));
     };
 
-    // Faixa azul de ponta a ponta (a cor dona) e o resultado em forma de fatura:
-    // o dono vive de conta de luz, e aqui a conta é a do dinheiro parado.
+    // Faixa noite de ponta a ponta e o resultado em forma de fatura: o dono vive
+    // de conta de luz, e aqui a conta é a do dinheiro parado. A EVA, sentada na
+    // fatura, se assusta quando a conta passa de zero.
     return (
-        <section className="py-16 md:py-24" style={{ background: "var(--lp-blue)", color: "var(--lp-white)" }} aria-label="Calculadora">
+        <section id="conta" className="vs-noite scroll-mt-4 py-16 md:py-32" aria-label="Calculadora">
             <div className="mx-auto grid w-full max-w-[1120px] items-center gap-10 px-4 sm:px-5 md:grid-cols-2 md:gap-14 md:px-8">
                 <div>
-                    <Eyebrow light>Faça a conta da sua integradora</Eyebrow>
-                    <SectionTitle light>Quanto está esperando alguém chamar de volta?</SectionTitle>
-                    <div className="mt-8">
-                        <p className="text-[15px]" style={{ color: "rgba(255,255,255,0.85)" }}>
-                            Orçamentos que ficaram sem resposta no último mês
-                        </p>
-                        <div className="mt-2 flex items-center gap-3">
-                            <button type="button" aria-label="Menos um" onClick={() => step(-1)} className={stepperCls}>
-                                −
-                            </button>
-                            <output className="vs-num w-16 text-center text-[34px] font-bold" aria-live="polite">
-                                {qtd}
-                            </output>
-                            <button type="button" aria-label="Mais um" onClick={() => step(1)} className={stepperCls}>
-                                +
-                            </button>
-                        </div>
-                    </div>
+                    <Eyebrow light>Faça a conta sem conectar nada</Eyebrow>
+                    <SectionTitle light>Quanto fica pelo caminho todo mês?</SectionTitle>
+                    <Contador className="mt-8" rotulo="Orçamentos que você manda por mês" valor={orcamentos} muda={mudaOrcamentos} />
+                    <Contador className="mt-6" rotulo="Quantos desses viram venda" valor={vendas} muda={mudaVendas} />
                     <div className="mt-6">
                         <p className="text-[15px]" style={{ color: "rgba(255,255,255,0.85)" }}>
                             Valor médio de um orçamento
@@ -393,7 +423,7 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                                     className="vs-num h-10 rounded-full border-2 px-4 text-[17px] font-semibold transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transition-none"
                                     style={
                                         ticket === t
-                                            ? { background: "var(--lp-white)", color: "var(--lp-ink)", borderColor: "var(--lp-white)" }
+                                            ? { background: "var(--lp-sol)", color: "var(--lp-ink)", borderColor: "var(--lp-sol)" }
                                             : { background: "transparent", color: "var(--lp-white)", borderColor: "rgba(255,255,255,0.5)" }
                                     }
                                 >
@@ -402,16 +432,21 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                             ))}
                         </div>
                     </div>
+                    <p className="mt-6 max-w-[460px] text-[14px] leading-relaxed" style={{ color: "var(--lp-ink-subtle)" }}>
+                        A conta começa na média do mercado (Greener, 1º semestre de 2026). Troque pelos seus números.
+                    </p>
                 </div>
+                <div className="relative mt-24 min-w-0 md:mt-16">
+                <EvaSentada size={132} state={total > 0 ? "alert" : "idle"} />
                 <div className="vs-fatura flex min-w-0 flex-col">
                     <div className="vs-fatura__topo">
-                        <span className="vs-fatura__titulo">Sua conta do último mês</span>
+                        <span className="vs-fatura__titulo">Sua conta do mês</span>
                         <span className="vs-fatura__ref">pela sua conta</span>
                     </div>
                     <dl className="mt-3 grid gap-2">
                         <div className="vs-fatura__linha">
-                            <dt>Orçamentos sem resposta</dt>
-                            <dd className="vs-num">{qtd}</dd>
+                            <dt>Orçamentos que não viraram venda</dt>
+                            <dd className="vs-num">{semVenda}</dd>
                         </div>
                         <div className="vs-fatura__linha">
                             <dt>Valor médio de cada um</dt>
@@ -420,13 +455,13 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                     </dl>
                     <div className="vs-fatura__total mt-4 pt-4">
                         <p className="text-[14.5px]" style={{ color: "var(--lp-ink-muted)" }}>
-                            Esperando alguém chamar de volta
+                            O que ficou pelo caminho
                         </p>
-                        <p className="vs-num mt-1 text-[48px] font-bold leading-none md:text-[60px]">
+                        <p className="vs-num mt-1 text-[48px] font-semibold leading-none md:text-[60px]">
                             <span className="vs-marca">{brl(total)}</span>
                         </p>
                         <p className="mt-3 text-[14.5px]" style={{ color: "var(--lp-ink-muted)" }}>
-                            O Vyzon custa R$ 197 por mês.
+                            Nem tudo isso volta. O Vyzon acompanha o que ainda dá para chamar de volta, por R$ 197 por mês.
                         </p>
                     </div>
                     <a href={whatsappUrl(msg)} target="_blank" rel="noopener noreferrer" onClick={onWhatsapp} className="vs-btn mt-6 self-stretch sm:self-start">
@@ -434,37 +469,55 @@ const Calculator = ({ angle, onWhatsapp }: { angle: SolarAngle; onWhatsapp: () =
                         <span>Mandar essa conta pro Markus</span>
                     </a>
                 </div>
+                </div>
             </div>
         </section>
     );
 };
 
+const Contador = ({ rotulo, valor, muda, className }: { rotulo: string; valor: number; muda: (d: number) => void; className: string }) => (
+    <div className={className}>
+        <p className="text-[15px]" style={{ color: "rgba(255,255,255,0.85)" }}>
+            {rotulo}
+        </p>
+        <div className="mt-2 flex items-center gap-3">
+            <button type="button" aria-label={`${rotulo}: menos um`} onClick={() => muda(-1)} className={stepperCls}>
+                −
+            </button>
+            <output className="vs-num w-16 text-center text-[38px] font-semibold" style={{ color: "var(--lp-sol)" }} aria-live="polite">
+                {valor}
+            </output>
+            <button type="button" aria-label={`${rotulo}: mais um`} onClick={() => muda(1)} className={stepperCls}>
+                +
+            </button>
+        </div>
+    </div>
+);
+
 const stepperCls =
     "h-11 w-11 rounded-full border-2 border-white/60 text-[20px] text-white transition-colors duration-150 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transition-none";
 
-// A vida de um orçamento, do envio ao aviso. O 2º dia é o único marco em azul,
-// porque é ali que o Vyzon entra.
-const HOW = [
-    ["1×", "Uma vez", "Conecte o seu WhatsApp", "Pelo código no celular, como no WhatsApp Web. O número continua o mesmo."],
-    ["0", "Dia 0", "Mande orçamento como sempre", "Cada proposta que sai do seu WhatsApp entra na lista sozinha. Você não cadastra nada."],
-    ["1", "Dia 1", "O cliente visualiza e não responde", "Ficou pensando na parcela, na garantia ou na conversa em casa. Você segue o seu dia."],
-    ["2", "Dia 2", "Chega o aviso com a mensagem pronta", "No seu tom. Você responde 1 e ela sai do seu número."],
-] as const;
+// A vida de um orçamento, do envio ao aviso, com a EVA em cada dia. O 2º dia é o
+// único cartão noite, porque é ali que o Vyzon entra.
+const HOW: readonly (readonly [EvaBotState, string, string, string])[] = [
+    ["idle", "Uma vez", "Conecte o seu WhatsApp", "Pelo código no celular, como no WhatsApp Web. O número continua o mesmo."],
+    ["thinking", "Dia 0", "Mande orçamento como sempre", "Cada proposta que sai do seu WhatsApp entra na lista sozinha. Você não cadastra nada."],
+    ["pondering", "Dia 1", "O cliente visualiza e não responde", "Ficou pensando na parcela, na garantia ou na conversa em casa. Você segue o seu dia."],
+    ["alert", "Dia 2", "Chega o aviso com a mensagem pronta", "No seu tom. Você responde 1 e ela sai do seu número."],
+];
 
 const HowItWorks = () => (
-    <section className="mx-auto w-full max-w-[1120px] px-4 py-16 sm:px-5 md:px-8 md:py-24" aria-label="Como funciona">
+    <section className="mx-auto w-full max-w-[1120px] px-4 py-16 sm:px-5 md:px-8 md:py-32" aria-label="Como funciona">
         <Eyebrow>Como funciona</Eyebrow>
         <SectionTitle>
             Você continua no WhatsApp. <span className="vs-azul">O Vyzon lembra por você.</span>
         </SectionTitle>
         <ol className="vs-tempo mt-10 md:mt-14">
-            {HOW.map(([marco, dia, titulo, texto], i) => (
-                <li key={titulo} className={`vs-tempo__passo${i === HOW.length - 1 ? " vs-tempo__passo--aviso" : ""}`}>
-                    <span className="vs-tempo__dia vs-num" aria-hidden="true">
-                        {marco}
-                    </span>
-                    <p className="vs-label">{dia}</p>
-                    <h3 className="vs-display mt-1.5 text-[19px] font-bold leading-snug" style={{ letterSpacing: "-0.01em" }}>
+            {HOW.map(([estado, dia, titulo, texto], i) => (
+                <li key={titulo} className={`vs-tempo__passo${i === HOW.length - 1 ? " vs-noite" : ""}`}>
+                    <EvaBot size={96} state={estado} />
+                    <p className="vs-label mt-2">{dia}</p>
+                    <h3 className="vs-display mt-1.5 text-[21px] leading-[1.15]" style={{ letterSpacing: "-0.01em" }}>
                         {titulo}
                     </h3>
                     <p className="mt-2 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
@@ -489,7 +542,7 @@ const INCLUDED = [
 ];
 
 const Offer = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
-    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-24" aria-label="O que está incluso">
+    <section className="mx-auto w-full max-w-[1120px] px-4 pb-16 sm:px-5 md:px-8 md:pb-32" aria-label="O que está incluso">
         <div className="grid gap-12 md:grid-cols-[1.2fr_1fr] md:gap-10">
             <div>
                 <Eyebrow>O que está incluso</Eyebrow>
@@ -507,10 +560,10 @@ const Offer = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
                     ))}
                 </ul>
             </div>
-            <div className="vs-preco self-start">
+            <div className="vs-preco vs-noite mt-4 self-start md:mt-0">
                 <span className="vs-preco__etiqueta">Preço de fundador</span>
                 <p className="flex items-baseline gap-2">
-                    <span className="vs-num text-[72px] font-bold leading-[0.95]">R$ 97</span>
+                    <span className="vs-num text-[80px] font-semibold leading-[0.95]" style={{ color: "var(--lp-sol)" }}>R$ 97</span>
                     <span className="text-[16px]" style={{ color: "var(--lp-ink-muted)" }}>
                         por mês
                     </span>
@@ -522,7 +575,9 @@ const Offer = ({ onWhatsapp }: { onWhatsapp: () => void }) => (
                     Sem contrato: você paga mês a mês e para quando quiser.
                 </p>
                 <div className="mt-6 flex flex-col">
-                    <WhatsappCta placement={onWhatsapp}>Quero o preço de fundador</WhatsappCta>
+                    <WhatsappCta placement={onWhatsapp} sol>
+                        Quero o preço de fundador
+                    </WhatsappCta>
                 </div>
             </div>
         </div>
@@ -565,7 +620,7 @@ const CountUp = ({ to, ms = 1100, delay = 450 }: { to: number; ms?: number; dela
 };
 
 const ProductMock = () => (
-    <section className="mx-auto w-full max-w-[1120px] px-4 pt-16 sm:px-5 md:px-8 md:pt-24" aria-label="Como o Vyzon aparece pra você">
+    <section className="mx-auto w-full max-w-[1120px] px-4 pt-16 sm:px-5 md:px-8 md:pt-32" aria-label="Como o Vyzon aparece pra você">
         <Eyebrow>Exemplo</Eyebrow>
         <SectionTitle>
             Cada proposta que sai do seu WhatsApp <span className="vs-azul">entra na lista sozinha</span>
@@ -591,7 +646,7 @@ const ProductMock = () => (
                                 </p>
                             </div>
                             <div className="flex shrink-0 flex-col items-end gap-1">
-                                <p className="vs-num text-[18px] font-semibold">{p.value}</p>
+                                <p className="vs-num text-[18px] font-bold">{p.value}</p>
                                 <span className={`vs-carimbo vs-carimbo--${p.estado}`}>{p.status}</span>
                             </div>
                         </li>
@@ -636,7 +691,7 @@ const Eyebrow = ({ children, light }: { children: ReactNode; light?: boolean }) 
 );
 
 const SectionTitle = ({ children, light }: { children: ReactNode; light?: boolean }) => (
-    <h2 className="vs-display mt-3 text-[30px] leading-[1.06] md:text-[42px]" style={{ color: light ? "var(--lp-white)" : "var(--lp-ink)" }}>
+    <h2 className="vs-display mt-3 text-[34px] leading-[1.02] md:text-[52px]" style={{ color: light ? "var(--lp-white)" : "var(--lp-ink)" }}>
         {children}
     </h2>
 );
@@ -662,23 +717,28 @@ const OBJECTIONS = [
 ] as const;
 
 const Objections = () => (
-    <section className="py-16 md:py-24" style={{ background: "var(--lp-ink)" }} aria-label="Objeções">
+    <section className="vs-sol py-16 md:py-32" aria-label="Objeções">
         <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-5 md:px-8">
-            <Eyebrow light>Antes que você diga</Eyebrow>
-            <SectionTitle light>O que a gente mais ouve de dono de integradora</SectionTitle>
+            <div className="flex items-end justify-between gap-6">
+                <div>
+                    <Eyebrow>Antes que você diga</Eyebrow>
+                    <SectionTitle>O que a gente mais ouve de dono de integradora</SectionTitle>
+                </div>
+                <span className="hidden shrink-0 md:block">
+                    <EvaBot size={150} state="pondering" />
+                </span>
+            </div>
             <ul className="mt-10 md:mt-12">
                 {OBJECTIONS.map(([fala, resposta]) => (
                     <li
                         key={fala}
                         className="grid gap-3 border-t py-6 md:grid-cols-[1fr_1.25fr] md:gap-12 md:py-8"
-                        style={{ borderColor: "rgba(255,255,255,0.14)" }}
+                        style={{ borderColor: "var(--lp-line)" }}
                     >
-                        <p className="vs-display text-[21px] font-bold leading-snug md:text-[24px]" style={{ color: "var(--lp-white)", letterSpacing: "-0.01em" }}>
-                            <span style={{ color: "var(--lp-blue-tint)" }}>“</span>
-                            {fala}
-                            <span style={{ color: "var(--lp-blue-tint)" }}>”</span>
+                        <p className="vs-display text-[23px] leading-[1.15] md:text-[26px]" style={{ letterSpacing: "-0.01em" }}>
+                            “{fala}”
                         </p>
-                        <p className="text-[16px] leading-relaxed md:text-[17px]" style={{ color: "rgba(255,255,255,0.78)" }}>
+                        <p className="text-[16px] leading-relaxed md:text-[17px]" style={{ color: "var(--lp-ink-muted)" }}>
                             {resposta}
                         </p>
                     </li>
@@ -714,7 +774,7 @@ const FAQ = [
 
 // Na mesma grade das outras seções: título à esquerda, perguntas à direita.
 const Faq = () => (
-    <section className="mx-auto grid w-full max-w-[1120px] gap-6 px-4 py-16 sm:px-5 md:grid-cols-[0.8fr_1.2fr] md:gap-14 md:px-8 md:py-24">
+    <section className="mx-auto grid w-full max-w-[1120px] gap-6 px-4 py-16 sm:px-5 md:grid-cols-[0.8fr_1.2fr] md:gap-14 md:px-8 md:py-32">
         <div>
             <Eyebrow>Perguntas</Eyebrow>
             <SectionTitle>O que todo integrador pergunta antes</SectionTitle>
@@ -802,11 +862,9 @@ const SignupForm = ({ angle, onWhatsapp, onCta }: { angle: SolarAngle; onWhatsap
     };
 
     return (
-        <section id="raio-x" className="mx-auto w-full max-w-[1120px] scroll-mt-6 px-4 pb-20 sm:px-5 md:px-8 md:pb-28">
-            <div
-                className="grid gap-8 rounded-[10px] border p-5 sm:p-7 md:grid-cols-[1fr_1.1fr] md:gap-12 md:p-10"
-                style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)", boxShadow: "0 1px 2px rgba(13,20,33,0.05), 0 14px 32px -18px rgba(13,20,33,0.3)" }}
-            >
+        <section id="raio-x" className="mx-auto w-full max-w-[1120px] scroll-mt-6 px-4 pb-20 pt-24 sm:px-5 md:px-8 md:pb-28">
+            <div className="vs-cartao relative grid gap-8 rounded-[22px] p-5 sm:p-7 md:grid-cols-[1fr_1.1fr] md:gap-12 md:p-10" style={{ background: "var(--lp-white)" }}>
+                <EvaSentada size={132} state={done ? "happy" : "idle"} />
                 <div>
                     <Eyebrow>Grátis, sem compromisso</Eyebrow>
                     <SectionTitle>20 minutos comigo pelo WhatsApp</SectionTitle>
@@ -835,7 +893,7 @@ const SignupForm = ({ angle, onWhatsapp, onCta }: { angle: SolarAngle; onWhatsap
                     <p className="mb-4 text-[15px] font-medium">Ou deixe seu número que eu te chamo.</p>
 
                     {done ? (
-                        <div className="rounded-[10px] border p-5" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
+                        <div className="rounded-[16px] border p-5" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
                             <p className="text-lg font-medium">Recebemos, {form.name.trim().split(" ")[0]}.</p>
                             <p className="mt-1 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
                                 O Markus te chama no WhatsApp pra marcar os 20 minutos. Se não quiser esperar, dá pra ver o seu Raio-X agora mesmo, em 3 minutos.

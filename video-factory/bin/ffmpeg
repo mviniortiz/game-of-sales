@@ -1,0 +1,11 @@
+#!/bin/bash
+# ffmpeg do pipeline. Preferência: bin/full/ (ffmpeg 9.0.2 estático de
+# ffmpeg.martin-riedl.de, baixado em 24/10/2026, fora do git; ver README).
+# Sem ele, cai no ffmpeg do Remotion (já vem com o repo), que basta para os
+# filmes de produto mas não para vídeo dentro do HyperFrames (molde rosto).
+D="$(cd "$(dirname "$0")" && pwd)"
+[ -x "$D/full/ffmpeg" ] && exec "$D/full/ffmpeg" "$@"
+R="${REMOTION_FF_DIR:-$(cd "$D/../.." && pwd)/node_modules/@remotion/compositor-darwin-arm64}"
+[ -x "$R/ffmpeg" ] || R="/Users/mviniortiz/code/vyzon/node_modules/@remotion/compositor-darwin-arm64"
+export DYLD_LIBRARY_PATH="$R"
+exec "$R/ffmpeg" "$@"
