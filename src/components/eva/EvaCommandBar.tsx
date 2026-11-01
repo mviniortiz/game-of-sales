@@ -93,7 +93,7 @@ export function EvaCommandBar() {
                         <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
                             <h3
                                 className="font-semibold text-[18px] sm:text-[20px]"
-                                style={{ color: "#0B1220", letterSpacing: "-0.018em" }}
+                                style={{ color: "#0F1730", letterSpacing: "-0.018em" }}
                             >
                                 EVA Comercial
                             </h3>
@@ -140,7 +140,7 @@ export function EvaCommandBar() {
                                 style={{
                                     background: "#F4F7FB",
                                     border: "1px solid #D9E2EC",
-                                    color: "#0B1220",
+                                    color: "#0F1730",
                                 }}
                             />
                             <button
@@ -148,8 +148,8 @@ export function EvaCommandBar() {
                                 disabled={!value.trim()}
                                 className="absolute right-2 top-2 h-10 inline-flex items-center gap-1.5 text-[13.5px] font-semibold px-4 rounded-lg text-white transition-all hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
                                 style={{
-                                    background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
-                                    boxShadow: "0 6px 16px -4px rgba(37,99,235,0.45), 0 1px 0 rgba(255,255,255,0.20) inset",
+                                    background: "linear-gradient(135deg, #1556C0, #4A8CE8)",
+                                    boxShadow: "0 6px 16px -4px rgba(21,86,192,0.45), 0 1px 0 rgba(255,255,255,0.20) inset",
                                 }}
                             >
                                 Enviar
@@ -182,8 +182,8 @@ export function EvaCommandBar() {
                                             fontWeight: 500,
                                         }}
                                         onMouseEnter={(e) => {
-                                            e.currentTarget.style.background = "rgba(37,99,235,0.06)";
-                                            e.currentTarget.style.borderColor = "rgba(37,99,235,0.22)";
+                                            e.currentTarget.style.background = "rgba(21,86,192,0.06)";
+                                            e.currentTarget.style.borderColor = "rgba(21,86,192,0.22)";
                                             e.currentTarget.style.color = "#1D4ED8";
                                         }}
                                         onMouseLeave={(e) => {
@@ -206,7 +206,7 @@ export function EvaCommandBar() {
                     <div
                         className="rounded-xl px-4 py-4 flex items-center gap-3"
                         style={{
-                            background: "linear-gradient(135deg, rgba(124,58,237,0.04), rgba(37,99,235,0.03))",
+                            background: "linear-gradient(135deg, rgba(124,58,237,0.04), rgba(21,86,192,0.03))",
                             border: "1px solid rgba(124,58,237,0.16)",
                         }}
                     >
@@ -222,7 +222,7 @@ export function EvaCommandBar() {
                             >
                                 EVA analisando…
                             </p>
-                            <p className="text-[12.5px] truncate" style={{ color: "#0B1220" }}>
+                            <p className="text-[12.5px] truncate" style={{ color: "#0F1730" }}>
                                 {lastPrompt}
                             </p>
                         </div>
@@ -252,7 +252,7 @@ export function EvaCommandBar() {
                             </p>
                             <p
                                 className="text-[13px] mb-1"
-                                style={{ color: "#0B1220", fontWeight: 500, lineHeight: 1.5 }}
+                                style={{ color: "#0F1730", fontWeight: 500, lineHeight: 1.5 }}
                             >
                                 Em breve a EVA vai responder &quot;{lastPrompt}&quot; com base nos seus dados reais de pipeline, WhatsApp e CRM.
                             </p>
@@ -264,7 +264,7 @@ export function EvaCommandBar() {
                             type="button"
                             onClick={reset}
                             className="text-[11.5px] font-medium shrink-0 transition-colors hover:text-[#1D4ED8]"
-                            style={{ color: "#2563EB" }}
+                            style={{ color: "#1556C0" }}
                         >
                             Nova pergunta
                         </button>

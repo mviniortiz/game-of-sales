@@ -238,7 +238,7 @@ export const ChannelConfigModal = ({ spec, open, onClose, onSaved }: Props) => {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <DialogTitle className="text-xl font-bold tracking-tight" style={{ color: "#0B1220" }}>{spec.name}</DialogTitle>
+                  <DialogTitle className="text-xl font-bold tracking-tight" style={{ color: "#0F1730" }}>{spec.name}</DialogTitle>
                   {isConnected && (
                     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase" style={{ background: "#ECFDF3", color: "#16A34A", letterSpacing: "0.04em" }}>
                       <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#16A34A" }} />
@@ -256,7 +256,7 @@ export const ChannelConfigModal = ({ spec, open, onClose, onSaved }: Props) => {
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#2563EB" }} />
+              <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#1556C0" }} />
             </div>
           ) : (
             <>
@@ -269,10 +269,10 @@ export const ChannelConfigModal = ({ spec, open, onClose, onSaved }: Props) => {
                       {i < spec.steps.length - 1 && (
                         <div className="absolute left-[13px] top-7 bottom-[-12px] w-px" style={{ background: "#E6EDF5" }} />
                       )}
-                      <div className="absolute left-0 top-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold" style={{ background: "rgba(37,99,235,0.08)", color: "#2563EB" }}>
+                      <div className="absolute left-0 top-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold" style={{ background: "rgba(21,86,192,0.08)", color: "#1556C0" }}>
                         {i + 1}
                       </div>
-                      <h4 className="text-[13px] font-semibold" style={{ color: "#0B1220" }}>{step.title}</h4>
+                      <h4 className="text-[13px] font-semibold" style={{ color: "#0F1730" }}>{step.title}</h4>
                       <p className="text-xs leading-relaxed mt-0.5" style={{ color: "#64748B" }}>{step.description}</p>
                     </li>
                   ))}
@@ -284,8 +284,8 @@ export const ChannelConfigModal = ({ spec, open, onClose, onSaved }: Props) => {
                   className="group flex items-center justify-between w-full mt-3 p-2.5 rounded-xl transition-colors hover:bg-[#F8FAFC]"
                   style={{ border: "1px solid #E6EDF5" }}
                 >
-                  <span className="flex items-center gap-2 text-xs font-medium" style={{ color: "#0B1220" }}>
-                    <ExternalLink className="w-3.5 h-3.5" style={{ color: "#2563EB" }} />
+                  <span className="flex items-center gap-2 text-xs font-medium" style={{ color: "#0F1730" }}>
+                    <ExternalLink className="w-3.5 h-3.5" style={{ color: "#1556C0" }} />
                     {spec.dashboardLabel}
                   </span>
                   <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" style={{ color: "#94A3B8" }} />
@@ -294,20 +294,20 @@ export const ChannelConfigModal = ({ spec, open, onClose, onSaved }: Props) => {
 
               {/* URL */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold uppercase" style={{ color: "#0B1220", letterSpacing: "0.04em" }}>{spec.urlLabel}</label>
+                <label className="text-xs font-semibold uppercase" style={{ color: "#0F1730", letterSpacing: "0.04em" }}>{spec.urlLabel}</label>
                 <div className="flex gap-2">
                   <input
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder={spec.urlPlaceholder}
-                    className="flex-1 h-10 px-3 rounded-lg text-sm font-mono outline-none transition-colors focus:border-[#2563EB]"
-                    style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", color: "#0B1220" }}
+                    className="flex-1 h-10 px-3 rounded-lg text-sm font-mono outline-none transition-colors focus:border-[#1556C0]"
+                    style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", color: "#0F1730" }}
                   />
                   <button
                     onClick={handleTest}
                     disabled={!validUrl || isTesting}
                     className="shrink-0 inline-flex items-center gap-1.5 h-10 px-3 rounded-lg text-xs font-semibold transition-colors hover:bg-[#F1F5F9] disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ border: "1px solid #E6EDF5", color: "#2563EB" }}
+                    style={{ border: "1px solid #E6EDF5", color: "#1556C0" }}
                   >
                     {isTesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                     Testar
@@ -318,7 +318,7 @@ export const ChannelConfigModal = ({ spec, open, onClose, onSaved }: Props) => {
 
               {/* Eventos */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase" style={{ color: "#0B1220", letterSpacing: "0.04em" }}>O que notificar</label>
+                <label className="text-xs font-semibold uppercase" style={{ color: "#0F1730", letterSpacing: "0.04em" }}>O que notificar</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {EVENTS.map((ev) => {
                     const active = events.includes(ev.id);
@@ -329,16 +329,16 @@ export const ChannelConfigModal = ({ spec, open, onClose, onSaved }: Props) => {
                         onClick={() => toggleEvent(ev.id)}
                         className="flex items-start gap-2.5 p-3 rounded-xl text-left transition-colors"
                         style={active
-                          ? { background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.3)" }
+                          ? { background: "rgba(21,86,192,0.05)", border: "1px solid rgba(21,86,192,0.3)" }
                           : { background: "#FFFFFF", border: "1px solid #E6EDF5" }}
                       >
-                        <span className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: active ? "rgba(37,99,235,0.1)" : "#F1F5F9" }}>
-                          <Icon className="w-4 h-4" style={{ color: active ? "#2563EB" : "#94A3B8" }} />
+                        <span className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: active ? "rgba(21,86,192,0.1)" : "#F1F5F9" }}>
+                          <Icon className="w-4 h-4" style={{ color: active ? "#1556C0" : "#94A3B8" }} />
                         </span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[13px] font-semibold" style={{ color: "#0B1220" }}>{ev.label}</span>
-                            {active && <Check className="w-3.5 h-3.5" style={{ color: "#2563EB" }} />}
+                            <span className="text-[13px] font-semibold" style={{ color: "#0F1730" }}>{ev.label}</span>
+                            {active && <Check className="w-3.5 h-3.5" style={{ color: "#1556C0" }} />}
                           </div>
                           <p className="text-[11px] mt-0.5 leading-snug" style={{ color: "#64748B" }}>{ev.description}</p>
                         </div>
@@ -373,7 +373,7 @@ export const ChannelConfigModal = ({ spec, open, onClose, onSaved }: Props) => {
             <button
               onClick={handleSave}
               disabled={isSaving || !validUrl || events.length === 0}
-              className="inline-flex items-center justify-center h-9 px-4 rounded-lg text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center h-9 px-4 rounded-lg text-xs font-semibold text-white bg-[#1556C0] hover:bg-[#1D4ED8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
               {isConnected ? "Salvar alterações" : "Conectar"}

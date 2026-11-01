@@ -51,13 +51,13 @@ export function EvaSuggestionCard({ suggestion, context, label = "Sugestão da E
         <div className={`eva-suggestion-card p-5 ${className}`} style={card}>
             <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-2 text-[12.5px] font-semibold" style={{ color: "#334155" }}>
-                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#2563EB" }} aria-hidden="true" />
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#1556C0" }} aria-hidden="true" />
                     {label}
                 </span>
                 <span className="text-[11.5px]" style={{ color: "#94A3B8" }}>Você aprova antes de enviar</span>
             </div>
 
-            <p className="mt-3 text-[14px]" style={{ color: "#0B1220", lineHeight: 1.55 }}>
+            <p className="mt-3 text-[14px]" style={{ color: "#0F1730", lineHeight: 1.55 }}>
                 {suggestion}
             </p>
 
@@ -71,7 +71,7 @@ export function EvaSuggestionCard({ suggestion, context, label = "Sugestão da E
                 <button
                     type="button"
                     onClick={onUse}
-                    className="inline-flex h-9 items-center rounded-full bg-[#0B1220] px-4 text-[13px] font-semibold text-white transition-all hover:bg-[#1F2A3B] active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+                    className="inline-flex h-9 items-center rounded-full bg-[#0F1730] px-4 text-[13px] font-semibold text-white transition-all hover:bg-[#1F2A3B] active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
                 >
                     Usar sugestão
                 </button>

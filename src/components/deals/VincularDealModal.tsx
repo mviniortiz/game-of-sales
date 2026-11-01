@@ -39,7 +39,7 @@ interface DealRow {
 
 const STAGE_LABELS: Record<string, { label: string; color: string; bg: string }> = {
     lead: { label: "Novo lead", color: "#64748B", bg: "rgba(148,163,184,0.14)" },
-    qualification: { label: "Qualificação", color: "#1D4ED8", bg: "rgba(37,99,235,0.10)" },
+    qualification: { label: "Qualificação", color: "#1D4ED8", bg: "rgba(21,86,192,0.10)" },
     proposal: { label: "Proposta", color: "#6D28D9", bg: "rgba(124,58,237,0.10)" },
     negotiation: { label: "Negociação", color: "#B45309", bg: "rgba(245,158,11,0.10)" },
 };
@@ -142,19 +142,19 @@ export const VincularDealModal = ({
                 <DialogHeader
                     className="px-6 pt-6 pb-5 relative overflow-hidden shrink-0"
                     style={{
-                        background: "linear-gradient(135deg, rgba(37,99,235,0.06) 0%, rgba(74,140,232,0.04) 100%), #FFFFFF",
+                        background: "linear-gradient(135deg, rgba(21,86,192,0.06) 0%, rgba(74,140,232,0.04) 100%), #FFFFFF",
                         borderBottom: "1px solid #EAF0F6",
                     }}
                 >
                     <DialogTitle className="flex items-center gap-3.5 text-foreground">
                         <div
                             className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
-                            style={{ background: "rgba(37,99,235,0.10)", border: "1px solid rgba(37,99,235,0.20)" }}
+                            style={{ background: "rgba(21,86,192,0.10)", border: "1px solid rgba(21,86,192,0.20)" }}
                         >
-                            <Link2 className="h-5 w-5" strokeWidth={2.3} style={{ color: "#2563EB" }} />
+                            <Link2 className="h-5 w-5" strokeWidth={2.3} style={{ color: "#1556C0" }} />
                         </div>
                         <div className="min-w-0">
-                            <span className="text-[18px] font-bold tracking-tight" style={{ color: "#0B1220", letterSpacing: "-0.018em" }}>
+                            <span className="text-[18px] font-bold tracking-tight" style={{ color: "#0F1730", letterSpacing: "-0.018em" }}>
                                 Vincular oportunidade existente
                             </span>
                             <p className="text-[12.5px] text-muted-foreground font-normal mt-0.5 leading-snug">
@@ -183,7 +183,7 @@ export const VincularDealModal = ({
                 <div className="px-6 pb-6 pt-2 overflow-y-auto flex-1 min-h-[180px]">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-10">
-                            <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#2563EB" }} />
+                            <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1556C0" }} />
                         </div>
                     ) : error ? (
                         <p className="text-[12.5px] text-center py-10" style={{ color: "#B91C1C" }}>
@@ -191,7 +191,7 @@ export const VincularDealModal = ({
                         </p>
                     ) : filtered.length === 0 ? (
                         <div className="text-center py-10">
-                            <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
+                            <p className="text-[13px] font-semibold mb-1" style={{ color: "#0F1730" }}>
                                 {(deals?.length ?? 0) === 0 ? "Nenhuma oportunidade aberta" : "Nenhum resultado para a busca"}
                             </p>
                             <p className="text-[11.5px]" style={{ color: "#64748B" }}>
@@ -217,7 +217,7 @@ export const VincularDealModal = ({
                                         >
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                                                    <span className="text-[13.5px] font-semibold truncate" style={{ color: "#0B1220" }}>
+                                                    <span className="text-[13.5px] font-semibold truncate" style={{ color: "#0F1730" }}>
                                                         {d.title || safeCustomer || "Oportunidade"}
                                                     </span>
                                                     <span
@@ -232,9 +232,9 @@ export const VincularDealModal = ({
                                                 </p>
                                             </div>
                                             {isLinkingThis ? (
-                                                <Loader2 className="h-4 w-4 animate-spin shrink-0" style={{ color: "#2563EB" }} />
+                                                <Loader2 className="h-4 w-4 animate-spin shrink-0" style={{ color: "#1556C0" }} />
                                             ) : (
-                                                <ArrowRight className="h-4 w-4 shrink-0" style={{ color: "#2563EB" }} />
+                                                <ArrowRight className="h-4 w-4 shrink-0" style={{ color: "#1556C0" }} />
                                             )}
                                         </button>
                                     </li>

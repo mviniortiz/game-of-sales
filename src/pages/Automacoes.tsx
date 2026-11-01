@@ -60,12 +60,12 @@ function telefone(e164: string): string {
 }
 
 const campo =
-  "w-full rounded-[10px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-3 py-2 text-[16px] text-[var(--vyz-text-primary)] transition-shadow duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.25)] sm:text-[14px]";
+  "w-full rounded-[10px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-3 py-2 text-[16px] text-[var(--vyz-text-primary)] transition-shadow duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.25)] sm:text-[14px]";
 const cartao = "rounded-[10px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] shadow-[0_1px_2px_rgba(15,23,42,0.04)]";
 const botaoPrimario =
-  "h-9 rounded-full bg-[var(--vyz-text-primary)] px-4 text-[13px] font-semibold text-[var(--vyz-surface-1)] transition-transform duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.97] disabled:opacity-40 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.3)]";
+  "h-9 rounded-full bg-[var(--vyz-text-primary)] px-4 text-[13px] font-semibold text-[var(--vyz-surface-1)] transition-transform duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.97] disabled:opacity-40 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.3)]";
 const botaoSecundario =
-  "inline-flex h-9 items-center rounded-full border border-[var(--vyz-border)] px-4 text-[13px] font-semibold text-[var(--vyz-text-primary)] transition-colors duration-150 hover:bg-[var(--vyz-surface-2)] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.3)]";
+  "inline-flex h-9 items-center rounded-full border border-[var(--vyz-border)] px-4 text-[13px] font-semibold text-[var(--vyz-text-primary)] transition-colors duration-150 hover:bg-[var(--vyz-surface-2)] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.3)]";
 
 export default function Automacoes() {
   const { user } = useAuth();

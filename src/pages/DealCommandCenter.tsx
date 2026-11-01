@@ -135,7 +135,7 @@ const STATUS_DOT: Record<ConvStatus["tone"], string> = {
 const QUOTE_TOM: Partial<Record<QuoteItem["state"], { dot: string; bg: string; border: string; text: string }>> = {
     no_reply: { dot: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A", text: "#92400E" },
     went_quiet: { dot: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A", text: "#92400E" },
-    your_turn: { dot: "#2563EB", bg: "#EFF6FF", border: "#BFDBFE", text: "#1E40AF" },
+    your_turn: { dot: "#1556C0", bg: "#EFF6FF", border: "#BFDBFE", text: "#1E40AF" },
     talking: { dot: "#10B981", bg: "#ECFDF5", border: "#A7F3D0", text: "#065F46" },
 };
 
@@ -726,7 +726,7 @@ export default function DealCommandCenter() {
     const handleWon = async () => {
         const won = stageList.find((st) => st.kind === "won");
         if (!won) {
-            toast.error("Este funil não tem etapa de ganho. Crie uma em Configurar, no Pipeline.");
+            toast.error("Este funil não tem etapa de ganho. Crie uma em Configurar funil.");
             return;
         }
         const prev = snapshot();
@@ -860,7 +860,7 @@ export default function DealCommandCenter() {
                             Tentar de novo
                         </Button>
                     )}
-                    <Button onClick={() => navigate("/pipeline")} variant="outline" className="rounded-full">Voltar ao Pipeline</Button>
+                    <Button onClick={() => navigate("/pipeline")} variant="outline" className="rounded-full">Voltar ao Funil</Button>
                 </div>
             </div>
         );
@@ -885,7 +885,7 @@ export default function DealCommandCenter() {
                                 className="inline-flex items-center gap-1 -ml-1 px-1 py-1 rounded-md text-[12px] font-medium text-[var(--vyz-text-muted)] hover:text-[var(--vyz-text-primary)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                             >
                                 <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-                                Pipeline
+                                Funil
                             </button>
                         </nav>
 

@@ -74,7 +74,10 @@ está BLOQUEADO por billing; não criar workflows.
    - Integrações: `src/config/integrationsConfig.ts` (não confirmada no
      código = "Em breve" / "Sob consulta"; nunca inventar).
    - Contatos/links: `src/config/contact.ts`.
-   - Tokens de design: `src/index.css` (`--lp-*` landing, `--vyz-*` app).
+   - Tokens de design: `src/index.css` (`--lp-*` landing, `--vyz-*` app, nos
+     mesmos valores da home desde 01/11/2026). Peças das abas do app:
+     `src/components/layout/tela.css` (`.vp-*`) e `lateral.css`. Um palco amarelo
+     por tela, para o que pede o dono agora.
 
 ## Stack e mapa
 
@@ -111,6 +114,9 @@ está BLOQUEADO por billing; não criar workflows.
   24h, 5 tentativas por rascunho (`notify_attempts`) e corte do lote inteiro
   quando o socket do número cai. Sessão de WhatsApp fica 'active' no banco
   mesmo caída, então esta última é a que evita queimar a rodada.
+- Menu do app (01/11/2026): os nomes mudaram, os endereços não. Hoje `/inicio`,
+  Conversas `/inbox`, Funil `/pipeline`, Resultados `/admin`, EVA `/eva-studio`
+  (o Studio abre em `?ajustar=1`). ⌘K busca cliente; ⌘J pergunta à EVA.
 - Rotas públicas/SEO em `App.tsx`; `/auth`, `/criar-conta` e o app
   autenticado (catch-all) em `AppShell.tsx`. `/onboarding` e `/register` são
   redirects de compatibilidade.

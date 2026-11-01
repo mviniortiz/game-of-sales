@@ -75,7 +75,7 @@ export interface EvaAssistColumnProps {
 const TEMP_META: Record<EvaAssistTemperatura, { label: string; dot: string }> = {
     quente: { label: "Quente", dot: "#E11D48" },
     morno: { label: "Morno", dot: "#D97706" },
-    frio: { label: "Frio", dot: "#2563EB" },
+    frio: { label: "Frio", dot: "#1556C0" },
 };
 
 // ─── Componente ─────────────────────────────────────────────────────────────

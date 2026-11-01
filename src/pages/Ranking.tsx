@@ -50,7 +50,7 @@ const NIVEL_CONFIG: Record<string, { color: string; bg: string; icon: typeof Shi
     Bronze:   { color: "#B45309", bg: "rgba(245,158,11,0.12)", icon: Shield },
     Prata:    { color: "#475569", bg: "rgba(148,163,184,0.18)", icon: Medal },
     Ouro:     { color: "#A16207", bg: "rgba(234,179,8,0.14)",  icon: Star },
-    Platina:  { color: "#1D4ED8", bg: "rgba(37,99,235,0.10)",  icon: Crown },
+    Platina:  { color: "#1D4ED8", bg: "rgba(21,86,192,0.10)",  icon: Crown },
     Diamante: { color: "#047857", bg: "rgba(16,185,129,0.12)", icon: Diamond },
 };
 
@@ -99,7 +99,7 @@ function KpiCell({ label, value, accent }: KpiCellProps) {
                 {label}
             </p>
             <p className="text-[18px] sm:text-[20px] font-bold tabular-nums leading-none"
-                style={{ color: accent ?? "#0B1220", letterSpacing: "-0.02em" }}>
+                style={{ color: accent ?? "#0F1730", letterSpacing: "-0.02em" }}>
                 {value}
             </p>
         </div>
@@ -177,7 +177,7 @@ function PodiumCard({
                 <div className="relative">
                     <Avatar className={`${sz.avatar} ring-2`} style={{ boxShadow: `0 0 0 2px ${style.ringColor}40` }}>
                         {vendedor.avatar_url && <AvatarImage src={vendedor.avatar_url} alt={vendedor.nome} />}
-                        <AvatarFallback style={{ background: "#F1F5F9", color: "#0B1220" }} className={`${sz.avatarText} font-semibold`}>
+                        <AvatarFallback style={{ background: "#F1F5F9", color: "#0F1730" }} className={`${sz.avatarText} font-semibold`}>
                             {getInitials(vendedor.nome)}
                         </AvatarFallback>
                     </Avatar>
@@ -189,12 +189,12 @@ function PodiumCard({
 
                 {/* Nome + nível */}
                 <div className="w-full">
-                    <p className={`${sz.name} font-bold truncate`} style={{ color: "#0B1220" }}>{vendedor.nome}</p>
+                    <p className={`${sz.name} font-bold truncate`} style={{ color: "#0F1730" }}>{vendedor.nome}</p>
                     <div className="flex items-center justify-center gap-1.5 mt-1 flex-wrap">
                         <NivelChip nivel={vendedor.nivel || "Bronze"} />
                         {isCurrentUser && (
                             <span className="inline-flex items-center text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded"
-                                style={{ background: "rgba(37,99,235,0.10)", color: "#1D4ED8", letterSpacing: "0.05em" }}>
+                                style={{ background: "rgba(21,86,192,0.10)", color: "#1D4ED8", letterSpacing: "0.05em" }}>
                                 você
                             </span>
                         )}
@@ -203,7 +203,7 @@ function PodiumCard({
 
                 {/* Valor */}
                 <p className={`${sz.value} font-bold tabular-nums leading-none`}
-                    style={{ color: "#0B1220", letterSpacing: "-0.022em" }}>
+                    style={{ color: "#0F1730", letterSpacing: "-0.022em" }}>
                     {formatCurrencyCompact(vendedor.valor_vendido)}
                 </p>
 
@@ -234,7 +234,7 @@ function RankingRow({
 
     return (
         <div className="grid grid-cols-[auto_auto_1fr_auto] gap-3 sm:gap-4 items-center px-4 py-3.5 transition-colors hover:bg-[#F8FAFC]"
-            style={isCurrentUser ? { background: "rgba(37,99,235,0.04)" } : undefined}>
+            style={isCurrentUser ? { background: "rgba(21,86,192,0.04)" } : undefined}>
             {/* Posição + delta */}
             <div className="flex items-center gap-1.5 w-12 flex-shrink-0">
                 <span className="text-[12px] font-bold tabular-nums w-5 text-right" style={{ color: "#94A3B8" }}>
@@ -256,7 +256,7 @@ function RankingRow({
             {/* Avatar */}
             <Avatar className="h-9 w-9 flex-shrink-0">
                 {vendedor.avatar_url && <AvatarImage src={vendedor.avatar_url} alt={vendedor.nome} />}
-                <AvatarFallback style={{ background: "#F1F5F9", color: "#0B1220" }} className="text-[11px] font-semibold">
+                <AvatarFallback style={{ background: "#F1F5F9", color: "#0F1730" }} className="text-[11px] font-semibold">
                     {getInitials(vendedor.nome)}
                 </AvatarFallback>
             </Avatar>
@@ -264,10 +264,10 @@ function RankingRow({
             {/* Nome + nível + barra/gap */}
             <div className="min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                    <p className="font-semibold text-[13.5px] truncate" style={{ color: "#0B1220" }}>{vendedor.nome}</p>
+                    <p className="font-semibold text-[13.5px] truncate" style={{ color: "#0F1730" }}>{vendedor.nome}</p>
                     {isCurrentUser && (
                         <span className="inline-flex items-center text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded"
-                            style={{ background: "rgba(37,99,235,0.10)", color: "#1D4ED8", letterSpacing: "0.05em" }}>
+                            style={{ background: "rgba(21,86,192,0.10)", color: "#1D4ED8", letterSpacing: "0.05em" }}>
                             você
                         </span>
                     )}
@@ -282,7 +282,7 @@ function RankingRow({
                                     width: `${progressValue}%`,
                                     background: progressValue >= 100
                                         ? "linear-gradient(90deg, #10B981, #34D399)"
-                                        : "linear-gradient(90deg, #2563EB, #4A8CE8)",
+                                        : "linear-gradient(90deg, #1556C0, #4A8CE8)",
                                 }} />
                         </div>
                         <span className="text-[10.5px] tabular-nums font-semibold" style={{ color: "#64748B" }}>
@@ -299,7 +299,7 @@ function RankingRow({
             {/* Valor */}
             <div className="text-right flex-shrink-0">
                 <p className="text-[15px] sm:text-[16px] font-bold tabular-nums leading-none"
-                    style={{ color: "#0B1220", letterSpacing: "-0.018em" }}>
+                    style={{ color: "#0F1730", letterSpacing: "-0.018em" }}>
                     {formatCurrencyCompact(vendedor.valor_vendido)}
                 </p>
                 {hasIndividualMeta && (
@@ -555,7 +555,7 @@ const Ranking = () => {
             <div className="space-y-5 sm:space-y-6">
                 <div className="rounded-2xl p-10 text-center"
                     style={{ background: "#FFFFFF", border: "1px solid #E4E9F2", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
-                    <CircleNotch size={28} weight="bold" className="mx-auto animate-spin" style={{ color: "#2563EB" }} />
+                    <CircleNotch size={28} weight="bold" className="mx-auto animate-spin" style={{ color: "#1556C0" }} />
                     <p className="mt-3 text-[12.5px]" style={{ color: "#64748B" }}>Carregando ranking…</p>
                 </div>
             </div>
@@ -574,7 +574,7 @@ const Ranking = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                     <div className="flex items-center gap-2.5 flex-wrap">
-                        <h1 className="text-[22px] sm:text-[26px] font-bold" style={{ color: "#0B1220", letterSpacing: "-0.022em" }}>
+                        <h1 className="text-[22px] sm:text-[26px] font-bold" style={{ color: "#0F1730", letterSpacing: "-0.022em" }}>
                             Ranking
                         </h1>
                         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold uppercase"
@@ -612,7 +612,7 @@ const Ranking = () => {
                                     onClick={() => setPeriodo(opt.id)}
                                     className="h-7 rounded-full px-3 text-[11.5px] font-semibold transition-colors"
                                     style={active
-                                        ? { background: "#FFFFFF", color: "#0B1220", boxShadow: "0 1px 2px rgba(15,23,42,0.08)" }
+                                        ? { background: "#FFFFFF", color: "#0F1730", boxShadow: "0 1px 2px rgba(15,23,42,0.08)" }
                                         : { color: "#64748B", background: "transparent" }}
                                 >
                                     {opt.label}
@@ -642,7 +642,7 @@ const Ranking = () => {
                     boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 10px 30px rgba(15,23,42,0.05)",
                 }}>
                 <div className="grid grid-cols-2 sm:grid-cols-4 divide-x" style={{ borderColor: "#F1F5F9" }}>
-                    <KpiCell label="Total vendido" value={formatCurrencyCompact(kpis.total)} accent="#2563EB" />
+                    <KpiCell label="Total vendido" value={formatCurrencyCompact(kpis.total)} accent="#1556C0" />
                     <KpiCell label="Maior venda" value={formatCurrencyCompact(kpis.maiorVenda)} />
                     <KpiCell label="Média por vendedor" value={formatCurrencyCompact(kpis.media)} />
                     <KpiCell
@@ -673,7 +673,7 @@ const Ranking = () => {
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0 text-[11px]">
                                 <span className="tabular-nums" style={{ color: "#64748B" }}>
-                                    <strong style={{ color: "#0B1220" }}>{formatCurrencyCompact(kpis.total)}</strong> de {formatCurrencyCompact(metaValor)}
+                                    <strong style={{ color: "#0F1730" }}>{formatCurrencyCompact(kpis.total)}</strong> de {formatCurrencyCompact(metaValor)}
                                 </span>
                                 <span className="font-bold tabular-nums" style={{ color: "#1D4ED8" }}>
                                     {metaPercent.toFixed(0)}%
@@ -688,7 +688,7 @@ const Ranking = () => {
                                 className="h-full rounded-full transition-all duration-700"
                                 style={{
                                     width: `${metaPercent}%`,
-                                    background: "linear-gradient(90deg, #2563EB 0%, #4A8CE8 100%)",
+                                    background: "linear-gradient(90deg, #1556C0 0%, #4A8CE8 100%)",
                                 }}
                             />
                         </div>
@@ -704,7 +704,7 @@ const Ranking = () => {
                         style={{ background: "rgba(148,163,184,0.12)" }}>
                         <Target size={24} weight="duotone" style={{ color: "#64748B" }} />
                     </div>
-                    <p className="text-[14px] font-bold" style={{ color: "#0B1220" }}>
+                    <p className="text-[14px] font-bold" style={{ color: "#0F1730" }}>
                         Sem movimentação {periodo === "mensal" ? "este mês" : "esta semana"}
                     </p>
                     <p className="text-[12px] mt-1 max-w-[340px] mx-auto" style={{ color: "#64748B" }}>

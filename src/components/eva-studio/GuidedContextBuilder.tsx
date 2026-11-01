@@ -271,7 +271,7 @@ export function GuidedContextBuilder({
                     style={{ textAlign: "center", padding: "26px 18px" }}
                 >
                     <Check style={{ width: 18, height: 18, color: "#16A34A", margin: "0 auto 8px" }} strokeWidth={2.6} />
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "#0B1220" }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: "#0F1730" }}>
                         Tudo revisado por aqui.
                     </p>
                     <p style={{ fontSize: 11.5, color: "#64748B", marginTop: 3 }}>

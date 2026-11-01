@@ -442,7 +442,7 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                                         <p
                                             key={f.value || "empty"}
                                             className={`vz-convo-field-value vz-cvs-value ${on ? "vz-cvs-value--on" : ""}`}
-                                            style={on ? { color: "var(--vyz-text-strong, #0B1220)" } : undefined}
+                                            style={on ? { color: "var(--vyz-text-strong, #0F1730)" } : undefined}
                                         >
                                             {on ? f.value : "ainda não perguntou"}
                                         </p>
@@ -464,7 +464,7 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                                     padding: "14px 14px 12px",
                                 }}
                             >
-                                <p style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, fontWeight: 600, color: "var(--vyz-text-strong, #0B1220)" }}>
+                                <p style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, fontWeight: 600, color: "var(--vyz-text-strong, #0F1730)" }}>
                                     <span style={{ lineHeight: 0 }}>
                                         <EvaBot state="idle" size={18} />
                                     </span>
@@ -495,7 +495,7 @@ export function ConversationalStudio({ agentKey = "qualificacao", hideHeader, on
                                     type="button"
                                     className="vz-convo-agent-cta"
                                     onClick={confirmRecap}
-                                    style={{ background: "#0B1220", flex: 1 }}
+                                    style={{ background: "#0F1730", flex: 1 }}
                                 >
                                     Confirmar e seguir
                                     <Check style={{ width: 14, height: 14 }} strokeWidth={2.6} />

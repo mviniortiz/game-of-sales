@@ -10,7 +10,7 @@ export function Bolha({ de, children }: { de: Msg["de"]; children: ReactNode }) 
     if (de === "voce") {
         return (
             <div className="flex justify-end">
-                <p className="max-w-[85%] rounded-2xl rounded-br-md bg-[#0B1220] px-4 py-2.5 text-[15px] leading-snug text-white">{children}</p>
+                <p className="max-w-[85%] rounded-2xl rounded-br-md bg-[#0F1730] px-4 py-2.5 text-[15px] leading-snug text-white">{children}</p>
             </div>
         );
     }

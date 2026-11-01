@@ -362,7 +362,7 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
                                                     onClick={r.onSelect}
                                                     className="relative w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors"
                                                     style={{
-                                                        background: active ? "rgba(37, 99, 235,0.08)" : "transparent",
+                                                        background: active ? "rgba(21, 86, 192,0.08)" : "transparent",
                                                     }}
                                                 >
                                                     {active && (
@@ -376,7 +376,7 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
                                                         className="flex items-center justify-center h-7 w-7 rounded-md shrink-0"
                                                         style={{
                                                             background: active
-                                                                ? "rgba(37, 99, 235,0.12)"
+                                                                ? "rgba(21, 86, 192,0.12)"
                                                                 : "rgba(255,255,255,0.03)",
                                                             border: "1px solid rgba(255,255,255,0.05)",
                                                         }}

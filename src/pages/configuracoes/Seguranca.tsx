@@ -47,8 +47,8 @@ export default function Seguranca() {
     <div className="space-y-5">
       <div className="rounded-2xl border border-[#E6EDF5] bg-white overflow-hidden shadow-[0_1px_2px_rgba(11,18,32,0.04)]">
         <div className="px-5 py-3.5 border-b border-[#E6EDF5] flex items-center gap-2.5">
-          <Lock className="h-4 w-4 text-[#2563EB]" />
-          <h2 className="text-[13px] font-semibold text-[#0B1220]">Alterar senha</h2>
+          <Lock className="h-4 w-4 text-[#1556C0]" />
+          <h2 className="text-[13px] font-semibold text-[#0F1730]">Alterar senha</h2>
         </div>
         <div className="px-5 py-5 space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
@@ -102,8 +102,8 @@ export default function Seguranca() {
 
       <div className="rounded-2xl border border-[#E6EDF5] bg-white overflow-hidden shadow-[0_1px_2px_rgba(11,18,32,0.04)]">
         <div className="px-5 py-3.5 border-b border-[#E6EDF5] flex items-center gap-2.5">
-          <ShieldCheck className="h-4 w-4 text-[#2563EB]" />
-          <h2 className="text-[13px] font-semibold text-[#0B1220]">Sessões</h2>
+          <ShieldCheck className="h-4 w-4 text-[#1556C0]" />
+          <h2 className="text-[13px] font-semibold text-[#0F1730]">Sessões</h2>
         </div>
         <div className="px-5 py-5">
           <p className="text-xs text-muted-foreground">

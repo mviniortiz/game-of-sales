@@ -21,7 +21,7 @@ export function AuthPreview({ modo }: { modo: "cadastro" | "login" }) {
             <div className="flex h-full flex-col items-center justify-center gap-6 rounded-[28px] border border-[#E6EDF5] bg-white p-10 text-center shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_60px_-32px_rgba(15,23,42,0.25)]">
                 <EvaBot size={96} state="happy" />
                 <div className="max-w-sm">
-                    <p className="font-satoshi text-[26px] font-black leading-tight tracking-[-0.02em] text-[#0B1220]">Suas propostas continuam onde você deixou.</p>
+                    <p className="font-satoshi text-[26px] font-black leading-tight tracking-[-0.02em] text-[#0F1730]">Suas propostas continuam onde você deixou.</p>
                     <p className="mt-3 text-[15px] leading-relaxed text-[#475569]">A EVA acompanha cada uma. O que sai para o cliente, você aprova.</p>
                 </div>
             </div>
@@ -32,7 +32,7 @@ export function AuthPreview({ modo }: { modo: "cadastro" | "login" }) {
         <div className="flex h-full flex-col justify-center gap-8 rounded-[28px] border border-[#E6EDF5] bg-white p-10 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_60px_-32px_rgba(15,23,42,0.25)] xl:p-14">
             <div className="flex items-center gap-4">
                 <VyzonMark size={52} />
-                <p className="font-satoshi text-[26px] font-black leading-tight tracking-[-0.02em] text-[#0B1220] xl:text-[30px]">
+                <p className="font-satoshi text-[26px] font-black leading-tight tracking-[-0.02em] text-[#0F1730] xl:text-[30px]">
                     Em 3 minutos você vê quanto está parado no seu WhatsApp.
                 </p>
             </div>
@@ -42,12 +42,12 @@ export function AuthPreview({ modo }: { modo: "cadastro" | "login" }) {
                     <li key={p.titulo} className="flex items-start gap-3.5">
                         <span
                             aria-hidden
-                            className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[13px] font-semibold ${i === 0 ? "bg-[#0B1220] text-white" : "border border-[#D7DEE9] text-[#64748B]"}`}
+                            className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[13px] font-semibold ${i === 0 ? "bg-[#0F1730] text-white" : "border border-[#D7DEE9] text-[#64748B]"}`}
                         >
                             {i + 1}
                         </span>
                         <span>
-                            <span className="block text-[15px] font-semibold text-[#0B1220]">{p.titulo}</span>
+                            <span className="block text-[15px] font-semibold text-[#0F1730]">{p.titulo}</span>
                             <span className="block text-[14px] text-[#64748B]">{p.texto}</span>
                         </span>
                     </li>
@@ -59,7 +59,7 @@ export function AuthPreview({ modo }: { modo: "cadastro" | "login" }) {
                     <p className="text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Parado no WhatsApp</p>
                     <span className="rounded-full bg-[#E6EDF5] px-2.5 py-0.5 text-[11px] font-semibold text-[#475569]">Exemplo</span>
                 </div>
-                <p className="mt-1 font-satoshi text-[34px] font-black leading-none tracking-[-0.03em] text-[#0B1220]">R$ 85.100</p>
+                <p className="mt-1 font-satoshi text-[34px] font-black leading-none tracking-[-0.03em] text-[#0F1730]">R$ 85.100</p>
                 <ul className="mt-3 flex flex-col divide-y divide-[#EEF2F7]">
                     {EXEMPLO.map((e) => (
                         <li key={e.nome} className="flex items-center justify-between gap-3 py-2">

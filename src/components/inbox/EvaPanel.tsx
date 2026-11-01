@@ -271,7 +271,7 @@ function EmptyPanel({ reason, onClose }: { reason: "no-chat" | "no-messages"; on
         <div className="relative flex-1 flex flex-col items-center justify-center px-5 text-center">
             {onClose && <SheetCloseButton onClose={onClose} absolute />}
             <EvaBot state="idle" size={56} className="mb-4" />
-            <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
+            <p className="text-[13px] font-semibold mb-1" style={{ color: "#0F1730" }}>
                 Escolha uma conversa
             </p>
             <p
@@ -288,7 +288,7 @@ function LoadingState({ message }: { message?: string }) {
     return (
         <div className="flex-1 flex flex-col items-center justify-center px-5 text-center">
             <EvaBot state="thinking" size={56} className="mb-4" />
-            <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
+            <p className="text-[13px] font-semibold mb-1" style={{ color: "#0F1730" }}>
                 {message || "EVA analisando conversa…"}
             </p>
             <p
@@ -336,7 +336,7 @@ function ErrorState({
                 )}
             </div>
             <div>
-                <p className="text-[13px] font-semibold mb-1" style={{ color: "#0B1220" }}>
+                <p className="text-[13px] font-semibold mb-1" style={{ color: "#0F1730" }}>
                     {isRateLimit ? "Limite diário de análises atingido" : "Não foi possível analisar agora"}
                 </p>
                 <p
@@ -357,9 +357,9 @@ function ErrorState({
                     onClick={onRetry}
                     className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[11.5px] font-semibold transition-colors"
                     style={{
-                        background: "rgba(37,99,235,0.08)",
+                        background: "rgba(21,86,192,0.08)",
                         color: "#1D4ED8",
-                        border: "1px solid rgba(37,99,235,0.20)",
+                        border: "1px solid rgba(21,86,192,0.20)",
                     }}
                 >
                     <RefreshCw className="h-3 w-3" />
@@ -680,7 +680,7 @@ function PanelContent({
         (insight.isStaleByMessages || insight.isStaleByContext),
     );
     const statusDot = insight.analyzing
-        ? "#2563EB"
+        ? "#1556C0"
         : insight.error
         ? "#DC2626"
         : isStale
@@ -689,7 +689,7 @@ function PanelContent({
         ? "#10B981"
         : "#94A3B8";
     const statusColor = insight.analyzing
-        ? "#2563EB"
+        ? "#1556C0"
         : insight.error
         ? "#B91C1C"
         : isStale
@@ -724,8 +724,8 @@ function PanelContent({
                             onClick={() => insight.reanalyze()}
                             title={reanalyzeLabel}
                             aria-label={reanalyzeLabel}
-                            className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 cursor-pointer transition-[filter] hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/40"
-                            style={{ background: "rgba(37,99,235,0.07)", color: "#2563EB" }}
+                            className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 cursor-pointer transition-[filter] hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1556C0]/40"
+                            style={{ background: "rgba(21,86,192,0.07)", color: "#1556C0" }}
                         >
                             <RefreshCw className="h-3.5 w-3.5" />
                         </button>
@@ -784,12 +784,12 @@ function PanelContent({
                 @keyframes vzEvaStalePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.45;transform:scale(.82)} }
                 .vz-eva-stale-dot { animation: vzEvaStalePulse 2.2s ease-in-out infinite; }
                 .vz-eva-hero { transition: box-shadow .2s cubic-bezier(0.22,1,0.36,1), transform .2s cubic-bezier(0.22,1,0.36,1); }
-                .vz-eva-hero:hover { box-shadow: 0 2px 4px rgba(15,23,42,0.05), 0 18px 40px -18px rgba(37,99,235,0.26); }
+                .vz-eva-hero:hover { box-shadow: 0 2px 4px rgba(15,23,42,0.05), 0 18px 40px -18px rgba(21,86,192,0.26); }
                 .vz-eva-cta { transition: transform .18s cubic-bezier(0.22,1,0.36,1), box-shadow .18s cubic-bezier(0.22,1,0.36,1), filter .18s cubic-bezier(0.22,1,0.36,1); }
                 .vz-eva-cta:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.05); }
                 .vz-eva-cta:active:not(:disabled) { transform: translateY(0); }
                 .vz-eva-ghost { transition: background .18s cubic-bezier(0.22,1,0.36,1), border-color .18s cubic-bezier(0.22,1,0.36,1), transform .18s cubic-bezier(0.22,1,0.36,1); }
-                .vz-eva-ghost:hover { background: rgba(37,99,235,0.05); transform: translateY(-1px); }
+                .vz-eva-ghost:hover { background: rgba(21,86,192,0.05); transform: translateY(-1px); }
                 .vz-eva-ghost:active { transform: translateY(0); }
                 @media (prefers-reduced-motion: reduce) {
                     .vz-eva-stale-dot { animation: none !important; }
@@ -926,7 +926,7 @@ function DealLinkBanner({
                 style={{ borderBottom: "1px solid var(--ibx-line-soft)", background: "#FFFFFF" }}
             >
                 <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#10B981" }} />
-                <p className="text-[11.5px] font-semibold flex-1 min-w-0 truncate" style={{ color: "#0B1220" }}>
+                <p className="text-[11.5px] font-semibold flex-1 min-w-0 truncate" style={{ color: "#0F1730" }}>
                     No pipeline
                 </p>
                 <button
@@ -952,7 +952,7 @@ function DealLinkBanner({
                 <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#F59E0B" }} />
                 <p
                     className="text-[11.5px] font-semibold flex-1 min-w-0 truncate"
-                    style={{ color: "#0B1220" }}
+                    style={{ color: "#0F1730" }}
                     title="Achamos um negócio no pipeline com este telefone, mas ele ainda não está ligado a esta conversa."
                 >
                     Já tem um negócio
@@ -1049,7 +1049,7 @@ function NoAnalysisState({ onAnalyze }: { onAnalyze: () => void }) {
     return (
         <div className="flex flex-col items-center justify-center text-center py-8 px-2">
             <EvaBot state="idle" size={56} className="mb-4" />
-            <p className="text-[13.5px] font-semibold mb-2" style={{ color: "#0B1220" }}>
+            <p className="text-[13.5px] font-semibold mb-2" style={{ color: "#0F1730" }}>
                 A EVA ainda não analisou esta conversa.
             </p>
             <p
@@ -1108,7 +1108,7 @@ function StaleBadge({
         >
             <AlertCircle className="h-4 w-4 mt-0.5 shrink-0 vz-eva-stale-dot" style={{ color: "#B45309" }} />
             <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold mb-0.5" style={{ color: "#0B1220" }}>
+                <p className="text-[13px] font-semibold mb-0.5" style={{ color: "#0F1730" }}>
                     {title}
                 </p>
                 <p className="text-[11.5px]" style={{ color: "#64748B", lineHeight: 1.5 }}>
@@ -1255,7 +1255,7 @@ function RealContent({
                         <div className="px-4 pb-0.5">
                             <p
                                 className="text-[14px] font-semibold"
-                                style={{ color: "#0B1220", lineHeight: 1.35 }}
+                                style={{ color: "#0F1730", lineHeight: 1.35 }}
                             >
                                 {nextActionLabel || analysis.nextAction}
                             </p>
@@ -1308,7 +1308,7 @@ function RealContent({
                         </p>
                         {analysis.stage && (
                             <p className="text-[11.5px] mt-1.5" style={{ color: "#64748B" }}>
-                                Estágio sugerido: <strong style={{ color: "#0B1220" }}>{analysis.stage}</strong>
+                                Estágio sugerido: <strong style={{ color: "#0F1730" }}>{analysis.stage}</strong>
                             </p>
                         )}
                     </DossierRow>
@@ -1406,7 +1406,7 @@ function DossierRow({
                 <ChevronRight
                     className="h-3.5 w-3.5 shrink-0 transition-transform duration-200"
                     style={{
-                        color: open ? "#2563EB" : "#94A3B8",
+                        color: open ? "#1556C0" : "#94A3B8",
                         transform: open ? "rotate(90deg)" : "none",
                         transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
                     }}
@@ -1414,7 +1414,7 @@ function DossierRow({
                 <span
                     className="text-[10.5px] uppercase flex-1 transition-colors duration-200"
                     style={{
-                        color: open ? "#0B1220" : "#475569",
+                        color: open ? "#0F1730" : "#475569",
                         fontWeight: 700,
                         letterSpacing: "0.07em",
                     }}
@@ -1425,7 +1425,7 @@ function DossierRow({
                     <span
                         className="text-[11.5px] tabular-nums px-1.5 py-0.5 rounded-full shrink-0"
                         style={{
-                            background: "rgba(37,99,235,0.08)",
+                            background: "rgba(21,86,192,0.08)",
                             color: "#1D4ED8",
                             fontWeight: 700,
                         }}
@@ -1465,7 +1465,7 @@ function DossierRow({
 type ToneKey = "blue" | "green" | "amber" | "orange" | "rose" | "purple" | "neutral";
 
 const TONE_STYLES: Record<ToneKey, { bg: string; border: string; text: string }> = {
-    blue: { bg: "rgba(37,99,235,0.10)", border: "rgba(37,99,235,0.30)", text: "#1D4ED8" },
+    blue: { bg: "rgba(21,86,192,0.10)", border: "rgba(21,86,192,0.30)", text: "#1D4ED8" },
     green: { bg: "rgba(16,185,129,0.10)", border: "rgba(16,185,129,0.30)", text: "#047857" },
     amber: { bg: "rgba(245,158,11,0.10)", border: "rgba(245,158,11,0.30)", text: "#B45309" },
     orange: { bg: "rgba(249,115,22,0.10)", border: "rgba(249,115,22,0.30)", text: "#C2410C" },
@@ -1508,7 +1508,7 @@ function QuickDiagnosis({ qualification }: { qualification: Qualification }) {
             )}
             {chance && (
                 <p className="text-[12px]" style={{ color: "#475569" }}>
-                    Chance de fechar: <strong style={{ color: "#0B1220" }}>{chance}</strong>
+                    Chance de fechar: <strong style={{ color: "#0F1730" }}>{chance}</strong>
                 </p>
             )}
         </div>
@@ -1644,7 +1644,7 @@ function InfoLists({
                             <li
                                 key={i}
                                 className="flex items-start gap-1.5 text-[11.5px]"
-                                style={{ color: "#0B1220" }}
+                                style={{ color: "#0F1730" }}
                             >
                                 <CheckCircle2
                                     className="h-3 w-3 mt-0.5 shrink-0"
@@ -1677,7 +1677,7 @@ function InfoLists({
                             <li
                                 key={i}
                                 className="flex items-start gap-1.5 text-[11.5px]"
-                                style={{ color: "#0B1220" }}
+                                style={{ color: "#0F1730" }}
                             >
                                 <AlertCircle
                                     className="h-3 w-3 mt-0.5 shrink-0"
@@ -1913,7 +1913,7 @@ function RecommendationCallout({
                         onClick={cta.onClick}
                         className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11.5px] font-semibold transition-all hover:brightness-110"
                         style={{
-                            background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
+                            background: "linear-gradient(135deg, #1556C0, #4A8CE8)",
                             color: "#FFFFFF",
                         }}
                     >
@@ -1966,7 +1966,7 @@ function KnowledgeGapsList({ gaps }: { gaps: KnowledgeGap[] }) {
                         </div>
                         <p
                             className="text-[11.5px] mb-1"
-                            style={{ color: "#0B1220", fontWeight: 500 }}
+                            style={{ color: "#0F1730", fontWeight: 500 }}
                         >
                             {g.description}
                         </p>
@@ -2108,7 +2108,7 @@ function CrmBlock({
                 style={{ background: "var(--ibx-sunken)", border: "1px solid var(--ibx-line)" }}
             >
                 <Workflow className="h-5 w-5 mx-auto mb-1.5" style={{ color: "#94A3B8" }} />
-                <p className="text-[13px]" style={{ color: "#0B1220", fontWeight: 600 }}>
+                <p className="text-[13px]" style={{ color: "#0F1730", fontWeight: 600 }}>
                     Ainda não está no pipeline
                 </p>
                 <p className="text-[11.5px] mt-1" style={{ color: "#64748B" }}>
@@ -2195,7 +2195,7 @@ function CrmBlock({
             <div className="flex items-start justify-between gap-2 mb-2">
                 <p
                     className="text-[13px] font-semibold flex-1 min-w-0 truncate"
-                    style={{ color: "#0B1220" }}
+                    style={{ color: "#0F1730" }}
                     title={detailDeal.title as string}
                 >
                     {detailDeal.title}
@@ -2247,7 +2247,7 @@ function Stat({
                 <Icon className="h-3 w-3" style={{ color }} />
                 <span style={{ color: "#94A3B8", fontWeight: 600 }}>{label}</span>
             </div>
-            <p className="tabular-nums" style={{ color: "#0B1220", fontWeight: 600 }}>
+            <p className="tabular-nums" style={{ color: "#0F1730", fontWeight: 600 }}>
                 {value}
             </p>
         </div>

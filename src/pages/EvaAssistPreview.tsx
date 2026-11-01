@@ -89,7 +89,7 @@ export default function EvaAssistPreview() {
                 >
                     Preview local
                 </p>
-                <h1 style={{ fontSize: 18, fontWeight: 700, color: "#0B1220", marginBottom: 6 }}>
+                <h1 style={{ fontSize: 18, fontWeight: 700, color: "#0F1730", marginBottom: 6 }}>
                     Lateral da EVA: máquina de resposta
                 </h1>
                 <p style={{ fontSize: 12.5, color: "#64748B", marginBottom: 24, lineHeight: 1.5 }}>

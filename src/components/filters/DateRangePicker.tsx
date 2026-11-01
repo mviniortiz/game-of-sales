@@ -40,7 +40,7 @@ export const DateRangePicker = ({
           className={cn(
             "inline-flex h-9 items-center gap-1.5 rounded-lg border bg-white px-3 text-[12.5px] font-medium transition-colors",
             "border-[#E6EDF5] hover:border-[#D7DEE9] hover:bg-[#F8FAFC]",
-            hasValue ? "text-[#0B1220] border-[#2563EB] ring-2 ring-[rgba(37,99,235,0.18)]" : "text-[#64748B]",
+            hasValue ? "text-[#0F1730] border-[#1556C0] ring-2 ring-[rgba(21,86,192,0.18)]" : "text-[#64748B]",
             className,
           )}
         >

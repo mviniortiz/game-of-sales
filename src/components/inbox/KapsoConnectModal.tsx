@@ -66,7 +66,7 @@ export function KapsoConnectModal({ open, onClose }: KapsoConnectModalProps) {
         <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
             <DialogContent className="w-[95vw] max-w-[440px] bg-white border border-[#D9E2EC] p-0 overflow-hidden">
                 <DialogHeader className="px-6 pt-6 pb-3" style={{ borderBottom: "1px solid #EAF0F6" }}>
-                    <DialogTitle className="text-[17px] font-bold" style={{ color: "#0B1220", letterSpacing: "-0.018em" }}>
+                    <DialogTitle className="text-[17px] font-bold" style={{ color: "#0F1730", letterSpacing: "-0.018em" }}>
                         WhatsApp pela API oficial
                     </DialogTitle>
                     <DialogDescription className="text-[12.5px] mt-1 leading-snug" style={{ color: "#64748B" }}>
@@ -78,7 +78,7 @@ export function KapsoConnectModal({ open, onClose }: KapsoConnectModalProps) {
                 <div className="px-6 py-6 min-h-[150px] flex flex-col justify-center">
                     {state.status === "loading" && (
                         <div className="flex items-center justify-center gap-2 text-[13px]" style={{ color: "#475569" }}>
-                            <Loader2 className="h-4 w-4 animate-spin" style={{ color: "#2563EB" }} />
+                            <Loader2 className="h-4 w-4 animate-spin" style={{ color: "#1556C0" }} />
                             Gerando link
                         </div>
                     )}
@@ -98,14 +98,14 @@ export function KapsoConnectModal({ open, onClose }: KapsoConnectModalProps) {
                                 onFocus={(e) => e.currentTarget.select()}
                                 aria-label="Link de conexão"
                                 className="h-10 w-full rounded-lg border px-3 text-[13px]"
-                                style={{ borderColor: "#D9E2EC", color: "#0B1220", background: "#F8FAFC" }}
+                                style={{ borderColor: "#D9E2EC", color: "#0F1730", background: "#F8FAFC" }}
                             />
                             <div className="flex items-center gap-2">
                                 <button
                                     type="button"
                                     onClick={() => void copy(state.url)}
                                     className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white transition-all hover:brightness-110"
-                                    style={{ background: "#0B1220" }}
+                                    style={{ background: "#0F1730" }}
                                 >
                                     {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                                     {copied ? "Copiado" : "Copiar link"}

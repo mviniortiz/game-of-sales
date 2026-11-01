@@ -73,7 +73,7 @@ export function PrimeirosPassos({ companyId, configured, connected }: { companyI
         <section aria-label="Primeiros passos" className="mt-4 rounded-2xl border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:px-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                 <div className="flex min-w-0 flex-1 items-start gap-3">
-                    <span aria-hidden className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[#0B1220] text-[12px] font-semibold text-[#0B1220]">
+                    <span aria-hidden className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[#0F1730] text-[12px] font-semibold text-[#0F1730]">
                         {proximo + 1}
                     </span>
                     <div className="min-w-0">
@@ -89,12 +89,12 @@ export function PrimeirosPassos({ companyId, configured, connected }: { companyI
                 </div>
                 <div className="flex shrink-0 items-center gap-3 pl-10 sm:pl-0">
                     <div className="h-1.5 w-24 overflow-hidden rounded-full bg-[var(--vyz-surface-2)]" aria-hidden>
-                        <div className={`h-full rounded-full bg-[#2563EB] transition-[width] duration-700 ${EASE} motion-reduce:transition-none`} style={{ width: `${(feitos / itens.length) * 100}%` }} />
+                        <div className={`h-full rounded-full bg-[#1556C0] transition-[width] duration-700 ${EASE} motion-reduce:transition-none`} style={{ width: `${(feitos / itens.length) * 100}%` }} />
                     </div>
                     {atual.acao && (
                         <Link
                             to={atual.acao.to}
-                            className={`inline-flex h-9 items-center rounded-full bg-[#0B1220] px-4 text-[13px] font-semibold text-white transition-colors duration-150 ${EASE} hover:bg-[#1F2A3B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2`}
+                            className={`inline-flex h-9 items-center rounded-full bg-[#0F1730] px-4 text-[13px] font-semibold text-white transition-colors duration-150 ${EASE} hover:bg-[#1F2A3B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2`}
                         >
                             {atual.acao.label}
                         </Link>

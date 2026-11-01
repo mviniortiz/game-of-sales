@@ -226,7 +226,7 @@ export function GuidedSimulationReplay({
                         style={{ width: 18, height: 18, color: "#16A34A", margin: "0 auto 8px" }}
                         strokeWidth={2.6}
                     />
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "#0B1220" }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: "#0F1730" }}>
                         Você revisou todos os momentos que eu separei.
                     </p>
                     <p style={{ fontSize: 11.5, color: "#64748B", marginTop: 3 }}>

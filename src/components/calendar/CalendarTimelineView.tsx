@@ -122,7 +122,7 @@ const EventBlock = ({
                         {format(agDate, "HH:mm")}
                     </span>
                     {showSellerName && agendamento.seller_name && (
-                        <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/20 px-1 rounded flex-shrink-0">
+                        <span className="text-[9px] font-bold text-[var(--vyz-accent)] bg-[var(--vyz-accent)]/20 px-1 rounded flex-shrink-0">
                             {getInitials(agendamento.seller_name)}
                         </span>
                     )}
@@ -200,7 +200,7 @@ const DayColumn = ({
         <div
             className={`
         relative flex-1 min-w-0
-        ${isNow ? "bg-emerald-500/[0.02]" : ""}
+        ${isNow ? "bg-[var(--vyz-accent)]/[0.02]" : ""}
       `}
             style={{ height: TOTAL_HOURS * HOUR_HEIGHT }}
         >
@@ -319,15 +319,15 @@ export function CalendarTimelineView({
                             className={`
                 flex-1 py-2 md:py-2.5 text-center border-l border-border/60
                 ${isMobile && isWeek ? "min-w-[100px]" : ""}
-                ${isNow ? "bg-emerald-500/5" : ""}
+                ${isNow ? "bg-[var(--vyz-accent-soft-6)]" : ""}
               `}
                         >
-                            <p className={`text-[10px] font-semibold uppercase tracking-wider mb-0.5 ${isNow ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
+                            <p className={`text-[10px] font-semibold uppercase tracking-wider mb-0.5 ${isNow ? "text-[var(--vyz-accent)] dark:text-[var(--vyz-accent)]" : "text-muted-foreground"}`}>
                                 {weekDayLabels[day.getDay()]}
                             </p>
                             <div className={`
                 w-7 h-7 md:w-8 md:h-8 mx-auto flex items-center justify-center rounded-full text-[13px] md:text-[15px] font-bold
-                ${isNow ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/40" : "text-muted-foreground"}
+                ${isNow ? "bg-[var(--vyz-accent)] text-white shadow-md " : "text-muted-foreground"}
               `}>
                                 {format(day, "d")}
                             </div>

@@ -40,7 +40,7 @@ export function AssistantBubble({ content, animate, onTick }: { content: string;
     return (
         <div
             className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap"
-            style={{ background: "#F4F6FB", color: "#0B1220", border: "1px solid #EAF0F6", borderBottomLeftRadius: 6 }}
+            style={{ background: "#F4F6FB", color: "#0F1730", border: "1px solid #EAF0F6", borderBottomLeftRadius: 6 }}
         >
             {displayed}
             {animate && !done && (
@@ -73,7 +73,7 @@ export function PerguntarEvaCabecalho() {
         <button
             type="button"
             onClick={() => window.dispatchEvent(new Event(ABRIR_EVENTO))}
-            className="hidden sm:inline-flex h-9 items-center gap-2 rounded-full border border-[#E2E8F0] bg-white pl-1 pr-3.5 text-[13px] font-semibold text-[#0B1220] shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-[background-color,box-shadow] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#F8FAFC] hover:shadow-[0_2px_8px_-2px_rgba(15,23,42,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+            className="hidden sm:inline-flex h-9 items-center gap-2 rounded-full border border-[#E2E8F0] bg-white pl-1 pr-3.5 text-[13px] font-semibold text-[#0F1730] shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-[background-color,box-shadow] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#F8FAFC] hover:shadow-[0_2px_8px_-2px_rgba(15,23,42,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1556C0]"
         >
             <EvaBot size={28} still />
             Perguntar à EVA
@@ -160,7 +160,7 @@ export function EvaHelpDock() {
                             <div className="flex items-center gap-2.5 px-4 py-3 border-b" style={{ borderColor: "#F1F5F9" }}>
                                 <EvaBot size={28} state={loading ? "thinking" : "idle"} label="EVA" />
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-[13.5px] font-bold leading-tight" style={{ color: "#0B1220" }}>EVA</p>
+                                    <p className="text-[13.5px] font-bold leading-tight" style={{ color: "#0F1730" }}>EVA</p>
                                     <p className="text-[11px] leading-tight" style={{ color: "#64748B" }}>Ajuda com o Vyzon</p>
                                 </div>
                                 {messages.length > 0 && (
@@ -204,7 +204,7 @@ export function EvaHelpDock() {
                                         {m.role === "user" ? (
                                             <div
                                                 className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap"
-                                                style={{ background: "#2563EB", color: "#FFFFFF", borderBottomRightRadius: 6 }}
+                                                style={{ background: "#1556C0", color: "#FFFFFF", borderBottomRightRadius: 6 }}
                                             >
                                                 {m.content}
                                             </div>
@@ -246,8 +246,8 @@ export function EvaHelpDock() {
                                     onChange={(e) => setInput(e.target.value)}
                                     placeholder="Pergunte qualquer coisa…"
                                     disabled={loading}
-                                    className="w-full h-11 pl-4 pr-12 rounded-xl text-[13px] outline-none transition-all focus:border-[#2563EB]/40 disabled:opacity-70"
-                                    style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#0B1220" }}
+                                    className="w-full h-11 pl-4 pr-12 rounded-xl text-[13px] outline-none transition-all focus:border-[#1556C0]/40 disabled:opacity-70"
+                                    style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#0F1730" }}
                                 />
                                 <motion.button
                                     type="submit"
@@ -255,7 +255,7 @@ export function EvaHelpDock() {
                                     aria-label="Enviar"
                                     whileTap={reduce ? undefined : { scale: 0.9 }}
                                     className="absolute right-4 top-2 inline-flex items-center justify-center h-8 w-8 rounded-full text-white transition-all disabled:opacity-40"
-                                    style={{ background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)" }}
+                                    style={{ background: "linear-gradient(135deg, #1556C0 0%, #1D4ED8 100%)" }}
                                 >
                                     {loading ? <CircleNotch size={15} weight="bold" className="animate-spin" /> : <ArrowUp size={15} weight="bold" />}
                                 </motion.button>

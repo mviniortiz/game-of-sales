@@ -49,7 +49,7 @@ export function WhatsappDownCard({ neverConnected, lastInboundAt }: { neverConne
 
             <Link
                 to="/inbox?connect=1"
-                className="mt-6 inline-flex h-11 items-center rounded-full bg-[#0B1220] px-6 text-[14.5px] font-semibold text-white transition-colors duration-150 hover:bg-[#1F2A3B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2"
+                className="mt-6 inline-flex h-11 items-center rounded-full bg-[#0F1730] px-6 text-[14.5px] font-semibold text-white transition-colors duration-150 hover:bg-[#1F2A3B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2"
             >
                 {neverConnected ? "Conectar WhatsApp" : "Reconectar WhatsApp"}
             </Link>

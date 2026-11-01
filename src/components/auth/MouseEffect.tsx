@@ -56,8 +56,8 @@ export const MouseEffect = () => {
         mouseRef.current.y,
         200
       );
-      gradient.addColorStop(0, "rgba(37, 99, 235, 0.1)");
-      gradient.addColorStop(1, "rgba(37, 99, 235, 0)");
+      gradient.addColorStop(0, "rgba(21, 86, 192, 0.1)");
+      gradient.addColorStop(1, "rgba(21, 86, 192, 0)");
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -71,7 +71,7 @@ export const MouseEffect = () => {
 
         ctx.beginPath();
         ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(37, 99, 235, ${particle.life * 0.5})`;
+        ctx.fillStyle = `rgba(21, 86, 192, ${particle.life * 0.5})`;
         ctx.fill();
 
         return true;

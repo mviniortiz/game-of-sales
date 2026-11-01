@@ -174,8 +174,8 @@ export default function Organizacao() {
     <div className="space-y-5">
       <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] overflow-hidden">
         <div className="px-5 py-3.5 border-b border-[#E6EDF5] flex items-center gap-2.5">
-          <Building2 className="h-4 w-4 text-[#2563EB]" />
-          <h2 className="text-[13px] font-semibold text-[#0B1220]">
+          <Building2 className="h-4 w-4 text-[#1556C0]" />
+          <h2 className="text-[13px] font-semibold text-[#0F1730]">
             Dados da empresa
           </h2>
         </div>

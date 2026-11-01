@@ -379,7 +379,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
 
   // Shared inline input classes
   const inlineInputClass =
-    "w-full bg-[var(--vyz-surface-1)] border border-[var(--vyz-accent)] rounded px-1.5 py-0.5 text-foreground outline-none shadow-[0_0_0_3px_rgba(37,99,235,0.15)] transition-colors";
+    "w-full bg-[var(--vyz-surface-1)] border border-[var(--vyz-accent)] rounded px-1.5 py-0.5 text-foreground outline-none shadow-[0_0_0_3px_rgba(21,86,192,0.15)] transition-colors";
 
   return (
     <div className="relative" data-demo-deal={deal.id}>

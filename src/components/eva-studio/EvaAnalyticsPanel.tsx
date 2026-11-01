@@ -306,7 +306,7 @@ function SlaCard({ sla, active }: { sla: AnalyticsSummary["sla"]; active: boolea
     return (
         <div className="rounded-2xl p-5 h-full flex flex-col" style={cardFlat}>
             <div className="flex items-center gap-2 mb-3">
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(37,99,235,0.08)" }}>
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(21,86,192,0.08)" }}>
                     <Timer className="w-3.5 h-3.5" style={{ color: BLUE }} />
                 </span>
                 <p className="text-[12.5px] font-semibold" style={{ color: INK }}>1ª resposta</p>
@@ -534,7 +534,7 @@ function FunnelCard({ funnel, funnelEva, qualified }: { funnel: FunnelShape | un
     return (
         <div className="rounded-2xl p-5" style={cardSoft}>
             <div className="flex items-center gap-2 mb-4">
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: evaAvailable ? "rgba(124,58,237,0.08)" : "rgba(37,99,235,0.08)" }}>
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: evaAvailable ? "rgba(124,58,237,0.08)" : "rgba(21,86,192,0.08)" }}>
                     <ChartColumn className="w-3.5 h-3.5" style={{ color: evaAvailable ? PURPLE : BLUE }} />
                 </span>
                 <p className="text-[13px] font-semibold" style={{ color: INK }}>
@@ -790,7 +790,7 @@ export function EvaAnalyticsPanel({ onTeach }: { onTeach?: () => void }) {
                     <ListCard
                         icon={MessageSquareWarning}
                         accent={BLUE}
-                        accentBg="rgba(37,99,235,0.08)"
+                        accentBg="rgba(21,86,192,0.08)"
                         title="Objeções mais comuns"
                         rows={objections}
                         emptyText="Nenhuma objeção recorrente detectada nas conversas do período."

@@ -40,8 +40,8 @@ const EvaPaywall = () => {
               <div
                 className="max-w-[75%] rounded-2xl px-4 py-3 text-sm"
                 style={{
-                  background: msg.role === "user" ? "rgba(37,99,235,0.10)" : "#F1F5F9",
-                  color: msg.role === "user" ? "#1D4ED8" : "#0B1220",
+                  background: msg.role === "user" ? "rgba(21,86,192,0.10)" : "#F1F5F9",
+                  color: msg.role === "user" ? "#1D4ED8" : "#0F1730",
                 }}
               >
                 {msg.text}
@@ -73,7 +73,7 @@ const EvaPaywall = () => {
 
             <div className="space-y-2 mb-5">
               <div className="flex items-center justify-center gap-2">
-                <h2 className="text-xl font-bold" style={{ color: "#0B1220", fontFamily: "var(--font-heading)" }}>
+                <h2 className="text-xl font-bold" style={{ color: "#0F1730", fontFamily: "var(--font-heading)" }}>
                   EVA Comercial
                 </h2>
                 <span
@@ -102,8 +102,8 @@ const EvaPaywall = () => {
               onClick={() => navigate("/upgrade")}
               className="w-full flex items-center justify-center gap-2 h-12 rounded-xl text-white text-sm font-semibold transition-all hover:brightness-110"
               style={{
-                background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
-                boxShadow: "0 4px 12px -4px rgba(37,99,235,0.4)",
+                background: "linear-gradient(135deg, #1556C0, #4A8CE8)",
+                boxShadow: "0 4px 12px -4px rgba(21,86,192,0.4)",
               }}
             >
               Assinar o Vyzon
@@ -145,7 +145,7 @@ function EvaPageHeader() {
           <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
             <h1
               className="text-[22px] sm:text-[28px] font-bold tracking-tight"
-              style={{ color: "#0B1220", letterSpacing: "-0.025em" }}
+              style={{ color: "#0F1730", letterSpacing: "-0.025em" }}
             >
               EVA Comercial
             </h1>
@@ -210,16 +210,16 @@ const AgenteRelatorios = () => {
             <div
               className="h-7 w-7 rounded-lg flex items-center justify-center"
               style={{
-                background: "rgba(37,99,235,0.08)",
-                border: "1px solid rgba(37,99,235,0.18)",
+                background: "rgba(21,86,192,0.08)",
+                border: "1px solid rgba(21,86,192,0.18)",
               }}
             >
-              <MessageSquare className="h-3.5 w-3.5" style={{ color: "#2563EB" }} strokeWidth={2.25} />
+              <MessageSquare className="h-3.5 w-3.5" style={{ color: "#1556C0" }} strokeWidth={2.25} />
             </div>
             <div>
               <p
                 className="text-[14px] font-semibold leading-tight"
-                style={{ color: "#0B1220" }}
+                style={{ color: "#0F1730" }}
               >
                 Chat com dados
               </p>

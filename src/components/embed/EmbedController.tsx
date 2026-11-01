@@ -195,7 +195,7 @@ export function EmbedController() {
 
             {/* selo Live */}
             <div
-                style={{ position: "fixed", top: 14, right: 16, zIndex: 2147483600, display: "flex", alignItems: "center", gap: 6, padding: "5px 11px", borderRadius: 999, background: "rgba(255,255,255,0.92)", border: "1px solid rgba(13,20,33,0.10)", boxShadow: "0 6px 18px -8px rgba(13,20,33,0.3)", fontSize: 11.5, fontWeight: 600, color: "#0B1220", pointerEvents: "none", backdropFilter: "blur(4px)" }}
+                style={{ position: "fixed", top: 14, right: 16, zIndex: 2147483600, display: "flex", alignItems: "center", gap: 6, padding: "5px 11px", borderRadius: 999, background: "rgba(255,255,255,0.92)", border: "1px solid rgba(13,20,33,0.10)", boxShadow: "0 6px 18px -8px rgba(13,20,33,0.3)", fontSize: 11.5, fontWeight: 600, color: "#0F1730", pointerEvents: "none", backdropFilter: "blur(4px)" }}
                 aria-hidden="true"
             >
                 <span style={{ width: 7, height: 7, borderRadius: 999, background: "#e5484d", boxShadow: "0 0 0 0 rgba(229,72,77,0.5)", animation: "vzLivePulse 1.6s ease-out infinite" }} />
@@ -208,10 +208,10 @@ export function EmbedController() {
                 aria-hidden="true"
             >
                 <svg width="24" height="24" viewBox="0 0 24 24" style={{ filter: "drop-shadow(0 2px 4px rgba(13,20,33,0.35))" }}>
-                    <path d="M5 2.5 L19.5 11 L12.5 12.3 L9.2 19 Z" fill="#0B1220" stroke="#ffffff" strokeWidth="1.3" strokeLinejoin="round" />
+                    <path d="M5 2.5 L19.5 11 L12.5 12.3 L9.2 19 Z" fill="#0F1730" stroke="#ffffff" strokeWidth="1.3" strokeLinejoin="round" />
                 </svg>
                 <span
-                    style={{ position: "absolute", left: 2, top: 2, width: 18, height: 18, borderRadius: 999, border: "2px solid #2563EB", transform: clicking ? "scale(1.9)" : "scale(0.3)", opacity: clicking ? 0.85 : 0, transition: "transform 0.24s ease, opacity 0.24s ease" }}
+                    style={{ position: "absolute", left: 2, top: 2, width: 18, height: 18, borderRadius: 999, border: "2px solid #1556C0", transform: clicking ? "scale(1.9)" : "scale(0.3)", opacity: clicking ? 0.85 : 0, transition: "transform 0.24s ease, opacity 0.24s ease" }}
                 />
             </div>
 
@@ -225,7 +225,7 @@ export function EmbedController() {
                     style={{ position: "fixed", top: 14, left: "50%", zIndex: 2147483600, pointerEvents: "none", display: "flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 999, background: "rgba(11,18,32,0.92)", color: "#fff", fontSize: 12.5, fontWeight: 600, boxShadow: "0 10px 28px -10px rgba(13,20,33,0.55)", backdropFilter: "blur(4px)", animation: "vzFlash 1.9s ease both" }}
                     aria-hidden="true"
                 >
-                    <span style={{ width: 7, height: 7, borderRadius: 999, background: "#2563EB" }} />
+                    <span style={{ width: 7, height: 7, borderRadius: 999, background: "#1556C0" }} />
                     EVA · {flash.label}
                 </div>
             )}

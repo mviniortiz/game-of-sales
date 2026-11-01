@@ -8,7 +8,7 @@
 import { Check } from "@phosphor-icons/react";
 import { brlCompact } from "./format";
 
-const RAMP = ["#93C5FD", "#60A5FA", "#3B82F6", "#2563EB", "#1D4ED8"];
+const RAMP = ["#93C5FD", "#60A5FA", "#3B82F6", "#1556C0", "#1D4ED8"];
 const BLOCK_LIMIT = 16;
 
 export interface FunnelStage { key: string; name: string; count: number; totalValue: number; values: number[] }

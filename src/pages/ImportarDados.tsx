@@ -467,7 +467,7 @@ const ImportarDados = () => {
 
   // Estilos reutilizáveis
   const cardStyle: React.CSSProperties = { background: "#FFFFFF", border: "1px solid #E6EDF5", boxShadow: "0 1px 2px rgba(11,18,32,0.04)" };
-  const primaryBtn = "inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-lg text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+  const primaryBtn = "inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-lg text-sm font-semibold text-white bg-[#1556C0] hover:bg-[#1D4ED8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
   const ghostBtn = "inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-colors hover:bg-[#F1F5F9]";
 
   const stepsOrder: Step[] = ["select", "upload", "map", "preview", "done"];
@@ -491,12 +491,12 @@ const ImportarDados = () => {
               <span
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-medium transition-colors"
                 style={active
-                  ? { background: "rgba(37,99,235,0.10)", color: "#2563EB" }
+                  ? { background: "rgba(21,86,192,0.10)", color: "#1556C0" }
                   : done
                     ? { background: "#ECFDF3", color: "#16A34A" }
                     : { background: "#F1F5F9", color: "#94A3B8" }}
               >
-                <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: active ? "rgba(37,99,235,0.18)" : done ? "rgba(22,163,74,0.18)" : "rgba(148,163,184,0.25)" }}>
+                <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: active ? "rgba(21,86,192,0.18)" : done ? "rgba(22,163,74,0.18)" : "rgba(148,163,184,0.25)" }}>
                   {done ? <CheckCircle2 className="w-3 h-3" /> : i + 1}
                 </span>
                 {s.label}
@@ -511,7 +511,7 @@ const ImportarDados = () => {
       {step === "select" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
-            { type: "deals" as ImportType, icon: Kanban, title: "Negociações", desc: "Leads, oportunidades e negociações do pipeline", color: "#2563EB", bg: "rgba(37,99,235,0.08)" },
+            { type: "deals" as ImportType, icon: Kanban, title: "Negociações", desc: "Leads, oportunidades e negociações do pipeline", color: "#1556C0", bg: "rgba(21,86,192,0.08)" },
             { type: "vendas" as ImportType, icon: ShoppingCart, title: "Vendas", desc: "Histórico de vendas já realizadas", color: "#16A34A", bg: "#ECFDF3" },
           ].map(({ type, icon: Icon, title, desc, color, bg }) => (
             <button
@@ -525,7 +525,7 @@ const ImportarDados = () => {
                   <Icon className="w-6 h-6" style={{ color }} />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-[15px]" style={{ color: "#0B1220" }}>{title}</h3>
+                  <h3 className="font-semibold text-[15px]" style={{ color: "#0F1730" }}>{title}</h3>
                   <p className="text-[13px] mt-1 leading-relaxed" style={{ color: "#64748B" }}>{desc}</p>
                 </div>
                 <ArrowRight className="w-4 h-4 mt-1 shrink-0" style={{ color: "#CBD5E1" }} />
@@ -539,7 +539,7 @@ const ImportarDados = () => {
       {step === "upload" && (
         <div className="rounded-2xl p-5 sm:p-6 space-y-4" style={cardStyle}>
           <div>
-            <h2 className="text-[15px] font-semibold" style={{ color: "#0B1220" }}>
+            <h2 className="text-[15px] font-semibold" style={{ color: "#0F1730" }}>
               Enviar arquivo de {importType === "deals" ? "negociações" : "vendas"}
             </h2>
             <p className="text-[13px] mt-0.5" style={{ color: "#64748B" }}>
@@ -552,14 +552,14 @@ const ImportarDados = () => {
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
             className="rounded-xl p-10 text-center cursor-pointer transition-colors"
-            style={{ border: `2px dashed ${isDragging ? "#2563EB" : "#D8E2F0"}`, background: isDragging ? "rgba(37,99,235,0.04)" : "#F8FAFC" }}
+            style={{ border: `2px dashed ${isDragging ? "#1556C0" : "#D8E2F0"}`, background: isDragging ? "rgba(21,86,192,0.04)" : "#F8FAFC" }}
             onClick={() => document.getElementById("file-input")?.click()}
           >
-            <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" style={{ background: "rgba(37,99,235,0.08)" }}>
-              <Upload className="w-6 h-6" style={{ color: "#2563EB" }} />
+            <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" style={{ background: "rgba(21,86,192,0.08)" }}>
+              <Upload className="w-6 h-6" style={{ color: "#1556C0" }} />
             </div>
             <p className="text-sm" style={{ color: "#334155" }}>
-              Arraste o arquivo aqui ou <span className="font-semibold" style={{ color: "#2563EB" }}>clique para selecionar</span>
+              Arraste o arquivo aqui ou <span className="font-semibold" style={{ color: "#1556C0" }}>clique para selecionar</span>
             </p>
             <p className="text-xs mt-1.5" style={{ color: "#94A3B8" }}>CSV, XLSX ou XLS, com a primeira linha sendo o cabeçalho</p>
             <input
@@ -575,7 +575,7 @@ const ImportarDados = () => {
             <button className={ghostBtn} style={{ color: "#64748B" }} onClick={() => { setStep("select"); setImportType(null); }}>
               <ArrowLeft className="w-4 h-4" /> Voltar
             </button>
-            <button className={ghostBtn} style={{ color: "#2563EB", border: "1px solid #E6EDF5" }} onClick={downloadTemplate}>
+            <button className={ghostBtn} style={{ color: "#1556C0", border: "1px solid #E6EDF5" }} onClick={downloadTemplate}>
               <Download className="w-4 h-4" /> Baixar modelo
             </button>
           </div>
@@ -587,7 +587,7 @@ const ImportarDados = () => {
         <div className="rounded-2xl p-5 sm:p-6 space-y-4" style={cardStyle}>
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
-              <h2 className="text-[15px] font-semibold" style={{ color: "#0B1220" }}>Mapear colunas</h2>
+              <h2 className="text-[15px] font-semibold" style={{ color: "#0F1730" }}>Mapear colunas</h2>
               <p className="text-[13px] mt-0.5 flex items-center gap-1.5" style={{ color: "#64748B" }}>
                 <FileSpreadsheet className="w-4 h-4" style={{ color: "#94A3B8" }} />
                 {file?.name} · {rows.length} {rows.length === 1 ? "linha" : "linhas"}
@@ -616,7 +616,7 @@ const ImportarDados = () => {
               return (
                 <div key={m.csvColumn} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "#F8FAFC", border: "1px solid #EEF2F7" }}>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: "#0B1220" }}>{m.csvColumn}</p>
+                    <p className="text-sm font-medium truncate" style={{ color: "#0F1730" }}>{m.csvColumn}</p>
                     <p className="text-xs truncate" style={{ color: "#94A3B8" }}>ex: {firstValue || "(vazio)"}</p>
                   </div>
                   <ArrowRight className="w-4 h-4 shrink-0" style={{ color: "#CBD5E1" }} />
@@ -660,7 +660,7 @@ const ImportarDados = () => {
       {step === "preview" && (
         <div className="rounded-2xl p-5 sm:p-6 space-y-4" style={cardStyle}>
           <div>
-            <h2 className="text-[15px] font-semibold" style={{ color: "#0B1220" }}>Revisar antes de importar</h2>
+            <h2 className="text-[15px] font-semibold" style={{ color: "#0F1730" }}>Revisar antes de importar</h2>
             <p className="text-[13px] mt-0.5" style={{ color: "#64748B" }}>
               Primeiras 5 linhas de {rows.length}. Confira se as colunas caíram nos campos certos.
             </p>
@@ -733,8 +733,8 @@ const ImportarDados = () => {
             </div>
           )}
 
-          <div className="rounded-xl p-3.5 text-sm flex items-start gap-2" style={{ background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.12)" }}>
-            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#2563EB" }} />
+          <div className="rounded-xl p-3.5 text-sm flex items-start gap-2" style={{ background: "rgba(21,86,192,0.04)", border: "1px solid rgba(21,86,192,0.12)" }}>
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#1556C0" }} />
             <span style={{ color: "#334155" }}>
               Vamos importar <strong>{rows.length - analysis.blockingRows}</strong> de {rows.length} {importType === "deals" ? "negociações" : "vendas"}. Esta ação não é desfeita automaticamente.
             </span>
@@ -754,14 +754,14 @@ const ImportarDados = () => {
       {/* ── Step 5: Importando ─────────────────────────────── */}
       {step === "importing" && (
         <div className="rounded-2xl py-16 flex flex-col items-center justify-center gap-5" style={cardStyle}>
-          <Loader2 className="w-10 h-10 animate-spin" style={{ color: "#2563EB" }} />
+          <Loader2 className="w-10 h-10 animate-spin" style={{ color: "#1556C0" }} />
           <div className="text-center">
-            <p className="font-semibold" style={{ color: "#0B1220" }}>Importando seus dados...</p>
+            <p className="font-semibold" style={{ color: "#0F1730" }}>Importando seus dados...</p>
             <p className="text-sm mt-1" style={{ color: "#64748B" }}>Não feche esta página até terminar.</p>
           </div>
           <div className="w-full max-w-xs">
             <div className="h-2 rounded-full overflow-hidden" style={{ background: "#EEF2F7" }}>
-              <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, background: "#2563EB" }} />
+              <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, background: "#1556C0" }} />
             </div>
             <p className="text-xs text-center mt-2 tabular-nums" style={{ color: "#94A3B8" }}>{progress}%</p>
           </div>
@@ -777,7 +777,7 @@ const ImportarDados = () => {
                 ? <CheckCircle2 className="w-8 h-8" style={{ color: "#16A34A" }} />
                 : <AlertCircle className="w-8 h-8" style={{ color: "#DC2626" }} />}
             </div>
-            <h2 className="text-xl font-bold" style={{ color: "#0B1220" }}>
+            <h2 className="text-xl font-bold" style={{ color: "#0F1730" }}>
               {result.success > 0 ? "Importação concluída" : "Não deu para importar"}
             </h2>
             <p className="text-[13px] mt-1" style={{ color: "#64748B" }}>
@@ -791,7 +791,7 @@ const ImportarDados = () => {
             {[
               { label: "Importados", value: result.success, color: "#16A34A" },
               { label: "Com erro", value: result.errors.length, color: "#DC2626" },
-              { label: "Total", value: result.total, color: "#0B1220" },
+              { label: "Total", value: result.total, color: "#0F1730" },
             ].map((s) => (
               <div key={s.label} className="rounded-xl py-3 text-center" style={{ background: "#F8FAFC", border: "1px solid #EEF2F7" }}>
                 <p className="text-2xl font-bold tabular-nums" style={{ color: s.color }}>{s.value}</p>

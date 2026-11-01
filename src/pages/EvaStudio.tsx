@@ -17,6 +17,7 @@
 //   Ativar → approveAssisted (gateia a EVA no Inbox)
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +30,7 @@ import { useHybridAutoCreate } from "@/hooks/useHybridAutoCreate";
 import { computeApproval, type Verdict } from "@/lib/eva/approval";
 import { EvaStudioJourney } from "@/components/eva-studio/EvaStudioJourney";
 import { EvaCanvas } from "@/components/eva-studio/EvaCanvas";
+import { EvaVisaoGeral } from "@/components/eva/EvaVisaoGeral";
 import { EvaMemoryView } from "@/components/eva-studio/EvaMemoryTab";
 import { EvaInsightsTab } from "@/components/eva-studio/EvaInsightsTab";
 import { EvaAnalyticsPanel } from "@/components/eva-studio/EvaAnalyticsPanel";
@@ -46,6 +48,8 @@ const SOURCES: AgentSourceInfo[] = [
 export default function EvaStudio() {
     const { isAdmin } = useAuth();
     const canEdit = !!isAdmin;
+    const [params] = useSearchParams();
+    const ajustando = params.get("ajustar") === "1";
     const { ready, initial, existing, save, approveAssisted } = useEvaBlueprint();
     const { memory, loading: memoryLoading } = useEvaMemory();
     const { results: simResults, save: saveSim } = useEvaSimulationResults();
@@ -143,9 +147,14 @@ export default function EvaStudio() {
     if (!ready) {
         return (
             <div className="flex items-center justify-center" style={{ minHeight: "60vh" }}>
-                <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#2563EB" }} />
+                <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--vyz-accent)" }} />
             </div>
         );
+    }
+
+    // ── Aba EVA: visão geral com o agente ativo; o Studio abre em "Ajustar a EVA" ──
+    if (isApproved && !ajustando) {
+        return <EvaVisaoGeral aprendeu={ctxBuilder.suggestions[0] ?? null} aoResolver={handleResolve} />;
     }
 
     // ── Agente ativo → canvas (o mapa vivo) ──

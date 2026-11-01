@@ -246,7 +246,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <DialogTitle className="text-xl font-bold tracking-tight" style={{ color: "#0B1220" }}>
+                  <DialogTitle className="text-xl font-bold tracking-tight" style={{ color: "#0F1730" }}>
                     {spec.name}
                   </DialogTitle>
                   {isConnected && (
@@ -274,7 +274,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                   onClick={() => setActiveTab(tab.id)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors"
                   style={active
-                    ? { background: "#FFFFFF", color: "#0B1220", boxShadow: "0 1px 2px rgba(11,18,32,0.06)", border: "1px solid #E6EDF5" }
+                    ? { background: "#FFFFFF", color: "#0F1730", boxShadow: "0 1px 2px rgba(11,18,32,0.06)", border: "1px solid #E6EDF5" }
                     : { color: "#64748B" }}
                 >
                   <TabIcon className="w-3.5 h-3.5" />
@@ -289,7 +289,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#2563EB" }} />
+              <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#1556C0" }} />
             </div>
           ) : (
             <>
@@ -312,7 +312,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                           style={{ background: "#F8FAFC", border: "1px solid #EEF2F7" }}
                         >
                           <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#16A34A" }} />
-                          <span className="text-xs" style={{ color: "#0B1220" }}>{feature}</span>
+                          <span className="text-xs" style={{ color: "#0F1730" }}>{feature}</span>
                         </div>
                       ))}
                     </div>
@@ -333,14 +333,14 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.15)" }}>
-                    <Rocket className="w-4 h-4 shrink-0" style={{ color: "#2563EB" }} />
+                  <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(21,86,192,0.05)", border: "1px solid rgba(21,86,192,0.15)" }}>
+                    <Rocket className="w-4 h-4 shrink-0" style={{ color: "#1556C0" }} />
                     <p className="text-xs flex-1" style={{ color: "#334155" }}>
-                      Pronto para conectar? Veja o passo-a-passo em <strong style={{ color: "#2563EB" }}>Como conectar</strong>.
+                      Pronto para conectar? Veja o passo-a-passo em <strong style={{ color: "#1556C0" }}>Como conectar</strong>.
                     </p>
                     <button
-                      className="inline-flex items-center gap-0.5 h-7 px-2 rounded-lg text-xs font-semibold transition-colors hover:bg-[rgba(37,99,235,0.08)]"
-                      style={{ color: "#2563EB" }}
+                      className="inline-flex items-center gap-0.5 h-7 px-2 rounded-lg text-xs font-semibold transition-colors hover:bg-[rgba(21,86,192,0.08)]"
+                      style={{ color: "#1556C0" }}
                       onClick={() => setActiveTab("setup")}
                     >
                       Começar
@@ -354,7 +354,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
               {activeTab === "setup" && (
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-semibold mb-0.5" style={{ color: "#0B1220" }}>
+                    <h3 className="text-sm font-semibold mb-0.5" style={{ color: "#0F1730" }}>
                       Passo-a-passo de conexão
                     </h3>
                     <p className="text-xs" style={{ color: "#64748B" }}>
@@ -368,11 +368,11 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                         {i < spec.setupSteps.length - 1 && (
                           <div className="absolute left-[14px] top-7 bottom-[-12px] w-px" style={{ background: "#E6EDF5" }} />
                         )}
-                        <div className="absolute left-0 top-0 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold" style={{ background: "rgba(37,99,235,0.08)", color: "#2563EB", border: "1px solid rgba(37,99,235,0.2)" }}>
+                        <div className="absolute left-0 top-0 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold" style={{ background: "rgba(21,86,192,0.08)", color: "#1556C0", border: "1px solid rgba(21,86,192,0.2)" }}>
                           {i + 1}
                         </div>
                         <div className="p-3 rounded-xl" style={{ border: "1px solid #E6EDF5", background: "#FFFFFF" }}>
-                          <h4 className="text-sm font-semibold" style={{ color: "#0B1220" }}>{step.title}</h4>
+                          <h4 className="text-sm font-semibold" style={{ color: "#0F1730" }}>{step.title}</h4>
                           <p className="text-xs leading-relaxed mt-0.5" style={{ color: "#64748B" }}>
                             {step.description}
                           </p>
@@ -397,15 +397,15 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                     style={{ border: "1px solid #E6EDF5" }}
                   >
                     <div className="flex items-center gap-2.5">
-                      <ExternalLink className="w-4 h-4" style={{ color: "#2563EB" }} />
-                      <span className="text-xs font-medium" style={{ color: "#0B1220" }}>{spec.dashboardLabel}</span>
+                      <ExternalLink className="w-4 h-4" style={{ color: "#1556C0" }} />
+                      <span className="text-xs font-medium" style={{ color: "#0F1730" }}>{spec.dashboardLabel}</span>
                     </div>
                     <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" style={{ color: "#94A3B8" }} />
                   </a>
 
                   <button
                     onClick={() => setActiveTab("webhook")}
-                    className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] transition-colors"
+                    className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold text-white bg-[#1556C0] hover:bg-[#1D4ED8] transition-colors"
                   >
                     <KeyRound className="w-4 h-4" />
                     Ir para as credenciais
@@ -479,8 +479,8 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
 
                   {/* Token input */}
                   <div className="space-y-1.5 pt-3" style={{ borderTop: "1px solid #EEF2F7" }}>
-                    <label className="text-xs font-semibold uppercase flex items-center gap-1.5" style={{ color: "#0B1220", letterSpacing: "0.04em" }}>
-                      <KeyRound className="w-3.5 h-3.5" style={{ color: "#2563EB" }} />
+                    <label className="text-xs font-semibold uppercase flex items-center gap-1.5" style={{ color: "#0F1730", letterSpacing: "0.04em" }}>
+                      <KeyRound className="w-3.5 h-3.5" style={{ color: "#1556C0" }} />
                       {spec.webhook.authFieldLabel}
                     </label>
                     <input
@@ -488,8 +488,8 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                       value={token}
                       onChange={(e) => setToken(e.target.value)}
                       placeholder={spec.webhook.authFieldPlaceholder}
-                      className="w-full h-10 px-3 rounded-lg text-sm font-mono outline-none transition-colors focus:border-[#2563EB]"
-                      style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", color: "#0B1220" }}
+                      className="w-full h-10 px-3 rounded-lg text-sm font-mono outline-none transition-colors focus:border-[#1556C0]"
+                      style={{ background: "#FFFFFF", border: "1px solid #E6EDF5", color: "#0F1730" }}
                     />
                     <p className="text-[11px]" style={{ color: "#94A3B8" }}>{spec.webhook.authFieldHelp}</p>
                   </div>
@@ -500,7 +500,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
               {activeTab === "events" && (
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-semibold mb-0.5" style={{ color: "#0B1220" }}>
+                    <h3 className="text-sm font-semibold mb-0.5" style={{ color: "#0F1730" }}>
                       Eventos suportados
                     </h3>
                     <p className="text-xs" style={{ color: "#64748B" }}>
@@ -511,9 +511,9 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                   <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #E6EDF5" }}>
                     {spec.events.map((event, i) => (
                       <div key={event.label} className="flex items-start gap-3 p-3" style={i > 0 ? { borderTop: "1px solid #EEF2F7" } : undefined}>
-                        <div className="w-1.5 h-1.5 rounded-full mt-2 shrink-0" style={{ background: "#2563EB" }} />
+                        <div className="w-1.5 h-1.5 rounded-full mt-2 shrink-0" style={{ background: "#1556C0" }} />
                         <div className="flex-1 min-w-0">
-                          <code className="text-[11px] font-mono font-semibold" style={{ color: "#2563EB" }}>
+                          <code className="text-[11px] font-mono font-semibold" style={{ color: "#1556C0" }}>
                             {event.label}
                           </code>
                           <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "#64748B" }}>
@@ -550,7 +550,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                       <Workflow className="w-5 h-5" style={{ color: "#7C3AED" }} />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold" style={{ color: "#0B1220" }}>
+                      <h3 className="text-sm font-semibold" style={{ color: "#0F1730" }}>
                         Integrar via Make (Integromat)
                       </h3>
                       <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "#64748B" }}>
@@ -562,10 +562,10 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                   <div className="space-y-3">
                     <div className="p-3 rounded-xl" style={{ border: "1px solid #E6EDF5" }}>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold" style={{ background: "rgba(37,99,235,0.08)", color: "#2563EB" }}>
+                        <span className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold" style={{ background: "rgba(21,86,192,0.08)", color: "#1556C0" }}>
                           1
                         </span>
-                        <span className="text-xs font-semibold" style={{ color: "#0B1220" }}>Módulo Trigger</span>
+                        <span className="text-xs font-semibold" style={{ color: "#0F1730" }}>Módulo Trigger</span>
                       </div>
                       <code className="block text-[11px] font-mono pl-8" style={{ color: "#64748B" }}>
                         {spec.make.trigger_module}
@@ -578,10 +578,10 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
 
                     <div className="p-3 rounded-xl" style={{ border: "1px solid #E6EDF5" }}>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold" style={{ background: "rgba(37,99,235,0.08)", color: "#2563EB" }}>
+                        <span className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold" style={{ background: "rgba(21,86,192,0.08)", color: "#1556C0" }}>
                           2
                         </span>
-                        <span className="text-xs font-semibold" style={{ color: "#0B1220" }}>Módulo Action</span>
+                        <span className="text-xs font-semibold" style={{ color: "#0F1730" }}>Módulo Action</span>
                       </div>
                       <code className="block text-[11px] font-mono pl-8" style={{ color: "#64748B" }}>
                         {spec.make.action_module}
@@ -589,8 +589,8 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-xl" style={{ background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.12)" }}>
-                    <h4 className="text-xs font-semibold mb-1.5 flex items-center gap-1.5" style={{ color: "#2563EB" }}>
+                  <div className="p-3 rounded-xl" style={{ background: "rgba(21,86,192,0.04)", border: "1px solid rgba(21,86,192,0.12)" }}>
+                    <h4 className="text-xs font-semibold mb-1.5 flex items-center gap-1.5" style={{ color: "#1556C0" }}>
                       <BookOpen className="w-3.5 h-3.5" />
                       Configuração do HTTP module
                     </h4>
@@ -611,7 +611,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
                   >
                     <div className="flex items-center gap-2.5">
                       <PlayCircle className="w-4 h-4" style={{ color: "#7C3AED" }} />
-                      <span className="text-xs font-medium" style={{ color: "#0B1220" }}>Abrir Make.com</span>
+                      <span className="text-xs font-medium" style={{ color: "#0F1730" }}>Abrir Make.com</span>
                     </div>
                     <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" style={{ color: "#94A3B8" }} />
                   </a>
@@ -662,7 +662,7 @@ export const IntegrationConfigModal = ({ spec, open, onClose, onSaved }: Integra
             <button
               onClick={handleSave}
               disabled={isSaving || !token.trim()}
-              className="inline-flex items-center justify-center h-9 px-4 rounded-lg text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center h-9 px-4 rounded-lg text-xs font-semibold text-white bg-[#1556C0] hover:bg-[#1D4ED8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
               {configId ? "Salvar alterações" : "Conectar"}

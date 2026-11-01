@@ -113,7 +113,7 @@ export const VendasFilters = ({ vendedores, produtos, onFilterChange, search, on
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Buscar cliente, produto ou vendedor..."
-          className="w-full pl-9 h-9 rounded-lg bg-white text-[13px] border-[#E6EDF5] text-[#0B1220] placeholder:text-[#94A3B8] hover:border-[#D7DEE9] focus-visible:ring-2 focus-visible:ring-[rgba(37,99,235,0.18)] focus-visible:border-[#2563EB]"
+          className="w-full pl-9 h-9 rounded-lg bg-white text-[13px] border-[#E6EDF5] text-[#0F1730] placeholder:text-[#94A3B8] hover:border-[#D7DEE9] focus-visible:ring-2 focus-visible:ring-[rgba(21,86,192,0.18)] focus-visible:border-[#1556C0]"
         />
       </div>
 

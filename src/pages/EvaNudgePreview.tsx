@@ -10,7 +10,7 @@ export default function EvaNudgePreview() {
     return (
         <div style={{ minHeight: "100vh", background: "#EEF2F7", padding: "32px 16px" }}>
             <div style={{ maxWidth: 420, margin: "0 auto" }}>
-                <h1 className="text-lg font-bold mb-1" style={{ color: "#0B1220" }}>
+                <h1 className="text-lg font-bold mb-1" style={{ color: "#0F1730" }}>
                     Preview · Card "Novo lead pronto pro pipeline"
                 </h1>
                 <p className="text-sm mb-6" style={{ color: "#64748B" }}>

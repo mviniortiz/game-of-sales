@@ -112,7 +112,7 @@ function FocusItem({ item, amount, handlers }: { item: DailyPriority; amount: nu
             </div>
             <div className="flex flex-wrap items-center gap-2">
                 {item.href && (
-                    <button type="button" onClick={() => onNavigate(item.href!)} className={`${PILL} bg-[#0B1220] text-white hover:bg-[#1F2A3B]`}>
+                    <button type="button" onClick={() => onNavigate(item.href!)} className={`${PILL} bg-[#0F1730] text-white hover:bg-[#1F2A3B]`}>
                         {item.actionLabel}
                         <ArrowRight size={13} weight="bold" aria-hidden />
                     </button>
@@ -159,7 +159,7 @@ function FocusItem({ item, amount, handlers }: { item: DailyPriority; amount: nu
                         <button type="button" onClick={() => { setReplyOpen(false); setText(""); setErr(null); }} className={TEXT_BTN}>
                             <X size={12} weight="bold" aria-hidden /> Cancelar
                         </button>
-                        <button type="button" onClick={() => void handleSend()} disabled={!text.trim() || sending} className={`${PILL} h-9 bg-[#0B1220] text-white hover:bg-[#1F2A3B]`}>
+                        <button type="button" onClick={() => void handleSend()} disabled={!text.trim() || sending} className={`${PILL} h-9 bg-[#0F1730] text-white hover:bg-[#1F2A3B]`}>
                             {sending ? <CircleNotch size={13} weight="bold" className="animate-spin" aria-hidden /> : <PaperPlaneRight size={13} weight="fill" aria-hidden />}
                             {sending ? "Enviando…" : "Enviar"}
                         </button>

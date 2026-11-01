@@ -53,7 +53,7 @@ export function EvaCreateDealNudge({
         <div
             className="rounded-xl overflow-hidden"
             style={{
-                background: "linear-gradient(180deg, rgba(109,40,217,0.05), rgba(37,99,235,0.04))",
+                background: "linear-gradient(180deg, rgba(109,40,217,0.05), rgba(21,86,192,0.04))",
                 border: "1px solid rgba(109,40,217,0.28)",
                 boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 12px 32px -16px rgba(109,40,217,0.25)",
             }}
@@ -86,7 +86,7 @@ export function EvaCreateDealNudge({
                     className="rounded-lg px-3 py-2.5 mb-3"
                     style={{ background: "#FFFFFF", border: "1px solid #E5EAF1" }}
                 >
-                    <p className="text-[13px] font-semibold" style={{ color: "#0B1220" }}>
+                    <p className="text-[13px] font-semibold" style={{ color: "#0F1730" }}>
                         {customerName}
                     </p>
                     {phone && (
@@ -115,9 +115,9 @@ export function EvaCreateDealNudge({
                         disabled={creating}
                         className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-[12.5px] text-white flex-1 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                         style={{
-                            background: "linear-gradient(135deg, #2563EB, #1D4ED8)",
+                            background: "linear-gradient(135deg, #1556C0, #1D4ED8)",
                             fontWeight: 700,
-                            boxShadow: "0 1px 2px rgba(37,99,235,0.3)",
+                            boxShadow: "0 1px 2px rgba(21,86,192,0.3)",
                         }}
                     >
                         {creating ? (

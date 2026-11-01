@@ -197,7 +197,9 @@ export default function Orcamentos() {
       )}
 
       {!preview && pago && isAdmin && setup.companyId && setup.configured !== null && (
-        <PrimeirosPassos companyId={setup.companyId} configured={setup.configured} connected={wa.connected} />
+        <div className="mb-4">
+          <PrimeirosPassos companyId={setup.companyId} configured={setup.configured} connected={wa.connected} />
+        </div>
       )}
 
       {board.isLoading || (!data && !board.isError) ? (
@@ -503,7 +505,7 @@ function PainelEva({ q, pending, onOutcome }: { q: QuoteItem; pending: boolean; 
           <span><Swap id={`${q.id}-s`}>{situacao.nome}</Swap></span>
         </div>
       </div>
-      <p className="vp-painel__texto">{stateLine(q).split(" · ").pop()}</p>
+      <p className="vp-painel__texto first-letter:uppercase">{stateLine(q).split(" · ").pop()}</p>
       {rascunho.data ? (
         <>
           <div className="vp-rotulo">{q.draft_status === "pending" ? "Rascunho esperando o seu 1" : "Rascunho"}</div>

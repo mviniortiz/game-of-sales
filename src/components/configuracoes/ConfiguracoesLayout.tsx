@@ -89,7 +89,7 @@ export default function ConfiguracoesLayout() {
   );
 
   const itemClass = (active: boolean) =>
-    `group flex items-center gap-2.5 rounded-[10px] px-2.5 text-[13.5px] font-medium outline-none transition-colors duration-150 focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.28)] ${
+    `group flex items-center gap-2.5 rounded-[10px] px-2.5 text-[13.5px] font-medium outline-none transition-colors duration-150 focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.28)] ${
       active
         ? "bg-[var(--vyz-accent-soft-10)] text-[var(--vyz-text-primary)]"
         : "text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-2)] hover:text-[var(--vyz-text-primary)]"

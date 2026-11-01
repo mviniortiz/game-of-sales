@@ -128,7 +128,7 @@ export function EvaSimulationsTab({ rulesText, results, onEvaluate, saving, appr
                     </MotionSafeReveal>
                     <MotionSafeReveal key={`next-${idx}`} index={3}>
                         <p className="text-[10px] uppercase font-semibold mb-1" style={{ color: MUTE, letterSpacing: "0.05em" }}>Próxima ação sugerida</p>
-                        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[11.5px] font-medium" style={{ background: "#EFF4FF", border: "1px solid rgba(37,99,235,0.22)", color: BLUE }}>{sc.nextAction}</span>
+                        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[11.5px] font-medium" style={{ background: "#EFF4FF", border: "1px solid rgba(21,86,192,0.22)", color: BLUE }}>{sc.nextAction}</span>
                     </MotionSafeReveal>
                     <MotionSafeReveal key={`rules-${idx}`} index={4}>
                         <p className="text-[10px] uppercase font-semibold mb-1.5 flex items-center gap-1" style={{ color: MUTE, letterSpacing: "0.05em" }}><ShieldCheck className="w-3 h-3" style={{ color: PURPLE }} /> Regras usadas</p>

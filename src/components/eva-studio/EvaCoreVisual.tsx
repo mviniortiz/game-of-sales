@@ -17,7 +17,7 @@ interface EvaCoreVisualProps {
 const STATE_BADGE: Record<EvaCoreState, { text: string; color: string; bg: string; border: string } | null> = {
     idle: null,
     analyzing: { text: "Analisando", color: "#7C3AED", bg: "#F5F3FF", border: "rgba(124,58,237,0.22)" },
-    configuring: { text: "Configurando", color: "#2563EB", bg: "#EFF4FF", border: "rgba(37,99,235,0.22)" },
+    configuring: { text: "Configurando", color: "#1556C0", bg: "#EFF4FF", border: "rgba(21,86,192,0.22)" },
     ready: { text: "Sincronizada", color: "#16A34A", bg: "#ECFDF3", border: "rgba(22,163,74,0.22)" },
     attention: { text: "Atenção", color: "#B45309", bg: "#FFFBEB", border: "rgba(217,119,6,0.25)" },
 };
@@ -103,7 +103,7 @@ export const EvaCoreVisual = ({ className = "", state = "idle", showStatus = tru
                     style={{
                         width: "112%",
                         height: "112%",
-                        background: "radial-gradient(circle, rgba(124,58,237,0.34) 0%, rgba(37,99,235,0.20) 38%, rgba(34,211,238,0.08) 56%, transparent 74%)",
+                        background: "radial-gradient(circle, rgba(124,58,237,0.34) 0%, rgba(21,86,192,0.20) 38%, rgba(34,211,238,0.08) 56%, transparent 74%)",
                         filter: "blur(14px)",
                     }}
                 />
@@ -113,7 +113,7 @@ export const EvaCoreVisual = ({ className = "", state = "idle", showStatus = tru
             <div className="absolute inset-0 grid place-items-center" aria-hidden="true">
                 <div className="eva-ring-3 rounded-full" style={{ gridArea: "1 / 1", width: "100%", height: "100%", border: "1px solid rgba(124,58,237,0.18)" }} />
                 <div className="eva-ring-1 rounded-full" style={{ gridArea: "1 / 1", width: "88%", height: "88%", border: "2px solid rgba(124,58,237,0.44)" }} />
-                <div className="eva-ring-2 rounded-full" style={{ gridArea: "1 / 1", width: "66%", height: "66%", border: "1.5px dashed rgba(37,99,235,0.42)" }} />
+                <div className="eva-ring-2 rounded-full" style={{ gridArea: "1 / 1", width: "66%", height: "66%", border: "1.5px dashed rgba(21,86,192,0.42)" }} />
             </div>
 
             {/* linhas curvas de conexão */}
@@ -137,7 +137,7 @@ export const EvaCoreVisual = ({ className = "", state = "idle", showStatus = tru
                     className="eva-core-a absolute inset-0"
                     style={{
                         background: "radial-gradient(circle at 38% 31%, #CDBEFE 0%, #A78BFA 20%, #7C3AED 47%, #2F4FE0 80%, #1D4ED8 100%)",
-                        boxShadow: "0 20px 60px rgba(124,58,237,0.5), 0 8px 140px rgba(37,99,235,0.3), inset 0 4px 16px rgba(255,255,255,0.48), inset 0 -16px 38px rgba(29,78,216,0.45)",
+                        boxShadow: "0 20px 60px rgba(124,58,237,0.5), 0 8px 140px rgba(21,86,192,0.3), inset 0 4px 16px rgba(255,255,255,0.48), inset 0 -16px 38px rgba(29,78,216,0.45)",
                         filter: "blur(0.3px)",
                     }}
                 />
@@ -186,9 +186,9 @@ export const EvaCoreVisual = ({ className = "", state = "idle", showStatus = tru
             {/* partículas */}
             {[
                 { l: "20%", t: "28%", d: "0s", c: "#7C3AED" },
-                { l: "80%", t: "26%", d: "1.4s", c: "#2563EB" },
+                { l: "80%", t: "26%", d: "1.4s", c: "#1556C0" },
                 { l: "74%", t: "76%", d: "2.1s", c: "#7C3AED" },
-                { l: "26%", t: "74%", d: "3.2s", c: "#2563EB" },
+                { l: "26%", t: "74%", d: "3.2s", c: "#1556C0" },
                 { l: "50%", t: "12%", d: "0.8s", c: "#A78BFA" },
             ].map((p, i) => (
                 <span

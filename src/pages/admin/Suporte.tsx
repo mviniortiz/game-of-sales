@@ -58,7 +58,7 @@ const db = supabase as any;
 
 const STATUS: Array<{ value: string; label: string; cor: string }> = [
   { value: "pending", label: "Novo", cor: "#d97706" },
-  { value: "contacted", label: "Chamei", cor: "#2563EB" },
+  { value: "contacted", label: "Chamei", cor: "#1556C0" },
   { value: "scheduled", label: "Conversa marcada", cor: "#7c3aed" },
   { value: "completed", label: "Raio-X feito", cor: "#16a34a" },
   { value: "cancelled", label: "Sem interesse", cor: "#64748b" },
@@ -334,7 +334,7 @@ const Suporte = () => {
         <hr style="border:none;border-top:1px solid #e5e5e5;margin:24px 0;">
         <div style="color:#666;font-size:13px;">
           <strong>Vyzon Suporte</strong><br>
-          <a href="https://vyzon.com.br" style="color:#2563EB;text-decoration:none;">vyzon.com.br</a>
+          <a href="https://vyzon.com.br" style="color:#1556C0;text-decoration:none;">vyzon.com.br</a>
         </div>
       </div>`;
       const { error } = await supabase.functions.invoke("admin-support-inbox", {

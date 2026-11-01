@@ -1397,7 +1397,7 @@ export default function CRM() {
                     setSearchQuery("");
                   }
                 }}
-                className="w-full pl-9 pr-8 h-9 rounded-full border border-input bg-background text-base md:text-[13px] text-foreground placeholder:text-muted-foreground/70 transition-[border-color,box-shadow] duration-150 hover:border-border focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[var(--vyz-accent)] focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] [&::-webkit-search-cancel-button]:hidden dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15"
+                className="w-full pl-9 pr-8 h-9 rounded-full border border-input bg-background text-base md:text-[13px] text-foreground placeholder:text-muted-foreground/70 transition-[border-color,box-shadow] duration-150 hover:border-border focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[var(--vyz-accent)] focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.15)] [&::-webkit-search-cancel-button]:hidden dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15"
               />
               {searchQuery && (
                 <button

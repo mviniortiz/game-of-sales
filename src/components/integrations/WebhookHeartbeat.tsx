@@ -71,7 +71,7 @@ export function WebhookHeartbeat({ logs, stats, platformNames, eventLabels }: Pr
     const isLive = lastEventAgoSec !== null && lastEventAgoSec < 120;
 
     const kpis = [
-        { label: "Eventos/h", value: String(eventsLastHour), color: "#2563EB", series },
+        { label: "Eventos/h", value: String(eventsLastHour), color: "#1556C0", series },
         { label: "Taxa de sucesso", value: `${successRate}%`, color: "#16A34A", series: [] as number[] },
         { label: "Total no mês", value: String(stats.totalCount), color: "#64748B", series: [] as number[] },
     ];
@@ -81,7 +81,7 @@ export function WebhookHeartbeat({ logs, stats, platformNames, eventLabels }: Pr
             {/* Header */}
             <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b" style={{ borderColor: "#E6EDF5" }}>
                 <div className="flex items-center gap-2.5">
-                    <h3 className="text-[13px] font-semibold" style={{ color: "#0B1220" }}>Atividade dos webhooks</h3>
+                    <h3 className="text-[13px] font-semibold" style={{ color: "#0F1730" }}>Atividade dos webhooks</h3>
                     {isLive ? (
                         <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: "#ECFDF3", color: "#16A34A", letterSpacing: "0.06em" }}>
                             <span className="w-1 h-1 rounded-full bg-[#16A34A] animate-pulse" />
@@ -110,7 +110,7 @@ export function WebhookHeartbeat({ logs, stats, platformNames, eventLabels }: Pr
                             <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: k.color }} />
                             <p className="text-[10px] font-semibold uppercase truncate" style={{ color: "#64748B", letterSpacing: "0.04em" }}>{k.label}</p>
                         </div>
-                        <p className="text-[20px] font-bold tabular-nums leading-none" style={{ color: "#0B1220", letterSpacing: "-0.02em" }}>{k.value}</p>
+                        <p className="text-[20px] font-bold tabular-nums leading-none" style={{ color: "#0F1730", letterSpacing: "-0.02em" }}>{k.value}</p>
                         {k.series.length > 0 && (
                             <div className="mt-2 h-6">
                                 <Sparkline data={k.series} color={k.color} width={120} height={24} className="w-full" />
@@ -136,7 +136,7 @@ export function WebhookHeartbeat({ logs, stats, platformNames, eventLabels }: Pr
                                 ) : (
                                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" style={{ color }} />
                                 )}
-                                <span className="text-xs font-medium w-28 shrink-0 truncate" style={{ color: "#0B1220" }}>
+                                <span className="text-xs font-medium w-28 shrink-0 truncate" style={{ color: "#0F1730" }}>
                                     {platformNames[log.platform] || log.platform}
                                 </span>
                                 <span className="text-xs flex-1 truncate" style={{ color: "#64748B" }}>

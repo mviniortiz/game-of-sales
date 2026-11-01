@@ -34,7 +34,7 @@ export function EvaAnalyzingState() {
                             className="vz-scan-bubble"
                             style={{
                                 width: `${b.w}%`,
-                                background: b.me ? "rgba(37,99,235,0.16)" : "rgba(13,20,33,0.07)",
+                                background: b.me ? "rgba(21,86,192,0.16)" : "rgba(13,20,33,0.07)",
                                 animationDelay: `${i * 0.42}s`,
                             }}
                         />
@@ -66,7 +66,7 @@ export function EvaAnalyzingState() {
                 }
                 .vz-scan-line {
                     position: absolute; left: 0; right: 0; top: 0; height: 26px;
-                    background: linear-gradient(180deg, rgba(37,99,235,0) 0%, rgba(37,99,235,0.18) 50%, rgba(37,99,235,0) 100%);
+                    background: linear-gradient(180deg, rgba(21,86,192,0) 0%, rgba(21,86,192,0.18) 50%, rgba(21,86,192,0) 100%);
                     animation: vzScanSweep 1.7s ease-in-out infinite;
                 }
                 @keyframes vzScanSweep {

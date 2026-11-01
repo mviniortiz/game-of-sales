@@ -237,6 +237,12 @@
 .vp-lista .vp-rotulo {
     margin-bottom: 4px;
 }
+.vp-lista > *,
+.vp-lista .ss-collapse,
+.vp-lista .ss-collapse > * {
+    min-width: 0;
+    max-width: 100%;
+}
 .vp-linha {
     position: relative;
     display: flex;
@@ -594,6 +600,12 @@
     text-align: center;
 }
 @media (max-width: 767px) {
+    .vp-linha__fim {
+        font-size: 13.5px;
+    }
+    .vp-linha__acoes {
+        display: none !important;
+    }
     .vp-tabela__cab {
         display: none;
     }
@@ -710,6 +722,97 @@
 .vp-barra-etapa b {
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+}
+
+/* ─── EVA ─────────────────────────────────────────────────────────────────── */
+.vp-eva {
+    display: grid;
+    gap: 20px;
+    align-items: start;
+}
+@media (min-width: 1024px) {
+    .vp-eva {
+        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    }
+}
+.vp-eva__palco {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 620px;
+    padding: 26px;
+    border-radius: 22px;
+    background: var(--vyz-sol);
+    color: var(--vyz-noite);
+}
+.vp-eva__bot {
+    position: absolute;
+    right: 22px;
+    top: 22px;
+    line-height: 0;
+}
+.vp-eva__numeros {
+    display: grid;
+    gap: 12px;
+}
+.vp-eva__numeros > div {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+.vp-eva__numeros b {
+    font-size: clamp(38px, 4vw, 52px);
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+}
+.vp-eva__numeros span {
+    font-size: 16px;
+}
+.vp-aprendeu {
+    margin: 10px 0 6px;
+    font-size: 18px;
+    line-height: 1.3;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--vyz-text-primary);
+}
+.vp-limites {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 14.5px;
+    color: var(--vyz-text-primary);
+}
+.vp-limites b {
+    font-weight: 600;
+}
+.vp-sozinha {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 10px;
+    font-size: 14.5px;
+    color: var(--vyz-text-primary);
+}
+.vp-sozinha span {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: var(--vyz-text-muted);
+}
+@media (max-width: 640px) {
+    .vp-eva__palco {
+        min-height: 480px;
+    }
+    .vp-eva__bot {
+        right: 50%;
+        transform: translateX(50%) scale(0.72);
+        transform-origin: top center;
+    }
 }
 
 /* ─── Configurações ────────────────────────────────────────────────────────── */

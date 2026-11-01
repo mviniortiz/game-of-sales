@@ -15,12 +15,12 @@ const generateConfetti = (count: number) => {
         rotation: Math.random() * 360,
         scale: 0.5 + Math.random() * 0.5,
         color: [
-            "#2563EB", // Emerald
-            "#2563EB", // Indigo
+            "#1556C0", // Emerald
+            "#1556C0", // Indigo
             "#F59E0B", // Amber
             "#EC4899", // Pink
             "#3B82F6", // Blue
-            "#2563EB", // Violet
+            "#1556C0", // Violet
         ][Math.floor(Math.random() * 6)],
     }));
 };

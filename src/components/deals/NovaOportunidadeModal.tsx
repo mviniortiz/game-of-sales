@@ -439,7 +439,7 @@ export const NovaOportunidadeModal = ({
           className="px-6 sm:px-7 pt-6 pb-5 relative overflow-hidden"
           style={{
             background:
-              "linear-gradient(135deg, rgba(37,99,235,0.06) 0%, rgba(74,140,232,0.04) 100%), #FFFFFF",
+              "linear-gradient(135deg, rgba(21,86,192,0.06) 0%, rgba(74,140,232,0.04) 100%), #FFFFFF",
             borderBottom: "1px solid #EAF0F6",
           }}
         >
@@ -447,7 +447,7 @@ export const NovaOportunidadeModal = ({
             className="absolute top-0 inset-x-0 h-px pointer-events-none"
             style={{
               background:
-                "linear-gradient(90deg, transparent, rgba(37,99,235,0.40) 50%, transparent)",
+                "linear-gradient(90deg, transparent, rgba(21,86,192,0.40) 50%, transparent)",
             }}
             aria-hidden
           />
@@ -455,16 +455,16 @@ export const NovaOportunidadeModal = ({
             <div
               className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
               style={{
-                background: "rgba(37,99,235,0.10)",
-                border: "1px solid rgba(37,99,235,0.20)",
+                background: "rgba(21,86,192,0.10)",
+                border: "1px solid rgba(21,86,192,0.20)",
               }}
             >
-              <Plus className="h-5 w-5" strokeWidth={2.3} style={{ color: "#2563EB" }} />
+              <Plus className="h-5 w-5" strokeWidth={2.3} style={{ color: "#1556C0" }} />
             </div>
             <div className="min-w-0">
               <span
                 className="text-[18px] font-bold tracking-tight"
-                style={{ color: "#0B1220", letterSpacing: "-0.018em" }}
+                style={{ color: "#0F1730", letterSpacing: "-0.018em" }}
               >
                 Criar nova oportunidade
               </span>
@@ -770,7 +770,7 @@ function Section({
       <header className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
         <span
           className="inline-flex items-center justify-center h-5 w-5 rounded-md"
-          style={{ background: "#F6F4EF", border: "1px solid #E6EDF5" }}
+          style={{ background: "#F3EFE4", border: "1px solid #E6EDF5" }}
         >
           {icon}
         </span>

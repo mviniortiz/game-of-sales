@@ -303,14 +303,14 @@ export function InboxPriorityList({
                             }
                         }}
                         placeholder="Buscar nome ou telefone"
-                        className="h-10 md:h-[34px] text-base md:text-[12px] border border-[var(--ibx-line)] outline-none transition-[border-color,box-shadow] duration-150 focus:border-[var(--vyz-accent)] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] [&::-webkit-search-cancel-button]:hidden"
+                        className="h-10 md:h-[34px] text-base md:text-[12px] border border-[var(--ibx-line)] outline-none transition-[border-color,box-shadow] duration-150 focus:border-[var(--vyz-accent)] focus:shadow-[0_0_0_3px_rgba(21,86,192,0.15)] [&::-webkit-search-cancel-button]:hidden"
                         style={{
                             width: "100%",
                             paddingLeft: 32,
                             paddingRight: query ? 30 : 12,
                             borderRadius: 999,
                             background: "var(--ibx-sunken)",
-                            color: "#0B1220",
+                            color: "#0F1730",
                         }}
                     />
                     {query && (

@@ -105,7 +105,7 @@ interface BlockDef {
 // ── Feed helpers ─────────────────────────────────────────────────────────────
 
 const STATUS_CHIP: Record<string, { label: string; bg: string; color: string }> = {
-    pending: { label: "aguardando você", bg: "rgba(37,99,235,0.10)", color: BLUE },
+    pending: { label: "aguardando você", bg: "rgba(21,86,192,0.10)", color: BLUE },
     accepted: { label: "você aprovou", bg: "rgba(22,163,74,0.10)", color: GREEN },
     sent: { label: "aprovada e enviada", bg: "rgba(22,163,74,0.10)", color: GREEN },
     adjusted: { label: "você ajustou", bg: "rgba(180,83,9,0.10)", color: AMBER },
@@ -213,7 +213,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
         <div
             className="flex min-h-[calc(100vh-56px)] w-full flex-col"
             style={{
-                background: "#F6F4EF",
+                background: "#F3EFE4",
                 backgroundImage: "radial-gradient(rgba(11,18,32,0.05) 1px, transparent 1px)",
                 backgroundSize: "22px 22px",
                 color: INK,
@@ -291,7 +291,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                                         >
                                             <span
                                                 className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg"
-                                                style={{ background: lit && runStep >= 0 ? "rgba(37,99,235,0.10)" : "rgba(11,18,32,0.05)" }}
+                                                style={{ background: lit && runStep >= 0 ? "rgba(21,86,192,0.10)" : "rgba(11,18,32,0.05)" }}
                                             >
                                                 <Icon style={{ width: 14, height: 14, color: lit && runStep >= 0 ? BLUE : SUB }} />
                                             </span>
@@ -308,7 +308,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                                                 </span>
                                                 <span className="block" style={{ fontSize: 11.5, color: b.ok ? MUTE : AMBER }}>{b.state}</span>
                                                 {active && b.trace && (
-                                                    <span className="vz-canvas-trace mt-1.5 block rounded-lg px-2 py-1.5" style={{ background: "rgba(37,99,235,0.06)", color: "#1e40af", fontSize: 11.5, lineHeight: 1.45 }}>
+                                                    <span className="vz-canvas-trace mt-1.5 block rounded-lg px-2 py-1.5" style={{ background: "rgba(21,86,192,0.06)", color: "#1e40af", fontSize: 11.5, lineHeight: 1.45 }}>
                                                         {b.trace}
                                                     </span>
                                                 )}
@@ -383,7 +383,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
 
                     {/* Desfecho do test-run: aprovar-e-enviar de verdade */}
                     {runStep >= 4 && runMoment && (
-                        <div className="vz-canvas-trace mb-5 rounded-2xl p-5" style={{ ...cardSoft, borderColor: "rgba(37,99,235,0.35)" }}>
+                        <div className="vz-canvas-trace mb-5 rounded-2xl p-5" style={{ ...cardSoft, borderColor: "rgba(21,86,192,0.35)" }}>
                             <p style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: PURPLE }}>
                                 Sugestão da EVA · aguardando você
                             </p>
@@ -572,7 +572,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                                             type="button"
                                             onClick={() => setSabeView("revisar")}
                                             className="flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left transition-colors hover:bg-black/[0.02]"
-                                            style={{ borderColor: "rgba(37,99,235,0.30)" }}
+                                            style={{ borderColor: "rgba(21,86,192,0.30)" }}
                                         >
                                             <span style={{ minWidth: 0 }}>
                                                 <span className="block" style={{ fontSize: 13.5, fontWeight: 600 }}>
@@ -825,7 +825,7 @@ function ModalFrame({
     return (
         <div className="p-6">
             <div className="flex items-start gap-3.5">
-                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl" style={{ background: "rgba(37,99,235,0.08)" }}>
+                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl" style={{ background: "rgba(21,86,192,0.08)" }}>
                     <Icon style={{ width: 17, height: 17, color: BLUE }} />
                 </span>
                 <div style={{ minWidth: 0 }}>

@@ -161,7 +161,7 @@ function EmptyConversation() {
                 <EvaBot state="idle" size={56} className="mx-auto mb-4" />
                 <h3
                     className="text-[15px] font-semibold mb-2"
-                    style={{ color: "#0B1220", letterSpacing: "-0.015em" }}
+                    style={{ color: "#0F1730", letterSpacing: "-0.015em" }}
                 >
                     Selecione uma conversa para começar
                 </h3>
@@ -697,7 +697,7 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                     <div className="flex items-start gap-2">
                         <EvaBot size={20} className="mt-0.5 shrink-0" />
                         <div className="flex-1 min-w-0">
-                            <p className="text-[12px] font-semibold mb-0.5" style={{ color: "#0B1220" }}>
+                            <p className="text-[12px] font-semibold mb-0.5" style={{ color: "#0F1730" }}>
                                 A análise da EVA fica aqui
                             </p>
                             <p className="text-[11px]" style={{ color: "#64748B", lineHeight: 1.45 }}>
@@ -769,7 +769,7 @@ function ConversationHeader({
                 {picUrl && <AvatarImage src={picUrl} alt={chat.name} />}
                 <AvatarFallback
                     className="text-[12px] font-semibold text-white"
-                    style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)" }}
+                    style={{ background: "linear-gradient(135deg, #1556C0, #4A8CE8)" }}
                 >
                     {getInitials(chat.name)}
                 </AvatarFallback>
@@ -779,7 +779,7 @@ function ConversationHeader({
                 <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                     <span
                         className="text-[14px] font-semibold truncate"
-                        style={{ color: "#0B1220" }}
+                        style={{ color: "#0F1730" }}
                     >
                         {chat.name || chat.phone || "Sem nome"}
                     </span>
@@ -878,7 +878,7 @@ function MessageThread({
                 className="flex-1 flex items-center justify-center"
                 style={{ background: "var(--ibx-paper)" }}
             >
-                <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#2563EB" }} />
+                <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1556C0" }} />
             </div>
         );
     }
@@ -1032,15 +1032,15 @@ const MessageBubble = memo(function MessageBubble({
                 style={
                     isMe
                         ? {
-                              background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
+                              background: "linear-gradient(135deg, #1556C0, #4A8CE8)",
                               color: "#FFFFFF",
                               ...tail,
-                              boxShadow: "0 2px 8px -3px rgba(37,99,235,0.28)",
+                              boxShadow: "0 2px 8px -3px rgba(21,86,192,0.28)",
                               opacity: isPending ? 0.92 : 1,
                           }
                         : {
                               background: "#FFFFFF",
-                              color: "#0B1220",
+                              color: "#0F1730",
                               border: "1px solid var(--ibx-line)",
                               ...tail,
                               boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
@@ -1076,7 +1076,7 @@ const MessageBubble = memo(function MessageBubble({
                 {message.text && (
                     <p
                         className="text-[13.5px] leading-snug whitespace-pre-wrap break-words"
-                        style={{ color: isMe ? "#FFFFFF" : "#0B1220" }}
+                        style={{ color: isMe ? "#FFFFFF" : "#0F1730" }}
                     >
                         {message.text}
                     </p>
@@ -1085,7 +1085,7 @@ const MessageBubble = memo(function MessageBubble({
                 {message.mediaCaption && !message.text && (
                     <p
                         className="text-[13.5px] leading-snug whitespace-pre-wrap break-words"
-                        style={{ color: isMe ? "#FFFFFF" : "#0B1220" }}
+                        style={{ color: isMe ? "#FFFFFF" : "#0F1730" }}
                     >
                         {message.mediaCaption}
                     </p>
@@ -1191,7 +1191,7 @@ function fileTypeColor(file: File): string {
     const n = file.name.toLowerCase();
     if (n.endsWith(".xlsx") || n.endsWith(".xls") || n.endsWith(".csv")) return "#16A34A";
     if (n.endsWith(".pdf")) return "#DC2626";
-    if (n.endsWith(".doc") || n.endsWith(".docx")) return "#2563EB";
+    if (n.endsWith(".doc") || n.endsWith(".docx")) return "#1556C0";
     if (n.endsWith(".ppt") || n.endsWith(".pptx")) return "#EA580C";
     if (file.type.startsWith("image/")) return "#7C3AED";
     if (file.type.startsWith("video/")) return "#0891B2";
@@ -1219,7 +1219,7 @@ function UploadProgressCard({ file, pct, onCancel }: { file: File; pct: number; 
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                            <span className="text-[13px] font-semibold truncate" style={{ color: "#0B1220" }}>{file.name}</span>
+                            <span className="text-[13px] font-semibold truncate" style={{ color: "#0F1730" }}>{file.name}</span>
                             <button
                                 type="button"
                                 onClick={onCancel}
@@ -1232,13 +1232,13 @@ function UploadProgressCard({ file, pct, onCancel }: { file: File; pct: number; 
                             </button>
                         </div>
                         <div className="text-[11.5px] mt-0.5">
-                            <span style={{ color: "#2563EB", fontWeight: 600 }}>Enviando {Math.round(p * 100)}%</span>
+                            <span style={{ color: "#1556C0", fontWeight: 600 }}>Enviando {Math.round(p * 100)}%</span>
                             <span style={{ color: "#94A3B8" }}> · {fmtMB(loaded)} de {fmtMB(file.size)}</span>
                         </div>
                         <div className="mt-1.5 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--ibx-sunken)" }}>
                             <div
                                 className="h-full rounded-full transition-[width] duration-200 ease-out"
-                                style={{ width: `${p * 100}%`, background: "linear-gradient(90deg, #2563EB, #4A8CE8)" }}
+                                style={{ width: `${p * 100}%`, background: "linear-gradient(90deg, #1556C0, #4A8CE8)" }}
                             />
                         </div>
                     </div>
@@ -1285,7 +1285,7 @@ function MediaPreviewBar({
                     {/* Legenda + meta */}
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5">
-                            <p className="text-[12px] font-semibold truncate" style={{ color: "#0B1220" }}>
+                            <p className="text-[12px] font-semibold truncate" style={{ color: "#0F1730" }}>
                                 {media.file.name}
                             </p>
                             <span className="text-[10.5px] tabular-nums shrink-0" style={{ color: "#94A3B8" }}>
@@ -1299,7 +1299,7 @@ function MediaPreviewBar({
                             placeholder="Adicione uma legenda…"
                             autoFocus
                             className="w-full bg-white outline-none text-base md:text-[13px] px-2.5 py-2 rounded-lg"
-                            style={{ color: "#0B1220", border: "1px solid var(--ibx-line)" }}
+                            style={{ color: "#0F1730", border: "1px solid var(--ibx-line)" }}
                         />
                     </div>
 
@@ -1311,7 +1311,7 @@ function MediaPreviewBar({
                             disabled={sending}
                             aria-label="Enviar mídia"
                             className="h-10 w-10 md:h-9 md:w-9 rounded-full flex items-center justify-center text-white transition-all hover:brightness-110 disabled:opacity-50"
-                            style={{ background: "linear-gradient(135deg, #2563EB, #4A8CE8)", boxShadow: "0 4px 12px -4px rgba(37,99,235,0.4)" }}
+                            style={{ background: "linear-gradient(135deg, #1556C0, #4A8CE8)", boxShadow: "0 4px 12px -4px rgba(21,86,192,0.4)" }}
                         >
                             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" strokeWidth={2.6} />}
                         </button>
@@ -1428,7 +1428,7 @@ function Composer({
                     type="button"
                     onClick={() => setShowTemplates((v) => !v)}
                     className="h-10 w-10 md:h-8 md:w-8 rounded-full flex items-center justify-center transition-colors shrink-0 hover:bg-white"
-                    style={{ color: showTemplates ? "#2563EB" : "#94A3B8" }}
+                    style={{ color: showTemplates ? "#1556C0" : "#94A3B8" }}
                     title="Templates de mensagem"
                     aria-label="Templates de mensagem"
                 >
@@ -1445,7 +1445,7 @@ function Composer({
                     placeholder="Mensagem"
                     rows={1}
                     className="flex-1 bg-transparent outline-none text-base md:text-[13.5px] py-2 md:py-1.5 px-1 resize-none max-h-32"
-                    style={{ color: "#0B1220", lineHeight: 1.45 }}
+                    style={{ color: "#0F1730", lineHeight: 1.45 }}
                 />
 
                 {canSendAudio && (
@@ -1470,8 +1470,8 @@ function Composer({
                     title="Enviar"
                     className="h-10 w-10 md:h-9 md:w-9 rounded-full flex items-center justify-center text-white transition-all hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                     style={{
-                        background: "linear-gradient(135deg, #2563EB, #4A8CE8)",
-                        boxShadow: "0 4px 12px -4px rgba(37,99,235,0.4)",
+                        background: "linear-gradient(135deg, #1556C0, #4A8CE8)",
+                        boxShadow: "0 4px 12px -4px rgba(21,86,192,0.4)",
                     }}
                 >
                     {sending ? (

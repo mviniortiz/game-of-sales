@@ -62,7 +62,7 @@ export function PlanPicker({ paid = false }: PlanPickerProps) {
                         target="_blank"
                         rel="noreferrer"
                         onClick={() => trackEvent(FUNNEL_EVENTS.UPGRADE_CLICK, { plan: plan.id, via: "whatsapp" })}
-                        className="mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] text-[14px] font-semibold text-[var(--vyz-btn-on)] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(37,99,235,0.3)]"
+                        className="mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] text-[14px] font-semibold text-[var(--vyz-btn-on)] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.3)]"
                     >
                         Assinar pelo WhatsApp
                         <ArrowRight size={15} weight="bold" aria-hidden />

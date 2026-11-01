@@ -41,7 +41,7 @@ export interface PipelineStageData {
 
 const STAGE_META: Record<PipelineStageKey, { name: string; color: string }> = {
   lead: { name: "Novo lead", color: "#94A3B8" },
-  qualification: { name: "Qualificação", color: "#2563EB" },
+  qualification: { name: "Qualificação", color: "#1556C0" },
   proposal: { name: "Proposta", color: "#1D4ED8" },
   negotiation: { name: "Negociação", color: "#7C3AED" },
   closed_won: { name: "Ganho", color: "#10B981" },
