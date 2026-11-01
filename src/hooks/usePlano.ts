@@ -17,3 +17,8 @@ const ROTAS_GRATIS = ["/orcamentos", "/upgrade", "/configuracoes", "/profile", "
 export function rotaGratis(pathname: string) {
     return ROTAS_GRATIS.some((r) => pathname === r || pathname.startsWith(`${r}/`));
 }
+
+/** O Inbox é pago, mas conectar o WhatsApp é de graça: é o que faz o Raio-X. */
+export function conectandoWhatsapp(pathname: string, search: string) {
+    return pathname === "/inbox" && new URLSearchParams(search).get("connect") === "1";
+}

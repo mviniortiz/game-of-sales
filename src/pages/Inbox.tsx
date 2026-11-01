@@ -13,6 +13,7 @@ import { useWhatsAppInboxDb } from "@/hooks/useWhatsAppInboxDb";
 import { useChannelInbox } from "@/hooks/useChannelInbox";
 import { useInboxConnectionStatus } from "@/hooks/useInboxConnectionStatus";
 import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
+import { usePlano } from "@/hooks/usePlano";
 import { useQuoteBoard, type QuoteItem } from "@/hooks/useQuoteBoard";
 import { OPEN_QUOTE_STATES } from "@/lib/quoteText";
 import {
@@ -103,6 +104,7 @@ function InboxEmpty({ status, onConnect }: { status: string; onConnect: () => vo
 const Inbox = () => {
     const { isAdmin, companyId } = useAuth();
     const { activeCompanyId, isSuperAdmin } = useTenant();
+    const { carregando: planoCarregando } = usePlano();
     const [connectModalOpen, setConnectModalOpen] = useState(false);
     const [kapsoModalOpen, setKapsoModalOpen] = useState(false);
     const [evaMobileOpen, setEvaMobileOpen] = useState(false);
@@ -324,13 +326,14 @@ const Inbox = () => {
 
     // FIO 1 — deep link `?connect=1` (vindo do fim do onboarding) abre direto
     // o modal de conexão do WhatsApp. Limpa o param pra não reabrir ao navegar.
+    // Espera saber o plano: sem assinatura quem usa o param é o AppLayout.
     useEffect(() => {
-        if (searchParams.get("connect") !== "1") return;
+        if (planoCarregando || searchParams.get("connect") !== "1") return;
         setConnectModalOpen(true);
         const sp = new URLSearchParams(searchParams);
         sp.delete("connect");
         setSearchParams(sp, { replace: true });
-    }, [searchParams, setSearchParams]);
+    }, [planoCarregando, searchParams, setSearchParams]);
 
     // F4W.4.3 — Sincroniza o ref do hook ANTES de qualquer fetch.
     // Garante que Realtime sempre veja o id correto, sem race condition.

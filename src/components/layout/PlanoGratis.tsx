@@ -1,10 +1,30 @@
 // Conta sem assinatura (sem teste grátis desde 08/10/2026): o grátis é o Raio-X
 // e o placar. A faixa lembra o que falta; o bloqueio cobre as telas em que a EVA
 // age (Inbox, funil, EVA Studio...), sempre com o caminho para assinar.
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { EvaBot } from "@/components/eva/EvaBot";
+import { WhatsAppConnectModal } from "@/components/inbox/WhatsAppConnectModal";
 
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
+
+// Os links de conectar apontam para /inbox?connect=1. Sem assinatura o Inbox não
+// abre, então a conexão abre aqui. Do placar, o admin que ainda não fez o Raio-X
+// segue sozinho para /raio-x, já com o WhatsApp conectado.
+export function ConectarSemPlano() {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const irParaPlacar = () => navigate("/orcamentos", { replace: true });
+    const fechar = () => (location.key === "default" ? irParaPlacar() : navigate(-1));
+
+    return (
+        <div className="mx-auto flex max-w-md flex-col items-center px-4 py-16 text-center">
+            <EvaBot size={72} state="idle" />
+            <h1 className="mt-6 font-satoshi text-[26px] font-black leading-tight tracking-[-0.02em] text-[#0B1220]">Conecte seu WhatsApp</h1>
+            <p className="mt-3 text-[15px] leading-relaxed text-[#475569]">É de graça. A EVA lê os últimos 90 dias e monta o seu Raio-X.</p>
+            <WhatsAppConnectModal open onClose={fechar} onConnected={irParaPlacar} />
+        </div>
+    );
+}
 
 export function FaixaPlanoGratis() {
     return (

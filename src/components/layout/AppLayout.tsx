@@ -4,11 +4,11 @@ import { motion, useReducedMotion } from "framer-motion";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { EvaLiveIsland } from "@/components/eva/EvaLiveIsland";
-import { FaixaPlanoGratis, TelaDoPlano } from "./PlanoGratis";
+import { ConectarSemPlano, FaixaPlanoGratis, TelaDoPlano } from "./PlanoGratis";
 import { EvaHelpDock, PerguntarEvaCabecalho } from "@/components/help/EvaHelpDock";
 import { AskEvaPalette } from "@/components/help/AskEvaPalette";
 import { WhatsappStatusPill } from "@/components/whatsapp/WhatsappStatusPill";
-import { rotaGratis, usePlano } from "@/hooks/usePlano";
+import { conectandoWhatsapp, rotaGratis, usePlano } from "@/hooks/usePlano";
 
 // Page titles alinhados com nova nomenclatura visual da nav (F3 2026-05-19).
 // Rotas novas (/inicio, /inbox, etc) são as principais; antigas redirect silencioso.
@@ -88,7 +88,13 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
             >
-              {semPlano && !rotaGratis(location.pathname) ? <TelaDoPlano /> : children}
+              {semPlano && conectandoWhatsapp(location.pathname, location.search) ? (
+                <ConectarSemPlano />
+              ) : semPlano && !rotaGratis(location.pathname) ? (
+                <TelaDoPlano />
+              ) : (
+                children
+              )}
             </motion.div>
           </main>
         </div>
