@@ -30,12 +30,12 @@ Leia antes do primeiro frame.
   placa solar; cores em `src/components/eva/evaBot.css`). Ela é o único bot dos
   filmes. Nunca orbe, plasma, partícula ou rosto realista.
 - Registros visuais (detalhe no style guide §2):
-  - **Vyzon Solar** (padrão desde 23/10/2026, mesmo design system da home,
-    bloco LP.8 de `src/index.css`): papel frio `#f6f7f9`, azul `#1556c0` dono,
+  - **Vyzon Solar** (home até 01/11/2026; `dia-2` e `parado` usam): papel frio `#f6f7f9`, azul `#1556c0` dono,
     marca-texto `#ffd84a` só atrás de texto `#0d1421`, Archivo nos títulos,
     Barlow Condensed nos números, a conversa de WhatsApp e a fatura como
     objetos. Molde: `video-factory/molde-vyzon-solar`. Substitui o antigo Papel.
-  - **EVA em campo** (conceito A, 01/11/2026): a EVA grande em cor chapada, sol
+  - **EVA em campo** (padrão desde 01/11/2026, mesmo sistema da home, bloco LP.9
+    de `src/index.css`): a EVA grande em cor chapada, sol
     `#ffc933`, noite `#0f1730` e creme `#f3efe4`, Gabarito como família única.
     Molde: `molde-vyzon-solar` mais `molde-eva-campo/tema.css`.
   - **Noite azul** (aprovado em 17/10/2026): azul-noite, borda acesa, um brilho

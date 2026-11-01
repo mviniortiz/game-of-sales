@@ -25,14 +25,15 @@ Revisão: `eva-campo-rev.mp4` (tempo e batida no canto).
 | 2 | Dor específica do integrador | 2 | Proposta em PDF, visualizada, contador de dias |
 | 3 † | Fidelidade ao produto | 2 | Aviso igual ao `buildDraftMessage` do commit `ef547f8`; depende do deploy |
 | 4 † | Humano aprova visível | 2 | O "1" do dono e a janela de 20 s aparecem antes de sair |
-| 5 | Identidade Vyzon | 1 | A EVA é a do app, mas o site segue no Vyzon Solar: quem clica vê outro visual |
+| 5 | Identidade Vyzon | 2 | Mesmo sistema da home (LP.9) e mesma EVA do app, valendo depois do deploy |
 | 6 | Leitura mobile | 2 | Menor texto de 33 px, legenda na faixa segura |
 | 7 | Ritmo nativo | 2 | Corte em toda virada, EVA reage nas batidas |
 | 8 † | Ausência de sinais de IA genérica | 2 | Cor chapada, sem orbe, brilho ou gradiente |
 | 9 | Som e voz | 2 | Mesmo mix do `dia-2`, conferido por subtração; voz 11 dB acima da trilha |
 | 10 | Acabamento técnico | 2 | -14 LUFS, pico abaixo de -1,5 dBTP, 60 qps |
 
-**Total 19/20, todos os † com 2: aprovado.**
+**Total 20/20, todos os † com 2: aprovado.** A nota 5 subiu de 1 para 2 em
+01/11/2026, quando a home passou para o mesmo sistema.
 
-Serve para orgânico agora que o aviso em produção diga "Responda 1". Para anúncio,
-falta alinhar o destino: o clique cai numa home de outro registro visual.
+Serve para orgânico e para anúncio depois de dois deploys: o do webhook, para o
+aviso dizer "Responda 1", e o do site, para a home e a EVA baterem com o filme.

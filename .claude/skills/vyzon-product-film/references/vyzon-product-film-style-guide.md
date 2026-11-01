@@ -14,11 +14,17 @@ A tela do produto é a heroína. Tipografia é a coadjuvante. O resto desaparece
 
 ## 2. Registros visuais (um por filme)
 
-### Vyzon Solar (padrão desde 23/10/2026; `video-factory/molde-vyzon-solar`)
+### EVA em campo (padrão desde 01/11/2026; `molde-vyzon-solar` + `molde-eva-campo/tema.css`)
 
-O mesmo design system da home (bloco LP.8 de `src/index.css`, referência
-https://claude.ai/artifact/Rm4n5dnbf8nPTb961BbsA2). Substitui o antigo Papel
-creme (`#FAF9F5`): creme + azul-noite + âmbar é a identidade da SolarMarket.
+O mesmo sistema da home (bloco LP.9 de `src/index.css`). Fundos chapados por cena:
+sol `#FFC933` no gancho e no payoff, noite `#0F1730` na virada e no CTA, creme
+`#F3EFE4` nas conversas. Gabarito como família única, marca-texto branco em fundo
+sol. A EVA é a estrela: grande no gancho e no payoff, sentada nos cartões no meio.
+Exemplo: `films/eva-campo`.
+
+### Vyzon Solar (home até 01/11/2026; `video-factory/molde-vyzon-solar`)
+
+Usado em `dia-2` e `parado`.
 
 | Papel | Valor | Uso |
 |---|---|---|
