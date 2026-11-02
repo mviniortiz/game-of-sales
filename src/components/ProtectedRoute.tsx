@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { BrandedLoader } from "@/components/ui/BrandedLoader";
+import { AppShellSkeleton } from "@/components/layout/AppShellSkeleton";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, profile, companyId, isSuperAdmin, signOut } = useAuth();
@@ -41,8 +41,10 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user, loading, profile, companyId, isSuperAdmin, navigate, signOut]);
 
+  // Mesma mesa do login (AppShellSkeleton): carregar sessão e perfil não troca
+  // de fundo nem remonta um loader diferente a cada etapa.
   if (loading) {
-    return <BrandedLoader label="Carregando..." />;
+    return <AppShellSkeleton carregando />;
   }
 
   if (!user) {
@@ -51,7 +53,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   // Profile ainda carregando: loader amigável (effect de signOut cuida se persistir)
   if (!profile) {
-    return <BrandedLoader label="Carregando perfil..." />;
+    return <AppShellSkeleton carregando />;
   }
 
   // Sem company — effect já redirecionou pro onboarding, renderiza nada
