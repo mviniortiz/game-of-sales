@@ -764,6 +764,9 @@
         gap: 8px;
         padding-block: 14px;
     }
+    .vp-obra .vp-fila__cliente {
+        grid-area: auto;
+    }
 }
 
 /* ─── Resultados ───────────────────────────────────────────────────────────── */
