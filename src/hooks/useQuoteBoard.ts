@@ -14,6 +14,8 @@ export type QuoteState = "no_reply" | "went_quiet" | "your_turn" | "talking" | "
 export type QuoteOutcome = "won" | "lost" | null;
 export type DraftStatus = "pending" | "accepted" | "adjusted" | "rejected" | "expired" | "sent";
 
+export type StopReason = "parcela" | "decisor" | "comparando" | "credito";
+
 export type QuoteItem = {
   id: string;
   deal_id: string | null;
@@ -31,6 +33,8 @@ export type QuoteItem = {
   followup_sent_at: string | null;
   draft_status: DraftStatus | null;
   draft_at: string | null;
+  system_kwp?: number | null;
+  stop_reason?: StopReason | null;
 };
 
 export type QuoteBoard = {

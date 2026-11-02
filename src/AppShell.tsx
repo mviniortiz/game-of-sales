@@ -28,6 +28,7 @@ const Ranking = lazy(() => import("./pages/Ranking"));
 const NovaVenda = lazy(() => import("./pages/NovaVenda"));
 const Calls = lazy(() => import("./pages/Calls"));
 const Metas = lazy(() => import("./pages/Metas"));
+const Obras = lazy(() => import("./pages/Obras"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Automacoes = lazy(() => import("./pages/Automacoes"));
 const AdminCompaniesPage = lazy(() => import("./pages/AdminCompaniesPage"));
@@ -362,6 +363,16 @@ const AppShell = () => (
               />
               <Route path="/pulse" element={<Navigate to="/inbox" replace />} />
               {/* F3 2026-05-19: /agenda é a rota principal, /calendario redirect silencioso */}
+              <Route
+                path="/obras"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Obras />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/agenda"
                 element={

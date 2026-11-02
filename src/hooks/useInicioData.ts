@@ -128,6 +128,8 @@ export function useLeadsHoje() {
 
 // ───── Agenda + Demos da semana ──────────────────────────────────────────────
 
+const TIPO_AGENDA: Record<string, string> = { visita: "Visita técnica", instalacao: "Instalação", vistoria: "Vistoria" };
+
 export interface AgendaItem {
   id: string;
   time: string; // HH:mm
@@ -169,18 +171,19 @@ export function useAgendaHoje() {
 
       const { data, error } = await supabase
         .from("agendamentos")
-        .select("id, cliente_nome, data_agendamento, observacoes")
+        .select("id, cliente_nome, data_agendamento, observacoes, tipo")
         .eq("company_id", effectiveCompanyId!)
         .gte("data_agendamento", startSemana.toISOString())
         .lt("data_agendamento", endSemana.toISOString())
         .order("data_agendamento", { ascending: true });
       if (error) throw error;
 
-      const rows = (data || []) as Array<{
+      const rows = (data || []) as unknown as Array<{
         id: string;
         cliente_nome: string | null;
         data_agendamento: string;
         observacoes: string | null;
+        tipo: string | null;
       }>;
 
       const startHoje = new Date(now);
@@ -203,7 +206,7 @@ export function useAgendaHoje() {
                 minute: "2-digit",
               }),
               title: r.cliente_nome?.trim() || "Reunião",
-              subtitle: r.observacoes?.trim() || "",
+              subtitle: (r.tipo && TIPO_AGENDA[r.tipo]) || r.observacoes?.trim() || "",
               dataIso: r.data_agendamento,
             });
           }

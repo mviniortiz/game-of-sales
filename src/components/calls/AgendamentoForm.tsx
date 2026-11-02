@@ -33,6 +33,7 @@ export const AgendamentoForm = ({ onSuccess }: AgendamentoFormProps) => {
     cliente_nome: "",
     data_agendamento: format(initialDate, "yyyy-MM-dd'T'HH:mm"),
     observacoes: "",
+    tipo: "visita",
   });
   const [dateTime, setDateTime] = useState<Date>(initialDate);
 
@@ -87,8 +88,9 @@ export const AgendamentoForm = ({ onSuccess }: AgendamentoFormProps) => {
           cliente_nome: formData.cliente_nome,
           data_agendamento: formData.data_agendamento,
           observacoes: formData.observacoes || null,
+          tipo: formData.tipo,
           status: "agendado",
-        })
+        } as never)
         .select()
         .single();
 
@@ -140,7 +142,7 @@ export const AgendamentoForm = ({ onSuccess }: AgendamentoFormProps) => {
         toast.success("Agendamento criado com sucesso!");
       }
 
-      setFormData({ cliente_nome: "", data_agendamento: "", observacoes: "" });
+      setFormData({ cliente_nome: "", data_agendamento: "", observacoes: "", tipo: "visita" });
       onSuccess();
     } catch (error) {
       console.error("Erro ao criar agendamento:", error);
@@ -157,7 +159,7 @@ export const AgendamentoForm = ({ onSuccess }: AgendamentoFormProps) => {
           <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-300" />
           Novo Agendamento
         </CardTitle>
-        <p className="text-xs text-muted-foreground">Agendar nova call com cliente</p>
+        <p className="text-xs text-muted-foreground">Marque uma visita, instalação ou vistoria</p>
       </CardHeader>
       <CardContent className="pt-0">
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -173,6 +175,21 @@ export const AgendamentoForm = ({ onSuccess }: AgendamentoFormProps) => {
               placeholder="Nome completo"
               className="h-10 bg-white dark:bg-secondary border-gray-300 dark:border-border text-foreground placeholder:text-muted-foreground focus:ring-emerald-500 focus:border-emerald-500"
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="tipo" className="text-xs text-muted-foreground">Tipo</Label>
+            <select
+              id="tipo"
+              value={formData.tipo}
+              onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-base md:text-sm text-foreground"
+            >
+              <option value="visita">Visita técnica</option>
+              <option value="instalacao">Instalação</option>
+              <option value="vistoria">Vistoria</option>
+              <option value="outro">Outro</option>
+            </select>
           </div>
 
           <div className="space-y-1.5">

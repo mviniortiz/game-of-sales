@@ -20,6 +20,7 @@ const getPageTitle = (pathname: string) => {
   if (pathname.startsWith("/inicio") || pathname.startsWith("/dashboard")) return "Hoje";
   if (pathname.startsWith("/inbox") || pathname.startsWith("/pulse") || pathname.startsWith("/whatsapp")) return "Conversas";
   if (pathname.startsWith("/pipeline") || pathname.startsWith("/crm")) return "Funil";
+  if (pathname.startsWith("/obras")) return "Obras";
   if (pathname.startsWith("/agenda") || pathname.startsWith("/calendario")) return "Agenda";
   if (pathname.startsWith("/eva-studio")) return "Lume";
   if (pathname.startsWith("/eva") || pathname.startsWith("/agente")) return "Lume";

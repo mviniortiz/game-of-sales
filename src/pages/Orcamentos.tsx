@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { quoteRpc, useQuoteBoard, type QuoteBoard, type QuoteItem, type QuoteOutcome, type QuoteState } from "@/hooks/useQuoteBoard";
+import { quoteRpc, useQuoteBoard, type QuoteBoard, type QuoteItem, type QuoteOutcome, type QuoteState, type StopReason } from "@/hooks/useQuoteBoard";
 import { brl, evaLine, OPEN_QUOTE_STATES, plural, quoteName, stateLine } from "@/lib/quoteText";
 import { EvaBot } from "@/components/eva/EvaBot";
 import { supabase } from "@/integrations/supabase/client";
@@ -371,7 +371,7 @@ function QuoteList({
             <>
               <div className="vp-tabela__cab" aria-hidden="true">
                 <span>Cliente</span>
-                <span>Situação</span>
+                <span>Por que parou</span>
                 <span>Dias</span>
                 <span style={{ textAlign: "right" }}>Valor</span>
                 <span />
@@ -432,6 +432,17 @@ function Marcas({ dias }: { dias: number }) {
   );
 }
 
+const MOTIVO: Record<StopReason, { nome: string; tom?: "ruim" }> = {
+  parcela: { nome: "Achou a parcela alta" },
+  decisor: { nome: "Vai falar com alguém" },
+  comparando: { nome: "Comparando orçamento" },
+  credito: { nome: "Banco negou", tom: "ruim" },
+};
+
+// Parado mostra o motivo quando o cliente disse; sem frase clara, a situação real.
+const chipDe = (q: QuoteItem) => (OPEN_QUOTE_STATES.includes(q.state) && q.stop_reason ? MOTIVO[q.stop_reason] : SITUACAO[q.state]);
+const kwp = (q: QuoteItem) => (q.system_kwp != null ? `${String(q.system_kwp).replace(".", ",")} kWp` : null);
+
 function QuoteRow({
   q, aberta, onAbrir, pending, onOutcome,
 }: { q: QuoteItem; aberta: boolean; onAbrir: () => void; pending: boolean; onOutcome: (o: QuoteOutcome) => void }) {
@@ -439,7 +450,7 @@ function QuoteRow({
   const open = OPEN_QUOTE_STATES.includes(q.state);
   const navigate = useNavigate();
   const target = q.conversation_id ? `/inbox?conversationId=${q.conversation_id}` : q.deal_id ? `/deals/${q.deal_id}` : null;
-  const situacao = SITUACAO[q.state];
+  const situacao = chipDe(q);
   // No computador a linha abre o painel da Lume; no celular, sem painel, abre a conversa.
   const escolher = () => {
     if (window.matchMedia("(min-width: 1024px)").matches || !target) onAbrir();
@@ -452,7 +463,7 @@ function QuoteRow({
         <button type="button" className={`truncate text-left text-[15px] font-semibold text-[var(--vyz-text-primary)] ${FOCUS}`} aria-pressed={aberta}>
           {name}
         </button>
-        <span>{evaLine(q) ?? (q.detected_by === "pdf" ? "Orçamento em PDF" : "Orçamento por mensagem")}</span>
+        <span>{kwp(q) ?? evaLine(q) ?? (q.detected_by === "pdf" ? "Orçamento em PDF" : "Orçamento por mensagem")}</span>
       </span>
       <span className="vp-chip" data-tom={situacao.tom}>{situacao.nome}</span>
       <span className="vp-fila__dias">
@@ -492,7 +503,7 @@ function PainelEva({ q, pending, onOutcome }: { q: QuoteItem; pending: boolean; 
   const rascunho = useRascunho(q);
   const name = quoteName(q);
   const open = OPEN_QUOTE_STATES.includes(q.state);
-  const situacao = SITUACAO[q.state];
+  const situacao = chipDe(q);
   const conversa = q.conversation_id ? `/inbox?conversationId=${q.conversation_id}` : null;
   const card = q.deal_id ? `/deals/${q.deal_id}` : null;
 

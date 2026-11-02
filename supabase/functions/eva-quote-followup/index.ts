@@ -13,6 +13,7 @@
 //   1. Automática via pg_cron (production)
 //   2. Manual POST { company_id? } com service_role bearer pra debug
 
+import { motivoParada } from "../_shared/motivoParada.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { notifyPendingSuggestions } from "../_shared/whatsappApproval.ts";
@@ -173,6 +174,13 @@ serve(async (req) => {
             const quiet = q.state === "went_quiet" && !!q.client_at;
             const days = daysBetween(quiet ? q.client_at! : q.sent_at);
             const plural = days === 1 ? "dia" : "dias";
+
+            // O motivo vem das últimas falas do cliente e só existe se ele falou.
+            if (quiet) {
+                const falas = (await recentMessages(q.conversation_id)).filter((m) => m.from === "cliente").map((m) => m.text);
+                const motivo = motivoParada(falas);
+                if (motivo) await setQuote(q.id, { stop_reason: motivo });
+            }
 
             const draft = await callLLM(
                 quiet
