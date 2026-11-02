@@ -16,6 +16,7 @@ import {
   CreditCard,
   FlowArrow,
   GearSix,
+  HardHat,
   Kanban as KanbanIcon,
   Lifebuoy as LifeBuoyIcon,
   MagnifyingGlass,
@@ -58,7 +59,7 @@ import { motion, useReducedMotion } from "framer-motion";
 
 // Phosphor icon component type
 type PhosphorIcon = ComponentType<IconProps>;
-type Contagem = "hoje" | "orcamentos" | "conversas";
+type Contagem = "hoje" | "orcamentos" | "conversas" | "obras";
 
 type NavItem = {
   title: string;
@@ -76,6 +77,8 @@ const vendaItems: NavItem[] = [
   { title: "Funil", url: "/pipeline", icon: KanbanIcon },
   { title: "Agenda", url: "/agenda", icon: CalendarBlank },
 ];
+
+const obraItem: NavItem = { title: "Obras", url: "/obras", icon: HardHat, conta: "obras" };
 
 const contaItems: NavItem[] = [
   { title: "Resultados", url: "/admin", icon: ChartLineUp, requires: "admin" },
@@ -277,6 +280,11 @@ export function AppSidebar() {
             <div className="vz-grupo">
               {!collapsed && <div className="vz-grupo__rotulo">Venda</div>}
               {vendaItems.filter(permitido).map(renderNavItem)}
+            </div>
+
+            <div className="vz-grupo">
+              {!collapsed && <div className="vz-grupo__rotulo">Depois da venda</div>}
+              {renderNavItem(obraItem)}
             </div>
 
             <div className="vz-lateral__pe">

@@ -9,6 +9,7 @@ import { WhatsappDownCard } from "@/components/inicio/WhatsappDownCard";
 import { PalcoEva } from "@/components/inicio/PalcoEva";
 import { PedemVoce } from "@/components/inicio/PedemVoce";
 import { useEvaDiary } from "@/hooks/useEvaDiary";
+import { travada, useObras } from "@/hooks/useObras";
 import { Count } from "@/vendor/stageshow/motion/Count";
 import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
 import { useQuoteBoard } from "@/hooks/useQuoteBoard";
@@ -74,6 +75,7 @@ const Inicio = () => {
     const { profile, companyId } = useAuth();
 
     const { agenda } = useInicioData();
+    const { query: obras } = useObras();
     const cc = useCommandCenterData();
     const wa = useWhatsappConnection();
     const liveDiary = useEvaDiary();
@@ -140,6 +142,7 @@ const Inicio = () => {
                     <PedemVoce
                         prioridades={pendingAll}
                         orcamentos={quotes}
+                        obras={(obras.data ?? []).filter(travada)}
                         carregando={queueLoading}
                         diaResolvido={dayComplete}
                         aoResolver={actions.resolve}

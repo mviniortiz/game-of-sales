@@ -1,8 +1,9 @@
 // Pedem você: a fila do dia, uma linha por coisa. Resolver e adiar ficam na própria
 // linha; responder leva à conversa.
 import { useNavigate } from "react-router-dom";
-import { CalendarBlank, CaretRight, Check, Clock, Receipt, WhatsappLogo, type Icon } from "@phosphor-icons/react";
+import { CalendarBlank, CaretRight, Check, Clock, HardHat, Receipt, WhatsappLogo, type Icon } from "@phosphor-icons/react";
 import type { DailyPriority } from "@/hooks/useCommandCenterData";
+import { diasNaEtapa, NOME_COM_QUEM, NOME_ETAPA, type Obra } from "@/hooks/useObras";
 import type { QuoteItem } from "@/hooks/useQuoteBoard";
 import { brl, quoteName, stateLine } from "@/lib/quoteText";
 import { Collapse } from "@/vendor/stageshow/motion/Collapse";
@@ -52,9 +53,22 @@ function doOrcamento(q: QuoteItem): Linha {
     };
 }
 
+function daObra(o: Obra): Linha {
+    return {
+        id: o.id,
+        titulo: `${o.cliente} parou em ${NOME_ETAPA[o.etapa].toLowerCase()}`,
+        detalhe: `${o.nota ? `${o.nota} · ` : ""}com ${NOME_COM_QUEM[o.com_quem]} há ${diasNaEtapa(o)} dias`,
+        acao: "Ver obra",
+        href: "/obras",
+        Icone: HardHat,
+        sol: true,
+    };
+}
+
 export function PedemVoce({
     prioridades,
     orcamentos,
+    obras = [],
     carregando,
     diaResolvido,
     aoResolver,
@@ -62,6 +76,7 @@ export function PedemVoce({
 }: {
     prioridades: DailyPriority[];
     orcamentos: QuoteItem[];
+    obras?: Obra[];
     carregando: boolean;
     diaResolvido: boolean;
     aoResolver: (id: string) => void;
@@ -72,6 +87,7 @@ export function PedemVoce({
     const linhas = [
         ...prioridades.map(daPrioridade),
         ...orcamentos.filter((q) => q.state === "your_turn" && !(q.conversation_id && cobertas.has(q.conversation_id))).map(doOrcamento),
+        ...obras.map(daObra),
     ].slice(0, MAX_LINHAS);
 
     return (

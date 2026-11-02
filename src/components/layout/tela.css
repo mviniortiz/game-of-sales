@@ -634,6 +634,138 @@
         grid-area: menu;
     }
 }
+/* ─── Obras ───────────────────────────────────────────────────────────────── */
+.vp-obra__cab,
+.vp-obra {
+    display: grid;
+    grid-template-columns: minmax(0, 170px) 150px minmax(0, 1fr);
+    gap: 18px;
+}
+.vp-obra__cab {
+    padding: 12px 14px 8px;
+    font-size: 13px;
+    color: var(--vyz-text-muted);
+}
+.vp-obra {
+    width: 100%;
+    align-items: center;
+    min-height: 84px;
+    padding: 10px 14px;
+    border-radius: 13px;
+    text-align: left;
+    transition: background-color 150ms var(--vp-ease);
+}
+.vp-obra:hover,
+.vp-obra[data-aberta] {
+    background: var(--vyz-bg);
+}
+.vp-obra:focus-visible {
+    outline: 2px solid var(--vyz-accent);
+    outline-offset: 2px;
+}
+.vp-obra__etapa {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--vyz-text);
+}
+.vp-etapas {
+    display: inline-flex;
+    gap: 4px;
+}
+.vp-etapas i {
+    width: 17px;
+    height: 8px;
+    border-radius: 3px;
+    background: var(--vyz-surface-2);
+}
+.vp-etapas i[data-feita] {
+    background: var(--vyz-text-muted);
+}
+.vp-etapas i[data-agora] {
+    background: var(--vyz-accent);
+}
+.vp-etapas i[data-trava] {
+    background: var(--vyz-sol);
+    box-shadow: inset 0 0 0 1px var(--vyz-sol-line);
+}
+.vp-obra__nota {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.vp-obra__nota b {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--vyz-text-primary);
+}
+.vp-obra__nota b[data-trava] {
+    color: var(--vyz-warning);
+}
+.vp-obra__nota > span {
+    font-size: 13.5px;
+    color: var(--vyz-text-muted);
+}
+.vp-docs {
+    display: grid;
+    gap: 2px;
+    margin: 6px 0 14px;
+}
+.vp-docs button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 32px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--vyz-text-primary);
+    text-align: left;
+}
+.vp-docs button svg {
+    color: var(--vyz-text-muted);
+}
+.vp-docs button[aria-pressed="true"] svg {
+    color: var(--vyz-success);
+}
+.vp-campo {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+.vp-campo select,
+.vp-campo input {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--vyz-border);
+    border-radius: 10px;
+    background: var(--vyz-surface-1);
+    font-size: 16px;
+    color: var(--vyz-text-primary);
+}
+@media (min-width: 768px) {
+    .vp-campo select,
+    .vp-campo input {
+        font-size: 14px;
+    }
+}
+@media (max-width: 767px) {
+    .vp-obra__cab {
+        display: none;
+    }
+    .vp-obra {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+        padding-block: 14px;
+    }
+}
+
 /* ─── Resultados ───────────────────────────────────────────────────────────── */
 .vp-stats {
     display: grid;

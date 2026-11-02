@@ -8,7 +8,7 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
-import { STATUS_COLORS, Agendamento } from "@/pages/Calendario";
+import { coresDo, Agendamento } from "@/pages/Calendario";
 
 // Re-export helper
 const mapStatus = (status?: string) => {
@@ -70,7 +70,7 @@ const EventBlock = ({
     const height = Math.max(20, (durationMins / 60) * HOUR_HEIGHT);
 
     const st = mapStatus(agendamento.status);
-    const colors = STATUS_COLORS[st];
+    const colors = coresDo(agendamento);
 
     const isGoogleEvent = !!agendamento.google_event_id;
 
