@@ -327,7 +327,7 @@ const ARTICLES: DocArticle[] = [
     title: "Planos e Preços",
     icon: CreditCard,
     category: "Conta",
-    tags: ["plano", "preço", "vyzon", "upgrade", "assinatura", "pagamento", "pix", "cartão", "mercado pago", "raio-x"],
+    tags: ["plano", "preço", "vyzon", "upgrade", "assinatura", "pagamento", "cartão", "stripe", "raio-x"],
     content: [
       {
         body: "O Vyzon tem um plano só, com tudo liberado.",
@@ -342,7 +342,7 @@ const ARTICLES: DocArticle[] = [
       },
       {
         heading: "Como assinar",
-        body: "A cobrança é combinada com o nosso time. Fale com a gente pelo WhatsApp de suporte e enviamos o link de pagamento do Mercado Pago, por Pix ou cartão.",
+        body: "Em **Configurações > Plano**, toque em Assinar e pague com cartão de crédito pelo Stripe. A conta fica liberada assim que o pagamento é aprovado. Na mesma tela você troca o cartão, baixa as faturas ou cancela.",
       },
     ],
   },

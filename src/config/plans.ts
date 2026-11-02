@@ -10,8 +10,10 @@
  * aparece na landing nem no checkout). "essential" e "escala" de contas antigas
  * valem como "pro" (normalizePlanId).
  *
- * Cobrança manual por enquanto: o cliente paga por link do Mercado Pago e o
- * super admin marca a empresa como paga (AdminCompanyDetail).
+ * Cobrança pelo Stripe (02/11/2026): edges assinatura-checkout, -portal e
+ * -webhook, com o preço espelhado em _shared/stripe.ts (PRECO_CENTAVOS).
+ * Mudou o preço aqui, muda lá e cria um preço novo no Stripe. O super admin
+ * ainda pode marcar "Pago" na mão (AdminCompanyDetail) para quem paga por fora.
  *
  * Ligações e e-mail são ADICIONAIS (decisão 2026-08-21): nenhum plano os
  * inclui. A telefonia (Twilio) foi removida em 22/10/2026.
@@ -146,7 +148,7 @@ export const formatPrice = (value: number | null): string => {
     }).format(value);
 };
 
-// Billing cycle configuration for Mercado Pago subscriptions
+// Ciclo de cobrança (mensal ou anual com desconto); hoje o checkout só vende o mensal.
 export type BillingCycle = "monthly" | "annual";
 
 export interface BillingConfig {

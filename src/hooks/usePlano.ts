@@ -1,5 +1,6 @@
 // Conta paga ou não. Sem teste grátis desde 08/10/2026: paga é assinatura ativa
-// (o Markus marca "Pago" em AdminCompanyDetail). Super admin vê tudo.
+// (o assinatura-webhook do Stripe marca, ou o Markus em AdminCompanyDetail).
+// Super admin vê tudo.
 import { useTenant } from "@/contexts/TenantContext";
 
 export function usePlano() {

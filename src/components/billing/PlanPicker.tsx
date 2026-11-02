@@ -1,13 +1,15 @@
 // Plano único do Vyzon, usado no /upgrade e na tela de teste expirado.
-// Cobrança manual por enquanto: o botão abre o WhatsApp do Markus com o pedido
-// pronto; ele manda o link do Mercado Pago (Pix ou cartão) e marca a empresa
-// como paga no admin (AdminCompanyDetail). Dados do plano em src/config/plans.ts.
+// O botão abre o checkout do Stripe (edge assinatura-checkout); quem libera a
+// conta é o assinatura-webhook quando o pagamento é aprovado. Dados do plano em
+// src/config/plans.ts.
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Check } from "@phosphor-icons/react";
+import { ArrowRight, Check, CircleNotch } from "@phosphor-icons/react";
+import { toast } from "sonner";
 import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
 import { PLANS, formatPrice } from "@/config/plans";
-import { whatsappUrl } from "@/config/contact";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { formatError } from "@/lib/utils";
 
 interface PlanPickerProps {
     /** Empresa já paga (subscription_status 'active'): mostra como plano atual. */
@@ -15,11 +17,23 @@ interface PlanPickerProps {
 }
 
 export function PlanPicker({ paid = false }: PlanPickerProps) {
-    const { user } = useAuth();
     const plan = PLANS.pro;
-    const mensagem =
-        `Oi, Markus! Quero assinar o Vyzon (${formatPrice(plan.monthlyPrice)}/mês).` +
-        (user?.email ? ` Meu e-mail de acesso é ${user.email}.` : "");
+    const [abrindo, setAbrindo] = useState(false);
+
+    const assinar = async () => {
+        setAbrindo(true);
+        trackEvent(FUNNEL_EVENTS.UPGRADE_CLICK, { plan: plan.id, via: "stripe" });
+        try {
+            // Sem companyId: a edge usa a empresa de quem está logado.
+            const { data, error } = await supabase.functions.invoke("assinatura-checkout", { body: {} });
+            if (error) throw error;
+            if (!data?.url) throw new Error(data?.error || "Sem link de pagamento");
+            window.location.assign(data.url);
+        } catch (e) {
+            toast.error(`Não deu para abrir o pagamento: ${formatError(e)}`);
+            setAbrindo(false);
+        }
+    };
 
     return (
         <motion.article
@@ -57,18 +71,21 @@ export function PlanPicker({ paid = false }: PlanPickerProps) {
                 <p className="mt-6 text-center text-[13px] text-[var(--vyz-text-muted)]">Sua assinatura está ativa.</p>
             ) : (
                 <>
-                    <a
-                        href={whatsappUrl(mensagem)}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={() => trackEvent(FUNNEL_EVENTS.UPGRADE_CLICK, { plan: plan.id, via: "whatsapp" })}
-                        className="mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] text-[14px] font-semibold text-[var(--vyz-btn-on)] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.3)]"
+                    <button
+                        type="button"
+                        onClick={assinar}
+                        disabled={abrindo}
+                        className="mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] text-[14px] font-semibold text-[var(--vyz-btn-on)] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:opacity-90 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.3)]"
                     >
-                        Assinar pelo WhatsApp
-                        <ArrowRight size={15} weight="bold" aria-hidden />
-                    </a>
+                        {abrindo ? "Abrindo o pagamento" : "Assinar agora"}
+                        {abrindo ? (
+                            <CircleNotch size={15} weight="bold" className="animate-spin motion-reduce:animate-none" aria-hidden />
+                        ) : (
+                            <ArrowRight size={15} weight="bold" aria-hidden />
+                        )}
+                    </button>
                     <p className="mt-3 text-center text-[12px] leading-relaxed text-[var(--vyz-text-muted)]">
-                        Você recebe o link de pagamento por Pix ou cartão. Assim que o pagamento cair, a conta fica liberada.
+                        Pagamento no cartão de crédito, em ambiente seguro do Stripe. A conta fica liberada assim que o pagamento é aprovado.
                     </p>
                 </>
             )}

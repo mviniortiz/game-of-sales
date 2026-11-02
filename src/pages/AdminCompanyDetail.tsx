@@ -189,8 +189,8 @@ export const AdminCompanyDetail = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Situação</Label>
-                  {/* Cobrança manual: o cliente paga por link do Mercado Pago e aqui
-                      vira "Pago". Só "Pago" libera o plano escolhido; qualquer
+                  {/* O Stripe marca sozinho quem assina no cartão. Aqui fica a
+                      marcação manual, para quem paga por fora. Só "Pago" libera o plano escolhido; qualquer
                       outra situação vale Free (resolveEffectivePlan em
                       src/config/plans.ts). */}
                   <select
