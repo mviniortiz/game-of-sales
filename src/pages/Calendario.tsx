@@ -35,6 +35,7 @@ export interface Agendamento {
   observacoes: string;
   status: string;
   user_id: string;
+  tipo?: TipoEvento | null;
   google_event_id?: string;
   attendance_status?: AttendanceStatus;
   seller_name?: string;
@@ -52,6 +53,17 @@ export const STATUS_COLORS: Record<AttendanceStatus, { bg: string; border: strin
   no_show: { bg: "bg-rose-500/15", border: "border-rose-500", text: "text-rose-300", dot: "bg-rose-500" },
   pending: { bg: "bg-muted", border: "border-muted-foreground", text: "text-muted-foreground", dot: "bg-muted-foreground" },
 };
+
+// Tipo manda na cor; compromisso antigo, sem tipo, segue a cor do comparecimento.
+export type TipoEvento = "visita" | "instalacao" | "vistoria" | "outro";
+export const NOME_TIPO: Record<TipoEvento, string> = { visita: "Visita técnica", instalacao: "Instalação", vistoria: "Vistoria", outro: "Outro" };
+const TIPO_COLORS: Record<Exclude<TipoEvento, "outro">, { bg: string; border: string; text: string; dot: string }> = {
+  visita: { bg: "bg-[var(--vyz-accent-soft-12)]", border: "border-[var(--vyz-accent)]", text: "text-[var(--vyz-accent)]", dot: "bg-[var(--vyz-accent)]" },
+  instalacao: { bg: "bg-[var(--vyz-sol-soft)]", border: "border-[var(--vyz-sol-line)]", text: "text-[var(--vyz-warning)]", dot: "bg-[var(--vyz-sol)]" },
+  vistoria: { bg: "bg-[var(--vyz-noite)]", border: "border-[var(--vyz-noite)]", text: "text-white", dot: "bg-[var(--vyz-noite)]" },
+};
+export const coresDo = (ag: { tipo?: TipoEvento | null; status: string }) =>
+  ag.tipo && ag.tipo !== "outro" ? TIPO_COLORS[ag.tipo] : STATUS_COLORS[mapStatus(ag.status)];
 
 // ── Mini Month Calendar ──────────────────────────────────────────────────────
 const MiniCalendar = ({
@@ -173,7 +185,7 @@ const UpcomingEvents = ({
         const showLabel = dateLabel !== lastDateLabel;
         lastDateLabel = dateLabel;
         const st = mapStatus(ag.status);
-        const colors = STATUS_COLORS[st];
+        const colors = coresDo(ag);
 
         return (
           <div key={ag.id}>
@@ -375,7 +387,7 @@ const MonthGridView = ({
                   <div className="flex gap-0.5 mt-1">
                     {dayAgs.slice(0, 3).map((ag, j) => {
                       const st = mapStatus(ag.status);
-                      const c = STATUS_COLORS[st];
+                      const c = coresDo(ag);
                       return <span key={j} className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />;
                     })}
                     {dayAgs.length > 3 && (
@@ -404,7 +416,7 @@ const MonthGridView = ({
                   </p>
                   {dayAgs.map(ag => {
                     const st = mapStatus(ag.status);
-                    const c = STATUS_COLORS[st];
+                    const c = coresDo(ag);
                     return (
                       <button
                         key={ag.id}
@@ -484,7 +496,7 @@ const MonthGridView = ({
               <div className="space-y-0.5">
                 {visible.map(ag => {
                   const st = mapStatus(ag.status);
-                  const c = STATUS_COLORS[st];
+                  const c = coresDo(ag);
                   return (
                     <button
                       key={ag.id}

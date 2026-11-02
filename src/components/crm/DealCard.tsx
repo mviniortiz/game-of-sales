@@ -803,6 +803,9 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
             largura (medido) e aparecia como um toco cortado na borda do card. O
             piso de 86px garante que ele desce de linha antes de ficar ilegível. */}
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10.5px] text-muted-foreground pt-1 mt-0.5 border-t border-slate-100 dark:border-border/30">
+          {quote?.system_kwp != null && (
+            <span className="tabular-nums whitespace-nowrap flex-shrink-0">{String(quote.system_kwp).replace(".", ",")} kWp</span>
+          )}
           {/* Aguardando (era "Parado há X dias") — só em deals abertos */}
           {quote && quoteStatus(quote) ? (
             <span

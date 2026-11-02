@@ -121,6 +121,10 @@ está BLOQUEADO por billing; não criar workflows.
 - Menu do app (01/11/2026): os nomes mudaram, os endereços não. Hoje `/inicio`,
   Conversas `/inbox`, Funil `/pipeline`, Resultados `/admin`, EVA `/eva-studio`
   (o Studio abre em `?ajustar=1`). ⌘K busca cliente; ⌘J pergunta à EVA.
+- Obras (02/11/2026): `/obras`, tabelas `obras` e `obra_documentos`. Deal ganho vira
+  obra pelo trigger `deal_ganho_vira_obra`; a etapa é manual. Travada = 5 dias ou
+  mais na mesma etapa. Motivo da parada só com frase clara do cliente
+  (`_shared/motivoParada.ts`).
 - Rotas públicas/SEO em `App.tsx`; `/auth`, `/criar-conta` e o app
   autenticado (catch-all) em `AppShell.tsx`. `/onboarding` e `/register` são
   redirects de compatibilidade.

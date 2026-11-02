@@ -100,11 +100,11 @@ serve(async (req) => {
 
     const { data: quote } = await admin
         .from("quote_tracking")
-        .select("id, amount, deal_id, channel_message_id")
+        .select("id, amount, system_kwp, deal_id, channel_message_id")
         .eq("id", quote_id)
         .maybeSingle();
     if (!quote) return json(404, { error: "rastreio não encontrado" });
-    if (quote.amount !== null) return json(200, { ok: true, skipped: "já tem valor", amount: quote.amount });
+    if (quote.amount !== null && quote.system_kwp !== null) return json(200, { ok: true, skipped: "já tem valor", amount: quote.amount });
 
     const { data: msg } = await admin
         .from("channel_messages")
@@ -118,6 +118,12 @@ serve(async (req) => {
         if (bytes.length > MAX_BYTES) return json(200, { ok: false, reason: `PDF grande demais (${bytes.length} bytes)` });
 
         const text = await pdfText(bytes);
+        const kwp = text.match(/(\d{1,3}(?:[.,]\d{1,2})?)\s*kwp/i)?.[1];
+        if (kwp && quote.system_kwp === null) {
+            await admin.from("quote_tracking").update({ system_kwp: Number(kwp.replace(",", ".")) }).eq("id", quote.id);
+        }
+        if (quote.amount !== null) return json(200, { ok: true, skipped: "já tem valor", amount: quote.amount, kwp: kwp ?? null });
+
         const candidates = [...new Set(extractAmounts(text))];
         if (!candidates.length) return json(200, { ok: false, reason: "PDF sem valor em reais no texto" });
 
