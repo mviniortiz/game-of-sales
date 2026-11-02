@@ -103,16 +103,16 @@
 .vz-entrada__veu {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--vyz-bg) 72%, transparent);
+  background: color-mix(in srgb, var(--vyz-bg) 84%, transparent);
   transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .vz-entrada__palco {
   position: absolute;
   inset: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 24px 16px;
+  padding: calc(var(--vz-sol-h) + 4px) 16px 24px;
   overflow-y: auto;
 }
 @media (min-width: 768px) {
@@ -129,7 +129,6 @@
   background: var(--vyz-surface-1);
   box-shadow: 0 1px 2px rgba(15, 23, 48, 0.04), 0 24px 60px -28px rgba(15, 23, 48, 0.28);
   animation: vzEntradaChega 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1), transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes vzEntradaChega {
   from { opacity: 0; transform: translateY(8px) scale(0.985); }
@@ -138,14 +137,15 @@
 
 /* Entrou: o cartão sai, o véu levanta e a mesa fica. A rota seguinte desenha
    a mesma mesa (ProtectedRoute) e depois os dados, sem trocar de fundo. */
-.vz-entrada--saindo .vz-entrada__cartao { opacity: 0; transform: scale(0.97); }
+.vz-entrada--saindo .vz-entrada__palco > *,
+.vz-entrada--saindo .vz-sol { animation: vzEntradaSai 200ms cubic-bezier(0.4, 0, 1, 1) forwards; }
+@keyframes vzEntradaSai { to { opacity: 0; transform: scale(0.97); } }
 .vz-entrada--saindo .vz-entrada__veu { opacity: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   .vz-entrada__cartao,
   .vz-mesa--carregando .vz-mesa__bloco,
   .vz-mesa--carregando .vz-mesa__item b { animation: none; }
-  .vz-entrada__cartao,
   .vz-entrada__veu { transition: none; }
 }
 
@@ -153,4 +153,94 @@
   color: var(--auth-erro);
   background: color-mix(in srgb, var(--auth-erro) 7%, transparent);
   border: 1px solid color-mix(in srgb, var(--auth-erro) 24%, transparent);
+}
+
+/* Curva de geração do dia atrás do cartão (SolDoDia). */
+/* A curva fica no alto, como o gráfico do dia, e o cartão logo abaixo. */
+.vz-entrada { --vz-sol-h: clamp(150px, 30vh, 300px); }
+.vz-sol {
+  --vz-sol-x: clamp(16px, 3vw, 36px);
+  position: absolute;
+  left: var(--vz-sol-x);
+  right: var(--vz-sol-x);
+  top: 0;
+  height: var(--vz-sol-h);
+  pointer-events: none;
+}
+@media (min-width: 768px) {
+  .vz-sol { left: calc(15.5rem + var(--vz-sol-x)); }
+}
+.vz-sol__svg { position: absolute; top: 24px; left: 0; width: 100%; height: calc(100% - 52px); }
+.vz-sol__area { fill: var(--vyz-sol-soft); opacity: 0.7; }
+.vz-sol__gerado { fill: var(--vyz-sol); opacity: 0.32; }
+.vz-sol__corte { transform-box: fill-box; animation: vzSolGera 1100ms 120ms cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: left; }
+.vz-sol__linha { fill: none; stroke: var(--vyz-sol-line); stroke-width: 1.5; opacity: 0.55; }
+.vz-sol__chao { stroke: var(--vyz-border); stroke-width: 1; }
+.vz-sol__hora {
+  position: absolute;
+  bottom: 6px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--vyz-text-muted);
+}
+.vz-sol__hora[data-lado="1"] { transform: translateX(-50%); }
+.vz-sol__hora[data-lado="2"] { transform: translateX(-100%); }
+.vz-sol__astro {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 999px;
+  background: var(--vyz-sol);
+  border: 3px solid var(--vyz-surface-1);
+  box-shadow: 0 1px 2px rgba(15, 23, 48, 0.12), 0 6px 14px -6px rgba(201, 148, 0, 0.45);
+  animation: vzSolSobe 700ms 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes vzSolGera { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes vzSolSobe { from { opacity: 0; transform: translateY(10px) scale(0.6); } to { opacity: 1; transform: none; } }
+
+/* Botão do Google: o caminho mais curto, então ganha peso e o selo de último usado. */
+.vz-google {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  border-radius: 999px;
+  border: 1px solid var(--vyz-border);
+  background: var(--vyz-surface-1);
+  color: var(--vyz-text-primary);
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(15, 23, 48, 0.06);
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 160ms cubic-bezier(0.22, 1, 0.36, 1), border-color 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vz-google:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--vyz-border-strong);
+  box-shadow: 0 1px 2px rgba(15, 23, 48, 0.06), 0 10px 22px -12px rgba(15, 23, 48, 0.3);
+}
+.vz-google:active:not(:disabled) { transform: translateY(0) scale(0.985); }
+.vz-google:focus-visible { outline: 2px solid var(--vyz-accent); outline-offset: 2px; }
+.vz-google:disabled { opacity: 0.55; }
+.vz-ultimo {
+  position: absolute;
+  right: 16px;
+  top: -10px;
+  padding: 2px 9px;
+  border: 1px solid var(--vyz-sol-line);
+  line-height: 16px;
+  border-radius: 999px;
+  background: var(--vyz-sol-soft);
+  color: var(--vyz-text-primary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vz-sol__corte, .vz-sol__astro { animation: none; }
+  .vz-google { transition: none; }
+  .vz-google:hover:not(:disabled) { transform: none; }
 }
