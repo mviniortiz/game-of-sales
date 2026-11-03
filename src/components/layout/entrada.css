@@ -162,57 +162,28 @@
     /* Encolhe até a largura da AppSidebar ao entrar (ver --saindo). */
     transition: width 320ms cubic-bezier(0.32, 0.72, 0, 1), padding 320ms cubic-bezier(0.32, 0.72, 0, 1);
   }
-  .vz-login__painel-corpo { flex: 1; justify-content: space-between; gap: 32px; padding-top: clamp(32px, 16vh, 170px); }
+  /* Sem padding embaixo: a cena encosta na borda da tela. */
+  .vz-login__painel { padding-bottom: 0; }
+  .vz-login__painel-corpo { flex: 1; min-height: 0; gap: 32px; padding-top: clamp(24px, 7vh, 72px); }
   .vz-login__frase { font-size: clamp(40px, 3.6vw, 52px); }
   .vz-login__form { align-items: center; padding: 40px; }
 }
 
-/* Curva de geração do dia (SolDoDia) no painel escuro. */
-.vz-sol { position: relative; }
-.vz-sol__grafico { position: relative; height: 96px; }
+/* Vaga da cena (CenaAprovacao) no painel em coluna. Ocupa o que sobra da
+   altura até a borda de baixo da tela; o palco cabe na largura e na altura da
+   vaga (488 x 520, a proporção da cena) e o celular sai pela borda de baixo. */
+.vz-cena-vaga { display: none; }
 @media (min-width: 1024px) {
-  .vz-sol__grafico { height: clamp(150px, 26vh, 230px); }
+  .vz-cena-vaga {
+    display: flex;
+    flex: 1;
+    align-items: flex-end;
+    min-height: 0;
+    container-type: size;
+    overflow: hidden;
+  }
+  .vz-cena-vaga__palco { width: min(100%, calc(100cqh * 488 / 520)); }
 }
-.vz-sol__grafico svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.vz-sol__area { fill: var(--vyz-noite-2); }
-.vz-sol__gerado { fill: var(--vyz-sol); }
-.vz-sol__corte { transform-box: fill-box; transform-origin: left; animation: vzSolGera 1100ms 150ms cubic-bezier(0.22, 1, 0.36, 1) both; }
-.vz-sol__linha { fill: none; stroke: var(--vyz-sol); stroke-width: 2; }
-.vz-sol__chao { stroke: var(--vyz-noite-3); stroke-width: 1; }
-.vz-sol__astro {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  margin: -11px 0 0 -11px;
-  border-radius: 999px;
-  background: var(--vyz-sol);
-  border: 4px solid var(--vyz-noite);
-  outline: 2px solid var(--vyz-sol);
-  animation: vzSolSobe 600ms 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-.vz-sol__agora {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 10px);
-  transform: translateX(-50%);
-  padding: 2px 8px;
-  border-radius: 6px;
-  background: var(--vyz-sol);
-  color: var(--vyz-noite);
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.vz-sol__horas {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-  font-size: 12px;
-  color: var(--vyz-text-dim);
-  font-variant-numeric: tabular-nums;
-}
-@keyframes vzSolGera { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-@keyframes vzSolSobe { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: none; } }
 
 /* Entrou: o formulário sai e o painel escuro encolhe até a largura da
    lateral do app. A rota seguinte desenha a mesa com a lateral no mesmo
@@ -223,6 +194,9 @@
 @keyframes vzLoginSai { to { opacity: 0; } }
 @media (min-width: 1024px) {
   .vz-login--saindo .vz-login__painel { width: 15.5rem; padding-left: 20px; padding-right: 20px; }
+  /* A cena some no lugar enquanto o painel encolhe por cima dela, sem
+     reescalar nem trocar de desenho no meio do fade. */
+  .vz-login--saindo .vz-login__painel-corpo { width: calc(min(42vw, 600px) - 112px); flex-shrink: 0; }
 }
 
 .vz-entrada__erro {
@@ -273,7 +247,7 @@
 
 
 @media (prefers-reduced-motion: reduce) {
-  .vz-login__caixa, .vz-sol__corte, .vz-sol__astro { animation: none; }
+  .vz-login__caixa { animation: none; }
   .vz-login__painel, .vz-google { transition: none; }
   .vz-google:hover:not(:disabled) { transform: none; }
 }

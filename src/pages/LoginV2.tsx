@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { lazy, Suspense, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,13 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { AuthField } from "@/components/auth/AuthField";
-import { SolDoDia, agora, fracaoDoDia, horaCurta } from "@/components/auth/SolDoDia";
+import { agora, fracaoDoDia, horaCurta } from "@/components/auth/horaDoDia";
 import "@/components/layout/entrada.css";
 import { APP_HOME } from "@/config/routes";
 
-// AUTH.2 "Placar do dia": painel escuro da marca com a curva de geração de hoje
-// e o formulário no fundo do app. Ao entrar, o botão segura "Entrando…" até o
-// perfil chegar, o formulário some e o painel encolhe até a largura da lateral
+// AUTH.2 "Placar do dia": painel escuro da marca com o produto funcionando (a
+// aprovação pelo WhatsApp, CenaAprovacao) e o formulário no fundo do app. Ao
+// entrar, o botão segura "Entrando…" até o perfil chegar, o formulário some e o painel encolhe até a largura da lateral
 // do app; a rota seguinte desenha a mesa com a lateral no mesmo lugar. Antes
 // eram três fundos, um toast e um loader de tela cheia que montava duas vezes.
 // Validação inline, toggle de senha, aviso de caps lock e email viajando pra
@@ -31,6 +31,23 @@ const lerUltimo = (): "google" | "email" | null => {
 };
 const gravarUltimo = (v: "google" | "email") => {
     try { localStorage.setItem(ULTIMO_KEY, v); } catch { /* aba privada: só não lembra */ }
+};
+
+// A cena só existe com o painel em coluna (desktop). No celular o painel é uma
+// faixa no topo e a cena empurraria o formulário; nem o chunk é baixado.
+const CenaAprovacao = lazy(() => import("@/components/auth/CenaAprovacao"));
+const COLUNA = "(min-width: 1024px)";
+const useColuna = () => {
+    const [sim, setSim] = useState(() => typeof window !== "undefined" && !!window.matchMedia?.(COLUNA).matches);
+    useEffect(() => {
+        const mq = window.matchMedia?.(COLUNA);
+        if (!mq) return;
+        const muda = () => setSim(mq.matches);
+        muda();
+        mq.addEventListener?.("change", muda);
+        return () => mq.removeEventListener?.("change", muda);
+    }, []);
+    return sim;
 };
 
 const semMovimento = () =>
@@ -57,6 +74,7 @@ const LoginV2 = () => {
     const [ultimo] = useState(lerUltimo);
     const [quando] = useState(agora);
     const deDia = fracaoDoDia(quando) !== null;
+    const coluna = useColuna();
 
     // Quem chega de uma página legada escura (/crm-*, /r/*) pela navegação do
     // SPA traz o .dark junto; o login é claro e devolve o tema ao sair.
@@ -167,7 +185,15 @@ const LoginV2 = () => {
                             <span>{deDia ? "Suas propostas também deveriam." : "Suas propostas continuam esperando."}</span>
                         </p>
                     </div>
-                    <SolDoDia quando={quando} />
+                    {coluna && (
+                        <div className="vz-cena-vaga" aria-hidden>
+                            <div className="vz-cena-vaga__palco">
+                                <Suspense fallback={null}>
+                                    <CenaAprovacao quando={quando} />
+                                </Suspense>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </section>
 

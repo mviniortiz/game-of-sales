@@ -1,0 +1,432 @@
+/* Cena da aprovação no painel escuro do login (CenaAprovacao.tsx). Tudo
+   preso em .vz-cena para o CSS do kit e o daqui não vazarem pro app. As cores
+   de conversa são as do WhatsApp que a landing já usa (--lp-chat-*). */
+.vz-cena {
+  --wa-chat: var(--lp-chat-bg, #efeae2);
+  --wa-saida: var(--lp-chat-out, #d9fdd3);
+  --wa-barra: #f6f5f3;
+  --wa-linha: #e3ded3;
+  --wa-tinta: var(--vyz-noite, #0f1730);
+  --wa-meta: #667781;
+  --wa-icone: #54656f;
+  --wa-verde: #25d366;
+  --wa-lida: #53bdeb;
+  font-family: var(--font-sans);
+}
+
+/* O chão é o próprio painel: sem placa atrás do celular. */
+.vz-cena .ss-stage {
+  overflow: hidden;
+  background: transparent;
+}
+
+.vz-cena .vz-cena__quadro {
+  position: absolute;
+  inset: 0;
+}
+
+/* O celular parte da borda de cima do palco e corre para fora por baixo,
+   que é a borda da tela. */
+.vz-cena .vz-cena__fone {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.vz-cena .vz-cena__fone .ss-phone__screen {
+  background: var(--wa-barra);
+}
+
+.vz-cena .vz-cena__fone .ss-phone__content {
+  display: flex;
+  flex-direction: column;
+  color: var(--wa-tinta);
+}
+
+/* Topo da conversa, em pontos do iOS (o Phone escala tudo junto). */
+.vz-cena .vz-cena__topo {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  height: 54px;
+  padding: 0 14px 0 8px;
+  border-bottom: 1px solid var(--wa-linha);
+}
+
+.vz-cena .vz-cena__voltar {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  color: var(--wa-tinta);
+  stroke-width: 2.2;
+}
+
+.vz-cena .vz-cena__lume {
+  display: inline-flex;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  line-height: 0;
+}
+
+.vz-cena .vz-cena__quem {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.vz-cena .vz-cena__quem b {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.vz-cena .vz-cena__status {
+  font-size: 13px;
+  color: var(--wa-meta);
+}
+
+.vz-cena .vz-cena__acao {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-left: 14px;
+  color: var(--wa-tinta);
+  stroke-width: 1.8;
+}
+
+/* A conversa tem altura fixa: o fim dela e o campo ficam dentro do quadro,
+   o resto do celular sai pela borda de baixo. */
+.vz-cena .vz-cena__conversa {
+  --ss-me: var(--wa-saida);
+  --ss-me-text: var(--wa-tinta);
+  --ss-them: #fff;
+  --ss-them-text: var(--wa-tinta);
+  --ss-thread-size: 16px;
+  gap: 6px;
+  letter-spacing: 0;
+}
+
+.vz-cena .vz-cena__fone .vz-cena__conversa {
+  flex: none;
+  height: 470px;
+  padding: 0 12px 10px;
+  background: var(--wa-chat);
+}
+
+/* Bolhas do WhatsApp: canto pequeno, sombra de um fio, sem a cauda do iMessage. */
+.vz-cena .vz-cena__msg .ss-bubble {
+  max-width: 82%;
+  padding: 6px 8px 7px 10px;
+  border-radius: 8px;
+}
+
+.vz-cena .vz-cena__msg .ss-bubble::before {
+  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+}
+
+.vz-cena .vz-cena__msg .ss-bubble__tail {
+  display: none;
+}
+
+.vz-cena .vz-cena__texto {
+  white-space: pre-line;
+}
+
+/* Hora e tique no canto da bolha, como o WhatsApp: flutua no fim da última linha. */
+.vz-cena .vz-cena__meta {
+  float: right;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 7px 0 -5px 10px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--wa-meta);
+  font-variant-numeric: tabular-nums;
+}
+
+.vz-cena .vz-cena__meta svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+
+/* Tique duplo cinza (entregue) que fica azul quando lido */
+.vz-cena .vz-cena__meta .vz-cena__tique {
+  color: var(--wa-meta);
+  transition: color 240ms ease;
+}
+
+.vz-cena .vz-cena__meta .vz-cena__tique[data-lida] {
+  color: var(--wa-lida);
+}
+
+.vz-cena .vz-cena__dia {
+  align-self: center;
+  margin: 12px 0 6px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--wa-meta);
+  font-size: 12.5px;
+  font-weight: 500;
+  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+}
+
+/* Campo de mensagem */
+.vz-cena .vz-cena__compor {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  height: 54px;
+  padding: 0 14px 0 12px;
+  border-top: 1px solid var(--wa-linha);
+}
+
+.vz-cena .vz-cena__icone {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--wa-icone);
+  stroke-width: 1.8;
+}
+
+.vz-cena .vz-cena__icone--leve {
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+}
+
+.vz-cena .vz-cena__campo {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px 0 14px;
+  border: 1px solid var(--wa-linha);
+  border-radius: 18px;
+  background: #fff;
+  font-size: 17px;
+  color: var(--wa-tinta);
+}
+
+.vz-cena .vz-cena__fim {
+  position: relative;
+  display: grid;
+  flex: none;
+  align-items: center;
+  justify-items: end;
+  width: 60px;
+  height: 36px;
+}
+
+.vz-cena .vz-cena__vazio,
+.vz-cena .vz-cena__enviar {
+  grid-area: 1 / 1;
+  transition: opacity 160ms ease, transform 240ms cubic-bezier(0.3, 0.75, 0.1, 1);
+}
+
+.vz-cena .vz-cena__vazio {
+  display: flex;
+  gap: 14px;
+}
+
+.vz-cena .vz-cena__enviar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--wa-verde);
+  color: #fff;
+  opacity: 0;
+  transform: scale(0.6);
+}
+
+.vz-cena .vz-cena__enviar svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.2;
+}
+
+.vz-cena .vz-cena__fim[data-cheio] .vz-cena__vazio {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.vz-cena .vz-cena__fim[data-cheio] .vz-cena__enviar {
+  opacity: 1;
+  transform: none;
+}
+
+.vz-cena .vz-cena__enviar[data-pressed] {
+  transform: scale(0.9);
+}
+
+/* Satélite: a conversa com o Carlos, no número do dono. */
+.vz-cena .vz-cena__carlos {
+  position: absolute;
+  /* Alinhado com a linha de baixo do topo da conversa, sobre a margem vazia
+     à direita das bolhas da Lume; termina acima do 1 do dono. */
+  top: 99px;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  width: 214px;
+  overflow: hidden;
+  will-change: transform;
+  border-radius: 14px;
+  background: var(--wa-chat);
+  box-shadow: 0 0 0 1px rgba(15, 23, 48, 0.08), 0 24px 48px -16px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 260ms ease, transform 700ms cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.vz-cena .vz-cena__carlos[data-show] {
+  opacity: 1;
+  transform: none;
+}
+
+.vz-cena .vz-cena__carlos-topo {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 9px;
+  padding: 10px;
+  background: var(--wa-barra);
+  border-bottom: 1px solid var(--wa-linha);
+}
+
+.vz-cena .vz-cena__carlos-topo .vz-cena__quem b {
+  font-size: 13.5px;
+}
+
+.vz-cena .vz-cena__carlos-topo .vz-cena__status {
+  font-size: 11.5px;
+}
+
+.vz-cena .vz-cena__conversa--carlos {
+  --ss-thread-size: 13px;
+  padding: 10px;
+}
+
+/* A bolha enviada começa na mesma linha do nome do Carlos no topo
+   (10 de margem + 28 do avatar + 9 de vão = 47 = 10 + 28 + 9 de recuo). */
+.vz-cena .vz-cena__conversa--carlos .vz-cena__msg[data-from="me"] .ss-bubble {
+  max-width: none;
+  margin-left: 28px;
+}
+
+/* A resposta do Carlos: mesma bolha branca, dentro de um Collapse */
+.vz-cena .vz-cena__resposta {
+  flex: none;
+}
+
+.vz-cena .vz-cena__bolha-carlos {
+  width: fit-content;
+  max-width: 88%;
+  margin-top: 2px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.vz-cena .vz-cena__bolha-carlos .vz-cena__meta {
+  margin-top: 6px;
+  font-size: 10px;
+}
+
+/* O "Hoje" chega junto com o aviso */
+.vz-cena .vz-cena__dia {
+  animation: vzCenaDia 300ms ease backwards;
+  transition: top var(--ss-scroll), opacity 200ms ease 240ms;
+}
+
+.vz-cena .vz-cena__quadro[data-saindo] .vz-cena__dia {
+  opacity: 0;
+}
+
+.vz-cena .vz-cena__conversa--carlos .vz-cena__msg .ss-bubble {
+  max-width: 88%;
+  padding: 5px 7px 6px 9px;
+}
+
+.vz-cena .vz-cena__conversa--carlos .vz-cena__meta {
+  margin-top: 6px;
+  font-size: 10px;
+}
+
+.vz-cena .vz-cena__conversa--carlos .vz-cena__meta svg {
+  width: 14px;
+  height: 14px;
+}
+
+.vz-cena .vz-cena__selo {
+  /* Desliza com a conversa quando a resposta chega (o Thread anima top) */
+  position: relative;
+  top: 0;
+  transition: top var(--ss-scroll);
+  align-self: flex-end;
+  flex: none;
+  margin: 2px 0 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--vyz-sol-soft, #fff3cc);
+  border: 1px solid var(--vyz-sol-line, #c99400);
+  color: var(--wa-tinta);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* Saída em volta da âncora: o celular fica, o que a volta trouxe sai do
+   último para o primeiro, tudo dentro de meio segundo. */
+.vz-cena .vz-cena__fone .vz-cena__msg {
+  transition: top var(--ss-scroll), opacity 200ms ease var(--vz-atraso, 0ms), transform 300ms cubic-bezier(0.4, 0, 1, 1) var(--vz-atraso, 0ms);
+}
+
+.vz-cena .vz-cena__quadro[data-saindo] .vz-cena__fone .vz-cena__msg {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.vz-cena .vz-cena__quadro[data-saindo] .vz-cena__fone .vz-cena__msg:nth-last-child(1) { --vz-atraso: 60ms; }
+.vz-cena .vz-cena__quadro[data-saindo] .vz-cena__fone .vz-cena__msg:nth-last-child(2) { --vz-atraso: 120ms; }
+.vz-cena .vz-cena__quadro[data-saindo] .vz-cena__fone .vz-cena__msg:nth-last-child(3) { --vz-atraso: 180ms; }
+
+/* Compacta (coluna estreita do desktop, 1024 a ~1280): celular menor, conversa
+   mais curta, satélite mais alto para não cobrir o 1. */
+.vz-cena .ss-stage[data-layout="compact"] .vz-cena__fone .vz-cena__conversa {
+  height: 349px;
+}
+
+/* O banner leva o avatar redondo do contato, como o iOS faz com mensagem. */
+.vz-cena .vz-cena__banner .ss-notification__icon {
+  border-radius: 50%;
+  background: none;
+}
+
+.vz-cena .vz-cena__banner {
+  transition: opacity 220ms ease, transform 320ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* Chega coisa nova: o banner sobe e some antes da próxima volta. */
+.vz-cena .vz-cena__banner[data-sai] {
+  opacity: 0;
+  transform: translateY(-16px);
+}
+
+@keyframes vzCenaDia {
+  from { opacity: 0; }
+}
