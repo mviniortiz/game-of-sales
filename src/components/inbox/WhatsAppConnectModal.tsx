@@ -11,7 +11,7 @@
 // Nos dois, poll de "status" a cada 3s; connected=true fecha o ciclo.
 // Não envia mensagem. A única escrita é na instância do usuário no servidor.
 // ─────────────────────────────────────────────────────────────────────────────
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import {
     Dialog,
     DialogContent,
@@ -25,6 +25,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { EvaBot } from "@/components/eva/EvaBot";
+import { logLandingEvent } from "@/lib/landingFunnel";
+import type { Sistema } from "./ConectarDemo";
+
+// O celular animado com o caminho dentro do WhatsApp (kit Stageshow) vem num
+// pedaço separado: só quem abre o modal baixa.
+const ConectarDemo = lazy(() => import("./ConectarDemo"));
 
 type ConnectState = "loading" | "qr" | "numero" | "codigo" | "connected" | "error";
 type Modo = "qr" | "codigo";
@@ -34,6 +40,8 @@ interface WhatsAppConnectModalProps {
     onClose: () => void;
     /** Chamado quando a conexão fica "open" — Inbox refetcha status + chats. */
     onConnected?: () => void;
+    /** Página do funil (landing_events) para medir cada passo; sem ela, nada é gravado. */
+    funil?: string;
 }
 
 const POLL_MS = 3_000;        // checa status a cada 3s enquanto espera a leitura
@@ -45,20 +53,22 @@ const ERRO_CODIGO: Record<string, string> = {
     unavailable: "O WhatsApp não liberou o código agora. Tente de novo em instantes ou use o QR Code.",
 };
 
-const PASSOS: Record<Modo, string[]> = {
-    qr: [
-        "Abra o WhatsApp no celular.",
-        "Toque em Mais opções (⋮) no Android ou em Configurações no iPhone, e depois em Aparelhos conectados.",
-        "Toque em Conectar um aparelho e aponte a câmera para o código.",
-    ],
-    codigo: [
-        "Abra o WhatsApp no celular deste número.",
-        "Toque em Mais opções (⋮) no Android ou em Configurações no iPhone, depois em Aparelhos conectados e Conectar um aparelho.",
-        "Toque em Conectar com número de telefone e digite o código.",
-    ],
-};
+// Um passo por toque, na ordem do celular animado; o 2º muda com o sistema.
+function passosDe(modo: Modo, sistema: Sistema): string[] {
+    const menu = sistema === "android" ? "Toque em Mais opções (⋮) e em Aparelhos conectados." : "Toque em Configurações e em Aparelhos conectados.";
+    return modo === "codigo"
+        ? ["Abra o WhatsApp no celular deste número.", menu, "Toque em Conectar um aparelho.", "Toque em Conectar com número de telefone e digite o código."]
+        : ["Abra o WhatsApp no celular.", menu, "Toque em Conectar um aparelho.", "Aponte a câmera para o código desta tela."];
+}
 
-export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppConnectModalProps) {
+export function WhatsAppConnectModal({ open, onClose, onConnected, funil }: WhatsAppConnectModalProps) {
+    // Cada passo vai pro mesmo funil da home e do cadastro (mesma sessão).
+    const medir = useCallback(
+        (evento: "form_start" | "form_submit" | "form_error" | "cta_click", props: Record<string, string | number>) => {
+            if (funil) logLandingEvent(funil, "solar", evento, props);
+        },
+        [funil],
+    );
     const { companyId } = useAuth();
     const { activeCompanyId } = useTenant();
     const effectiveCompanyId = activeCompanyId || companyId;
@@ -66,6 +76,11 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
     // No celular não dá para ler o próprio QR: abre direto no código.
     const [noCelular] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches);
     const [modo, setModo] = useState<Modo>(noCelular ? "codigo" : "qr");
+    // O passo a passo começa no sistema de quem está vendo (no computador, Android,
+    // que é o da maioria); a pessoa troca no seletor.
+    const [sistema, setSistema] = useState<Sistema>(() => (typeof navigator !== "undefined" && /iPhone|iPad|iPod/.test(navigator.userAgent) ? "iphone" : "android"));
+    // Passo que o celular animado está mostrando; -1 sem animação (movimento reduzido).
+    const [passo, setPasso] = useState(-1);
     const [state, setState] = useState<ConnectState>("loading");
     const [qr, setQr] = useState<string | null>(null);
     const [numero, setNumero] = useState("");
@@ -75,13 +90,18 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
     const [qrAt, setQrAt] = useState(0);
     const [agora, setAgora] = useState(() => Date.now());
 
-    // O WhatsApp informado no cadastro já entra no campo do código.
+    // O WhatsApp informado no cadastro já entra no campo do código. No modo
+    // código, com o número em mãos, o código já é pedido: um toque a menos.
+    const [numeroDoCadastro, setNumeroDoCadastro] = useState<string | null>(null);
     useEffect(() => {
         if (!open || !effectiveCompanyId) return;
         let vivo = true;
         supabase.from("companies").select("phone").eq("id", effectiveCompanyId).maybeSingle().then(({ data }) => {
             const phone = (data as { phone?: string | null } | null)?.phone;
-            if (vivo && phone) setNumero((n) => n || phone.replace(/^55/, ""));
+            if (!vivo || !phone) return;
+            const local = phone.replace(/^55/, "");
+            setNumero((n) => n || local);
+            setNumeroDoCadastro(local);
         });
         return () => { vivo = false; };
     }, [open, effectiveCompanyId]);
@@ -96,11 +116,15 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
         if (qrRefreshRef.current) { window.clearInterval(qrRefreshRef.current); qrRefreshRef.current = null; }
     }, []);
 
+    const qrMedido = useRef(false);
+    const modoRef = useRef<Modo>(modo);
+    modoRef.current = modo;
     const markConnected = useCallback(() => {
         clearTimers();
         setState("connected");
+        medir("form_submit", { step: "conectado", modo: modoRef.current });
         onConnectedRef.current?.();
-    }, [clearTimers]);
+    }, [clearTimers, medir]);
 
     // Invoke com timeout — o servidor pode estar lento/fora; sem isto a janela
     // fica "Gerando…" pra sempre, sem dizer o que houve.
@@ -115,13 +139,14 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
 
     const falhou = useCallback((err: unknown) => {
         const timedOut = err instanceof Error && err.message === "__timeout__";
+        medir("form_error", { step: "conexao", modo: modoRef.current, reason: timedOut ? "timeout" : (err instanceof Error ? err.message : "erro").slice(0, 60) });
         setErrorMsg(
             timedOut
                 ? "Não conseguimos falar com o servidor do WhatsApp agora. Tente de novo em alguns minutos."
                 : err instanceof Error ? err.message : "Falha ao iniciar a conexão.",
         );
         setState("error");
-    }, []);
+    }, [medir]);
 
     const callConnect = useCallback(async () => {
         setState("loading");
@@ -138,6 +163,8 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
             if (raw) {
                 setQr(raw.startsWith("data:") ? raw : `data:image/png;base64,${raw}`);
                 setQrAt(Date.now());
+                // Mede só o primeiro QR da abertura, não cada renovação de 50s.
+                if (!qrMedido.current) { qrMedido.current = true; medir("form_submit", { step: "qr" }); }
                 setState("qr");
             } else {
                 setErrorMsg("Não consegui gerar o QR Code agora. Tente novamente.");
@@ -146,7 +173,7 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
         } catch (err) {
             falhou(err);
         }
-    }, [invokeWA, markConnected, falhou]);
+    }, [invokeWA, markConnected, falhou, medir]);
 
     // O código pode demorar uns segundos para sair do WhatsApp: pede de novo,
     // sempre com o mesmo número, até vir (ou até 6 tentativas).
@@ -164,11 +191,13 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
                     return;
                 }
                 if (payload?.pairingError) {
+                    medir("form_error", { step: "codigo", reason: payload.pairingError });
                     setErrorMsg(ERRO_CODIGO[payload.pairingError] ?? ERRO_CODIGO.unavailable);
                     setState(payload.pairingError === "invalid_number" ? "numero" : "error");
                     return;
                 }
                 if (payload?.pairingCode) {
+                    medir("form_submit", { step: "codigo" });
                     setCodigo(payload.pairingCode);
                     setState("codigo");
                     return;
@@ -180,7 +209,7 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
         } catch (err) {
             falhou(err);
         }
-    }, [invokeWA, markConnected, falhou]);
+    }, [invokeWA, markConnected, falhou, medir]);
 
     const checkStatus = useCallback(async () => {
         try {
@@ -211,11 +240,23 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
     // Abre → começa no modo escolhido. Fecha → limpa timers.
     useEffect(() => {
         if (!open) return;
+        medir("form_start", { step: "modal", modo });
         if (modo === "qr") void callConnect();
         else setState("numero");
         return () => clearTimers();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
+
+    // Número do cadastro chegou com o modal no campo do número: pede o código
+    // sozinho, uma vez por abertura. "Trocar número" continua ali.
+    const pediuSozinho = useRef(false);
+    useEffect(() => {
+        if (!open) { pediuSozinho.current = false; qrMedido.current = false; return; }
+        if (pediuSozinho.current || modo !== "codigo" || state !== "numero" || !numeroDoCadastro) return;
+        if (numeroDoCadastro.replace(/\D/g, "").length < 10) return;
+        pediuSozinho.current = true;
+        void pedirCodigo(numeroDoCadastro);
+    }, [open, modo, state, numeroDoCadastro, pedirCodigo]);
 
     // Esperando a leitura: poll de status; no QR, também renova o código.
     useEffect(() => {
@@ -236,6 +277,8 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
 
     const trocarModo = (m: Modo) => {
         if (m === modo) return;
+        medir("cta_click", { step: "trocar_modo", modo: m });
+        setPasso(-1);
         clearTimers();
         setModo(m);
         setErrorMsg("");
@@ -254,14 +297,24 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
     };
 
     const copiar = async () => {
-        if (!codigo) return;
+        if (!codigo) return false;
         try {
             await navigator.clipboard.writeText(codigo.replace(/-/g, ""));
             setCopiado(true);
             setTimeout(() => setCopiado(false), 1600);
+            return true;
         } catch {
             /* sem área de transferência */
+            return false;
         }
+    };
+
+    // No celular a pessoa digita o código no próprio WhatsApp: copia e abre o
+    // app, e a espera continua aqui quando ela voltar.
+    const copiarEAbrir = async () => {
+        await copiar();
+        medir("cta_click", { step: "abrir_whatsapp" });
+        window.location.href = "whatsapp://";
     };
 
     const handleClose = () => {
@@ -334,13 +387,48 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
                             </p>
                         )}
                         <div className="order-2 md:order-1">
-                            <ol className="flex flex-col gap-4">
-                                {PASSOS[modo].map((t, i) => (
-                                    <li key={t} className="flex gap-3">
-                                        <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#0F1730] text-[12px] font-semibold text-white">{i + 1}</span>
-                                        <span className="text-[14px] leading-snug text-[#1F2A3B]">{t}</span>
-                                    </li>
-                                ))}
+                            <div className="flex items-center justify-between gap-3">
+                                <p className="text-[13px] font-semibold text-[#1F2A3B]">Veja onde tocar</p>
+                                <div role="radiogroup" aria-label="Sistema do celular" className="inline-flex rounded-full border border-[#E6EDF5] bg-[#F8FAFC] p-0.5">
+                                    {([["android", "Android"], ["iphone", "iPhone"]] as const).map(([v, rotulo]) => (
+                                        <button
+                                            key={v}
+                                            type="button"
+                                            role="radio"
+                                            aria-checked={sistema === v}
+                                            onClick={() => {
+                                                if (v === sistema) return;
+                                                setSistema(v);
+                                                setPasso(-1);
+                                                medir("cta_click", { step: "sistema", sistema: v });
+                                            }}
+                                            className={`h-7 rounded-full px-3 text-[12.5px] font-semibold transition-colors duration-150 ${EASE} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1556C0] ${sistema === v ? "bg-white text-[#0F1730] shadow-[0_1px_2px_rgba(15,23,42,0.12)]" : "text-[#64748B] hover:text-[#0F1730]"}`}
+                                        >
+                                            {rotulo}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="mx-auto mt-3 w-full max-w-[380px]" style={{ aspectRatio: "380 / 420" }}>
+                                <Suspense fallback={null}>
+                                    <ConectarDemo sistema={sistema} modo={modo} onPasso={setPasso} />
+                                </Suspense>
+                            </div>
+                            <ol className="mt-4 flex flex-col gap-3" aria-label="Passos no WhatsApp">
+                                {passosDe(modo, sistema).map((t, i) => {
+                                    const feito = passo > i;
+                                    const agora = passo === i;
+                                    return (
+                                        <li key={t} className="flex gap-3" aria-current={agora ? "step" : undefined}>
+                                            <span
+                                                className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-[12px] font-semibold transition-colors duration-200 ${feito ? "bg-[#E7F8EE] text-[#0B7A43]" : agora || passo < 0 ? "bg-[#0F1730] text-white" : "bg-[#EEF2F7] text-[#64748B]"}`}
+                                            >
+                                                {feito ? <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden /> : i + 1}
+                                            </span>
+                                            <span className={`text-[14px] leading-snug transition-colors duration-200 ${agora || passo < 0 ? "text-[#0F1730]" : feito ? "text-[#475569]" : "text-[#64748B]"} ${agora ? "font-semibold" : ""}`}>{t}</span>
+                                        </li>
+                                    );
+                                })}
                             </ol>
                             <ul className="mt-6 flex flex-col gap-2 border-t border-[#EEF2F7] pt-5">
                                 {["Seu número continua o mesmo", "Nada sai para cliente sem você aprovar", "Dá para desconectar quando quiser, em Aparelhos conectados"].map((t) => (
@@ -392,13 +480,23 @@ export function WhatsAppConnectModal({ open, onClose, onConnected }: WhatsAppCon
                                     <div className="flex w-full flex-col items-center gap-3 text-center">
                                         <p className="text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Seu código</p>
                                         <p className="font-mono text-[32px] font-bold tracking-[0.12em] text-[#0F1730]" aria-live="polite">{codigo}</p>
+                                        {noCelular ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => void copiarEAbrir()}
+                                                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#0F1730] px-5 text-[15px] font-semibold text-white transition-colors duration-150 hover:bg-[#1F2A3B] active:scale-[0.97] motion-reduce:active:scale-100"
+                                            >
+                                                <WhatsAppIcon className="h-4 w-4" />
+                                                Copiar e abrir o WhatsApp
+                                            </button>
+                                        ) : null}
                                         <button
                                             type="button"
                                             onClick={() => void copiar()}
                                             className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#D7DEE9] px-4 text-[13px] font-semibold text-[#1F2A3B] transition-colors hover:bg-[#F1F5F9]"
                                         >
                                             {copiado ? <Check className="h-3.5 w-3.5 text-[#1556C0]" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}
-                                            {copiado ? "Copiado" : "Copiar código"}
+                                            {copiado ? "Copiado" : noCelular ? "Só copiar" : "Copiar código"}
                                         </button>
                                     </div>
                                 ) : state === "error" ? (

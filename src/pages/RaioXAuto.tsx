@@ -19,6 +19,9 @@ import { WhatsAppConnectModal } from "@/components/inbox/WhatsAppConnectModal";
 import { EvaBot, type EvaBotState } from "@/components/eva/EvaBot";
 import { APP_HOME } from "@/config/routes";
 import { raioXDismissKey } from "@/hooks/useEvaSetup";
+import { logLandingEvent } from "@/lib/landingFunnel";
+import { CONTACT, whatsappUrl } from "@/config/contact";
+import { Check } from "lucide-react";
 import "./raioXPalco.css";
 
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
@@ -36,6 +39,21 @@ const MONTANDO = [
     "Vendo quem falou por último em cada conversa…",
     "Somando o que ficou parado…",
     "Escrevendo a retomada das maiores…",
+];
+
+// Mesmo funil da home e do cadastro (landing_events, mesma sessão), com o
+// passo em props.step: dá pra ver onde quem criou a conta para.
+const FUNIL = "raio_x";
+const medir = (evento: "view" | "cta_click" | "form_submit" | "form_error" | "whatsapp_click", props: Record<string, string | number> = {}) =>
+    logLandingEvent(FUNIL, "solar", evento, props);
+
+// O que pesa na hora de conectar o WhatsApp num site novo. Tudo confere com o
+// produto: a leitura não envia nada, e o aparelho aparece (e sai) em Aparelhos
+// conectados, como o WhatsApp Web.
+const GARANTIAS = [
+    "Eu só leio. Nada é enviado para cliente nenhum.",
+    "Seu número e seu celular continuam iguais.",
+    "Você desconecta quando quiser, em Aparelhos conectados.",
 ];
 
 const n = (v: number) => v.toLocaleString("pt-BR");
@@ -100,6 +118,7 @@ export default function RaioXAuto() {
     useEffect(() => {
         if (wa.loading || iniciou.current) return;
         iniciou.current = true;
+        medir("view", { step: wa.connected ? "ja_conectado" : "conectar" });
         if (wa.connected) void montar();
         else setFase("conectar");
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -123,6 +142,7 @@ export default function RaioXAuto() {
             if (!vivo.current) return;
             const d = data as { token?: string; summary?: Resumo; message?: string } | null;
             if (d?.token && d.summary) {
+                medir("form_submit", { step: "pronto", paradas: d.summary.stuck });
                 setResultado({ token: d.token, resumo: d.summary });
                 setFase("pronto");
                 return;
@@ -130,6 +150,7 @@ export default function RaioXAuto() {
             throw new Error(d?.message || error?.message || "falhou");
         } catch (e) {
             if (!vivo.current) return;
+            medir("form_error", { step: "montar", reason: (e instanceof Error ? e.message : "erro").slice(0, 60) });
             setErro(e instanceof Error && /3 Raio-X/.test(e.message) ? e.message : "Não consegui montar o Raio-X agora. Tente de novo em alguns minutos.");
             setFase("erro");
         }
@@ -163,6 +184,7 @@ export default function RaioXAuto() {
                         <button
                             type="button"
                             onClick={() => {
+                                medir("cta_click", { step: "adiar", fase });
                                 if (companyId) try { localStorage.setItem(raioXDismissKey(companyId), "1"); } catch { /* sem storage */ }
                                 navigate(APP_HOME);
                             }}
@@ -203,13 +225,38 @@ export default function RaioXAuto() {
                                     {nome ? `${nome}, vou` : "Vou"} achar as propostas que ficaram paradas no seu WhatsApp.
                                 </h1>
                                 <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-[var(--vyz-text-muted)]">
-                                    Leio os últimos 90 dias e te mostro quanto está parado, com a retomada pronta das maiores. Leva uns 3 minutos. Eu só leio: nada é enviado para cliente nenhum.
+                                    Leio os últimos 90 dias e te mostro quanto está parado, com a retomada pronta das maiores. Leva uns 3 minutos.
                                 </p>
+                                <ul className="mx-auto mt-5 flex w-fit flex-col gap-2 text-left">
+                                    {GARANTIAS.map((g) => (
+                                        <li key={g} className="flex items-start gap-2.5 text-[14px] leading-snug text-[var(--vyz-text-strong)]">
+                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--vyz-accent)]" strokeWidth={2.5} aria-hidden />
+                                            {g}
+                                        </li>
+                                    ))}
+                                </ul>
                                 <div className="mt-7 flex flex-col items-center gap-2">
-                                    <button type="button" onClick={() => setConectar(true)} disabled={fase === "inicio"} className={BTN_PRIMARY}>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            medir("cta_click", { step: "conectar" });
+                                            setConectar(true);
+                                        }}
+                                        disabled={fase === "inicio"}
+                                        className={BTN_PRIMARY}
+                                    >
                                         Conectar meu WhatsApp
                                     </button>
                                     <p className="text-[12px] text-[var(--vyz-text-muted)]">Por um código no celular ou pelo QR Code.</p>
+                                    <a
+                                        href={whatsappUrl("Oi, Markus. Travei pra conectar o WhatsApp no Raio-X.", CONTACT.whatsappNumber)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={() => medir("whatsapp_click", { step: "ajuda" })}
+                                        className="mt-2 rounded-full px-3 py-1.5 text-[13px] font-medium text-[var(--vyz-text-muted)] underline underline-offset-4 hover:text-[var(--vyz-text-strong)]"
+                                    >
+                                        Travou? Fale com o Markus
+                                    </a>
                                 </div>
                             </div>
                         )}
@@ -228,7 +275,15 @@ export default function RaioXAuto() {
                             </div>
                         )}
 
-                        {fase === "pronto" && resultado && <Revelacao resumo={resultado.resumo} onVer={() => navigate(`/relatorio/${resultado.token}`)} />}
+                        {fase === "pronto" && resultado && (
+                    <Revelacao
+                        resumo={resultado.resumo}
+                        onVer={() => {
+                            medir("cta_click", { step: "ver_relatorio" });
+                            navigate(`/relatorio/${resultado.token}`);
+                        }}
+                    />
+                )}
 
                         {fase === "erro" && (
                             <div className="rx-entra">
@@ -254,6 +309,7 @@ export default function RaioXAuto() {
             </main>
 
             <WhatsAppConnectModal
+                funil={FUNIL}
                 open={conectar}
                 onClose={() => setConectar(false)}
                 onConnected={() => {
