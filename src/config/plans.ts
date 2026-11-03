@@ -2,7 +2,9 @@
  * Vyzon — Fonte ÚNICA de planos.
  *
  * Estrutura comercial (decisão de 01/11/2026): um plano só, "Vyzon", R$ 97/mês,
- * tudo liberado, até 10 usuários, sem preço de fundador. Três planos foram
+ * tudo liberado, até 10 usuários. Fundadoras (decisão de 03/11/2026): as 10
+ * primeiras integradoras usam de graça para sempre, em troca de feedback; o
+ * super admin marca "Pago" em AdminCompanyDetail sem passar pelo Stripe. Três planos foram
  * descartados porque só usuários e análises da Lume têm trava real no produto.
  * O id continua "pro" porque é o
  * que está gravado em companies.plan. O id "free" NÃO é plano comercial: é piso
