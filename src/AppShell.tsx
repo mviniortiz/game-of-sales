@@ -10,7 +10,7 @@ import { TenantProvider } from "@/contexts/TenantContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { BrandedLoader } from "@/components/ui/BrandedLoader";
+import { PageLoader } from "@/components/ui/PageLoader";
 import NotFound from "./pages/NotFound";
 import { EmbedController } from "@/components/embed/EmbedController";
 
@@ -65,7 +65,7 @@ const CheckoutRedirect = () => {
   return <Navigate to={`/criar-conta?plan=${plan}`} replace />;
 };
 
-const LazyFallback = () => <BrandedLoader />;
+const LazyFallback = () => <PageLoader />;
 
 // /orcamentos é a tela principal. Em dev, ?preview=1|vazio|erro renderiza com
 // dados fixos sem login (import.meta.env.DEV é false no build de produção).
