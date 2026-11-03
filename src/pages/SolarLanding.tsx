@@ -278,14 +278,15 @@ const AvisoNoWhatsApp = () => (
     </figure>
 );
 
-// Preço à vista, como na Heliux ("R$ 390 até 90 placas" no topo). Vem de
-// src/config/plans.ts.
+// Preço à vista, como na Heliux ("R$ 390 até 90 placas" no topo). As 10
+// primeiras integradoras usam de graça para sempre (03/11/2026); o preço
+// depois delas vem de src/config/plans.ts.
 const PriceLine = ({ className = "" }: { className?: string }) => (
     <p className={`text-[14.5px] leading-snug ${className}`} style={{ color: "var(--lp-ink-muted)" }}>
         <strong className="vs-num text-[17px] font-semibold" style={{ color: "var(--lp-ink)" }}>
-            {PRECO} por mês
-        </strong>
-        , tudo liberado para até 10 pessoas. Sem contrato.
+            Grátis para sempre
+        </strong>{" "}
+        nas 10 primeiras integradoras. Depois, {PRECO} por mês. Sem contrato.
     </p>
 );
 
@@ -412,7 +413,7 @@ const Calculator = ({ angle, onCta }: { angle: SolarAngle; onCta: () => void }) 
                             <span className="vs-marca">{brl(total)}</span>
                         </p>
                         <p className="mt-3 text-[14.5px]" style={{ color: "var(--lp-ink-muted)" }}>
-                            Nem tudo isso volta. O Vyzon acompanha o que ainda dá para chamar de volta, por {PRECO} por mês.
+                            Nem tudo isso volta. O Vyzon acompanha o que ainda dá para chamar de volta, e as 10 primeiras integradoras usam de graça.
                         </p>
                     </div>
                     <Link to={RAIO_X_AUTO} onClick={onCta} className="vs-btn mt-6 self-stretch sm:self-start">
@@ -514,17 +515,20 @@ const Offer = ({ onCta }: { onCta: () => void }) => (
             <div className="vs-preco vs-noite mt-4 self-start md:mt-0">
                 <p className="flex items-baseline gap-2">
                     <span className="vs-num text-[80px] font-semibold leading-[0.95]" style={{ color: "var(--lp-sol)" }}>
-                        {PRECO}
+                        R$ 0
                     </span>
                     <span className="text-[16px]" style={{ color: "var(--lp-ink-muted)" }}>
                         por mês
                     </span>
                 </p>
                 <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
-                    Pagamento no cartão de crédito.
+                    Para sempre, nas 10 primeiras integradoras. Em troca, você conta pra gente o que funciona e o que falta.
+                </p>
+                <p className="mt-2 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
+                    Depois delas, {PRECO} por mês no cartão de crédito.
                 </p>
                 <p className="mt-4 border-t pt-4 text-[15px] font-semibold leading-relaxed" style={{ borderColor: "var(--lp-line)" }}>
-                    Sem contrato: você paga mês a mês e para quando quiser.
+                    Sem contrato: você para quando quiser.
                 </p>
                 <div className="mt-6 flex flex-col">
                     <Link to={RAIO_X_AUTO} className="vs-btn vs-btn--sol" onClick={onCta}>
@@ -532,7 +536,7 @@ const Offer = ({ onCta }: { onCta: () => void }) => (
                     </Link>
                 </div>
                 <p className="mt-3 text-[14px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
-                    Você cria a conta, vê o Raio-X grátis e só paga se quiser continuar.
+                    Você cria a conta e vê o Raio-X. Se a sua integradora estiver entre as 10 primeiras, a gente libera tudo sem cobrar.
                 </p>
             </div>
         </div>
@@ -726,7 +730,7 @@ const FAQ = [
     },
     {
         q: "Quanto custa?",
-        a: `O Raio-X é grátis. Se depois você quiser que a Lume acompanhe as suas propostas todo mês, o Vyzon custa ${PRECO} por mês, com tudo liberado para até 10 pessoas da equipe. Não tem teste: o Raio-X já mostra o que o Vyzon acha no seu WhatsApp.`,
+        a: `O Raio-X é grátis. As 10 primeiras integradoras usam o Vyzon de graça, para sempre, com tudo liberado para até 10 pessoas da equipe. Em troca, contam pra gente o que funciona e o que falta. Depois delas, o Vyzon custa ${PRECO} por mês.`,
     },
     {
         q: "O que vocês fazem com as minhas conversas?",

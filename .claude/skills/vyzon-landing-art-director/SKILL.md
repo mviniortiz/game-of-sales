@@ -55,7 +55,8 @@ topo (Raio-X, EVA, placar, rascunho, aprovação A2).
    WhatsApp), dia 0 (manda orçamento como sempre), dia 1 (cliente visualiza
    e não responde), dia 2 (chega o aviso, único cartão noite).
 7. **Incluso + cartão de preço**: só o que existe no app. Plano único de
-   R$ 97/mês, sem preço de fundador (01/11/2026). Sem contrato (confirmado pelo
+   R$ 97/mês; as 10 primeiras integradoras usam de graça para sempre, em troca
+   de feedback (03/11/2026). Sem contrato (confirmado pelo
    Markus em 19/10/2026). O botão leva ao cadastro.
 8. **Objeções reais**, com as frases acima e a resposta de cada uma.
 9. **FAQ**, espelhado no FAQPage do `index.html`.

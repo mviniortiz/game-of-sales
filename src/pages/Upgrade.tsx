@@ -24,6 +24,9 @@ export default function Upgrade() {
                 <p className="text-[15px] text-[var(--vyz-text-muted)]">
                     Um plano só, com tudo liberado para a sua equipe.
                 </p>
+                <p className="mt-2 text-[13px] text-[var(--vyz-text-muted)]">
+                    As 10 primeiras integradoras não pagam. Se a sua é uma delas, a gente libera a conta sem cobrar e avisa no WhatsApp.
+                </p>
             </div>
 
             <div className="flex justify-center">
