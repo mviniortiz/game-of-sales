@@ -71,33 +71,38 @@
             "statusCode": 301
         },
         {
+            "source": "/alternativas",
+            "destination": "/",
+            "statusCode": 301
+        },
+        {
             "source": "/alternativa-hubspot",
-            "destination": "/alternativas",
+            "destination": "/",
             "statusCode": 301
         },
         {
             "source": "/alternativa-ploomes",
-            "destination": "/alternativas",
+            "destination": "/",
             "statusCode": 301
         },
         {
             "source": "/alternativa-rd-station",
-            "destination": "/alternativas",
+            "destination": "/",
             "statusCode": 301
         },
         {
             "source": "/alternativa-kommo",
-            "destination": "/alternativas",
+            "destination": "/",
             "statusCode": 301
         },
         {
             "source": "/alternativa-pipedrive",
-            "destination": "/alternativas",
+            "destination": "/",
             "statusCode": 301
         },
         {
             "source": "/alternativa-agendor",
-            "destination": "/alternativas",
+            "destination": "/",
             "statusCode": 301
         },
         {

@@ -27,7 +27,6 @@ const SolarAngleRoute = () => {
 };
 const BlogV2 = lazy(() => import("./pages/BlogV2"));
 const BlogPostV2 = lazy(() => import("./pages/BlogPostV2"));
-const Alternativas = lazy(() => import("./pages/Alternativas"));
 
 // Página temporária de validação da nova lateral da Lume na Inbox (remover após integrar).
 const EvaAssistPreview = lazy(() => import("./pages/EvaAssistPreview"));
@@ -53,9 +52,8 @@ const App = () => (
         <Route path="/relatorio/:token" element={<Suspense fallback={<LazyFallback />}><RaioXReport /></Suspense>} />
         <Route path="/blog" element={<Suspense fallback={<LazyFallback />}><BlogV2 /></Suspense>} />
         <Route path="/blog/:slug" element={<Suspense fallback={<LazyFallback />}><BlogPostV2 /></Suspense>} />
-        <Route path="/alternativas" element={<Suspense fallback={<LazyFallback />}><Alternativas /></Suspense>} />
         {/* Personas /para-* despublicadas 2026-06-16 — 301 → home no vercel.json. */}
-        {/* /alternativa-* individuais → /alternativas (hub republicado 2026-07-22). */}
+        {/* /alternativas e /alternativa-* despublicadas 2026-11-03 (comparativo de CRM genérico, fora do nicho solar) — 301 → home no vercel.json. */}
         {/* Rotas /crm-* despublicadas 2026-06-10 — 301 → home no vercel.json. */}
         <Route
           path="/eva-assist-preview"
