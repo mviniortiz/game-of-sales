@@ -6,6 +6,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
+import { EvaBot } from "@/components/eva/EvaBot";
 import { supabase } from "@/integrations/supabase/client";
 import { getAttribution } from "@/lib/attribution";
 import { trackEvent } from "@/lib/analytics";
@@ -13,6 +14,12 @@ import { trackEvent } from "@/lib/analytics";
 const NUMEROS = ["2", "3 a 5", "6 a 10", "Mais de 10"];
 const VENDEDORES = ["1 a 3", "4 a 10", "11 a 30", "Mais de 30"];
 const PROPOSTAS = ["Até 50", "50 a 200", "200 a 500", "Mais de 500"];
+
+const PASSOS: [string, string][] = [
+    ["Você conta como vende", "Quantos números, quantas pessoas e onde as propostas se perdem hoje."],
+    ["O Markus te chama no WhatsApp", "Ele lê o que você respondeu antes, para a conversa ser curta."],
+    ["Plano e preço do seu tamanho", "Montados para a sua equipe e combinados com você."],
+];
 
 const CAMPO =
     "h-12 w-full rounded-xl border bg-white px-4 text-[16px] outline-none transition-[border-color,box-shadow] duration-150 focus:border-[var(--lp-blue)] focus:shadow-[0_0_0_3px_rgba(21,86,192,0.18)]";
@@ -76,7 +83,7 @@ export default function Escala() {
 
     return (
         <div className="lp-v2 lp-solar min-h-screen">
-            <div className="vs-topo">
+            <div>
                 <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between px-4 py-5 sm:px-5 md:px-8">
                     <Link to="/" aria-label="Vyzon, início">
                         <ThemeLogo className="h-[22px] w-auto" />
@@ -87,9 +94,9 @@ export default function Escala() {
                 </header>
             </div>
 
-            <main className="mx-auto w-full max-w-[640px] px-4 pb-20 pt-10 sm:px-5 md:pt-16">
+            <main className="mx-auto w-full max-w-[1120px] px-4 pb-20 pt-8 sm:px-5 md:px-8 md:pt-14">
                 {enviado ? (
-                    <section aria-live="polite">
+                    <section aria-live="polite" className="max-w-[640px]">
                         <p className="vs-label">Plano Escala</p>
                         <h1 className="vs-display mt-3 text-[34px] leading-[1.05] md:text-[44px]">Recebemos, {nome.split(" ")[0] || "obrigado"}.</h1>
                         <p className="mt-4 text-[17px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
@@ -100,7 +107,8 @@ export default function Escala() {
                         </Link>
                     </section>
                 ) : (
-                    <>
+                    <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_360px] md:gap-12">
+                    <div>
                         <p className="vs-label">Plano Escala</p>
                         <h1 className="vs-display mt-3 text-[34px] leading-[1.05] md:text-[44px]">
                             Sua equipe vende por <span className="vs-azul">mais de um WhatsApp?</span>
@@ -109,7 +117,7 @@ export default function Escala() {
                             Conta como a sua operação funciona. A gente monta o plano e o preço com você, do tamanho da sua equipe.
                         </p>
 
-                        <form onSubmit={enviar} className="mt-10 space-y-6">
+                        <form onSubmit={enviar} className="mt-8 space-y-7 rounded-[22px] border p-5 sm:p-7" style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}>
                             <div className="grid gap-5 sm:grid-cols-2">
                                 <Campo rotulo="Seu nome" id="nome">
                                     <input id="nome" required autoComplete="name" value={nome} onChange={(e) => setNome(e.target.value)} className={CAMPO} style={{ borderColor: "var(--lp-line)" }} />
@@ -148,14 +156,38 @@ export default function Escala() {
                                 </p>
                             )}
 
-                            <button type="submit" className="vs-btn w-full sm:w-auto" disabled={enviando}>
+                            <button type="submit" className="vs-btn w-full" disabled={enviando}>
                                 {enviando ? "Enviando" : "Falar com um especialista"}
                             </button>
                             <p className="text-[14px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
                                 Usamos esses dados só para conversar sobre o seu plano.
                             </p>
                         </form>
-                    </>
+                    </div>
+                    <aside className="vs-noite self-start rounded-[22px] p-6 md:sticky md:top-8 md:p-7" aria-label="O que acontece depois">
+                        <div className="flex items-center gap-3">
+                            <EvaBot size={44} state="idle" />
+                            <p className="text-[15px] font-semibold">O que acontece depois</p>
+                        </div>
+                        <ol className="mt-6 space-y-5">
+                            {PASSOS.map(([titulo, texto], i) => (
+                                <li key={titulo} className="flex gap-4">
+                                    <span className="vs-num flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[17px] font-semibold" style={{ background: "var(--lp-sol)", color: "var(--lp-ink)" }}>
+                                        {i + 1}
+                                    </span>
+                                    <div>
+                                        <p className="text-[15px] font-semibold leading-snug">{titulo}</p>
+                                        <p className="mt-1 text-[14px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>{texto}</p>
+                                    </div>
+                                </li>
+                            ))}
+                        </ol>
+                        <p className="mt-6 border-t pt-5 text-[14px] leading-relaxed" style={{ borderColor: "var(--lp-line)", color: "var(--lp-ink-muted)" }}>
+                            Só um número? O plano de R$ 97 por mês já cobre, com até 10 pessoas da equipe.{" "}
+                            <Link to="/" className="font-semibold underline underline-offset-2" style={{ color: "#fff" }}>Ver o plano</Link>
+                        </p>
+                    </aside>
+                    </div>
                 )}
             </main>
         </div>
