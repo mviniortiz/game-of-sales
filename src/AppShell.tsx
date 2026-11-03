@@ -77,7 +77,7 @@ const OrcamentosRoute = () => {
     </AppLayout>
   );
   if (import.meta.env.DEV && params.get("preview")) return page;
-  return <ProtectedRoute>{page}</ProtectedRoute>;
+  return <ProtectedRoute esqueleto="mesa">{page}</ProtectedRoute>;
 };
 
 // Mesmo trato do OrcamentosRoute: ?preview= em dev abre com dados de exemplo, sem login.
@@ -89,7 +89,7 @@ const InicioRoute = () => {
     </AppLayout>
   );
   if (import.meta.env.DEV && params.get("preview")) return page;
-  return <ProtectedRoute>{page}</ProtectedRoute>;
+  return <ProtectedRoute esqueleto="mesa">{page}</ProtectedRoute>;
 };
 
 const PreProdRoute = ({ children, fallback = "/dashboard" }: { children: React.ReactNode; fallback?: string }) => {

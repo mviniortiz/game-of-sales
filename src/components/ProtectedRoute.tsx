@@ -1,9 +1,13 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { AppShellSkeleton } from "@/components/layout/AppShellSkeleton";
 import { BrandedLoader } from "@/components/ui/BrandedLoader";
 
-export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+// esqueleto "mesa": rotas dentro do AppLayout (lateral + tela), onde o
+// carregamento desenha a mesma mesa do login. Sem ele, telas cheias como
+// /configurar-eva e /raio-x ficam com o loader da marca, sem lateral fantasma.
+export const ProtectedRoute = ({ children, esqueleto }: { children: React.ReactNode; esqueleto?: "mesa" }) => {
   const { user, loading, profile, companyId, isSuperAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const corruptedSessionCleanupInProgress = useRef(false);
@@ -41,8 +45,10 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user, loading, profile, companyId, isSuperAdmin, navigate, signOut]);
 
+  // Um carregamento só, do começo ao perfil: não troca de legenda nem remonta.
+  const carregando = esqueleto === "mesa" ? <AppShellSkeleton carregando /> : <BrandedLoader />;
   if (loading) {
-    return <BrandedLoader label="Carregando..." />;
+    return carregando;
   }
 
   if (!user) {
@@ -51,7 +57,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   // Profile ainda carregando: loader amigável (effect de signOut cuida se persistir)
   if (!profile) {
-    return <BrandedLoader label="Carregando perfil..." />;
+    return carregando;
   }
 
   // Sem company — effect já redirecionou pro onboarding, renderiza nada
