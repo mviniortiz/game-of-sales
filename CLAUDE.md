@@ -90,7 +90,7 @@ está BLOQUEADO por billing; não criar workflows.
 - Supabase: Postgres + RLS + edge functions (`supabase/functions/`),
   migrations em `supabase/migrations/`. Núcleo agéntico: edge
   `eva-agent-loop` (function-calling, teto de 6 iterações) + tabelas
-  `agent_tools`/`agent_runs`/`agent_steps`. Pagamentos: Mercado Pago.
+  `agent_tools`/`agent_runs`/`agent_steps`. Assinatura: Stripe.
   Analytics: GA4 + Google Ads + Meta Pixel + Clarity (carregados após 1ª
   interação).
 - Quem dispara o agente (desde 24/08): cron `eva-agent-tick` às 9h BRT em dia
@@ -136,11 +136,18 @@ está BLOQUEADO por billing; não criar workflows.
   `active` (`company_is_paid()` no banco, `usePlano()` no front). Sem
   assinatura: só placar, assinatura, conta e ajuda (`rotaGratis`); a EVA não
   lê, não rascunha, não roda agente nem aprende (filtro nas funções de cron).
-  Cobrança MANUAL desde 08/10/2026: /upgrade abre o WhatsApp do Markus, ele
-  manda link do Mercado Pago e marca "Pago" em AdminCompanyDetail. Plano e
+  Cobrança pelo Stripe desde 02/11/2026: /upgrade chama a edge
+  `assinatura-checkout` (Checkout no cartão, preço achado pela lookup_key
+  `vyzon_mensal`, criado na 1ª compra a partir de `PRECO_CENTAVOS` em
+  `_shared/stripe.ts`); Faturamento abre o portal do Stripe
+  (`assinatura-portal`) para cartão, faturas e cancelamento no fim do ciclo.
+  Só a `assinatura-webhook` (assinada com `STRIPE_WEBHOOK_SECRET`) libera ou
+  corta a conta, gravando `stripe_customer_id`/`stripe_subscription_id`.
+  "Pago" manual em AdminCompanyDetail segue para quem paga por fora. Plano e
   assinatura só mudam por service_role ou super admin (trigger
-  `guard_company_billing`). Edges mercadopago-* estão dormentes e o webhook
-  não valida assinatura; não religar sem consertar.
+  `guard_company_billing`). O Mercado Pago de assinatura foi removido;
+  `mercadopago-sales-webhook` e `stripe-webhook` são integrações de VENDAS
+  dos clientes, outra coisa.
 - CTAs: home solar sem conversa com o Markus (01/11/2026): o topo leva à
   calculadora e a oferta ao Raio-X automático
   (`/criar-conta?segmento=energia_solar`, o cadastro dispara o Lead do pixel).

@@ -8,12 +8,12 @@ import {
   Star, Crown, Rocket, Check, ArrowRight, Users, CreditCard,
   Loader2, AlertTriangle, Calendar, HeartCrack,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 import { PLAN_FEATURES, PlanType } from "@/config/planConfig";
 import { PLANS, formatPrice } from "@/config/plans";
 import { whatsappUrl } from "@/config/contact";
-import { CancelSubscriptionDialog } from "@/components/configuracoes/CancelSubscriptionDialog";
-import { normalizeSubscriptionStatus, type SubscriptionStatus } from "@/lib/utils";
+import { formatError, normalizeSubscriptionStatus, type SubscriptionStatus } from "@/lib/utils";
 
 // Ícones por plano — os dados (preço, features, limites) vêm da fonte única
 // em src/config/plans.ts, nada de lista hardcoded aqui.
@@ -26,7 +26,8 @@ interface Subscription {
   status: SubscriptionStatus;
   cancelled_at: string | null;
   ends_at: string | null;
-  mp_subscription_id: string | null;
+  /** Cliente no Stripe: tem portal para cartão, faturas e cancelamento. */
+  stripe_customer_id: string | null;
 }
 
 
@@ -41,7 +42,10 @@ export default function Faturamento() {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [teamCount, setTeamCount] = useState(0);
-  const [cancelOpen, setCancelOpen] = useState(false);
+  const [abrindoPortal, setAbrindoPortal] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Volta do checkout: o webhook pode levar uns segundos para liberar a conta.
+  const [confirmando, setConfirmando] = useState(searchParams.get("assinatura") === "ok");
 
   const load = async () => {
     if (!effectiveCompanyId) return;
@@ -50,7 +54,7 @@ export default function Faturamento() {
     const [companyRes, teamRes] = await Promise.all([
       supabase
         .from("companies")
-        .select("subscription_status, subscription_cancelled_at, subscription_ends_at, mp_subscription_id")
+        .select("subscription_status, subscription_cancelled_at, subscription_ends_at, stripe_customer_id")
         .eq("id", effectiveCompanyId)
         .maybeSingle(),
       supabase.from("profiles").select("id", { count: "exact", head: true }).eq("company_id", effectiveCompanyId),
@@ -62,7 +66,7 @@ export default function Faturamento() {
 
         cancelled_at: companyRes.data.subscription_cancelled_at,
         ends_at: companyRes.data.subscription_ends_at,
-        mp_subscription_id: companyRes.data.mp_subscription_id,
+        stripe_customer_id: companyRes.data.stripe_customer_id,
       });
     }
 
@@ -74,12 +78,62 @@ export default function Faturamento() {
     load();
   }, [effectiveCompanyId]);
 
+  useEffect(() => {
+    if (!confirmando || !effectiveCompanyId) return;
+    let tentativas = 0;
+    const timer = window.setInterval(async () => {
+      tentativas += 1;
+      const { data } = await supabase
+        .from("companies")
+        .select("subscription_status")
+        .eq("id", effectiveCompanyId)
+        .maybeSingle();
+      if (data?.subscription_status === "active") {
+        window.clearInterval(timer);
+        toast.success("Pagamento aprovado. Sua conta está liberada.");
+        // Recarrega para o menu e as travas lerem a assinatura nova.
+        window.location.replace("/configuracoes/faturamento");
+      } else if (tentativas >= 20) {
+        window.clearInterval(timer);
+        setConfirmando(false);
+        setSearchParams({}, { replace: true });
+        toast.message("O pagamento ainda está sendo confirmado. A conta libera sozinha assim que ele for aprovado.");
+      }
+    }, 2000);
+    return () => window.clearInterval(timer);
+  }, [confirmando, effectiveCompanyId]);
+
+  const abrirPortal = async () => {
+    setAbrindoPortal(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("assinatura-portal", {
+        body: { companyId: effectiveCompanyId },
+      });
+      if (error) throw error;
+      if (!data?.url) throw new Error(data?.error || "Sem link");
+      window.location.assign(data.url);
+    } catch (e) {
+      toast.error(`Não deu para abrir a assinatura: ${formatError(e)}`);
+      setAbrindoPortal(false);
+    }
+  };
+
   if (!isAdmin) {
     return (
       <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] p-8 text-center">
         <p className="text-sm text-muted-foreground">
           Apenas admins podem acessar faturamento.
         </p>
+      </div>
+    );
+  }
+
+  if (confirmando) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 text-center" role="status">
+        <Loader2 className="h-5 w-5 animate-spin motion-reduce:animate-none text-muted-foreground" />
+        <p className="text-sm font-medium text-foreground">Confirmando o pagamento</p>
+        <p className="text-xs text-muted-foreground">Leva poucos segundos.</p>
       </div>
     );
   }
@@ -121,7 +175,8 @@ export default function Faturamento() {
           </div>
           <Button
             size="sm"
-            onClick={() => navigate("/upgrade")}
+            disabled={abrindoPortal}
+            onClick={() => (subscription?.stripe_customer_id && status === "active" ? abrirPortal() : navigate("/upgrade"))}
             className="h-8 text-xs rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 shrink-0"
           >
             Reativar
@@ -193,7 +248,7 @@ export default function Faturamento() {
           <div className="flex-1 min-w-0">
             <h2 className="text-[13px] font-semibold text-foreground">Assinar o Vyzon</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {formatPrice(PLANS.pro.monthlyPrice)}/mês, tudo liberado. Pagamento por Pix ou cartão.
+              {formatPrice(PLANS.pro.monthlyPrice)}/mês, tudo liberado. Pagamento no cartão de crédito.
             </p>
           </div>
           <Button
@@ -207,39 +262,42 @@ export default function Faturamento() {
         </div>
       )}
 
-      {/* Danger zone: só existe o que cancelar quando a assinatura está paga */}
-      {status === "active" && !isCancelled && (
-        <div className="pt-6 mt-2 border-t border-border/30">
-          <div className="flex items-center justify-between gap-4 px-1">
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-muted-foreground">
-                Cancelar assinatura
-              </p>
-              <p className="text-[11px] text-muted-foreground/60 mt-0.5 leading-relaxed">
-                Você mantém acesso até o fim do ciclo pago atual.
-              </p>
-            </div>
-            <button
-              onClick={() => setCancelOpen(true)}
-              className="text-[12px] font-medium text-muted-foreground hover:text-rose-400 transition-colors px-3 py-1.5 rounded-md hover:bg-rose-500/5 shrink-0"
-            >
-              Cancelar
-            </button>
+      {/* Assinatura no cartão: cartão, faturas e cancelamento ficam no portal do Stripe */}
+      {status === "active" && !isCancelled && subscription?.stripe_customer_id && (
+        <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-[13px] font-semibold text-foreground">Gerenciar assinatura</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Trocar o cartão, baixar as faturas ou cancelar. Cancelando, o acesso segue até o fim do mês já pago.
+            </p>
           </div>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={abrindoPortal}
+            onClick={abrirPortal}
+            className="h-9 rounded-full shrink-0"
+          >
+            {abrindoPortal ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin motion-reduce:animate-none" /> : <CreditCard className="h-3.5 w-3.5 mr-1.5" />}
+            Abrir
+          </Button>
         </div>
       )}
 
-      {/* Cancel dialog */}
-      {effectiveCompanyId && (
-        <CancelSubscriptionDialog
-          open={cancelOpen}
-          onClose={() => setCancelOpen(false)}
-          companyId={effectiveCompanyId}
-          planLabel={planInfo.label}
-          onCancelled={() => {
-            load();
-          }}
-        />
+      {/* Paga por fora do cartão (combinada antes do Stripe): muda pelo suporte */}
+      {status === "active" && !subscription?.stripe_customer_id && (
+        <p className="px-1 text-[11px] text-muted-foreground leading-relaxed">
+          Sua assinatura foi combinada direto com o Vyzon. Para mudar a forma de pagamento ou cancelar,{" "}
+          <a
+            href={whatsappUrl("Oi! Quero mudar a assinatura do Vyzon.")}
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium text-foreground underline underline-offset-2"
+          >
+            fale com o suporte
+          </a>
+          .
+        </p>
       )}
     </div>
   );

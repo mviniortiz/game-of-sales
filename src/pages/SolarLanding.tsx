@@ -520,7 +520,7 @@ const Offer = ({ onCta }: { onCta: () => void }) => (
                     </span>
                 </p>
                 <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
-                    Pagamento por Pix ou cartão.
+                    Pagamento no cartão de crédito.
                 </p>
                 <p className="mt-4 border-t pt-4 text-[15px] font-semibold leading-relaxed" style={{ borderColor: "var(--lp-line)" }}>
                     Sem contrato: você paga mês a mês e para quando quiser.

@@ -787,6 +787,8 @@ export type Database = {
           mp_customer_id: string | null
           mp_plan_id: string | null
           mp_subscription_id: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           name: string
           phone: string | null
           plan: string | null
@@ -821,6 +823,8 @@ export type Database = {
           mp_customer_id?: string | null
           mp_plan_id?: string | null
           mp_subscription_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           name: string
           phone?: string | null
           plan?: string | null
@@ -855,6 +859,8 @@ export type Database = {
           mp_customer_id?: string | null
           mp_plan_id?: string | null
           mp_subscription_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           name?: string
           phone?: string | null
           plan?: string | null

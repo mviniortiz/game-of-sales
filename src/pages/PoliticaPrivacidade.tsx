@@ -66,7 +66,7 @@ const SECOES: LegalSection[] = [
                 </P>
 
                 <Sub>Pagamento</Sub>
-                <P>A cobrança é feita por link do Mercado Pago. Os dados do cartão ficam com o Mercado Pago, e o Vyzon não os recebe.</P>
+                <P>A cobrança da assinatura é feita pelo Stripe. Os dados do cartão ficam com o Stripe, e o Vyzon não os recebe.</P>
             </>
         ),
     },
@@ -121,7 +121,7 @@ const SECOES: LegalSection[] = [
                     "Railway, que hospeda o servidor de conexão do WhatsApp por QR code;",
                     "Kapso, quando a conexão usa a API oficial do WhatsApp;",
                     "os provedores de inteligência artificial da seção anterior;",
-                    "Mercado Pago, para a cobrança;",
+                    "Stripe, para a cobrança da assinatura;",
                     "Google, Meta e Microsoft, nas ferramentas de medição e anúncios;",
                     "autoridades, quando a lei exigir.",
                 ]} />
