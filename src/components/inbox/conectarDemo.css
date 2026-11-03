@@ -1,0 +1,192 @@
+/* Passo a passo do WhatsApp (ConectarDemo). Tudo aninhado em .cd; as medidas
+   dentro do celular são pontos da tela real (Phone escala a tela inteira). */
+.cd {
+  --cd-wa: #1daa61;
+  --cd-wa-escuro: #0b7a43;
+  --cd-wa-claro: #e7f8ee;
+  --cd-tinta: #111b21;
+  --cd-cinza: #54656f;
+  --cd-linha: #e9edef;
+  --cd-fundo-busca: #f0f2f5;
+  --cd-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cd .ss-stage { background: transparent; overflow: hidden; }
+
+.cd .cd-cena {
+  position: absolute;
+  inset: 0;
+  /* O celular corre para fora do palco: some em degradê, nunca num corte seco */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 64px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 64px), transparent);
+}
+.cd .cd-cena[data-baixo] {
+  -webkit-mask-image: linear-gradient(to top, #000 calc(100% - 64px), transparent);
+  mask-image: linear-gradient(to top, #000 calc(100% - 64px), transparent);
+}
+
+.cd .cd-trilho {
+  position: absolute;
+  transition: transform 640ms var(--cd-ease);
+  will-change: transform;
+}
+
+.cd .cd-phone { box-shadow: 0 24px 48px -28px rgba(15, 23, 48, 0.45); border-radius: inherit; }
+
+.cd .cd-telas { position: absolute; inset: 0; overflow: hidden; }
+/* A área do Phone tem o respiro da barra de status como padding; a tela
+   absoluta ignora padding, então cada tela começa abaixo dela por conta própria.
+   O fundo de cada tela sobe por baixo da barra, como no app. */
+.cd .cd-tela { padding-top: 48px; }
+.cd .cd-phone--iphone .cd-tela { padding-top: 62px; }
+.cd .ss-phone__content[data-status] { padding-top: 0; }
+
+.cd .cd-tela {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  color: var(--cd-tinta);
+  font-family: "Roboto", system-ui, -apple-system, sans-serif;
+  transition: transform 380ms var(--cd-ease), opacity 380ms var(--cd-ease);
+  will-change: transform;
+}
+.cd .cd-phone--iphone .cd-tela { font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; }
+.cd .cd-tela[data-pos="antes"] { transform: translateX(-28%); opacity: 0; pointer-events: none; }
+.cd .cd-tela[data-pos="depois"] { transform: translateX(100%); pointer-events: none; }
+.cd .cd-tela[data-pos="aba"] { opacity: 0; pointer-events: none; transition-duration: 220ms; }
+.cd .cd-tela[data-pos="agora"] { transform: none; opacity: 1; z-index: 1; }
+.cd .cd-tela--escura { background: #0b1014; color: #fff; }
+
+/* Conversas */
+.cd .cd-topo { display: flex; align-items: center; justify-content: space-between; height: 64px; padding: 0 8px 0 20px; }
+.cd .cd-marca { font-size: 26px; font-weight: 600; letter-spacing: -0.2px; color: var(--cd-wa); }
+.cd .cd-icones { display: flex; align-items: center; gap: 8px; color: var(--cd-tinta); }
+.cd .cd-toque { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 24px; flex: none; }
+.cd .cd-toque[data-pressed] { background: rgba(17, 27, 33, 0.08); }
+.cd .cd-titulo-grande { display: flex; flex-direction: column; gap: 14px; padding: 6px 20px 10px; }
+.cd .cd-titulo-grande span:not(.ss-bar) { font-size: 34px; font-weight: 700; letter-spacing: -0.4px; line-height: 1.15; }
+.cd .cd-busca { display: flex; align-items: center; height: 46px; margin: 6px 16px 8px; padding: 0 18px; border-radius: 23px; background: var(--cd-fundo-busca); }
+.cd .cd-lista { display: flex; flex-direction: column; }
+.cd .cd-linha { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 14px; height: 76px; padding: 0 20px; }
+.cd .cd-linha__texto { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.cd .cd-avatar { width: 52px; height: 52px; border-radius: 26px; background: #dfe5e7; flex: none; }
+.cd .cd-avatar[data-i="1"] { background: #e5e0d8; }
+.cd .cd-avatar[data-i="2"] { background: #d9e3ea; }
+.cd .cd-avatar[data-i="3"] { background: #e3dde6; }
+.cd .cd-avatar--grande { width: 64px; height: 64px; border-radius: 32px; }
+
+/* Menu do ⋮ (Android) */
+.cd .cd-menu {
+  position: absolute;
+  top: 54px;
+  right: 10px;
+  z-index: 5;
+  width: 262px;
+  padding: 8px 0;
+  border-radius: 14px;
+  --ss-popover-bg: #fff;
+  --ss-popover-shadow: 0 2px 6px rgba(0, 0, 0, 0.14), 0 12px 32px rgba(0, 0, 0, 0.16);
+}
+.cd .cd-menu__item { display: flex; align-items: center; height: 50px; padding: 0 20px; }
+.cd .cd-menu__item--real { font-size: 17px; color: var(--cd-tinta); }
+.cd .cd-menu__item--real > span { padding-right: 8px; }
+.cd .cd-menu__item--real[data-pressed] { background: rgba(17, 27, 33, 0.07); }
+
+/* Configurações (iPhone) */
+.cd .cd-phone--iphone .cd-tela { background: #f2f2f7; }
+.cd .cd-phone--iphone .cd-tela--escura { background: #0b1014; }
+.cd .cd-perfil { display: flex; align-items: center; gap: 14px; margin: 4px 16px 0; padding: 14px 16px; border-radius: 14px; background: #fff; }
+.cd .cd-grupo { margin: 22px 16px 0; border-radius: 14px; background: #fff; overflow: hidden; }
+.cd .cd-item { display: flex; align-items: center; gap: 14px; height: 50px; padding: 0 16px; }
+.cd .cd-item + .cd-item { box-shadow: inset 0 0.5px 0 0 #d8d8dc; }
+.cd .cd-item[data-pressed] { background: #e5e5ea; }
+.cd .cd-item__icone { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; flex: none; background: #d1d5db; color: #fff; }
+.cd .cd-item__icone[data-cor="wa"] { background: var(--cd-wa); }
+.cd .cd-item__icone[data-cor="1"] { background: #c7d2fe; }
+.cd .cd-item__icone[data-cor="2"] { background: #fde68a; }
+.cd .cd-item__icone[data-cor="3"] { background: #bfdbfe; }
+.cd .cd-item__icone[data-cor="4"] { background: #fecaca; }
+.cd .cd-item__icone[data-cor="5"] { background: #bbf7d0; }
+.cd .cd-item__texto { font-size: 17px; color: #000; }
+
+/* Abas do iPhone */
+.cd .cd-abas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding: 8px 4px 36px;
+  background: rgba(249, 249, 249, 0.96);
+  box-shadow: inset 0 0.5px 0 0 #c6c6c8;
+  color: #8e8e93;
+  opacity: 0;
+  transition: opacity 260ms var(--cd-ease);
+}
+.cd .cd-abas[data-show] { opacity: 1; }
+.cd .cd-aba { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px 0; }
+.cd .cd-aba__rotulo { font-size: 11px; font-weight: 500; line-height: 1.3; }
+.cd .cd-aba[data-pressed] { color: var(--cd-wa); }
+
+/* Aparelhos conectados */
+.cd .cd-barra { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 12px 0 4px; }
+.cd .cd-barra__titulo { font-size: 21px; font-weight: 500; }
+.cd .cd-barra--iphone { position: relative; justify-content: center; height: 52px; }
+.cd .cd-barra--iphone .cd-toque { position: absolute; left: 4px; color: var(--cd-wa); }
+.cd .cd-barra--iphone .cd-barra__titulo { font-size: 17px; font-weight: 600; }
+.cd .cd-arte { display: grid; place-items: center; height: 96px; margin: 8px 24px 0; border-radius: 18px; background: var(--cd-wa-claro); color: var(--cd-wa-escuro); }
+.cd .cd-phone--iphone .cd-arte { background: #fff; }
+.cd .cd-centro { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px 24px 0; }
+.cd .cd-botao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  margin: 18px 24px 0;
+  border-radius: 24px;
+  background: var(--cd-wa);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+.cd .cd-botao[data-pressed] { transform: scale(0.97); background: var(--cd-wa-escuro); }
+.cd .cd-secao { padding: 20px 24px 10px; }
+.cd .cd-aparelho { display: flex; align-items: center; gap: 14px; margin: 0 12px; padding: 12px; border-radius: 14px; transition: background-color 900ms var(--cd-ease); }
+.cd .cd-aparelho[data-novo] { background: var(--cd-wa-claro); }
+.cd .cd-phone--iphone .cd-aparelho { background: #fff; }
+.cd .cd-aparelho__icone { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 22px; flex: none; background: var(--cd-wa); color: #fff; }
+
+/* Câmera */
+.cd .cd-camera { display: flex; flex-direction: column; align-items: center; height: 100%; }
+.cd .cd-camera__topo { padding: 34px 0 0; }
+.cd .cd-claro { background: rgba(255, 255, 255, 0.4) !important; }
+.cd .cd-visor { position: relative; display: grid; place-items: center; width: 220px; height: 220px; margin-top: 24px; }
+.cd .cd-canto { position: absolute; width: 44px; height: 44px; border: 0 solid #fff; transition: border-color 300ms var(--cd-ease); }
+.cd .cd-canto--tl { top: 0; left: 0; border-top-width: 4px; border-left-width: 4px; border-top-left-radius: 16px; }
+.cd .cd-canto--tr { top: 0; right: 0; border-top-width: 4px; border-right-width: 4px; border-top-right-radius: 16px; }
+.cd .cd-canto--bl { bottom: 0; left: 0; border-bottom-width: 4px; border-left-width: 4px; border-bottom-left-radius: 16px; }
+.cd .cd-canto--br { bottom: 0; right: 0; border-bottom-width: 4px; border-right-width: 4px; border-bottom-right-radius: 16px; }
+.cd .cd-visor[data-lido] .cd-canto { border-color: var(--cd-wa); }
+.cd .cd-qr { display: grid; place-items: center; width: 168px; height: 168px; border-radius: 12px; background: #fff; color: #111; opacity: 0; transform: translateY(24px) scale(0.92); transition: opacity 420ms var(--cd-ease), transform 520ms var(--cd-ease); }
+.cd .cd-qr[data-show] { opacity: 1; transform: none; }
+.cd .cd-link { margin-top: 22px; padding: 10px 16px; border-radius: 22px; font-size: 17px; font-weight: 600; color: #fff; }
+.cd .cd-link[data-pressed] { background: rgba(255, 255, 255, 0.14); }
+
+/* Código */
+.cd .cd-centro--codigo { padding-top: 26px; }
+.cd .cd-centro--rodape { padding-top: 44px; }
+.cd .cd-codigo { display: flex; justify-content: center; gap: 8px; padding: 34px 20px 0; }
+.cd .cd-casa { position: relative; display: grid; place-items: center; width: 36px; height: 50px; border-bottom: 2px solid #c9d1d5; }
+.cd .cd-casa[data-meio] { margin-left: 18px; }
+.cd .cd-casa[data-meio]::before { content: ""; position: absolute; left: -17px; top: 24px; width: 10px; height: 2px; border-radius: 1px; background: #8696a0; }
+.cd .cd-casa[data-cheia] { border-bottom-color: var(--cd-wa); }
+.cd .cd-casa[data-agora] { border-bottom-color: var(--cd-tinta); }
+.cd .cd-casa__letra { font-size: 26px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--cd-tinta); opacity: 0; transform: translateY(6px); transition: opacity 160ms ease, transform 200ms var(--cd-ease); will-change: transform; }
+.cd .cd-casa[data-cheia] .cd-casa__letra { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cd .cd-trilho, .cd .cd-tela, .cd .cd-qr, .cd .cd-casa__letra, .cd .cd-botao, .cd .cd-aparelho, .cd .cd-abas { transition: none; }
+}
