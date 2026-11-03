@@ -17,6 +17,7 @@ const AppShell = lazy(() => import("./AppShell"));
 // O login v2 virou a página de /auth (dentro do AppShell, com AuthProvider).
 const SolarLanding = lazy(() => import("./pages/SolarLanding"));
 const RaioXReport = lazy(() => import("./pages/RaioXReport"));
+const Escala = lazy(() => import("./pages/Escala"));
 
 // Página por ângulo de anúncio; ângulo desconhecido cai na home.
 const SolarAngleRoute = () => {
@@ -48,6 +49,7 @@ const App = () => (
       <Routes>
         <Route path="/" element={<Suspense fallback={<LazyFallback />}><SolarLanding /></Suspense>} />
         <Route path="/raio-x/:angulo" element={<SolarAngleRoute />} />
+        <Route path="/escala" element={<Suspense fallback={<LazyFallback />}><Escala /></Suspense>} />
         <Route path="/relatorio/:token" element={<Suspense fallback={<LazyFallback />}><RaioXReport /></Suspense>} />
         <Route path="/blog" element={<Suspense fallback={<LazyFallback />}><BlogV2 /></Suspense>} />
         <Route path="/blog/:slug" element={<Suspense fallback={<LazyFallback />}><BlogPostV2 /></Suspense>} />
