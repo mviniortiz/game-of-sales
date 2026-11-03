@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 
 // Curva de geração de um dia de sol (o sino que todo integrador lê no inversor),
-// preenchida até a hora de agora, com o sol em cima da curva. Fica atrás do
-// cartão de login. Cor sólida do token --vyz-sol, sem brilho.
+// pintada em amarelo até a hora de agora, com o sol marcado em cima dela. Vive
+// no painel escuro do login. Cor sólida do token --vyz-sol, sem brilho.
 const W = 1000;
 const BASE = 300;
-const PICO = 70;
-const LARGURA = 185;
+const PICO = 40;
+const LARGURA = 190;
 
 const yEm = (x: number) => BASE - (BASE - PICO) * Math.exp(-(((x - W / 2) / LARGURA) ** 2));
 
@@ -19,6 +19,7 @@ const CURVA = (() => {
     return `M${pts.join(" L")}`;
 })();
 const AREA = `${CURVA} L${W},${BASE} L0,${BASE} Z`;
+const HORAS = ["6h", "9h", "12h", "15h", "18h"];
 
 /** Agora; em dev, ?hora=14.5 fixa a hora pra conferir o desenho. */
 export function agora(): Date {
@@ -31,48 +32,44 @@ export function agora(): Date {
 }
 
 /** Fração do dia solar (6h às 18h) na hora local; fora disso, null. */
-export function fracaoDoDia(agora = new Date()): number | null {
-    const h = agora.getHours() + agora.getMinutes() / 60;
+export function fracaoDoDia(d: Date): number | null {
+    const h = d.getHours() + d.getMinutes() / 60;
     if (h < 6 || h >= 18) return null;
     return (h - 6) / 12;
 }
 
-export function saudacao(agora = new Date()): string {
-    const h = agora.getHours();
-    if (h >= 5 && h < 12) return "Bom dia.";
-    if (h >= 12 && h < 18) return "Boa tarde.";
-    return "Boa noite.";
-}
+/** "14h30" */
+export const horaCurta = (d: Date) => `${d.getHours()}h${String(d.getMinutes()).padStart(2, "0")}`;
 
-export function SolDoDia() {
-    const t = useMemo(() => fracaoDoDia(agora()), []);
+export function SolDoDia({ quando }: { quando: Date }) {
+    const t = useMemo(() => fracaoDoDia(quando), [quando]);
     const sx = t === null ? null : t * W;
+    // Altura do sol em fração do gráfico, para posicionar o marcador em HTML.
+    const sy = sx === null ? 0 : yEm(sx) / BASE;
 
     return (
         <div className="vz-sol" aria-hidden>
-            <svg className="vz-sol__svg" viewBox={`0 0 ${W} ${BASE + 1}`} width="1000" height="301" preserveAspectRatio="none">
-                <defs>
-                    <clipPath id="vz-sol-ate-agora">
-                        <rect className="vz-sol__corte" x="0" y="0" width={sx ?? 0} height={BASE} />
-                    </clipPath>
-                </defs>
-                <path d={AREA} className="vz-sol__area" />
-                {sx !== null && <path d={AREA} className="vz-sol__gerado" clipPath="url(#vz-sol-ate-agora)" />}
-                <path d={CURVA} className="vz-sol__linha" vectorEffect="non-scaling-stroke" />
-                <line x1="0" y1={BASE} x2={W} y2={BASE} className="vz-sol__chao" vectorEffect="non-scaling-stroke" />
-            </svg>
-            {/* Rótulos em HTML: o SVG estica na largura e distorceria o texto. */}
-            {["6h", "12h", "18h"].map((h, i) => (
-                <span key={h} className="vz-sol__hora" style={{ left: `${i * 50}%` }} data-lado={i}>
-                    {h}
-                </span>
-            ))}
-            {sx !== null && (
-                <span
-                    className="vz-sol__astro"
-                    style={{ left: `${(sx / W) * 100}%`, top: `calc(24px + (100% - 52px) * ${(yEm(sx) / (BASE + 1)).toFixed(4)})` }}
-                />
-            )}
+            <div className="vz-sol__grafico">
+                <svg viewBox={`0 0 ${W} ${BASE}`} width="1000" height="300" preserveAspectRatio="none">
+                    <defs>
+                        <clipPath id="vz-sol-ate-agora">
+                            <rect className="vz-sol__corte" x="0" y="0" width={sx ?? 0} height={BASE} />
+                        </clipPath>
+                    </defs>
+                    <path d={AREA} className="vz-sol__area" />
+                    {sx !== null && <path d={AREA} className="vz-sol__gerado" clipPath="url(#vz-sol-ate-agora)" />}
+                    <path d={CURVA} className="vz-sol__linha" vectorEffect="non-scaling-stroke" />
+                    <line x1="0" y1={BASE} x2={W} y2={BASE} className="vz-sol__chao" vectorEffect="non-scaling-stroke" />
+                </svg>
+                {sx !== null && (
+                    <span className="vz-sol__astro" style={{ left: `${(sx / W) * 100}%`, top: `${sy * 100}%` }}>
+                        <span className="vz-sol__agora">agora</span>
+                    </span>
+                )}
+            </div>
+            <div className="vz-sol__horas">
+                {HORAS.map((h) => <span key={h}>{h}</span>)}
+            </div>
         </div>
     );
 }

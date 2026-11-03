@@ -6,18 +6,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { AuthField } from "@/components/auth/AuthField";
-import { AppShellSkeleton } from "@/components/layout/AppShellSkeleton";
-import { SolDoDia, agora, saudacao } from "@/components/auth/SolDoDia";
+import { SolDoDia, agora, fracaoDoDia, horaCurta } from "@/components/auth/SolDoDia";
+import "@/components/layout/entrada.css";
 import { APP_HOME } from "@/config/routes";
 
-// AUTH.2: o login fica em cima da própria mesa do app (AppShellSkeleton). Ao
-// entrar, o botão segura "Entrando…" até o perfil chegar, o cartão sai e a
-// rota do app redesenha a mesma mesa até os dados aparecerem. Antes eram três
-// fundos diferentes, um toast e um loader de tela cheia que montava duas vezes.
+// AUTH.2 "Placar do dia": painel escuro da marca com a curva de geração de hoje
+// e o formulário no fundo do app. Ao entrar, o botão segura "Entrando…" até o
+// perfil chegar, o formulário some e o painel encolhe até a largura da lateral
+// do app; a rota seguinte desenha a mesa com a lateral no mesmo lugar. Antes
+// eram três fundos, um toast e um loader de tela cheia que montava duas vezes.
 // Validação inline, toggle de senha, aviso de caps lock e email viajando pra
 // recuperação/cadastro continuam do AUTH.1.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const SAIDA_MS = 200;
+const SAIDA_MS = 320;
 const ULTIMO_KEY = "vyz_ultimo_login";
 
 const lerUltimo = (): "google" | "email" | null => {
@@ -54,7 +55,8 @@ const LoginV2 = () => {
     const [erroKey, setErroKey] = useState(0);
     const saidaTimer = useRef<number>();
     const [ultimo] = useState(lerUltimo);
-    const [ola] = useState(() => saudacao(agora()));
+    const [quando] = useState(agora);
+    const deDia = fracaoDoDia(quando) !== null;
 
     // Quem chega de uma página legada escura (/crm-*, /r/*) pela navegação do
     // SPA traz o .dark junto; o login é claro e devolve o tema ao sair.
@@ -151,140 +153,150 @@ const LoginV2 = () => {
     const irRecuperar = () => navigate("/recuperar-senha", { state: { email: email.trim() } });
 
     return (
-        <div className={`vz-auth-claro vz-entrada ${saindo ? "vz-entrada--saindo" : ""}`}>
-            <AppShellSkeleton>
-                <div className="vz-entrada__veu" aria-hidden />
-                <SolDoDia />
-                <div className="vz-entrada__palco">
-                    <div className="w-full max-w-[400px]">
-                        <div className="vz-entrada__cartao">
-                            <ThemeLogo variant="default" className="h-6 w-auto md:hidden" />
-                            <h1 className="mt-6 text-[28px] font-semibold leading-[34px] tracking-[-0.02em] text-[var(--vyz-text-primary)] md:mt-0">
-                                {ola}
-                            </h1>
-                            <p className="mt-1.5 text-[15px] leading-6 text-[var(--vyz-text-muted)]">
-                                Entre para ver as propostas de hoje.
-                            </p>
+        <div className={`vz-auth-claro vz-login ${saindo ? "vz-login--saindo" : ""}`}>
+            <section className="vz-login__painel">
+                <button type="button" onClick={() => navigate("/")} className="vz-login__logo self-start" aria-label="Vyzon, voltar ao site">
+                    <ThemeLogo variant="inverse" className="h-[26px] w-auto" />
+                </button>
+                <div className="vz-login__painel-corpo">
+                    <div>
+                        <p className="vz-login__kick">Hoje, {horaCurta(quando)}</p>
+                        <p className="vz-login__frase">
+                            {deDia ? "O sol está gerando." : "O sol já foi."}
+                            <br />
+                            <span>{deDia ? "Suas propostas também deveriam." : "Suas propostas continuam esperando."}</span>
+                        </p>
+                    </div>
+                    <SolDoDia quando={quando} />
+                </div>
+            </section>
 
-                            <button type="button" onClick={handleGoogle} disabled={busy || googleLoading} className="vz-google mt-7">
-                                {googleLoading ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        Abrindo o Google…
-                                    </>
-                                ) : (
-                                    <>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" /></svg>
-                                        Continuar com Google
-                                        {ultimo === "google" && <span className="vz-ultimo">Último usado</span>}
-                                    </>
-                                )}
-                            </button>
+            <section className="vz-login__form">
+                <div className="vz-login__caixa">
+                    <h1 className="text-[32px] font-semibold leading-[38px] tracking-[-0.025em] text-[var(--vyz-text-primary)]">
+                        Entrar
+                    </h1>
+                    <p className="mt-2 text-[15px] leading-6 text-[var(--vyz-text-muted)]">
+                        Veja quem está esperando a sua resposta.
+                    </p>
 
-                            <div className="my-5 flex items-center gap-3">
-                                <span className="h-px flex-1 bg-[var(--vyz-border-subtle)]" />
-                                <span className="text-[12px] text-[var(--vyz-text-muted)]">
-                                    {ultimo === "email" ? "ou com email, como da última vez" : "ou com email"}
-                                </span>
-                                <span className="h-px flex-1 bg-[var(--vyz-border-subtle)]" />
-                            </div>
+                    <button type="button" onClick={handleGoogle} disabled={busy || googleLoading} className="vz-google mt-7">
+                        {googleLoading ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Abrindo o Google…
+                            </>
+                        ) : (
+                            <>
+                                <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" /></svg>
+                                Continuar com Google
+                                {ultimo === "google" && <span className="vz-ultimo">Último usado</span>}
+                            </>
+                        )}
+                    </button>
 
-                            <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
-                                <AuthField
-                                    label="Email"
-                                    type="email"
-                                    placeholder="voce@suaempresa.com"
-                                    value={email}
-                                    onChange={(v) => { setEmail(v); if (erros.email || erros.form) setErros({}); }}
-                                    onBlur={() => { const e = validaEmail(); if (email.trim()) setErros((p) => ({ ...p, email: e ?? undefined })); }}
-                                    autoComplete="email"
-                                    autoFocus
-                                    error={erros.email}
-                                    errorKey={erroKey}
-                                />
-                                <AuthField
-                                    label="Senha"
-                                    type={showSenha ? "text" : "password"}
-                                    placeholder="••••••••"
-                                    value={senha}
-                                    onChange={(v) => { setSenha(v); if (erros.senha || erros.form) setErros({}); }}
-                                    onKeyDown={trackCaps}
-                                    onKeyUp={trackCaps}
-                                    autoComplete="current-password"
-                                    error={erros.senha}
-                                    errorKey={erroKey}
-                                    rightSlot={
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowSenha((s) => !s)}
-                                            aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
-                                            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--vyz-text-muted)] transition-colors duration-150 hover:text-[var(--vyz-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
-                                        >
-                                            {showSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                        </button>
-                                    }
-                                />
-                                {capsOn && (
-                                    <p className="-mt-2 text-[12px] text-[var(--vyz-text-muted)]" aria-live="polite">
-                                        Caps Lock ativado.
-                                    </p>
-                                )}
+                    <div className="my-6 flex items-center gap-3">
+                        <span className="h-px flex-1 bg-[var(--vyz-border-subtle)]" />
+                        <span className="text-[12px] text-[var(--vyz-text-muted)]">
+                            {ultimo === "email" ? "ou com email, como da última vez" : "ou com email"}
+                        </span>
+                        <span className="h-px flex-1 bg-[var(--vyz-border-subtle)]" />
+                    </div>
 
-                                {erros.form && (
-                                    <div key={`f${erroKey}`} className="vz-shake vz-entrada__erro rounded-[10px] px-3.5 py-2.5" role="alert">
-                                        <p className="text-[13px]">{erros.form}</p>
-                                        {erros.form.includes("inválidos") && (
-                                            <button type="button" onClick={irRecuperar} className="mt-1 text-[13px] text-[var(--vyz-text-primary)] underline underline-offset-4">
-                                                Recuperar senha com este email
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
-
-                                <button type="submit" disabled={busy} aria-busy={ocupado} className="vz-btn vz-btn--primary mt-2 min-h-[44px] w-full disabled:opacity-60">
-                                    {ocupado ? (
-                                        <span className="flex items-center justify-center gap-2">
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            Entrando…
-                                        </span>
-                                    ) : (
-                                        "Entrar"
-                                    )}
-                                </button>
-
+                    <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
+                        <AuthField
+                            label="Email"
+                            type="email"
+                            placeholder="voce@suaempresa.com"
+                            value={email}
+                            onChange={(v) => { setEmail(v); if (erros.email || erros.form) setErros({}); }}
+                            onBlur={() => { const e = validaEmail(); if (email.trim()) setErros((p) => ({ ...p, email: e ?? undefined })); }}
+                            autoComplete="email"
+                            autoFocus
+                            error={erros.email}
+                            errorKey={erroKey}
+                        />
+                        <AuthField
+                            label="Senha"
+                            type={showSenha ? "text" : "password"}
+                            placeholder="••••••••"
+                            value={senha}
+                            onChange={(v) => { setSenha(v); if (erros.senha || erros.form) setErros({}); }}
+                            onKeyDown={trackCaps}
+                            onKeyUp={trackCaps}
+                            autoComplete="current-password"
+                            error={erros.senha}
+                            errorKey={erroKey}
+                            rightSlot={
                                 <button
                                     type="button"
-                                    onClick={irRecuperar}
-                                    className="self-center text-[13px] text-[var(--vyz-text-muted)] transition-colors duration-150 hover:text-[var(--vyz-text-primary)]"
+                                    onClick={() => setShowSenha((s) => !s)}
+                                    aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--vyz-text-muted)] transition-colors duration-150 hover:text-[var(--vyz-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                                 >
-                                    Esqueci minha senha
+                                    {showSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
-                            </form>
-                        </div>
+                            }
+                        />
+                        {capsOn && (
+                            <p className="-mt-2 text-[12px] text-[var(--vyz-text-muted)]" aria-live="polite">
+                                Caps Lock ativado.
+                            </p>
+                        )}
 
-                        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 px-1 text-[13px] text-[var(--vyz-text-muted)]">
+                        {erros.form && (
+                            <div key={`f${erroKey}`} className="vz-shake vz-entrada__erro rounded-[10px] px-3.5 py-2.5" role="alert">
+                                <p className="text-[13px]">{erros.form}</p>
+                                {erros.form.includes("inválidos") && (
+                                    <button type="button" onClick={irRecuperar} className="mt-1 text-[13px] text-[var(--vyz-text-primary)] underline underline-offset-4">
+                                        Recuperar senha com este email
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        <button type="submit" disabled={busy} aria-busy={ocupado} className="vz-btn vz-btn--primary mt-2 min-h-[48px] w-full disabled:opacity-60">
+                            {ocupado ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Entrando…
+                                </span>
+                            ) : (
+                                "Entrar"
+                            )}
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={irRecuperar}
+                            className="self-center text-[13px] text-[var(--vyz-text-muted)] transition-colors duration-150 hover:text-[var(--vyz-text-primary)]"
+                        >
+                            Esqueci minha senha
+                        </button>
+                    </form>
+
+                    <div className="mt-8 flex flex-wrap items-center justify-between gap-3 text-[13px] text-[var(--vyz-text-muted)]">
+                        <button
+                            type="button"
+                            onClick={() => navigate("/")}
+                            className="inline-flex items-center gap-1.5 transition-colors duration-150 hover:text-[var(--vyz-text-primary)]"
+                        >
+                            <ArrowLeft className="h-3.5 w-3.5" />
+                            Voltar ao site
+                        </button>
+                        <span>
+                            Sem conta?{" "}
                             <button
                                 type="button"
-                                onClick={() => navigate("/")}
-                                className="inline-flex items-center gap-1.5 transition-colors duration-150 hover:text-[var(--vyz-text-primary)]"
+                                onClick={() => navigate("/criar-conta?plan=pro", { state: { email: email.trim() } })}
+                                className="font-medium text-[var(--vyz-text-primary)] hover:underline"
                             >
-                                <ArrowLeft className="h-3.5 w-3.5" />
-                                Voltar ao site
+                                Fazer meu Raio-X grátis
                             </button>
-                            <span>
-                                Sem conta?{" "}
-                                <button
-                                    type="button"
-                                    onClick={() => navigate("/criar-conta?plan=pro", { state: { email: email.trim() } })}
-                                    className="font-medium text-[var(--vyz-text-primary)] hover:underline"
-                                >
-                                    Fazer meu Raio-X grátis
-                                </button>
-                            </span>
-                        </div>
+                        </span>
                     </div>
                 </div>
-            </AppShellSkeleton>
+            </section>
         </div>
     );
 };

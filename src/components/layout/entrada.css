@@ -1,6 +1,6 @@
-/* Mesa do app sem dados (AppShellSkeleton) e cartão de entrada do /auth.
-   Mesmas medidas da AppSidebar (15.5rem) e mesmo fundo da tela (--vyz-bg),
-   para o login, o carregamento e o app serem a mesma superfície. */
+/* Mesa do app sem dados (AppShellSkeleton): mesmas medidas da AppSidebar
+   (15.5rem) e mesmo fundo da tela (--vyz-bg). O ProtectedRoute desenha ela
+   enquanto carrega, e o login encolhe o painel escuro até virar essa lateral. */
 
 .vz-mesa {
   position: relative;
@@ -99,92 +99,86 @@
 }
 @keyframes vzMesaRespira { from { opacity: 1; } to { opacity: 0.55; } }
 
-/* Login: a mesa fica atrás, quieta, e o cartão vem na frente. */
-.vz-entrada__veu {
-  position: absolute;
-  inset: 0;
-  background: color-mix(in srgb, var(--vyz-bg) 84%, transparent);
-  transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1);
+
+/* Login "Placar do dia": painel escuro da marca com a curva de geração e o
+   formulário no fundo do app. No celular o painel vira uma faixa no topo. */
+.vz-login {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--vyz-bg);
 }
-.vz-entrada__palco {
-  position: absolute;
-  inset: 0;
+.vz-login__painel {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 24px 20px 20px;
+  background: var(--vyz-noite);
+  color: #fff;
+  overflow: hidden;
+}
+.vz-login__painel-corpo { display: flex; flex-direction: column; gap: 22px; }
+.vz-login__kick {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--vyz-sol);
+  font-variant-numeric: tabular-nums;
+}
+.vz-login__frase {
+  margin-top: 10px;
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+}
+.vz-login__frase span { color: var(--vyz-sol); }
+.vz-login__form {
+  flex: 1;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: calc(var(--vz-sol-h) + 4px) 16px 24px;
-  overflow-y: auto;
+  padding: 32px 20px 40px;
 }
-@media (min-width: 768px) {
-  /* A lateral fica limpa, como no app; véu e cartão só sobre a tela. */
-  .vz-entrada__veu,
-  .vz-entrada__palco { left: 15.5rem; }
-}
-.vz-entrada__cartao {
+.vz-login__caixa {
   width: 100%;
-  max-width: 400px;
-  padding: 32px 28px 28px;
-  border: 1px solid var(--vyz-border-subtle);
-  border-radius: 16px;
-  background: var(--vyz-surface-1);
-  box-shadow: 0 1px 2px rgba(15, 23, 48, 0.04), 0 24px 60px -28px rgba(15, 23, 48, 0.28);
-  animation: vzEntradaChega 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  max-width: 380px;
+  animation: vzLoginChega 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-@keyframes vzEntradaChega {
-  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+@keyframes vzLoginChega {
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
 
-/* Entrou: o cartão sai, o véu levanta e a mesa fica. A rota seguinte desenha
-   a mesma mesa (ProtectedRoute) e depois os dados, sem trocar de fundo. */
-.vz-entrada--saindo .vz-entrada__palco > *,
-.vz-entrada--saindo .vz-sol { animation: vzEntradaSai 200ms cubic-bezier(0.4, 0, 1, 1) forwards; }
-@keyframes vzEntradaSai { to { opacity: 0; transform: scale(0.97); } }
-.vz-entrada--saindo .vz-entrada__veu { opacity: 0; }
-
-@media (prefers-reduced-motion: reduce) {
-  .vz-entrada__cartao,
-  .vz-mesa--carregando .vz-mesa__bloco,
-  .vz-mesa--carregando .vz-mesa__item b { animation: none; }
-  .vz-entrada__veu { transition: none; }
+@media (min-width: 1024px) {
+  .vz-login { flex-direction: row; }
+  .vz-login__painel {
+    width: min(42vw, 600px);
+    flex-shrink: 0;
+    justify-content: space-between;
+    padding: 48px 56px 40px;
+    /* Encolhe até a largura da AppSidebar ao entrar (ver --saindo). */
+    transition: width 320ms cubic-bezier(0.32, 0.72, 0, 1), padding 320ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .vz-login__painel-corpo { flex: 1; justify-content: space-between; gap: 32px; padding-top: clamp(32px, 16vh, 170px); }
+  .vz-login__frase { font-size: clamp(40px, 3.6vw, 52px); }
+  .vz-login__form { align-items: center; padding: 40px; }
 }
 
-.vz-entrada__erro {
-  color: var(--auth-erro);
-  background: color-mix(in srgb, var(--auth-erro) 7%, transparent);
-  border: 1px solid color-mix(in srgb, var(--auth-erro) 24%, transparent);
+/* Curva de geração do dia (SolDoDia) no painel escuro. */
+.vz-sol { position: relative; }
+.vz-sol__grafico { position: relative; height: 96px; }
+@media (min-width: 1024px) {
+  .vz-sol__grafico { height: clamp(150px, 26vh, 230px); }
 }
-
-/* Curva de geração do dia atrás do cartão (SolDoDia). */
-/* A curva fica no alto, como o gráfico do dia, e o cartão logo abaixo. */
-.vz-entrada { --vz-sol-h: clamp(150px, 30vh, 300px); }
-.vz-sol {
-  --vz-sol-x: clamp(16px, 3vw, 36px);
-  position: absolute;
-  left: var(--vz-sol-x);
-  right: var(--vz-sol-x);
-  top: 0;
-  height: var(--vz-sol-h);
-  pointer-events: none;
-}
-@media (min-width: 768px) {
-  .vz-sol { left: calc(15.5rem + var(--vz-sol-x)); }
-}
-.vz-sol__svg { position: absolute; top: 24px; left: 0; width: 100%; height: calc(100% - 52px); }
-.vz-sol__area { fill: var(--vyz-sol-soft); opacity: 0.7; }
-.vz-sol__gerado { fill: var(--vyz-sol); opacity: 0.32; }
-.vz-sol__corte { transform-box: fill-box; animation: vzSolGera 1100ms 120ms cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: left; }
-.vz-sol__linha { fill: none; stroke: var(--vyz-sol-line); stroke-width: 1.5; opacity: 0.55; }
-.vz-sol__chao { stroke: var(--vyz-border); stroke-width: 1; }
-.vz-sol__hora {
-  position: absolute;
-  bottom: 6px;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  color: var(--vyz-text-muted);
-}
-.vz-sol__hora[data-lado="1"] { transform: translateX(-50%); }
-.vz-sol__hora[data-lado="2"] { transform: translateX(-100%); }
+.vz-sol__grafico svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.vz-sol__area { fill: var(--vyz-noite-2); }
+.vz-sol__gerado { fill: var(--vyz-sol); }
+.vz-sol__corte { transform-box: fill-box; transform-origin: left; animation: vzSolGera 1100ms 150ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.vz-sol__linha { fill: none; stroke: var(--vyz-sol); stroke-width: 2; }
+.vz-sol__chao { stroke: var(--vyz-noite-3); stroke-width: 1; }
 .vz-sol__astro {
   position: absolute;
   width: 22px;
@@ -192,12 +186,50 @@
   margin: -11px 0 0 -11px;
   border-radius: 999px;
   background: var(--vyz-sol);
-  border: 3px solid var(--vyz-surface-1);
-  box-shadow: 0 1px 2px rgba(15, 23, 48, 0.12), 0 6px 14px -6px rgba(201, 148, 0, 0.45);
-  animation: vzSolSobe 700ms 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  border: 4px solid var(--vyz-noite);
+  outline: 2px solid var(--vyz-sol);
+  animation: vzSolSobe 600ms 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.vz-sol__agora {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--vyz-sol);
+  color: var(--vyz-noite);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.vz-sol__horas {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--vyz-text-dim);
+  font-variant-numeric: tabular-nums;
 }
 @keyframes vzSolGera { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-@keyframes vzSolSobe { from { opacity: 0; transform: translateY(10px) scale(0.6); } to { opacity: 1; transform: none; } }
+@keyframes vzSolSobe { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: none; } }
+
+/* Entrou: o formulário sai e o painel escuro encolhe até a largura da
+   lateral do app. A rota seguinte desenha a mesa com a lateral no mesmo
+   lugar, então o login vira o app sem corte. */
+.vz-login--saindo .vz-login__caixa,
+.vz-login--saindo .vz-login__painel-corpo,
+.vz-login--saindo .vz-login__logo { animation: vzLoginSai 160ms cubic-bezier(0.4, 0, 1, 1) forwards; }
+@keyframes vzLoginSai { to { opacity: 0; } }
+@media (min-width: 1024px) {
+  .vz-login--saindo .vz-login__painel { width: 15.5rem; padding-left: 20px; padding-right: 20px; }
+}
+
+.vz-entrada__erro {
+  color: var(--auth-erro);
+  background: color-mix(in srgb, var(--auth-erro) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--auth-erro) 24%, transparent);
+}
 
 /* Botão do Google: o caminho mais curto, então ganha peso e o selo de último usado. */
 .vz-google {
@@ -239,8 +271,9 @@
   font-weight: 500;
 }
 
+
 @media (prefers-reduced-motion: reduce) {
-  .vz-sol__corte, .vz-sol__astro { animation: none; }
-  .vz-google { transition: none; }
+  .vz-login__caixa, .vz-sol__corte, .vz-sol__astro { animation: none; }
+  .vz-login__painel, .vz-google { transition: none; }
   .vz-google:hover:not(:disabled) { transform: none; }
 }
