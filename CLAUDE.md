@@ -129,7 +129,11 @@ está BLOQUEADO por billing; não criar workflows.
   autenticado (catch-all) em `AppShell.tsx`. `/onboarding` e `/register` são
   redirects de compatibilidade.
 - Plano único "Vyzon" R$ 97/mês (id `pro`, decisão de 01/11/2026), tudo liberado,
-  até 10 usuários, sem preço de fundador. SEM teste grátis (08/10/2026): conta
+  até 10 usuários, sem preço de fundador. Plano Escala (03/11/2026): mais de um
+  WhatsApp, sem preço; card na home e no /upgrade leva ao formulário público
+  `/escala` → RPC `submit_escala_request` → `demo_requests` (source
+  `plano_escala`) → card "Escala: <empresa>" no funil do Markus, sem SDR
+  automático. O Vyzon só conecta 1 número por empresa hoje. SEM teste grátis (08/10/2026): conta
   nova nasce free/inactive (o `guard_company_billing` força) e o grátis é o
   Raio-X automático (`/raio-x` → edge `raio-x-build` em modo dono → relatório
   em `/relatorio/:token`, que o dono confere e corrige). Paga = assinatura

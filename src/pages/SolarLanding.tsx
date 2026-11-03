@@ -481,13 +481,14 @@ const HowItWorks = () => (
 
 // Só o que existe no app: aviso da Lume no 2º dia (eva-quote-followup + aprovação
 // por WhatsApp), placar /orcamentos, Inbox por prioridade, funil, até 10
-// usuários (plans.ts) e o Raio-X automático (raio-x-build).
+// usuários e 1 WhatsApp (plans.ts) e o Raio-X automático (raio-x-build). Mais
+// de um número é o plano Escala, sem preço, pelo formulário de /escala.
 const INCLUDED = [
     "Aviso no 2º dia sem resposta, com a mensagem pronta",
     "Lista de todos os orçamentos: quem respondeu, quem sumiu e quanto vale",
     "Conversas em ordem: primeiro o cliente que está esperando você",
     "Funil de vendas com quanto vale cada etapa",
-    "Até 10 pessoas da sua equipe",
+    "Até 10 pessoas da sua equipe e 1 WhatsApp da empresa",
     "Raio-X dos últimos 90 dias, grátis antes de assinar",
 ];
 
@@ -534,6 +535,21 @@ const Offer = ({ onCta }: { onCta: () => void }) => (
                     Você cria a conta, vê o Raio-X grátis e só paga se quiser continuar.
                 </p>
             </div>
+        </div>
+        <div
+            className="mt-8 flex flex-col gap-5 rounded-[22px] border p-6 sm:flex-row sm:items-center sm:justify-between md:mt-10 md:p-8"
+            style={{ borderColor: "var(--lp-line)", background: "var(--lp-white)" }}
+        >
+            <div className="max-w-[560px]">
+                <p className="vs-label">Plano Escala</p>
+                <h3 className="vs-display mt-2 text-[24px] leading-[1.1] md:text-[28px]">Vende por mais de um WhatsApp?</h3>
+                <p className="mt-2 text-[15px] leading-relaxed md:text-[16px]" style={{ color: "var(--lp-ink-muted)" }}>
+                    Para equipes com vários números. A gente entende a sua operação e monta o plano e o preço com você.
+                </p>
+            </div>
+            <Link to="/escala" className="vs-btn shrink-0" onClick={() => trackEvent("escala_cta_click", { origem: "home" })}>
+                Falar com um especialista
+            </Link>
         </div>
     </section>
 );
