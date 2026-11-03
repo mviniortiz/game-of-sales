@@ -5402,3 +5402,50 @@ html.lenis, html.lenis body { height: auto; }
 .vz-auth-claro .vz-input--error,
 .vz-auth-claro .vz-input--error:hover { border-color: rgba(190, 18, 60, 0.6); }
 .vz-auth-claro .vz-strength__seg { background: #E2E8F0; }
+
+/* Cadastro (03/11/2026): mesmo papel, Geist e sol da home (.lp-v2.lp-solar).
+   Campo branco com borda de papel; foco azul de marca. */
+.vz-cadastro { --auth-label: var(--lp-ink-muted); --auth-erro: #be123c; min-height: 100vh; }
+.vz-cadastro .vz-input {
+  height: 52px;
+  border: 1.5px solid var(--lp-line);
+  border-radius: 14px;
+  background: var(--lp-white);
+  color: var(--lp-ink);
+  font-size: 16px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.vz-cadastro .vz-input::placeholder { color: var(--lp-ink-subtle); opacity: 0.7; }
+.vz-cadastro .vz-input:hover { border-color: var(--lp-ink-subtle); }
+.vz-cadastro .vz-input:focus { border-color: var(--lp-blue); box-shadow: 0 0 0 3px var(--lp-blue-tint); outline: none; }
+.vz-cadastro .vz-input--error,
+.vz-cadastro .vz-input--error:hover { border-color: var(--auth-erro); }
+.vz-cadastro .vz-strength__seg { background: var(--lp-line); }
+.vz-cadastro__dica { font-size: 13px; line-height: 1.45; color: var(--lp-ink-subtle); }
+.vz-cadastro__google {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; min-height: 50px; border-radius: 999px;
+  border: 1.5px solid var(--lp-line); background: var(--lp-white); color: var(--lp-ink);
+  font-size: 15px; font-weight: 600;
+  transition: border-color 150ms ease, transform 120ms ease;
+}
+.vz-cadastro__google:hover { border-color: var(--lp-ink); }
+.vz-cadastro__google:active { transform: scale(0.98); }
+.vz-cadastro__google:focus-visible { outline: 3px solid var(--lp-blue); outline-offset: 3px; }
+.vz-cadastro__erro { border-radius: 14px; padding: 10px 14px; border: 1.5px solid var(--auth-erro); background: var(--lp-white); }
+.vz-cadastro__link { color: var(--lp-ink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.vz-cadastro__link:hover { color: var(--lp-blue); }
+.vz-cadastro__passos { display: flex; gap: 6px; }
+.vz-cadastro__passo { flex: 1; height: 4px; border-radius: 999px; background: var(--lp-line); }
+.vz-cadastro__passo--agora { background: var(--lp-ink); }
+.vz-cadastro__lado { border-radius: 28px; background: var(--lp-sol); }
+.vz-cadastro__num {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 28px; height: 28px; border-radius: 999px;
+  border: 2px solid var(--lp-ink); font-size: 13px; font-weight: 700;
+}
+.vz-cadastro__num--agora { background: var(--lp-ink); color: var(--lp-sol); }
+@media (prefers-reduced-motion: reduce) {
+  .vz-cadastro .vz-input, .vz-cadastro__google { transition: none; }
+  .vz-cadastro__google:active { transform: none; }
+}

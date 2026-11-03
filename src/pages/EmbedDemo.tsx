@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BrandedLoader } from "@/components/ui/BrandedLoader";
+import { PageLoader } from "@/components/ui/PageLoader";
 import { trackBehavior, claritySet, clarityUpgrade, DEMO_EVENTS } from "@/lib/analytics";
 
 // LP.8 (v2) — rota de entrada da demo embutida (iframe). Pega uma sessão do
@@ -45,7 +45,7 @@ const EmbedDemo = () => {
             </div>
         );
     }
-    return <BrandedLoader label="Abrindo a Vyzon…" />;
+    return <PageLoader label="Abrindo a Vyzon…" />;
 };
 
 export default EmbedDemo;

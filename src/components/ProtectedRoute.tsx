@@ -2,11 +2,11 @@ import { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { AppShellSkeleton } from "@/components/layout/AppShellSkeleton";
-import { BrandedLoader } from "@/components/ui/BrandedLoader";
+import { PageLoader } from "@/components/ui/PageLoader";
 
 // esqueleto "mesa": rotas dentro do AppLayout (lateral + tela), onde o
 // carregamento desenha a mesma mesa do login. Sem ele, telas cheias como
-// /configurar-eva e /raio-x ficam com o loader da marca, sem lateral fantasma.
+// /configurar-eva e /raio-x ficam com a barra de espera, sem lateral fantasma.
 export const ProtectedRoute = ({ children, esqueleto }: { children: React.ReactNode; esqueleto?: "mesa" }) => {
   const { user, loading, profile, companyId, isSuperAdmin, signOut } = useAuth();
   const navigate = useNavigate();
@@ -46,7 +46,7 @@ export const ProtectedRoute = ({ children, esqueleto }: { children: React.ReactN
   }, [user, loading, profile, companyId, isSuperAdmin, navigate, signOut]);
 
   // Um carregamento só, do começo ao perfil: não troca de legenda nem remonta.
-  const carregando = esqueleto === "mesa" ? <AppShellSkeleton carregando /> : <BrandedLoader />;
+  const carregando = esqueleto === "mesa" ? <AppShellSkeleton carregando /> : <PageLoader />;
   if (loading) {
     return carregando;
   }

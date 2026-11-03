@@ -9,7 +9,8 @@ import { logLandingEvent } from "@/lib/landingFunnel";
 import { toast } from "sonner";
 import { ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
-import { AuthPreview } from "@/components/auth/AuthPreview";
+import { EvaBot } from "@/components/eva/EvaBot";
+import { PageLoader } from "@/components/ui/PageLoader";
 import { AuthField } from "@/components/auth/AuthField";
 import { scorePassword, STRENGTH_META } from "@/components/auth/password";
 import { APP_HOME } from "@/config/routes";
@@ -28,6 +29,17 @@ function whatsDigitos(v: string): string {
     return d.length === 10 || d.length === 11 ? "55" + d : d;
 }
 const whatsValido = (v: string) => /^55\d{10,11}$/.test(whatsDigitos(v));
+// Máscara enquanto digita: (48) 99999-9999. Quem cola com 55 na frente perde
+// o 55 só na tela; whatsDigitos põe de volta.
+function mascaraWhats(v: string): string {
+    let d = v.replace(/\D/g, "");
+    if (d.length > 11 && d.startsWith("55")) d = d.slice(2);
+    d = d.slice(0, 11);
+    if (d.length <= 2) return d.length ? `(${d}` : "";
+    const meio = d.length === 11 ? 7 : 6;
+    if (d.length <= meio) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    return `(${d.slice(0, 2)}) ${d.slice(2, meio)}-${d.slice(meio)}`;
+}
 
 const EMAIL_PESSOAL = /^(gmail|googlemail|hotmail|outlook|live|msn|yahoo|ymail|icloud|me|bol|uol|terra|ig|globo|r7|proton|protonmail)\./;
 const capitalizar = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -269,12 +281,21 @@ const SignupV2 = () => {
 
     const busy = loading || authLoading;
 
+    // Erro só depois que a pessoa sai do campo com algo digitado: no meio da
+    // digitação não aparece nada.
+    const validarWhats = () => {
+        if (whats && !whatsValido(whats)) setErros((p) => ({ ...p, whats: "Confira o DDD e o número." }));
+    };
+    const validarEmail = () => {
+        if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) setErros((p) => ({ ...p, email: "Confira o email." }));
+    };
+
     // Enquanto a auth resolve (ex.: retorno do OAuth Google), não mostra o
-    // formulário de email — evita o flash do form errado antes do ssoMode ligar.
+    // formulário de email: evita o flash do form errado antes do ssoMode ligar.
     if (authLoading) {
         return (
-            <div className="lp-v2 vz-auth-claro" style={{ minHeight: "100vh", backgroundColor: "#F6F4EF", color: "#0B1220", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ color: "rgba(11,18,32,0.66)", fontSize: "0.95rem" }}>Carregando…</span>
+            <div className="lp-v2 lp-solar vz-cadastro">
+                <PageLoader />
             </div>
         );
     }
@@ -282,41 +303,31 @@ const SignupV2 = () => {
     // Conta criada, confirmação de email pendente: tela dedicada no lugar do form.
     if (confirmSentTo) {
         return (
-            <div className="lp-v2 vz-auth-claro" style={{ minHeight: "100vh", backgroundColor: "#F6F4EF", color: "#0B1220", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
-                <div className="w-full max-w-[420px] text-center">
-                    <div style={{ display: "flex", justifyContent: "center" }}>
-                        <ThemeLogo variant="default" className="h-6 w-auto" />
+            <div className="lp-v2 lp-solar vz-auth-claro vz-cadastro flex items-center justify-center px-6 py-10">
+                <div className="w-full max-w-[420px] landing-fade-in-up">
+                    <ThemeLogo variant="default" className="h-6 w-auto" />
+                    <div className="vz-cadastro__passos mt-10" aria-hidden>
+                        <span className="vz-cadastro__passo vz-cadastro__passo--agora" />
+                        <span className="vz-cadastro__passo" />
+                        <span className="vz-cadastro__passo" />
                     </div>
-                    <h1 className="lp-display mt-10" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.4rem)", lineHeight: 1.05, letterSpacing: "-0.03em", color: "#0B1220" }}>
-                        Confirme seu email
-                    </h1>
-                    <p className="mt-4 text-[15px]" style={{ color: "rgba(11,18,32,0.7)", lineHeight: 1.6 }}>
-                        Sua conta foi criada. Enviamos um link de ativação para{" "}
-                        <strong style={{ color: "#0B1220", fontWeight: 600 }}>{confirmSentTo}</strong>. Clique nele para entrar e fazer o seu Raio-X.
+                    <h1 className="vs-display mt-6 text-[36px] leading-[1.05]">Confirme seu email</h1>
+                    <p className="mt-4 text-[16px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
+                        A conta foi criada. Mandamos um link para <strong style={{ color: "var(--lp-ink)" }}>{confirmSentTo}</strong>. Clique nele para entrar e fazer o seu Raio-X.
                     </p>
-                    <p className="mt-4 text-[13px]" style={{ color: "rgba(11,18,32,0.58)", lineHeight: 1.55 }}>
-                        Não chegou em alguns minutos? Confira a caixa de spam. O link expira em 24 horas.
-                    </p>
-                    <button
-                        type="button"
-                        onClick={reenviarConfirmacao}
-                        disabled={reenviando || reenvioCooldown > 0}
-                        className="mt-6 inline-flex items-center gap-2 text-[13.5px] underline underline-offset-4 transition-opacity disabled:opacity-50"
-                        style={{ color: "rgba(11,18,32,0.74)" }}
-                    >
-                        {reenviando && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                        {reenvioCooldown > 0
-                            ? `Pode reenviar em ${reenvioCooldown}s`
-                            : "Não chegou? Reenviar email"}
-                    </button>
-                    <div className="mt-9">
+                    <p className="vz-cadastro__dica mt-3">Não chegou em alguns minutos? Confira o spam. O link vale por 24 horas.</p>
+                    <div className="mt-8 flex flex-col gap-3">
+                        <button type="button" onClick={() => navigate("/auth")} className="vs-btn w-full">
+                            Já confirmei, entrar
+                        </button>
                         <button
                             type="button"
-                            onClick={() => navigate("/auth")}
-                            className="rounded-full px-6 py-3 text-[14px] font-semibold transition-opacity hover:opacity-90"
-                            style={{ background: "#fff", color: "#0B1220", border: "1px solid #D7DEE9" }}
+                            onClick={reenviarConfirmacao}
+                            disabled={reenviando || reenvioCooldown > 0}
+                            className="vz-cadastro__google disabled:opacity-50"
                         >
-                            Já confirmei, fazer login
+                            {reenviando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+                            {reenvioCooldown > 0 ? `Pode reenviar em ${reenvioCooldown}s` : "Reenviar o email"}
                         </button>
                     </div>
                 </div>
@@ -325,75 +336,84 @@ const SignupV2 = () => {
     }
 
     return (
-        <div className="lp-v2 vz-auth-claro" style={{ minHeight: "100vh", backgroundColor: "#F6F4EF", color: "#0B1220" }}>
-            <div className="grid min-h-screen lg:grid-cols-[0.88fr_1.12fr]">
-                <div className="relative flex flex-col px-6 py-8 sm:px-12 sm:py-10">
-                    <div className="flex items-center gap-3 self-start landing-fade-in-up">
-                        <button
-                            onClick={() => navigate("/")}
-                            className="flex items-center opacity-90 transition-opacity hover:opacity-100"
-                            aria-label="Vyzon"
-                        >
+        <div className="lp-v2 lp-solar vz-auth-claro vz-cadastro">
+            <div className="grid min-h-screen lg:grid-cols-[1fr_1fr]">
+                <div className="flex flex-col px-5 py-6 sm:px-12 sm:py-9">
+                    <div className="flex items-center justify-between gap-3 landing-fade-in">
+                        <button type="button" onClick={() => navigate("/")} className="flex items-center" aria-label="Vyzon, voltar ao site">
                             <ThemeLogo variant="default" className="h-6 w-auto" />
                         </button>
-                        <span className="h-4 w-px" style={{ background: "rgba(11,18,32,0.14)" }} aria-hidden />
                         <button
                             type="button"
                             onClick={() => navigate("/")}
-                            className="inline-flex items-center gap-1.5 text-[13px] font-medium transition-colors"
-                            style={{ color: "rgba(11,18,32,0.62)" }}
-                            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(11,18,32,0.9)")}
-                            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(11,18,32,0.62)")}
+                            className="inline-flex items-center gap-1.5 text-[14px] font-medium transition-colors hover:text-[var(--lp-ink)]"
+                            style={{ color: "var(--lp-ink-muted)" }}
                         >
-                            <ArrowLeft className="h-3.5 w-3.5" />
+                            <ArrowLeft className="h-4 w-4" aria-hidden />
                             Voltar ao site
                         </button>
                     </div>
 
                     <div className="flex flex-1 items-center">
-                        <div className="mx-auto w-full max-w-[380px] py-12">
-                            <h1 className="lp-display landing-fade-in-up landing-delay-100" style={{ fontSize: "clamp(2.3rem, 4vw, 2.9rem)", lineHeight: 1, letterSpacing: "-0.03em", color: "#0B1220" }}>
-                                {ssoMode ? "Quase lá" : "Criar conta"}
-                            </h1>
-                            <p className="mt-2.5 landing-fade-in-up landing-delay-150" style={{ color: "rgba(11,18,32,0.66)", fontSize: "1rem" }}>
-                                {ssoMode ? "Só falta o seu WhatsApp." : veioPreenchido ? "Já trouxemos o que você digitou. Só falta criar uma senha." : "Grátis e sem cartão. São só 3 campos."}
-                            </p>
+                        <div className="mx-auto w-full max-w-[400px] py-10 lg:py-12">
+                            <div className="landing-fade-in-up">
+                                <div className="vz-cadastro__passos" aria-hidden>
+                                    <span className="vz-cadastro__passo vz-cadastro__passo--agora" />
+                                    <span className="vz-cadastro__passo" />
+                                    <span className="vz-cadastro__passo" />
+                                </div>
+                                <p className="mt-3 text-[13px] font-semibold" style={{ color: "var(--lp-ink-muted)" }}>
+                                    {ssoMode ? "Passo 1 de 3: falta só o WhatsApp" : "Passo 1 de 3. Depois: conectar o WhatsApp e ver o que está parado."}
+                                </p>
+                                <h1 className="vs-display mt-5 text-[40px] leading-[1.02] sm:text-[46px]">{ssoMode ? "Quase lá" : "Crie sua conta"}</h1>
+                                <p className="mt-3 text-[16px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
+                                    {ssoMode
+                                        ? "Com o seu WhatsApp, a gente já deixa a conexão pronta."
+                                        : veioPreenchido
+                                          ? "Trouxemos o que você digitou. Só falta escolher uma senha."
+                                          : "Grátis e sem cartão. Em 3 minutos você vê quanto está parado no seu WhatsApp."}
+                                </p>
+                            </div>
 
                             {!ssoMode && !navegadorDeApp && (
-                                <>
-                                    <button type="button" onClick={handleGoogle} disabled={busy} className="mt-9 flex w-full items-center justify-center gap-2.5 rounded-full py-3 text-[14px] font-semibold transition-transform active:scale-[0.98] disabled:opacity-50 landing-fade-in-up landing-delay-200" style={{ background: "#fff", color: "#0B1220", border: "1px solid #D7DEE9" }}>
+                                <div className="landing-fade-in-up landing-delay-100">
+                                    <button type="button" onClick={handleGoogle} disabled={busy} className="vz-cadastro__google mt-8 disabled:opacity-50">
                                         {loading ? (
                                             <>
-                                                <Loader2 className="h-4 w-4 animate-spin" style={{ color: "#0B1220" }} />
-                                                Conectando ao Google…
+                                                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                                                Abrindo o Google…
                                             </>
                                         ) : (
                                             <>
-                                                <svg width="17" height="17" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" /></svg>
-                                                Criar conta com Google
+                                                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" /></svg>
+                                                Continuar com Google
                                             </>
                                         )}
                                     </button>
-                                    <div className="my-6 flex items-center gap-3">
-                                        <span className="h-px flex-1" style={{ background: "rgba(11,18,32,0.1)" }} />
-                                        <span className="text-[11px]" style={{ color: "rgba(11,18,32,0.58)" }}>ou com email</span>
-                                        <span className="h-px flex-1" style={{ background: "rgba(11,18,32,0.1)" }} />
+                                    <div className="my-6 flex items-center gap-3" aria-hidden>
+                                        <span className="h-px flex-1" style={{ background: "var(--lp-line)" }} />
+                                        <span className="text-[13px]" style={{ color: "var(--lp-ink-subtle)" }}>ou com email</span>
+                                        <span className="h-px flex-1" style={{ background: "var(--lp-line)" }} />
                                     </div>
-                                </>
+                                </div>
                             )}
 
-                            <form className={`flex flex-col gap-5 landing-fade-in-up landing-delay-300 ${ssoMode || navegadorDeApp ? "mt-9" : ""}`} onSubmit={onSubmit} noValidate>
-                                <AuthField
-                                    label="Seu WhatsApp (com DDD)"
-                                    type="tel"
-                                    placeholder="(48) 99999-9999"
-                                    value={whats}
-                                    onChange={(v) => { setWhats(v); if (erros.whats) setErros((p) => ({ ...p, whats: undefined })); }}
-                                    autoComplete="tel-national"
-                                    autoFocus={ssoMode || !veioPreenchido}
-                                    error={erros.whats}
-                                    errorKey={erroKey}
-                                />
+                            <form className={`flex flex-col gap-5 landing-fade-in-up landing-delay-150 ${ssoMode || navegadorDeApp ? "mt-8" : ""}`} onSubmit={onSubmit} noValidate>
+                                <div className="flex flex-col gap-1.5">
+                                    <AuthField
+                                        label="Seu WhatsApp"
+                                        type="tel"
+                                        placeholder="(48) 99999-9999"
+                                        value={whats}
+                                        onChange={(v) => { setWhats(mascaraWhats(v)); if (erros.whats) setErros((p) => ({ ...p, whats: undefined })); }}
+                                        onBlur={validarWhats}
+                                        autoComplete="tel-national"
+                                        autoFocus={ssoMode || !veioPreenchido}
+                                        error={erros.whats}
+                                        errorKey={erroKey}
+                                    />
+                                    {!erros.whats && <p className="vz-cadastro__dica">Com DDD. Se a conexão travar, é por ele que a gente te ajuda.</p>}
+                                </div>
                                 {!ssoMode && (
                                     <>
                                         <AuthField
@@ -402,6 +422,7 @@ const SignupV2 = () => {
                                             placeholder="voce@suaempresa.com"
                                             value={email}
                                             onChange={(v) => { setEmail(v); if (erros.email || erros.form) setErros((p) => ({ ...p, email: undefined, form: undefined })); }}
+                                            onBlur={validarEmail}
                                             autoComplete="email"
                                             error={erros.email}
                                             errorKey={erroKey}
@@ -410,7 +431,7 @@ const SignupV2 = () => {
                                             <AuthField
                                                 label="Senha"
                                                 type={showSenha ? "text" : "password"}
-                                                placeholder="Mínimo 8 caracteres"
+                                                placeholder="Mínimo de 8 caracteres"
                                                 value={senha}
                                                 onChange={(v) => { setSenha(v); if (erros.senha) setErros((p) => ({ ...p, senha: undefined })); }}
                                                 autoComplete="new-password"
@@ -422,10 +443,8 @@ const SignupV2 = () => {
                                                         type="button"
                                                         onClick={() => setShowSenha((s) => !s)}
                                                         aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
-                                                        className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
-                                                        style={{ color: "rgba(11,18,32,0.58)" }}
-                                                        onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(11,18,32,0.86)")}
-                                                        onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(11,18,32,0.58)")}
+                                                        className="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-[var(--lp-ink)]"
+                                                        style={{ color: "var(--lp-ink-subtle)" }}
                                                     >
                                                         {showSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                                     </button>
@@ -442,7 +461,7 @@ const SignupV2 = () => {
                                                             />
                                                         ))}
                                                     </div>
-                                                    <span className="text-[11.5px]" style={{ color: "rgba(11,18,32,0.6)" }}>
+                                                    <span className="text-[12.5px]" style={{ color: "var(--lp-ink-subtle)" }}>
                                                         {STRENGTH_META[scorePassword(senha)].label}
                                                     </span>
                                                 </div>
@@ -452,37 +471,39 @@ const SignupV2 = () => {
                                 )}
 
                                 {erros.form && (
-                                    <div key={`f${erroKey}`} className="vz-shake rounded-xl px-3.5 py-2.5" style={{ background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.25)" }} role="alert">
-                                        <p className="text-[13px]" style={{ color: "#BE123C" }}>{erros.form}</p>
+                                    <div key={`f${erroKey}`} className="vz-shake vz-cadastro__erro" role="alert">
+                                        <p className="text-[14px]" style={{ color: "var(--auth-erro)" }}>{erros.form}</p>
                                         {erros.formAction === "login" && (
-                                            <button
-                                                type="button"
-                                                onClick={() => navigate("/auth", { state: { email: email.trim() } })}
-                                                className="mt-1 text-[12.5px] underline underline-offset-4"
-                                                style={{ color: "rgba(11,18,32,0.78)" }}
-                                            >
-                                                Fazer login com este email
+                                            <button type="button" onClick={() => navigate("/auth", { state: { email: email.trim() } })} className="vz-cadastro__link mt-1 text-[14px]">
+                                                Entrar com este email
                                             </button>
                                         )}
                                     </div>
                                 )}
 
-                                <button type="submit" disabled={busy} className="vz-btn vz-btn--primary mt-3 w-full disabled:opacity-50">
+                                <button type="submit" disabled={busy} className="vs-btn mt-2 w-full">
                                     {loading ? (
-                                        <span className="flex items-center justify-center gap-2">
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            Criando…
-                                        </span>
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                                            Criando sua conta…
+                                        </>
+                                    ) : ssoMode ? (
+                                        "Continuar para o Raio-X"
                                     ) : (
-                                        ssoMode ? "Entrar na Vyzon" : "Criar conta e fazer o Raio-X"
+                                        "Criar conta e ver meu Raio-X"
                                     )}
                                 </button>
+                                <p className="vz-cadastro__dica text-center">
+                                    Ao criar a conta, você aceita os{" "}
+                                    <a href="/termos-de-servico" className="vz-cadastro__link font-medium">termos</a> e a{" "}
+                                    <a href="/politica-privacidade" className="vz-cadastro__link font-medium">política de privacidade</a>.
+                                </p>
                             </form>
 
                             {!ssoMode && (
-                                <p className="mt-10 text-[13px]" style={{ color: "rgba(11,18,32,0.58)" }}>
+                                <p className="mt-8 text-[15px] landing-fade-in landing-delay-200" style={{ color: "var(--lp-ink-muted)" }}>
                                     Já tem conta?{" "}
-                                    <button type="button" onClick={() => navigate("/auth")} style={{ color: "rgba(11,18,32,0.88)", fontWeight: 500 }} className="hover:underline">
+                                    <button type="button" onClick={() => navigate("/auth")} className="vz-cadastro__link">
                                         Entrar
                                     </button>
                                 </p>
@@ -491,12 +512,64 @@ const SignupV2 = () => {
                     </div>
                 </div>
 
-                <div className="relative hidden p-4 sm:p-5 lg:block landing-fade-in landing-delay-200">
-                    <AuthPreview modo="cadastro" />
+                <div className="hidden p-5 lg:block landing-fade-in landing-delay-100">
+                    <LadoDoCadastro />
                 </div>
             </div>
         </div>
     );
 };
+
+// Lado direito no desktop: o que vem depois da conta, no sol da home, e um
+// exemplo do placar que ela vai ver (marcado como exemplo).
+const PASSOS = [
+    { titulo: "Criar a conta", texto: "Você está aqui. Grátis, sem cartão." },
+    { titulo: "Conectar o WhatsApp", texto: "Por um código no celular ou QR Code. Nada é enviado para ninguém." },
+    { titulo: "Ver as propostas paradas", texto: "Quanto somam, há quantos dias e quem chamar primeiro." },
+];
+const EXEMPLO = [
+    { nome: "Padaria Trigo Bom", valor: "R$ 61.200", dias: 8 },
+    { nome: "Carlos", valor: "R$ 23.900", dias: 5 },
+];
+
+const LadoDoCadastro = () => (
+    <div className="vz-cadastro__lado flex h-full flex-col justify-center gap-12 px-10 py-12 xl:px-16">
+        <p className="vs-display max-w-[460px] text-[34px] leading-[1.08] xl:text-[40px]">Em 3 minutos você vê quanto está parado no seu WhatsApp.</p>
+
+        <div className="vs-cartao relative max-w-[460px] rounded-[22px] p-6" style={{ background: "var(--lp-white)" }}>
+            <span className="vs-sentada" style={{ ["--s-eva" as string]: "88px" }}>
+                <EvaBot size={88} state="alert" />
+            </span>
+            <div className="flex items-center justify-between">
+                <p className="text-[13px] font-bold" style={{ color: "var(--lp-ink-muted)" }}>Parado no WhatsApp</p>
+                <span className="vs-carimbo vs-carimbo--neutro">Exemplo</span>
+            </div>
+            <p className="vs-num mt-2 text-[44px] font-semibold leading-none">R$ 85.100</p>
+            <ul className="mt-4 flex flex-col divide-y" style={{ borderColor: "var(--lp-line)" }}>
+                {EXEMPLO.map((e) => (
+                    <li key={e.nome} className="flex items-center justify-between gap-3 py-3" style={{ borderColor: "var(--lp-line)" }}>
+                        <span>
+                            <span className="block text-[15px] font-semibold">{e.nome}</span>
+                            <span className="vs-carimbo vs-carimbo--espera mt-1">{e.dias} dias sem resposta</span>
+                        </span>
+                        <span className="vs-num text-[16px] font-semibold">{e.valor}</span>
+                    </li>
+                ))}
+            </ul>
+        </div>
+
+        <ol className="flex max-w-[460px] flex-col gap-4">
+            {PASSOS.map((p, i) => (
+                <li key={p.titulo} className="flex items-start gap-3.5">
+                    <span aria-hidden className={`vz-cadastro__num ${i === 0 ? "vz-cadastro__num--agora" : ""}`}>{i + 1}</span>
+                    <span>
+                        <span className="block text-[16px] font-semibold">{p.titulo}</span>
+                        <span className="block text-[15px]" style={{ color: "var(--lp-ink-muted)" }}>{p.texto}</span>
+                    </span>
+                </li>
+            ))}
+        </ol>
+    </div>
+);
 
 export default SignupV2;

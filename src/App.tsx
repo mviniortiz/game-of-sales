@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrandedLoader } from "@/components/ui/BrandedLoader";
+import { PageLoader } from "@/components/ui/PageLoader";
 import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { CanonicalManager } from "@/components/CanonicalManager";
@@ -40,7 +40,7 @@ const EvaNudgePreview = lazy(() => import("./pages/EvaNudgePreview"));
 const EvaSuggestionPreview = lazy(() => import("./pages/EvaSuggestionPreview"));
 const UpgradeLockPreview = lazy(() => import("./pages/admin/UpgradeLock"));
 
-const LazyFallback = () => <BrandedLoader />;
+const LazyFallback = () => <PageLoader />;
 
 const App = () => (
   <ErrorBoundary>
