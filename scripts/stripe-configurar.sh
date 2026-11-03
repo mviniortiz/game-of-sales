@@ -33,5 +33,5 @@ WHSEC=$(curl -s https://api.stripe.com/v1/webhook_endpoints -u "$KEY:" \
   python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('secret',''))")
 [ -n "$WHSEC" ] || { echo "Não deu para criar o webhook no Stripe"; exit 1; }
 
-npx supabase secrets set STRIPE_SECRET_KEY="$KEY" STRIPE_WEBHOOK_SECRET="$WHSEC" --project-ref "$REF" --yes >/dev/null 2>&1
+npx supabase secrets set STRIPE_SECRET_KEY="$KEY" STRIPE_WEBHOOK_SECRET="$WHSEC" --project-ref "$REF" --yes >/dev/null 2>&1 || { echo "O Supabase não gravou os secrets. Rode: npx supabase login"; exit 1; }
 echo "Pronto: Stripe em modo $MODO, webhook cadastrado e secrets gravados."
