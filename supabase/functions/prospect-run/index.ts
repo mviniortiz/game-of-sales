@@ -310,6 +310,11 @@ Deno.serve(async (req) => {
         }).eq("id", alvo.id);
         r.enviado = alvo.agency_name;
       }
+      // Saiu: a suspeita da falha anterior era do número, não do chip.
+      if (inst.falhas_envio?.suspeita) {
+        const { suspeita: _suspeita, ...resto } = inst.falhas_envio;
+        await admin.from("prospecting_instances").update({ falhas_envio: resto }).eq("id", inst.id);
+      }
     } catch (e) {
       r.erro_envio = `${alvo.agency_name}: ${(e as Error).message}`;
       // "failed to send" com a sessão aberta é a restrição do WhatsApp para contato
@@ -321,7 +326,27 @@ Deno.serve(async (req) => {
         .eq("instance_name", instanceName).neq("state", "open")
         .gte("created_at", new Date(agora.getTime() - 15 * 60000).toISOString());
       const quedasHoje = inst.falhas_envio?.dia === dia ? inst.falhas_envio.conexao || 0 : 0;
-      const tipo = tipoDaFalha({ mensagem: (e as Error).message, estadoAgora, quedaRecente: (quedas || 0) > 0, quedasHoje });
+      const suspeita = inst.falhas_envio?.suspeita as { em?: string; alvo?: string } | undefined;
+      const outraFalhouAntes = Boolean(suspeita?.em && suspeita.alvo && suspeita.alvo !== alvo.id
+        && agora.getTime() - new Date(suspeita.em).getTime() < 2 * 3600 * 1000);
+      const tipo = tipoDaFalha({ mensagem: (e as Error).message, estadoAgora, quedaRecente: (quedas || 0) > 0, quedasHoje, outraFalhouAntes });
+      if (tipo === "suspeita") {
+        // Uma integradora só falhou: pode ser o número dela. Ela vai para o fim da fila
+        // (na 2ª falha, sai), e o próximo envio, daqui a 15 minutos, vai para outra.
+        const falhasAlvo = (alvo.metadata?.falhas_envio || 0) + 1;
+        await admin.from("prospecting_allowlist").update({
+          metadata: { ...(alvo.metadata || {}), falhas_envio: falhasAlvo },
+          ...(falhasAlvo >= 2
+            ? { status: "descartado", notes: `envio falhou ${falhasAlvo} vezes com a sessão estável: ${(e as Error).message}` }
+            : seguimento ? {} : { approved_at: agora.toISOString() }),
+        }).eq("id", alvo.id);
+        await admin.from("prospecting_instances").update({
+          next_send_at: new Date(agora.getTime() + 15 * 60000).toISOString(),
+          falhas_envio: { ...(inst.falhas_envio?.dia === dia ? inst.falhas_envio : { dia, total: 0 }), suspeita: { em: agora.toISOString(), alvo: alvo.id } },
+        }).eq("id", inst.id);
+        r.suspeita_de_numero = alvo.agency_name;
+        continue;
+      }
       if (tipo === "conexao") {
         // Conexão caiu: espera 15 minutos e tenta de novo, sem pausar o dia, sem zerar o
         // aquecimento e sem marcar a integradora.
