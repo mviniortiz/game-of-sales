@@ -88,10 +88,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // O papel admin nasce no onboarding_assign_company, depois do login. Sem reler
+  // aqui, isAdmin ficava falso até recarregar a página e o placar não levava a
+  // conta nova ao Raio-X.
+  const reloadAdminRole = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!error) setIsAdmin(!!data);
+  };
+
   const refreshProfile = async () => {
     // Primary: use user from state (fast path)
     if (user?.id) {
-      await loadProfile(user.id);
+      await Promise.all([loadProfile(user.id), reloadAdminRole(user.id)]);
       return;
     }
     // Fallback: state may not yet reflect new session (e.g. right after
@@ -101,7 +114,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (freshSession?.user?.id) {
       setUser(freshSession.user);
       setSession(freshSession);
-      await loadProfile(freshSession.user.id);
+      await Promise.all([loadProfile(freshSession.user.id), reloadAdminRole(freshSession.user.id)]);
     }
   };
 

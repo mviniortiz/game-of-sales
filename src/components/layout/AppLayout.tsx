@@ -11,6 +11,7 @@ import { EvaHelpDock } from "@/components/help/EvaHelpDock";
 import { AskEvaPalette } from "@/components/help/AskEvaPalette";
 import { WhatsappStatusPill } from "@/components/whatsapp/WhatsappStatusPill";
 import { conectandoWhatsapp, rotaGratis, usePlano } from "@/hooks/usePlano";
+import { useEvaSetup } from "@/hooks/useEvaSetup";
 
 // Page titles alinhados com nova nomenclatura visual da nav (F3 2026-05-19).
 // Rotas novas (/inicio, /inbox, etc) são as principais; antigas redirect silencioso.
@@ -47,6 +48,9 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const semPlano = !carregando && !pago;
 
   const conectando = semPlano && conectandoWhatsapp(location.pathname, location.search);
+  // A faixa da assinatura só no placar e só depois do Raio-X feito.
+  const { fezRaioX } = useEvaSetup();
+  const mostraFaixa = semPlano && location.pathname === "/orcamentos" && fezRaioX === true;
 
   useEffect(() => {
     const title = conectando ? "Conectar WhatsApp" : getPageTitle(location.pathname);
@@ -61,7 +65,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
       <div className="min-h-screen flex w-full" style={{ background: "var(--vyz-bg)", color: "var(--vyz-text-primary)" }}>
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          {semPlano && <FaixaPlanoGratis />}
+          {mostraFaixa && <FaixaPlanoGratis />}
           {/* No computador tudo vive na sidebar. No celular fica o que não cabe nas abas de baixo. */}
           <header className="md:hidden h-14 flex items-center gap-2 px-3" style={{ background: "var(--vyz-noite)", color: "#fff" }}>
             <SidebarTrigger className="text-white hover:bg-white/10 hover:text-white" aria-label="Abrir menu" />

@@ -14,6 +14,7 @@ import { PageLoader } from "@/components/ui/PageLoader";
 import { AuthField } from "@/components/auth/AuthField";
 import { scorePassword, STRENGTH_META } from "@/components/auth/password";
 import { APP_HOME } from "@/config/routes";
+import { rotuloPasso } from "@/lib/primeiroAcesso";
 
 // Cadastro SIMPLES: 1 tela → conta criada sem plano (sem teste grátis) →
 // Raio-X automático no app. Trata 2 modos: (a) novo usuário
@@ -58,9 +59,9 @@ function empresaDoEmail(email: string): string {
     return capitalizar(dominio.split(".")[0]);
 }
 const FUNNEL_PAGE = "signup";
-// Toda conta nova nasce sem assinatura, e o grátis é o Raio-X. Ir direto: o
-// desvio por Orçamentos depende de isAdmin, que só é lido no login e ainda
-// está falso logo depois de onboarding_assign_company.
+// Toda conta nova nasce sem assinatura, e o grátis é o Raio-X. Ir direto, sem
+// o desvio por Orçamentos (que também leva, agora que o refreshProfile relê o
+// papel admin criado no onboarding_assign_company).
 const RAIO_X = "/raio-x";
 
 const SignupV2 = () => {
@@ -343,7 +344,7 @@ const SignupV2 = () => {
                                     <span className="vz-cadastro__passo" />
                                 </div>
                                 <p className="mt-3 text-[13px] font-semibold" style={{ color: "var(--lp-ink-muted)" }}>
-                                    {ssoMode ? "Passo 1 de 3: falta só o WhatsApp" : "Passo 1 de 3. Depois: conectar o WhatsApp e ver o que está parado."}
+                                    {ssoMode ? `${rotuloPasso(0)}: falta só o WhatsApp` : `${rotuloPasso(0)}. Depois: conectar o WhatsApp e ver as propostas paradas.`}
                                 </p>
                                 <h1 className="vs-display mt-5 text-[40px] leading-[1.02] sm:text-[46px]">{ssoMode ? "Quase lá" : "Crie sua conta"}</h1>
                                 <p className="mt-3 text-[16px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>

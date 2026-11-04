@@ -1,22 +1,31 @@
-// /upgrade: assinar o plano único de dentro do app (banner do teste grátis,
-// aviso de limite ou Faturamento). Mesmo PlanPicker da tela de teste expirado.
+// /upgrade: assinar o plano único de dentro do app (faixa do placar, aviso de
+// limite ou Faturamento). Mesmo PlanPicker da tela de teste expirado. Da vaga
+// das primeiras integradoras só fala o que vale para esta conta.
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "@phosphor-icons/react";
 import { usePlano } from "@/hooks/usePlano";
+import { useVagaFundadora } from "@/hooks/useVagaFundadora";
+import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
+import { fraseFundadora, ofertaFundadora } from "@/lib/fundadora";
+import { APP_HOME } from "@/config/routes";
 import { PlanPicker } from "@/components/billing/PlanPicker";
 
 export default function Upgrade() {
     const navigate = useNavigate();
     const { pago } = usePlano();
+    const vaga = useVagaFundadora();
+    const wa = useWhatsappConnection();
+    const fundadora = vaga.data?.fundadora && vaga.data.numero ? vaga.data : null;
+    const oferta = wa.loading ? null : ofertaFundadora(vaga.data ?? null, wa.connected);
 
     return (
         <div className="px-4 sm:px-6 py-8 sm:py-10 max-w-5xl mx-auto">
             <button
-                onClick={() => navigate("/configuracoes/faturamento")}
+                onClick={() => navigate(APP_HOME)}
                 className="mb-6 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--vyz-text-muted)] transition-colors hover:text-[var(--vyz-text-primary)]"
             >
                 <ArrowLeft size={14} aria-hidden />
-                Voltar para o plano
+                Voltar ao placar
             </button>
 
             <div className="text-center mb-9 max-w-lg mx-auto">
@@ -24,9 +33,16 @@ export default function Upgrade() {
                 <p className="text-[15px] text-[var(--vyz-text-muted)]">
                     Um plano só, com tudo liberado para a sua equipe.
                 </p>
-                <p className="mt-2 text-[13px] text-[var(--vyz-text-muted)]">
-                    As 10 primeiras integradoras não pagam. Se a sua é uma delas, a gente libera a conta sem cobrar e avisa no WhatsApp.
-                </p>
+                {fundadora ? (
+                    <p className="mt-2 text-[13px] font-medium text-[var(--vyz-text-primary)]">{fraseFundadora(fundadora.numero!, fundadora.limite)}</p>
+                ) : oferta ? (
+                    <p className="mt-2 text-[13px] text-[var(--vyz-text-muted)]">
+                        {oferta}{" "}
+                        <Link to="/inbox?connect=1" className="font-medium text-[var(--vyz-text-primary)] underline underline-offset-4">
+                            Conectar agora
+                        </Link>
+                    </p>
+                ) : null}
             </div>
 
             <div className="flex justify-center">

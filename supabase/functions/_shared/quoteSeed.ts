@@ -1,11 +1,20 @@
 // Grava no placar as propostas que já estavam no histórico do WhatsApp
 // (quote-seed-history). Mesma análise do Raio-X: conversa inteira, na ordem,
-// só a última proposta de cada conversa dos últimos 30 dias, com card no
-// estágio Proposta. Proposta mais nova substitui a aberta da mesma conversa;
-// a mesma mensagem nunca grava duas vezes (unique de channel_message_id).
+// só a última proposta de cada conversa, com card no estágio Proposta.
+// Janela (04/11/2026): os mesmos 90 dias que o Raio-X lê, menos o que o placar
+// já daria por vencido (30 dias sem o cliente escrever, quote_tracking_expire
+// no eva-quote-followup). Antes eram 30 dias da proposta, e uma proposta de 45
+// dias com o cliente ativo ficava fora do placar. As que esfriaram seguem só
+// no relatório; gravadas, virariam "Perdidos" no próximo vencimento.
+// Proposta mais nova substitui a aberta da mesma conversa; a mesma mensagem
+// nunca grava duas vezes (unique de channel_message_id).
 import { buildRaioX } from "../raio-x-build/build.ts";
-import { RECENT_DAYS } from "./raioX.ts";
 import { linkQuoteToDeal } from "./quoteTracking.ts";
+
+/** Mesma janela do Raio-X (raio-x-build lê 90 dias). */
+export const SEED_DAYS = 90;
+/** Igual ao EXPIRE_AFTER_DAYS do eva-quote-followup. */
+export const VENCE_SEM_CLIENTE_DIAS = 30;
 
 export type SeedResult = {
     quotes: number;
@@ -21,7 +30,9 @@ export type SeedResult = {
 // deno-lint-ignore no-explicit-any
 export async function seedQuotesFromHistory(admin: any, companyId: string, ownerId: string | null): Promise<SeedResult> {
     const built = await buildRaioX(admin, companyId, { drafts: false });
-    const recentes = built.quotes.filter((q) => q.days_since_quote <= RECENT_DAYS && q.message_id);
+    const recentes = built.quotes.filter(
+        (q) => q.days_since_quote <= SEED_DAYS && q.days_silent < VENCE_SEM_CLIENTE_DIAS && q.message_id,
+    );
 
     const convIds = recentes.map((q) => q.conversation_id);
     const abertos = new Map<string, { id: string; sent_at: string }>();

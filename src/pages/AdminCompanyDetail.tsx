@@ -49,6 +49,23 @@ export const AdminCompanyDetail = () => {
     enabled: !!companyId && isAdmin,
   });
 
+  // Vaga das primeiras integradoras (conceder_fundadora, ao conectar o WhatsApp).
+  // Só leitura: revogar é no SQL (ver a migration 20261104_fundadoras_sozinhas).
+  const { data: fundadora } = useQuery({
+    queryKey: ["fundadora", companyId],
+    enabled: !!companyId && isAdmin,
+    queryFn: async () => {
+      // Tabela nova, fora dos tipos gerados.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any)
+        .from("fundadoras")
+        .select("numero, concedida_em, revogada_em")
+        .eq("company_id", companyId)
+        .maybeSingle();
+      return (data as { numero: number; concedida_em: string; revogada_em: string | null } | null) ?? null;
+    },
+  });
+
   // react-query v5 removeu onSuccess de useQuery; sincroniza o estado de edição
   // local (name/plan) quando a empresa carrega ou muda.
   useEffect(() => {
@@ -201,6 +218,13 @@ export const AdminCompanyDetail = () => {
                     <option value="active">Pago</option>
                     <option value="inactive">Sem plano</option>
                   </select>
+                  {fundadora && (
+                    <p className="text-xs text-muted-foreground">
+                      {fundadora.revogada_em
+                        ? `Foi a fundadora nº ${fundadora.numero} (vaga revogada).`
+                        : `Fundadora nº ${fundadora.numero}, liberada ao conectar o WhatsApp. "Sem plano" corta o acesso, mas a vaga continua ocupada até ser revogada.`}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">

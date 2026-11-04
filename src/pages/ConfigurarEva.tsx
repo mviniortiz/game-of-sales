@@ -17,6 +17,7 @@ import { useEvaSetup, setupDismissKey } from "@/hooks/useEvaSetup";
 import { useWhatsappConnection } from "@/hooks/useWhatsappConnection";
 import { useLeituraHistorico } from "@/hooks/useLeituraHistorico";
 import { APP_HOME } from "@/config/routes";
+import { SO_LEIO } from "@/lib/primeiroAcesso";
 import {
     composeContext,
     perguntasPendentes,
@@ -271,11 +272,11 @@ export default function ConfigurarEva() {
         if (!r) {
             fala({ de: "eva", texto: "Não consegui terminar a leitura agora. Sem problema: cada proposta que sair do seu WhatsApp já entra no placar sozinha." });
         } else if (r.stuck > 0) {
-            fala({ de: "eva", texto: "Pronto. Olha o que achei nos últimos 30 dias:" }, { de: "bloco", texto: <Placar r={r} /> });
+            fala({ de: "eva", texto: "Pronto. Olha o que achei nos últimos 90 dias:" }, { de: "bloco", texto: <Placar r={r} /> });
         } else if (r.quotes > 0) {
-            fala({ de: "eva", texto: `Achei ${r.quotes === 1 ? "1 proposta" : `${r.quotes} propostas`} nos últimos 30 dias e nenhuma parada. Bom sinal.` });
+            fala({ de: "eva", texto: `Achei ${r.quotes === 1 ? "1 proposta" : `${r.quotes} propostas`} nos últimos 90 dias e nenhuma parada. Bom sinal.` });
         } else {
-            fala({ de: "eva", texto: "Não achei proposta nos últimos 30 dias nesse número. Daqui pra frente, cada proposta que sair dele entra no placar sozinha." });
+            fala({ de: "eva", texto: "Não achei proposta nos últimos 90 dias nesse número. Daqui pra frente, cada proposta que sair dele entra no placar sozinha." });
         }
         fala({ de: "eva", texto: "Daqui pra frente é assim: quando uma proposta passar 2 dias sem resposta, eu te mando no WhatsApp a retomada pronta. Você responde 1 e ela sai do seu número." });
     }
@@ -296,9 +297,11 @@ export default function ConfigurarEva() {
                     <div className="flex min-w-0 items-center gap-2.5">
                         <VyzonMark size={30} />
                         <div className="min-w-0">
-                            <p className="text-[14px] font-semibold leading-tight">Primeiros passos</p>
+                            <p className="text-[14px] font-semibold leading-tight">Configurar a Lume</p>
                             <p className="truncate text-[12px] text-[var(--vyz-text-muted)]">
-                                {passo < 4 ? `Passo ${passo + 1} de 4 · ${PASSOS[passo]}` : `Tudo pronto · ${empresa}`}
+                                {/* Vem depois do primeiro acesso (conta, conectar, ver as
+                                    propostas): sem contador próprio para não brigar com aquele. */}
+                                {passo < 4 ? PASSOS[passo] : `Tudo pronto · ${empresa}`}
                             </p>
                         </div>
                     </div>
@@ -421,7 +424,7 @@ export default function ConfigurarEva() {
                     {fase === "whatsapp" && (
                         <div className="flex flex-col gap-2">
                             <button type="button" onClick={() => setConectar(true)} className={`${BTN_PRIMARY} w-full`}>Conectar meu WhatsApp</button>
-                            <p className="text-center text-[12px] text-[var(--vyz-text-muted)]">Por um código no celular ou pelo QR Code, como no WhatsApp Web. Nada sai para cliente sem você aprovar.</p>
+                            <p className="text-center text-[12px] text-[var(--vyz-text-muted)]">Por um código no celular ou pelo QR Code, como no WhatsApp Web. {SO_LEIO}</p>
                         </div>
                     )}
 
@@ -430,7 +433,7 @@ export default function ConfigurarEva() {
                     )}
 
                     {fase === "placar" && (
-                        <Link to={APP_HOME} replace className={`${BTN_PRIMARY} w-full`}>Ver meu placar</Link>
+                        <Link to={`${APP_HOME}?dias=90`} replace className={`${BTN_PRIMARY} w-full`}>Ver meu placar</Link>
                     )}
                 </div>
             </footer>

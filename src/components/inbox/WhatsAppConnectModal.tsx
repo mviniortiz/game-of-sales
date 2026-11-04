@@ -26,6 +26,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { EvaBot } from "@/components/eva/EvaBot";
 import { logLandingEvent } from "@/lib/landingFunnel";
+import { SO_LEIO } from "@/lib/primeiroAcesso";
 import type { Sistema } from "./ConectarDemo";
 
 // O celular animado com o caminho dentro do WhatsApp (kit Stageshow) vem num
@@ -73,11 +74,13 @@ export function WhatsAppConnectModal({ open, onClose, onConnected, funil }: What
     const { activeCompanyId } = useTenant();
     const effectiveCompanyId = activeCompanyId || companyId;
 
-    // No celular não dá para ler o próprio QR: abre direto no código.
+    // Uma escolha só na tela: abre sempre no código no celular (funciona no
+    // celular e no computador, e o número do cadastro já pede o código sozinho).
+    // QR Code e o outro sistema ficam num link pequeno.
     const [noCelular] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches);
-    const [modo, setModo] = useState<Modo>(noCelular ? "codigo" : "qr");
+    const [modo, setModo] = useState<Modo>("codigo");
     // O passo a passo começa no sistema de quem está vendo (no computador, Android,
-    // que é o da maioria); a pessoa troca no seletor.
+    // que é o da maioria); a pessoa troca no link.
     const [sistema, setSistema] = useState<Sistema>(() => (typeof navigator !== "undefined" && /iPhone|iPad|iPod/.test(navigator.userAgent) ? "iphone" : "android"));
     // Passo que o celular animado está mostrando; -1 sem animação (movimento reduzido).
     const [passo, setPasso] = useState(-1);
@@ -327,7 +330,7 @@ export function WhatsAppConnectModal({ open, onClose, onConnected, funil }: What
     };
 
     const linkBtn = "inline-flex items-center gap-1.5 rounded-full text-[13px] font-semibold text-[#1556C0] hover:text-[#1D4ED8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1556C0]";
-    const linkMudo = "rounded-full text-[13px] font-medium text-[#94A3B8] hover:text-[#475569] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1556C0]";
+    const linkMudo = "rounded-full text-[13px] font-medium text-[#64748B] underline-offset-4 hover:text-[#0F1730] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1556C0]";
 
     return (
         <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
@@ -342,22 +345,6 @@ export function WhatsAppConnectModal({ open, onClose, onConnected, funil }: What
                     <DialogDescription className="mt-1 text-[14px] leading-relaxed text-[#64748B]">
                         O mesmo número que você usa com os clientes. Nada muda no seu celular.
                     </DialogDescription>
-                    {state !== "connected" && (
-                        <div role="radiogroup" aria-label="Como conectar" className="mt-4 inline-flex self-start rounded-full border border-[#E6EDF5] bg-[#F8FAFC] p-1">
-                            {([["codigo", "Código no celular"], ["qr", "QR Code"]] as const).map(([m, rotulo]) => (
-                                <button
-                                    key={m}
-                                    type="button"
-                                    role="radio"
-                                    aria-checked={modo === m}
-                                    onClick={() => trocarModo(m)}
-                                    className={`h-8 rounded-full px-4 text-[13px] font-semibold transition-colors duration-150 ${EASE} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1556C0] ${modo === m ? "bg-[#0F1730] text-white" : "text-[#475569] hover:text-[#0F1730]"}`}
-                                >
-                                    {rotulo}
-                                </button>
-                            ))}
-                        </div>
-                    )}
                 </DialogHeader>
 
                 {state === "connected" ? (
@@ -387,27 +374,20 @@ export function WhatsAppConnectModal({ open, onClose, onConnected, funil }: What
                             </p>
                         )}
                         <div className="order-2 md:order-1">
-                            <div className="flex items-center justify-between gap-3">
-                                <p className="text-[13px] font-semibold text-[#1F2A3B]">Veja onde tocar</p>
-                                <div role="radiogroup" aria-label="Sistema do celular" className="inline-flex rounded-full border border-[#E6EDF5] bg-[#F8FAFC] p-0.5">
-                                    {([["android", "Android"], ["iphone", "iPhone"]] as const).map(([v, rotulo]) => (
-                                        <button
-                                            key={v}
-                                            type="button"
-                                            role="radio"
-                                            aria-checked={sistema === v}
-                                            onClick={() => {
-                                                if (v === sistema) return;
-                                                setSistema(v);
-                                                setPasso(-1);
-                                                medir("cta_click", { step: "sistema", sistema: v });
-                                            }}
-                                            className={`h-7 rounded-full px-3 text-[12.5px] font-semibold transition-colors duration-150 ${EASE} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1556C0] ${sistema === v ? "bg-white text-[#0F1730] shadow-[0_1px_2px_rgba(15,23,42,0.12)]" : "text-[#64748B] hover:text-[#0F1730]"}`}
-                                        >
-                                            {rotulo}
-                                        </button>
-                                    ))}
-                                </div>
+                            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                                <p className="text-[13px] font-semibold text-[#1F2A3B]">Veja onde tocar no {sistema === "iphone" ? "iPhone" : "Android"}</p>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const v: Sistema = sistema === "iphone" ? "android" : "iphone";
+                                        setSistema(v);
+                                        setPasso(-1);
+                                        medir("cta_click", { step: "sistema", sistema: v });
+                                    }}
+                                    className={linkMudo}
+                                >
+                                    {sistema === "iphone" ? "É Android?" : "É iPhone?"}
+                                </button>
                             </div>
                             <div className="mx-auto mt-3 w-full max-w-[380px]" style={{ aspectRatio: "380 / 420" }}>
                                 <Suspense fallback={null}>
@@ -431,7 +411,7 @@ export function WhatsAppConnectModal({ open, onClose, onConnected, funil }: What
                                 })}
                             </ol>
                             <ul className="mt-6 flex flex-col gap-2 border-t border-[#EEF2F7] pt-5">
-                                {["Seu número continua o mesmo", "Nada sai para cliente sem você aprovar", "Dá para desconectar quando quiser, em Aparelhos conectados"].map((t) => (
+                                {[SO_LEIO, "Seu número continua o mesmo", "Dá para desconectar quando quiser, em Aparelhos conectados"].map((t) => (
                                     <li key={t} className="flex items-center gap-2 text-[13px] text-[#64748B]">
                                         <Check className="h-3.5 w-3.5 shrink-0 text-[#1556C0]" strokeWidth={2.5} aria-hidden />
                                         {t}
@@ -549,6 +529,17 @@ export function WhatsAppConnectModal({ open, onClose, onConnected, funil }: What
                                         </button>
                                     )}
                                 </div>
+                            )}
+
+                            {/* No celular o QR não serve (é o próprio aparelho); lá o link some. */}
+                            {state !== "loading" && !(noCelular && modo === "codigo") && (
+                                <button
+                                    type="button"
+                                    onClick={() => trocarModo(modo === "codigo" ? "qr" : "codigo")}
+                                    className={`${linkMudo} mt-3`}
+                                >
+                                    {modo === "codigo" ? "Prefere ler um QR Code com a câmera?" : "Prefere digitar um código no celular?"}
+                                </button>
                             )}
                         </div>
                     </div>
