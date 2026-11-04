@@ -186,14 +186,17 @@ export default function Faturamento() {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h2 id="fat-plano" className="text-[18px] font-semibold tracking-[-0.01em] text-[var(--vyz-text-primary)]">
-              Plano {planInfo.label}
+              {/* "free" é piso interno (plans.ts): nunca aparece como plano para a pessoa. */}
+              {currentPlan === "free" ? "Sem assinatura" : `Plano ${planInfo.label}`}
             </h2>
             <span className="vp-chip" data-tom={statusChip.tom}>{statusChip.texto}</span>
           </div>
           <p className="vp-sub">
-            {currentPlanData.monthlyPrice
-              ? `${formatPrice(currentPlanData.monthlyPrice)}/mês`
-              : formatPrice(currentPlanData.monthlyPrice)}
+            {currentPlan === "free"
+              ? `Assine o Vyzon por ${formatPrice(PLANS.pro.monthlyPrice)}/mês para a Lume acompanhar seus orçamentos.`
+              : currentPlanData.monthlyPrice
+                ? `${formatPrice(currentPlanData.monthlyPrice)}/mês`
+                : formatPrice(currentPlanData.monthlyPrice)}
           </p>
           {currentPlanData.features.length > 0 && (
             <ul className="mt-4 space-y-2">
