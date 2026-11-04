@@ -42,6 +42,8 @@ export type Evidencia = {
   googleBuscado?: boolean; // false: ainda sem chave da Places API
   google?: LugarGoogle | null;
   juiz?: Juiz | null;
+  /** Busca pública do site e do Instagram (_shared/prospectWeb.ts). */
+  web?: { achou: boolean; vendeClienteFinal: "sim" | "nao" | "duvida"; ativa: boolean | null } | null;
 };
 
 export type Nota = { nota: number; motivos: string[]; veto: string | null };
@@ -103,6 +105,13 @@ export function notaDeEncaixe(e: Evidencia, hoje: Date = new Date()): Nota {
   if (e.inicio && /^\d{8}$/.test(e.inicio)) {
     const anos = hoje.getUTCFullYear() - Number(e.inicio.slice(0, 4));
     add(anos >= 2 && anos <= 8 ? 5 : anos > 8 ? 3 : 1, `CNPJ há ${anos} ${anos === 1 ? "ano" : "anos"}`);
+  }
+
+  // Site e Instagram (até 15): a busca acha a empresa, ela vende para o cliente final e posta.
+  if (e.web?.achou) {
+    add(5, "achou site ou Instagram");
+    if (e.web.vendeClienteFinal === "sim") add(5, "vende para o cliente final");
+    if (e.web.ativa === true) add(5, "postou obra ou orçamento nos últimos 6 meses");
   }
 
   // O juiz de IA (até 15)

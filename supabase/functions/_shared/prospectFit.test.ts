@@ -69,3 +69,11 @@ Deno.test("distribuidora pontua pelo atacado e pelo porte maior, não pela insta
   const micro = notaDeEncaixe({ ...dist, porte: "ME" }, hoje);
   assert(!micro.motivos.includes("porte ME"));
 });
+
+Deno.test("site ou Instagram ativo, vendendo para o cliente final, soma até 15", () => {
+  const sem = notaDeEncaixe({ ...base, googleBuscado: false }, hoje).nota;
+  const com = notaDeEncaixe({ ...base, googleBuscado: false, web: { achou: true, vendeClienteFinal: "sim", ativa: true } }, hoje);
+  assert(com.nota > sem);
+  assert(com.motivos.includes("vende para o cliente final"));
+  assertEquals(notaDeEncaixe({ ...base, googleBuscado: false, web: { achou: false, vendeClienteFinal: "duvida", ativa: null } }, hoje).nota, sem);
+});

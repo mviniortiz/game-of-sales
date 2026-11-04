@@ -20,7 +20,10 @@ export type ProspectVariant = "pergunta" | "numero" | "curta" | "encaminha" | "r
  *  a curta em 1 de 16 (9 robôs) e a raiox em 1 de 15; ficou só a encaminha. As outras
  *  continuam em firstMessage/readProspectReply para as conversas que já começaram com elas.
  *  Sem "Não é venda": a resposta seguinte mostra a ferramenta, e a frase viraria mentira. */
-export const VARIANTS: ProspectVariant[] = ["encaminha", "time", "aberta"];
+/** Retrospectiva de 04/11/2026 (122 envios de 09 a 27/10): a encaminha trouxe pessoa em
+ *  21 de 62, a curta em 2 de 19 (9 robôs), a raiox em 2 de 15, a time em 1 de 4 e a
+ *  aberta em 0 de 3. Fica só a encaminha. */
+export const VARIANTS: ProspectVariant[] = ["encaminha"];
 
 /** Teste de dores até 30/10/2026 (decisão do Markus em 19/10): o formato da encaminha,
  *  que é o que faz pessoa responder, com três assuntos. encaminha = proposta parada,
@@ -28,7 +31,8 @@ export const VARIANTS: ProspectVariant[] = ["encaminha", "time", "aberta"];
  *  venda, sem mostrar produto. A divisão conta só o que entrou desde TESTE_DORES_DESDE. */
 export const TESTE_DORES_DESDE = "2026-10-19T15:30:00Z";
 /** A distribuidora para durante o teste: a amostra de cada dor já é pequena. */
-export const DISTRIBUIDORA_PAUSADA_ATE = "2026-10-31T03:00:00Z";
+// Desde 04/11/2026 o Markus quer só integradoras no lote: a distribuidora fica pausada.
+export const DISTRIBUIDORA_PAUSADA_ATE = "2099-01-01T00:00:00Z";
 
 /** Distribuidora de kit solar é um teste à parte (decisão de 16/10/2026): a integradora
  *  segue sendo o público do critério de 30/10, e a distribuidora entra como 1 de cada 5
@@ -56,15 +60,22 @@ export const IMAGEM_RETOMADA = "https://omsdkjzkphflpwnbaeye.supabase.co/storage
  *  aprovação (Elesan ficou mais de 24h sem resposta). Qualquer outra resposta espera.
  *  Sai AUTO_ENVIO_MS depois da última mensagem deles: costumam mandar "Oi", "tudo bem?"
  *  e "pode falar" em sequência, e só a última conta. */
+// Retrospectiva de 04/11/2026: 14 donos disseram "é comigo" e a conversa morreu na
+// mensagem seguinte, que explicava e perguntava sem oferecer nada. Agora a oferta das
+// 10 vagas (plans.ts, decisão de 03/11) vai junto, com uma pergunta de sim ou não.
+export const OFERTA_VAGA =
+  "Tô liberando de graça, pra sempre, pras 10 primeiras integradoras, em troca de me contarem o que funciona e o que falta. Quer uma das vagas?";
+const OFERTA_VAGA_DISTRIBUIDORA =
+  "Tô liberando de graça, pra sempre, pras 10 primeiras empresas, em troca de me contarem o que funciona e o que falta. Quer uma das vagas?";
 export const RESPOSTA_PORTA = [
-  "Tô montando uma ferramenta pra integradora: quando um orçamento fica 2 dias sem resposta do cliente, ela avisa o dono no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.",
+  "Fiz uma ferramenta pra integradora: quando um orçamento fica 2 dias sem resposta do cliente, ela avisa o dono no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.",
   MARCA_IMAGEM,
-  "Vocês fazem algo assim hoje ou fica no braço?",
+  OFERTA_VAGA,
 ].join("\n\n");
 const RESPOSTA_PORTA_DISTRIBUIDORA = [
-  "Tô montando uma ferramenta pra distribuidora: quando uma cotação fica 2 dias sem resposta do integrador, ela avisa o vendedor no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.",
+  "Fiz uma ferramenta pra distribuidora: quando uma cotação fica 2 dias sem resposta do integrador, ela avisa o vendedor no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.",
   MARCA_IMAGEM,
-  "Vocês fazem algo assim hoje ou fica no braço?",
+  OFERTA_VAGA_DISTRIBUIDORA,
 ].join("\n\n");
 // Só o que existe: cada vendedor conecta o próprio número (evolution-whatsapp,
 // instância por usuário), as propostas de todos caem no placar da empresa
@@ -91,6 +102,12 @@ export const portaJaFoi = (conversa: string | null | undefined, niche?: string |
   return c.includes(MARCA_IMAGEM) || c.includes(respostaPorta(niche, variant).slice(0, 60));
 };
 export const AUTO_ENVIO_MS = 90_000;
+
+/** O robô já respondeu antes e o Markus já mandou a mensagem pedindo a pessoa. */
+export function roboDeNovo(kind: string, kindAntes: string | null | undefined, conversa: string | null | undefined): boolean {
+  return kind === "automatico" && kindAntes === "automatico" && /(^|\n)Markus:/.test(String(conversa || ""));
+}
+
 
 type ProspectTarget = {
   agency_name: string | null; city: string | null; rating_count: number | null;
@@ -246,6 +263,10 @@ export function followupMessage(row?: Pick<ProspectTarget, "metadata" | "niche">
     : row?.variant === "time" ? PERGUNTA_TIME
     : row?.variant === "aberta" ? PERGUNTA_ABERTA
     : PERGUNTA_DOR;
+  // Integradora da versão atual: o seguimento leva a oferta em vez de pedir número.
+  if (!perfil && !ehDistribuidora(row?.niche) && (!row?.variant || row.variant === "encaminha")) {
+    return `Oi${dono ? `, ${dono}` : ""}, tudo bem? Passando só pra não deixar minha mensagem solta. Fiz uma ferramenta que avisa quando um orçamento fica 2 dias sem resposta e já deixa a retomada pronta, e tô liberando de graça pras 10 primeiras integradoras de SC. Quer que eu te conte como funciona? ${sender}`;
+  }
   return `Oi${dono ? `, ${dono}` : ""}, tudo bem? Passando só pra não deixar minha mensagem solta. É uma pergunta só: ${pergunta.charAt(0).toLowerCase()}${pergunta.slice(1)} ${sender}`;
 }
 

@@ -13,7 +13,8 @@ Deno.test("versões em teste usam o nome da integradora, sem travessão e sem li
 });
 
 Deno.test("a próxima versão é a em teste menos usada, ignorando as aposentadas", () => {
-  assertEquals(nextVariant({ pergunta: 0, curta: 3, encaminha: 1, time: 1, aberta: 0, raiox: 2 }), "aberta");
+  // Desde a retrospectiva de 04/11/2026 só a encaminha está em uso.
+  assertEquals(nextVariant({ pergunta: 0, curta: 3, encaminha: 1, time: 1, aberta: 0, raiox: 2 }), "encaminha");
   assertEquals(nextVariant({ encaminha: 0, time: 2, aberta: 1 }), "encaminha");
   assertEquals(nextVariant({}), "encaminha");
 });
@@ -32,7 +33,7 @@ Markus: ${porta}`, null, v), `${v} não reconhece a própria resposta`);
   assert(respostaPorta(null, "aberta").includes("perder venda"));
   assert(followupMessage({ variant: "time" }).includes("vendedor"));
   assert(followupMessage({ variant: "aberta" }).includes("perder venda"));
-  assert(followupMessage({ variant: "encaminha" }).includes("visualiza a proposta"));
+  assert(followupMessage({ variant: "encaminha" }).includes("10 primeiras integradoras"));
 });
 
 Deno.test("com o sócio do CNPJ, todas as versões abrem pelo primeiro nome", () => {
@@ -45,10 +46,11 @@ Deno.test("com o sócio do CNPJ, todas as versões abrem pelo primeiro nome", ()
   }
 });
 
-Deno.test("seguimento do dia 4 faz a pergunta da dor e não pede reunião", () => {
+Deno.test("seguimento do dia 4 leva a oferta das 10 vagas e não pede reunião", () => {
   const semDono = followupMessage();
   assert(semDono.startsWith("Oi, tudo bem?"));
-  assert(semDono.includes("quando o cliente visualiza a proposta e some"));
+  assert(semDono.includes("de graça pras 10 primeiras integradoras"));
+  assert(!/quantas|quantos/i.test(semDono), "pede número");
   assert(!/20 minutos|reunião|chamada/.test(semDono));
   assert(!/[—–]/.test(semDono));
   assert(followupMessage({ metadata: { socio: "ANNA LUIZA SOUZA" } }).startsWith("Oi, Anna, tudo bem?"));
@@ -72,10 +74,11 @@ Deno.test("parágrafo [imagem] vira uma parte sozinha", () => {
   assertEquals(dividirMensagens("Estamos montando isso.\n\n[imagem]\n\nVocês fazem algo assim?"), ["Estamos montando isso.", "[imagem]", "Vocês fazem algo assim?"]);
 });
 
-Deno.test("resposta padrão sai em três partes, com o print no meio e sem travessão", () => {
+Deno.test("resposta padrão sai em três partes, com o print no meio e a oferta no fim", () => {
   const partes = dividirMensagens(RESPOSTA_PORTA);
   assertEquals(partes.length, 3);
   assertEquals(partes[1], MARCA_IMAGEM);
+  assert(partes[2].includes("10 primeiras") && partes[2].endsWith("?"));
   assert(!/[—–]/.test(RESPOSTA_PORTA));
 });
 
@@ -137,4 +140,12 @@ Deno.test("teto só sobe com resposta de pessoa nas últimas frias", () => {
   assertEquals(tetoComSinal(10, seco, "2026-10-21"), 3); // segura no que saiu no último dia
   assertEquals(tetoComSinal(10, [...seco.slice(1), { dia: "2026-10-19", pessoa: true }], "2026-10-21"), 10);
   assertEquals(tetoComSinal(10, seco.slice(0, 5), "2026-10-21"), 10); // amostra pequena não trava
+});
+
+Deno.test("robô de novo só encerra depois que o Markus já pediu a pessoa", async () => {
+  const { roboDeNovo } = await import("./prospectingText.ts");
+  assert(roboDeNovo("automatico", "automatico", "Eles: Olá! Como podemos ajudar?\nMarkus: Oi! Sou o Markus, de Floripa."));
+  assert(!roboDeNovo("automatico", "automatico", "Eles: Olá! Como podemos ajudar?"), "ainda não respondeu ao robô");
+  assert(!roboDeNovo("automatico", null, "Eles: menu"), "primeiro robô");
+  assert(!roboDeNovo("duvida", "automatico", "Eles: menu\nMarkus: oi"), "pessoa respondeu");
 });
