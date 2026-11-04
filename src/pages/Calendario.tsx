@@ -1,997 +1,629 @@
-import { useState, useEffect, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { useTenant } from "@/contexts/TenantContext";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  ChevronLeft, ChevronRight, Plus, Users, Target, Trophy,
-  TrendingUp, RefreshCw, CalendarDays, Menu, X, ChevronDown
-} from "lucide-react";
-import {
-  format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth,
-  isSameDay, addMonths, subMonths, startOfWeek, endOfWeek,
-  addDays, subDays, addWeeks, subWeeks, isToday as dateFnsIsToday,
-  parseISO, startOfDay, endOfDay
-} from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+// Agenda: a semana na rua. Visita técnica, instalação e vistoria, cada uma com cliente,
+// hora e quem vai. Hoje vem primeiro; o que já passou e ficou sem resposta pede
+// "Aconteceu" ou "Não foi" na própria linha.
+import { useState, type ReactNode } from "react";
+import { addDays, addMonths, addWeeks, format, isSameDay, isSameMonth, isToday, parseISO } from "date-fns";
+import { CaretLeft, CaretRight, Check, GoogleLogo, Plus, X } from "@phosphor-icons/react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AgendamentoForm } from "@/components/calls/AgendamentoForm";
 import { CalendarTimelineView } from "@/components/calendar/CalendarTimelineView";
 import { AgendamentoDetailsModal } from "@/components/calendar/AgendamentoDetailsModal";
+import { TipoTile } from "@/components/calendar/TipoTile";
 import { GoogleCalendarConfigModal } from "@/components/integrations/GoogleCalendarConfigModal";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useAgenda } from "@/hooks/useAgenda";
+import {
+    agruparPorDia,
+    chaveDia,
+    contarPorTipo,
+    DIA_CURTO,
+    dentro,
+    diasDaGrade,
+    gradeDoMes,
+    MES,
+    mesmoHorarioEm,
+    nomeContado,
+    NOME_STATUS,
+    NOME_TIPO,
+    ordemDaSemana,
+    periodoDa,
+    plural,
+    porHorario,
+    precisaMarcar,
+    rotuloDoDia,
+    rotuloPeriodo,
+    semanaDe,
+    statusDe,
+    tipoDe,
+    TIPOS,
+    type Agendamento,
+    type Periodo,
+    type StatusAgenda,
+    type VisaoAgenda,
+} from "@/lib/agenda";
+import { Collapse } from "@/vendor/stageshow/motion/Collapse";
+import { Count } from "@/vendor/stageshow/motion/Count";
+import { Swap } from "@/vendor/stageshow/motion/Swap";
 
-type ViewType = "day" | "week" | "month";
-type AttendanceStatus = "show" | "no_show" | "pending";
+type FiltroStatus = "all" | StatusAgenda;
 
-export interface Agendamento {
-  id: string;
-  cliente_nome: string;
-  data_agendamento: string;
-  observacoes: string;
-  status: string;
-  user_id: string;
-  tipo?: TipoEvento | null;
-  google_event_id?: string;
-  attendance_status?: AttendanceStatus;
-  seller_name?: string;
+const VISOES: { id: VisaoAgenda; nome: string }[] = [
+    { id: "semana", nome: "Semana" },
+    { id: "mes", nome: "Mês" },
+    { id: "dia", nome: "Dia" },
+];
+
+const FILTROS: { id: FiltroStatus; nome: string }[] = [
+    { id: "all", nome: "Todos" },
+    { id: "agendado", nome: "Pendentes" },
+    { id: "realizado", nome: "Aconteceu" },
+    { id: "nao_compareceu", nome: "Não foi" },
+    { id: "cancelado", nome: "Cancelados" },
+];
+
+const ANTERIOR: Record<VisaoAgenda, string> = { semana: "Semana anterior", mes: "Mês anterior", dia: "Dia anterior" };
+const PROXIMO: Record<VisaoAgenda, string> = { semana: "Próxima semana", mes: "Próximo mês", dia: "Próximo dia" };
+
+const inteiro = (n: number) => String(Math.round(n));
+const N = ({ n }: { n: number }) => <Count value={n} format={inteiro} />;
+const compromissos = (n: number) => plural(n, "compromisso", "compromissos");
+const tomDoStatus = (s: StatusAgenda) => (s === "realizado" ? "ok" : s === "nao_compareceu" ? "ruim" : undefined);
+const hora = (ag: Agendamento) => format(parseISO(ag.data_agendamento), "HH:mm");
+
+// ── Uma linha da semana ───────────────────────────────────────────────────────
+function Linha({
+    ag,
+    agora,
+    mostrarEquipe,
+    aoAbrir,
+    aoMarcar,
+}: {
+    ag: Agendamento;
+    agora: Date;
+    mostrarEquipe: boolean;
+    aoAbrir: (ag: Agendamento) => void;
+    aoMarcar: (ag: Agendamento, s: StatusAgenda) => void;
+}) {
+    const tipo = tipoDe(ag);
+    const status = statusDe(ag.status);
+    const estado = precisaMarcar(ag, agora) ? "marcar" : status;
+    const detalhe = [NOME_TIPO[tipo], mostrarEquipe && ag.seller_name ? ag.seller_name : null].filter(Boolean).join(" · ");
+
+    let fim: ReactNode = null;
+    if (estado === "marcar") {
+        fim = (
+            <span className="vp-agenda-acoes">
+                <button type="button" className="vp-agenda-acao" data-tom="ok" aria-label={`${ag.cliente_nome}: aconteceu`} onClick={() => aoMarcar(ag, "realizado")}>
+                    <Check size={14} weight="bold" aria-hidden />
+                    Aconteceu
+                </button>
+                <button type="button" className="vp-agenda-acao" data-tom="ruim" aria-label={`${ag.cliente_nome}: não foi`} onClick={() => aoMarcar(ag, "nao_compareceu")}>
+                    <X size={14} weight="bold" aria-hidden />
+                    Não foi
+                </button>
+            </span>
+        );
+    } else if (estado !== "agendado") {
+        fim = (
+            <span className="vp-chip" data-tom={tomDoStatus(status)}>
+                {NOME_STATUS[status]}
+            </span>
+        );
+    }
+
+    return (
+        <div className="vp-agenda-item" data-status={status} data-marcar={estado === "marcar" || undefined}>
+            <time dateTime={ag.data_agendamento}>{hora(ag)}</time>
+            <TipoTile tipo={tipo} />
+            <button type="button" className="vp-agenda-item__abrir" onClick={() => aoAbrir(ag)}>
+                <b>{ag.cliente_nome}</b>
+                <span>{detalhe}</span>
+            </button>
+            {fim !== null ? (
+                <span className="vp-agenda-item__fim">
+                    <Swap id={estado}>{fim}</Swap>
+                </span>
+            ) : null}
+        </div>
+    );
 }
 
-const mapStatus = (status?: string): AttendanceStatus => {
-  if (status === "realizado") return "show";
-  if (status === "nao_compareceu") return "no_show";
-  return "pending";
-};
-
-// Status colors
-export const STATUS_COLORS: Record<AttendanceStatus, { bg: string; border: string; text: string; dot: string }> = {
-  show: { bg: "bg-[var(--vyz-success-bg)]", border: "border-[var(--vyz-success)]", text: "text-[var(--vyz-success)]", dot: "bg-[var(--vyz-accent)]" },
-  no_show: { bg: "bg-rose-500/15", border: "border-rose-500", text: "text-rose-300", dot: "bg-rose-500" },
-  pending: { bg: "bg-muted", border: "border-muted-foreground", text: "text-muted-foreground", dot: "bg-muted-foreground" },
-};
-
-// Tipo manda na cor; compromisso antigo, sem tipo, segue a cor do comparecimento.
-export type TipoEvento = "visita" | "instalacao" | "vistoria" | "outro";
-export const NOME_TIPO: Record<TipoEvento, string> = { visita: "Visita técnica", instalacao: "Instalação", vistoria: "Vistoria", outro: "Outro" };
-const TIPO_COLORS: Record<Exclude<TipoEvento, "outro">, { bg: string; border: string; text: string; dot: string }> = {
-  visita: { bg: "bg-[var(--vyz-accent-soft-12)]", border: "border-[var(--vyz-accent)]", text: "text-[var(--vyz-accent)]", dot: "bg-[var(--vyz-accent)]" },
-  instalacao: { bg: "bg-[var(--vyz-sol-soft)]", border: "border-[var(--vyz-sol-line)]", text: "text-[var(--vyz-warning)]", dot: "bg-[var(--vyz-sol)]" },
-  vistoria: { bg: "bg-[var(--vyz-noite)]", border: "border-[var(--vyz-noite)]", text: "text-white", dot: "bg-[var(--vyz-noite)]" },
-};
-export const coresDo = (ag: { tipo?: TipoEvento | null; status: string }) =>
-  ag.tipo && ag.tipo !== "outro" ? TIPO_COLORS[ag.tipo] : STATUS_COLORS[mapStatus(ag.status)];
-
-// ── Mini Month Calendar ──────────────────────────────────────────────────────
-const MiniCalendar = ({
-  date,
-  onDateSelect,
-  agendamentos,
+// ── Lista por dia (semana; no celular, também o mês) ──────────────────────────
+function ListaDias({
+    itens,
+    periodo,
+    passa,
+    cronologica = false,
+    vazio,
+    mostrarEquipe,
+    aoAbrir,
+    aoMarcar,
 }: {
-  date: Date;
-  onDateSelect: (d: Date) => void;
-  agendamentos: Agendamento[];
-}) => {
-  const [miniDate, setMiniDate] = useState(date);
+    itens: Agendamento[];
+    periodo: Periodo;
+    passa: (ag: Agendamento) => boolean;
+    cronologica?: boolean;
+    vazio: string;
+    mostrarEquipe: boolean;
+    aoAbrir: (ag: Agendamento) => void;
+    aoMarcar: (ag: Agendamento, s: StatusAgenda) => void;
+}) {
+    const agora = new Date();
+    const chaveHoje = chaveDia(agora);
+    const grupos = agruparPorDia(itens);
+    const ordem = cronologica ? { adiante: grupos, passados: [], temHoje: false } : ordemDaSemana(grupos, periodo, agora);
+    const algum = itens.some(passa);
 
-  // Sync when parent changes
-  useEffect(() => { setMiniDate(date); }, [date]);
-
-  const monthStart = startOfMonth(miniDate);
-  const monthEnd = endOfMonth(miniDate);
-  const calStart = startOfWeek(monthStart, { locale: ptBR });
-  const calEnd = endOfWeek(monthEnd, { locale: ptBR });
-  const days = eachDayOfInterval({ start: calStart, end: calEnd });
-  const weekLabels = ["D", "S", "T", "Q", "Q", "S", "S"];
-
-  const hasEvent = (d: Date) =>
-    agendamentos.some(ag => isSameDay(parseISO(ag.data_agendamento), d));
-
-  return (
-    <div className="select-none">
-      {/* Mini month nav */}
-      <div className="flex items-center justify-between mb-2 px-1">
-        <button
-          onClick={() => setMiniDate(subMonths(miniDate, 1))}
-          className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ChevronLeft className="h-3.5 w-3.5" />
-        </button>
-        <span className="text-[11px] font-semibold text-foreground capitalize">
-          {format(miniDate, "MMMM yyyy", { locale: ptBR })}
-        </span>
-        <button
-          onClick={() => setMiniDate(addMonths(miniDate, 1))}
-          className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ChevronRight className="h-3.5 w-3.5" />
-        </button>
-      </div>
-
-      {/* Week labels */}
-      <div className="grid grid-cols-7 mb-1">
-        {weekLabels.map((l, i) => (
-          <div key={i} className="text-center text-[10px] font-medium text-muted-foreground">{l}</div>
-        ))}
-      </div>
-
-      {/* Day grid */}
-      <div className="grid grid-cols-7 gap-y-0.5">
-        {days.map((day, i) => {
-          const inMonth = isSameMonth(day, miniDate);
-          const isSelected = isSameDay(day, date);
-          const isNow = dateFnsIsToday(day);
-          const hasAg = hasEvent(day);
-
-          return (
-            <button
-              key={i}
-              onClick={() => { onDateSelect(day); setMiniDate(day); }}
-              className={`
-                relative h-7 w-7 mx-auto flex items-center justify-center rounded-full
-                text-[11px] font-medium transition-all duration-100
-                ${!inMonth ? "text-muted-foreground/40" : "text-muted-foreground hover:text-foreground hover:bg-muted"}
-                ${isSelected ? "!bg-[var(--vyz-accent)] !text-white " : ""}
-                ${isNow && !isSelected ? "!text-[var(--vyz-accent)] font-bold" : ""}
-              `}
-            >
-              {format(day, "d")}
-              {hasAg && inMonth && !isSelected && (
-                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[var(--vyz-accent)]" />
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-// ── Upcoming Events List ──────────────────────────────────────────────────────
-const UpcomingEvents = ({
-  agendamentos,
-  onEventClick,
-}: {
-  agendamentos: Agendamento[];
-  onEventClick: (ag: Agendamento) => void;
-}) => {
-  const now = new Date();
-  const upcoming = agendamentos
-    .filter(ag => new Date(ag.data_agendamento) >= startOfDay(now))
-    .sort((a, b) => new Date(a.data_agendamento).getTime() - new Date(b.data_agendamento).getTime())
-    .slice(0, 8);
-
-  if (upcoming.length === 0) {
-    return (
-      <div className="text-center py-6">
-        <CalendarDays className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-        <p className="text-xs text-muted-foreground">Sem próximos eventos</p>
-      </div>
-    );
-  }
-
-  let lastDateLabel = "";
-
-  return (
-    <div className="space-y-0.5">
-      {upcoming.map((ag) => {
-        const agDate = new Date(ag.data_agendamento);
-        const dateLabel = dateFnsIsToday(agDate)
-          ? "Hoje"
-          : format(agDate, "EEE, d 'de' MMM", { locale: ptBR });
-        const showLabel = dateLabel !== lastDateLabel;
-        lastDateLabel = dateLabel;
-        const st = mapStatus(ag.status);
-        const colors = coresDo(ag);
-
+    const dia = (g: (typeof grupos)[number], passou: boolean) => {
+        const visiveis = g.itens.filter(passa).length;
+        const ehHoje = g.chave === chaveHoje;
+        // Hoje fica na tela mesmo vazio, desde que a semana tenha alguma coisa.
+        const aberto = ehHoje && ordem.temHoje ? algum : visiveis > 0;
+        const rotulo = rotuloDoDia(g.dia, agora);
         return (
-          <div key={ag.id}>
-            {showLabel && (
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pt-3 pb-1 px-1">
-                {dateLabel}
-              </p>
-            )}
-            <button
-              onClick={() => onEventClick(ag)}
-              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted transition-colors text-left group"
-            >
-              <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${colors.dot}`} />
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-medium text-foreground truncate group-hover:text-foreground">
-                  {ag.cliente_nome}
-                </p>
-                {ag.seller_name && (
-                  <p className="text-[10px] text-muted-foreground truncate">{ag.seller_name}</p>
-                )}
-              </div>
-              <span className="text-[10px] text-muted-foreground flex-shrink-0 tabular-nums">
-                {format(agDate, "HH:mm")}
-              </span>
-            </button>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-// ── Mini Goal Widget ──────────────────────────────────────────────────────────
-const MiniGoalWidget = ({ userId, companyId }: { userId?: string; companyId?: string }) => {
-  const mesRef = format(new Date(), "yyyy-MM-01");
-
-  // Buscar meta individual do mês
-  const { data: metaData } = useQuery({
-    queryKey: ["mini-meta-calendario", userId, companyId, mesRef],
-    queryFn: async () => {
-      if (!userId || !companyId) return null;
-
-      // Meta individual
-      const { data: meta } = await supabase
-        .from("metas")
-        .select("valor_meta")
-        .eq("user_id", userId)
-        .eq("mes_referencia", mesRef)
-        .eq("company_id", companyId)
-        .maybeSingle();
-
-      if (!meta) return null;
-
-      // Vendas do mês
-      const start = `${format(startOfMonth(new Date()), "yyyy-MM-dd")}`;
-      const end = `${format(endOfMonth(new Date()), "yyyy-MM-dd")}`;
-
-      const { data: vendas } = await supabase
-        .from("vendas")
-        .select("valor")
-        .eq("user_id", userId)
-        .eq("status", "Aprovado")
-        .gte("data_venda", start)
-        .lte("data_venda", end);
-
-      const realizado = (vendas || []).reduce((acc, v) => acc + Number(v.valor), 0);
-      const metaVal = Number(meta.valor_meta) || 0;
-      const pct = metaVal > 0 ? Math.min(100, (realizado / metaVal) * 100) : 0;
-
-      return { realizado, meta: metaVal, pct };
-    },
-    enabled: !!userId && !!companyId,
-    refetchInterval: 30000,
-  });
-
-  if (!metaData) return null;
-
-  const { pct, realizado, meta } = metaData;
-  const color = pct >= 100 ? "from-[var(--vyz-success)] to-[var(--vyz-success)]" :
-    pct >= 50 ? "from-cyan-500 to-cyan-400" :
-      "from-muted-foreground to-muted-foreground";
-  const textColor = pct >= 100 ? "text-[var(--vyz-accent)]" :
-    pct >= 50 ? "text-cyan-400" : "text-muted-foreground";
-
-  const fmt = (v: number) =>
-    v >= 1000 ? `R$ ${(v / 1000).toFixed(1).replace(".", ",")}k` :
-      `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 0 })}`;
-
-  return (
-    <div className="mt-4 p-3 rounded-xl bg-muted border border-border">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5">
-          {pct >= 100
-            ? <Trophy className="h-3.5 w-3.5 text-[var(--vyz-accent)]" />
-            : <Target className="h-3.5 w-3.5 text-muted-foreground" />
-          }
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Minha Meta
-          </span>
-        </div>
-        <span className={`text-[11px] font-bold tabular-nums ${textColor}`}>
-          {pct.toFixed(0)}%
-        </span>
-      </div>
-
-      {/* Progress bar */}
-      <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden mb-1.5">
-        <motion.div
-          className={`h-full bg-gradient-to-r ${color} rounded-full`}
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        />
-      </div>
-
-      <div className="flex justify-between text-[10px] text-muted-foreground">
-        <span className={textColor}>{fmt(realizado)}</span>
-        <span>{fmt(meta)}</span>
-      </div>
-    </div>
-  );
-};
-
-// ── Month Grid View ───────────────────────────────────────────────────────────
-const MonthGridView = ({
-  date,
-  agendamentos,
-  onEventClick,
-  onDayClick,
-  showTeam,
-  isMobile = false,
-}: {
-  date: Date;
-  agendamentos: Agendamento[];
-  onEventClick: (ag: Agendamento) => void;
-  onDayClick: (d: Date) => void;
-  showTeam: boolean;
-  isMobile?: boolean;
-}) => {
-  const monthStart = startOfMonth(date);
-  const monthEnd = endOfMonth(date);
-  const calStart = startOfWeek(monthStart, { locale: ptBR });
-  const calEnd = endOfWeek(monthEnd, { locale: ptBR });
-  const days = eachDayOfInterval({ start: calStart, end: calEnd });
-  const headerDaysDesktop = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-  const headerDaysMobile = ["D", "S", "T", "Q", "Q", "S", "S"];
-  const headerDays = isMobile ? headerDaysMobile : headerDaysDesktop;
-
-  const getAgForDay = (d: Date) =>
-    agendamentos
-      .filter(ag => isSameDay(parseISO(ag.data_agendamento), d))
-      .sort((a, b) => new Date(a.data_agendamento).getTime() - new Date(b.data_agendamento).getTime());
-
-  const getInitials = (name: string) => {
-    if (!name) return "?";
-    const p = name.trim().split(" ");
-    return p.length === 1 ? p[0].substring(0, 2).toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase();
-  };
-
-  // Mobile: compact month grid with dot indicators, tap to drill into day
-  if (isMobile) {
-    return (
-      <div className="flex flex-col flex-1 h-full overflow-y-auto">
-        {/* Compact day headers */}
-        <div className="grid grid-cols-7 border-b border-border sticky top-0 bg-background z-10">
-          {headerDays.map((d, i) => (
-            <div key={i} className="py-2 text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-              {d}
-            </div>
-          ))}
-        </div>
-
-        {/* Compact grid cells */}
-        <div className="grid grid-cols-7">
-          {days.map((day, i) => {
-            const inMonth = isSameMonth(day, date);
-            const isNow = dateFnsIsToday(day);
-            const dayAgs = getAgForDay(day);
-
-            return (
-              <button
-                key={i}
-                onClick={() => onDayClick(day)}
-                className={`
-                  relative flex flex-col items-center py-2 min-h-[48px] border-b border-r border-border/30
-                  transition-colors active:bg-muted/60
-                  ${!inMonth ? "bg-background/40" : ""}
-                  ${isNow ? "bg-[var(--vyz-accent-soft-6)]" : ""}
-                `}
-              >
-                <span className={`
-                  text-[12px] font-semibold w-6 h-6 flex items-center justify-center rounded-full
-                  ${isNow ? "bg-[var(--vyz-accent)] text-white shadow-sm" : ""}
-                  ${!inMonth ? "text-muted-foreground/40" : !isNow ? "text-muted-foreground" : ""}
-                `}>
-                  {format(day, "d")}
-                </span>
-                {dayAgs.length > 0 && inMonth && (
-                  <div className="flex gap-0.5 mt-1">
-                    {dayAgs.slice(0, 3).map((ag, j) => {
-                      const st = mapStatus(ag.status);
-                      const c = coresDo(ag);
-                      return <span key={j} className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />;
-                    })}
-                    {dayAgs.length > 3 && (
-                      <span className="text-[8px] text-muted-foreground leading-none">+</span>
-                    )}
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Events list below the grid */}
-        <div className="px-3 py-2 space-y-1">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1 pt-2 pb-1">
-            Eventos do mes
-          </p>
-          {days
-            .filter(d => isSameMonth(d, date) && getAgForDay(d).length > 0)
-            .map((day, i) => {
-              const dayAgs = getAgForDay(day);
-              return (
-                <div key={i}>
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1 pt-2 pb-1">
-                    {format(day, "EEE, d 'de' MMM", { locale: ptBR })}
-                  </p>
-                  {dayAgs.map(ag => {
-                    const st = mapStatus(ag.status);
-                    const c = coresDo(ag);
-                    return (
-                      <button
-                        key={ag.id}
-                        onClick={() => onEventClick(ag)}
-                        className={`
-                          w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left
-                          ${c.bg} border-l-2 ${c.border} mb-0.5
-                          active:brightness-125 transition-all
-                        `}
-                      >
-                        <span className={`text-[11px] font-semibold tabular-nums ${c.text} flex-shrink-0`}>
-                          {format(parseISO(ag.data_agendamento), "HH:mm")}
-                        </span>
-                        {showTeam && ag.seller_name && (
-                          <span className="text-[9px] font-bold text-[var(--vyz-accent)] bg-[var(--vyz-accent-soft-12)] px-1 rounded flex-shrink-0">
-                            {getInitials(ag.seller_name)}
-                          </span>
+            <Collapse key={g.chave} open={aberto}>
+                <section className="vp-agenda-dia" data-hoje={ehHoje || undefined} data-passou={passou || undefined} aria-label={rotulo}>
+                    <h2 className="vp-agenda-dia__titulo">
+                        {rotulo}
+                        {visiveis > 0 && (
+                            <em>
+                                <N n={visiveis} />
+                            </em>
                         )}
-                        <span className={`text-[11px] font-medium truncate ${c.text}`}>
-                          {ag.cliente_nome}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              );
-            })}
-        </div>
-      </div>
-    );
-  }
-
-  // Desktop: original grid layout
-  return (
-    <div className="flex flex-col flex-1 h-full">
-      {/* Day headers */}
-      <div className="grid grid-cols-7 border-b border-border">
-        {headerDays.map(d => (
-          <div key={d} className="py-2.5 text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            {d}
-          </div>
-        ))}
-      </div>
-
-      {/* Grid cells */}
-      <div className="grid grid-cols-7 flex-1 divide-x divide-border/30">
-        {days.map((day, i) => {
-          const inMonth = isSameMonth(day, date);
-          const isNow = dateFnsIsToday(day);
-          const dayAgs = getAgForDay(day);
-          const visible = dayAgs.slice(0, 3);
-          const overflow = dayAgs.length - 3;
-
-          return (
-            <div
-              key={i}
-              onClick={() => onDayClick(day)}
-              className={`
-                group relative min-h-[110px] p-2 cursor-pointer border-b border-border/30
-                transition-colors hover:bg-muted/60
-                ${!inMonth ? "bg-background/40" : ""}
-                ${isNow ? "bg-[var(--vyz-accent-soft-6)]" : ""}
-              `}
-            >
-              {/* Day number */}
-              <div className="flex justify-between items-start mb-1">
-                <span className={`
-                  text-[13px] font-semibold w-7 h-7 flex items-center justify-center rounded-full
-                  ${isNow ? "bg-[var(--vyz-accent)] text-white " : ""}
-                  ${!inMonth ? "text-muted-foreground/40" : !isNow ? "text-muted-foreground" : ""}
-                `}>
-                  {format(day, "d")}
-                </span>
-              </div>
-
-              {/* Events */}
-              <div className="space-y-0.5">
-                {visible.map(ag => {
-                  const st = mapStatus(ag.status);
-                  const c = coresDo(ag);
-                  return (
-                    <button
-                      key={ag.id}
-                      onClick={e => { e.stopPropagation(); onEventClick(ag); }}
-                      className={`
-                        w-full flex items-center gap-1.5 px-1.5 py-0.5 rounded-md text-left
-                        ${c.bg} border-l-2 ${c.border}
-                        hover:brightness-125 transition-all
-                      `}
-                    >
-                      <span className={`text-[10px] font-semibold tabular-nums ${c.text} flex-shrink-0`}>
-                        {format(parseISO(ag.data_agendamento), "HH:mm")}
-                      </span>
-                      {showTeam && ag.seller_name && (
-                        <span className="text-[9px] font-bold text-[var(--vyz-accent)] bg-[var(--vyz-accent-soft-12)] px-1 rounded flex-shrink-0">
-                          {getInitials(ag.seller_name)}
-                        </span>
-                      )}
-                      <span className={`text-[10px] font-medium truncate ${c.text}`}>
-                        {ag.cliente_nome}
-                      </span>
-                    </button>
-                  );
-                })}
-                {overflow > 0 && (
-                  <p className="text-[10px] text-muted-foreground pl-1.5 font-medium">+{overflow} mais</p>
-                )}
-              </div>
-
-              {/* Hover + button for empty days */}
-              {dayAgs.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  <Plus className="h-6 w-6 text-muted-foreground" />
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-// ── View Selector ─────────────────────────────────────────────────────────────
-const ViewSelector = ({ view, onChange }: { view: ViewType; onChange: (v: ViewType) => void }) => {
-  const views: { id: ViewType; label: string }[] = [
-    { id: "day", label: "Dia" },
-    { id: "week", label: "Semana" },
-    { id: "month", label: "Mês" },
-  ];
-  return (
-    <div className="flex items-center bg-muted rounded-lg p-0.5 border border-border flex-shrink-0">
-      {views.map(v => (
-        <button
-          key={v.id}
-          onClick={() => onChange(v.id)}
-          className={`px-2 md:px-3 py-1 md:py-1.5 text-[11px] md:text-[12px] font-semibold rounded-md transition-all duration-150 ${view === v.id
-              ? "bg-card text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-            }`}
-        >
-          {v.label}
-        </button>
-      ))}
-    </div>
-  );
-};
-
-// ── Main Page ─────────────────────────────────────────────────────────────────
-export default function Calendario() {
-  const { user, isAdmin, isSuperAdmin, companyId } = useAuth();
-  const { activeCompanyId } = useTenant();
-  const isMobile = useIsMobile();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<ViewType>("week");
-  const [selectedVendedor, setSelectedVendedor] = useState("all");
-  const [selectedStatus, setSelectedStatus] = useState("all");
-  const [selectedAgendamento, setSelectedAgendamento] = useState<Agendamento | null>(null);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showNewAgendamento, setShowNewAgendamento] = useState(false);
-  const [googleSynced, setGoogleSynced] = useState(false);
-  const [googleConnected, setGoogleConnected] = useState(false);
-  const [googleCalendarModalOpen, setGoogleCalendarModalOpen] = useState(false);
-  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
-
-  const canSeeTeam = isAdmin || isSuperAdmin;
-  const showingTeam = canSeeTeam && selectedVendedor === "all";
-  const effectiveCompanyId = isSuperAdmin ? activeCompanyId : companyId;
-
-  // Sellers list for filter
-  const { data: sellers = [] } = useQuery({
-    queryKey: ["sellers-list-cal", effectiveCompanyId, isSuperAdmin],
-    queryFn: async () => {
-      let q = supabase.from("profiles").select("id, nome").eq("is_super_admin", false).order("nome");
-      if (isSuperAdmin && activeCompanyId) q = q.eq("company_id", activeCompanyId);
-      else if (companyId) q = q.eq("company_id", companyId);
-      const { data } = await q;
-      return data || [];
-    },
-    enabled: canSeeTeam,
-  });
-
-  // Auto-sync Google Calendar
-  useEffect(() => {
-    const syncGoogle = async () => {
-      if (!user || googleSynced) return;
-      try {
-        const { data: profile } = await supabase.from("profiles").select("google_access_token").eq("id", user.id).single();
-        if (profile?.google_access_token) {
-          setGoogleConnected(true);
-          const res = await supabase.functions.invoke("google-calendar-sync", { body: { action: "sync_all", userId: user.id } });
-          if (res.data?.inserted > 0) loadAgendamentos();
-        }
-      } catch { /* silent */ } finally {
-        setGoogleSynced(true);
-      }
+                    </h2>
+                    <div className="vp-agenda-dia__lista">
+                        {g.itens.map((ag) => (
+                            <Collapse key={ag.id} open={passa(ag)}>
+                                <Linha ag={ag} agora={agora} mostrarEquipe={mostrarEquipe} aoAbrir={aoAbrir} aoMarcar={aoMarcar} />
+                            </Collapse>
+                        ))}
+                        {ehHoje && (
+                            <Collapse open={visiveis === 0}>
+                                <p className="vp-agenda-dia__nada">Nada marcado para hoje.</p>
+                            </Collapse>
+                        )}
+                    </div>
+                </section>
+            </Collapse>
+        );
     };
-    syncGoogle();
-  }, [user, googleSynced]);
 
-  const loadAgendamentos = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-
-    let start: Date, end: Date;
-    // Load a wider range in month view
-    if (view === "day") {
-      start = startOfDay(currentDate);
-      end = endOfDay(currentDate);
-    } else if (view === "week") {
-      start = startOfWeek(currentDate, { locale: ptBR });
-      end = endOfWeek(currentDate, { locale: ptBR });
-    } else {
-      start = startOfWeek(startOfMonth(currentDate), { locale: ptBR });
-      end = endOfWeek(endOfMonth(currentDate), { locale: ptBR });
-    }
-
-    let q = supabase
-      .from("agendamentos")
-      .select("*, profiles!agendamentos_user_id_fkey(nome, is_super_admin, company_id)")
-      .gte("data_agendamento", start.toISOString())
-      .lte("data_agendamento", end.toISOString());
-
-    if (isSuperAdmin) {
-      if (selectedVendedor !== "all") q = q.eq("user_id", selectedVendedor);
-      else if (activeCompanyId) q = q.eq("profiles.company_id", activeCompanyId);
-    } else if (isAdmin) {
-      if (selectedVendedor !== "all") q = q.eq("user_id", selectedVendedor);
-      if (companyId) q = q.eq("profiles.company_id", companyId);
-    } else {
-      q = q.eq("user_id", user.id);
-    }
-
-    if (selectedStatus !== "all") q = q.eq("status", selectedStatus as any);
-    q = q.order("data_agendamento");
-
-    const { data, error } = await q;
-    if (error) { toast.error("Erro ao carregar agendamentos"); }
-    else {
-      const filtered = (data || []).filter((ag: any) => {
-        if (ag.user_id === user.id) return true;
-        if (ag.profiles?.is_super_admin) return false;
-        if (activeCompanyId && ag.profiles?.company_id !== activeCompanyId) return false;
-        if (isAdmin && !isSuperAdmin && companyId && ag.profiles?.company_id !== companyId) return false;
-        return true;
-      });
-      setAgendamentos(filtered.map((ag: any) => ({ ...ag, seller_name: ag.profiles?.nome || "" })));
-    }
-    setLoading(false);
-  }, [user, view, currentDate, selectedVendedor, selectedStatus, activeCompanyId, isSuperAdmin, isAdmin, companyId]);
-
-  useEffect(() => { loadAgendamentos(); }, [loadAgendamentos]);
-
-  const navigate = (dir: "prev" | "next" | "today") => {
-    if (dir === "today") { setCurrentDate(new Date()); return; }
-    const delta = dir === "prev" ? -1 : 1;
-    if (view === "day") setCurrentDate(addDays(currentDate, delta));
-    else if (view === "week") setCurrentDate(addWeeks(currentDate, delta));
-    else setCurrentDate(addMonths(currentDate, delta));
-  };
-
-  const getTitle = () => {
-    if (view === "day") return format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR });
-    if (view === "week") {
-      const ws = startOfWeek(currentDate, { locale: ptBR });
-      const we = endOfWeek(currentDate, { locale: ptBR });
-      return `${format(ws, "d MMM", { locale: ptBR })} – ${format(we, "d MMM yyyy", { locale: ptBR })}`;
-    }
-    return format(currentDate, "MMMM yyyy", { locale: ptBR });
-  };
-
-  const handleEventClick = (ag: Agendamento) => { setSelectedAgendamento(ag); setShowDetailsModal(true); };
-  const handleAgendamentoUpdate = async (id: string, newDate: Date) => {
-    try {
-      const { error } = await supabase.from("agendamentos").update({ data_agendamento: newDate.toISOString() }).eq("id", id);
-      if (error) throw error;
-      toast.success("Agendamento atualizado!");
-      loadAgendamentos();
-    } catch { toast.error("Erro ao atualizar agendamento"); }
-  };
-
-  return (
-    <>
-      <div className="vz-page-full -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-9 md:-my-8 flex flex-col bg-background text-foreground overflow-hidden">
-
-        {/* ── TOP BAR ────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-2 md:gap-3 px-3 md:px-9 pt-3 md:pt-8 pb-3 flex-shrink-0">
-          {/* Mobile sidebar toggle */}
-          {isMobile && (
-            <button
-              onClick={() => setShowMobileSidebar(!showMobileSidebar)}
-              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-            >
-              {showMobileSidebar ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </button>
-          )}
-
-          {/* Nav */}
-          <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0">
-            <button
-              onClick={() => navigate("prev")}
-              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => navigate("today")}
-              className="px-2 md:px-3 py-1.5 text-[11px] md:text-[12px] font-semibold rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Hoje
-            </button>
-            <button
-              onClick={() => navigate("next")}
-              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Title */}
-          <h1 className="vp-titulo capitalize flex-1 truncate min-w-0" style={{ fontSize: "clamp(18px, 2.4vw, 26px)" }}>
-            {getTitle()}
-          </h1>
-
-          {/* Desktop-only controls */}
-          {!isMobile && (
-            <>
-              {/* Team filter (admins only) */}
-              {canSeeTeam && (
-                <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
-                  <SelectTrigger className="w-full sm:w-[160px] h-8 bg-muted border-border text-foreground text-[12px]">
-                    <Users className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-border">
-                    <SelectItem value="all" className="text-foreground focus:bg-muted text-[12px]">Todos vendedores</SelectItem>
-                    {sellers.map((s: any) => (
-                      <SelectItem key={s.id} value={s.id} className="text-foreground focus:bg-muted text-[12px]">{s.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-
-              {/* Status filter */}
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-full sm:w-[140px] h-8 bg-muted border-border text-foreground text-[12px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border">
-                  <SelectItem value="all" className="text-foreground focus:bg-muted text-[12px]">Todos</SelectItem>
-                  <SelectItem value="agendado" className="text-foreground focus:bg-muted text-[12px]">Pendentes</SelectItem>
-                  <SelectItem value="realizado" className="text-foreground focus:bg-muted text-[12px]">Compareceu</SelectItem>
-                  <SelectItem value="nao_compareceu" className="text-foreground focus:bg-muted text-[12px]">Não compareceu</SelectItem>
-                  <SelectItem value="cancelado" className="text-foreground focus:bg-muted text-[12px]">Cancelados</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* View selector */}
-              <ViewSelector view={view} onChange={setView} />
-
-              {/* Google Calendar */}
-              <Button
-                size="sm"
-                variant={googleConnected ? "outline" : "default"}
-                className={googleConnected
-                  ? "h-8 px-3 text-[12px] border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-                  : "h-8 px-3 text-[12px] bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md shadow-blue-500/20"
-                }
-                onClick={() => setGoogleCalendarModalOpen(true)}
-              >
-                <CalendarDays className="h-3.5 w-3.5 mr-1" />
-                {googleConnected ? "Google Calendar" : "Conectar Google"}
-              </Button>
-            </>
-          )}
-
-          {/* Mobile: filter toggle + view selector */}
-          {isMobile && (
-            <>
-              <ViewSelector view={view} onChange={setView} />
-              <button
-                onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 relative"
-              >
-                <ChevronDown className={`h-4 w-4 transition-transform ${showMobileFilters ? "rotate-180" : ""}`} />
-                {(selectedVendedor !== "all" || selectedStatus !== "all") && (
-                  <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-[var(--vyz-accent)]" />
-                )}
-              </button>
-            </>
-          )}
-
-          {/* New appointment */}
-          <Dialog open={showNewAgendamento} onOpenChange={setShowNewAgendamento}>
-            <DialogTrigger asChild>
-              <Button
-                size="sm"
-                className="bg-[var(--vyz-accent)] hover:bg-[var(--vyz-accent-dark)] text-white h-8 px-2 md:px-3 text-[12px] font-semibold flex-shrink-0"
-              >
-                <Plus className="h-3.5 w-3.5 md:mr-1" />
-                <span className="hidden md:inline">Novo</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-card border-border max-w-[95vw] md:max-w-lg">
-              <DialogHeader>
-                <DialogTitle className="text-foreground">Novo Agendamento</DialogTitle>
-              </DialogHeader>
-              <AgendamentoForm onSuccess={() => { setShowNewAgendamento(false); loadAgendamentos(); }} />
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* ── MOBILE FILTERS DROPDOWN ──────────────────────────────── */}
-        {isMobile && showMobileFilters && (
-          <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-border bg-card/60 backdrop-blur">
-            {canSeeTeam && (
-              <Select value={selectedVendedor} onValueChange={setSelectedVendedor}>
-                <SelectTrigger className="flex-1 min-w-[120px] h-8 bg-muted border-border text-foreground text-[12px]">
-                  <Users className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border">
-                  <SelectItem value="all" className="text-foreground focus:bg-muted text-[12px]">Todos vendedores</SelectItem>
-                  {sellers.map((s: any) => (
-                    <SelectItem key={s.id} value={s.id} className="text-foreground focus:bg-muted text-[12px]">{s.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+    const passadosVisiveis = ordem.passados.some((g) => g.itens.some(passa));
+    return (
+        <div className="vp-agenda-semana">
+            <Collapse open={!algum}>
+                <div className="vp-vazio">{vazio}</div>
+            </Collapse>
+            {ordem.adiante.map((g) => dia(g, cronologica && g.dia < agora && !isSameDay(g.dia, agora)))}
+            {ordem.passados.length > 0 && (
+                <Collapse open={passadosVisiveis}>
+                    <div className="vp-agenda-antes">Antes, nesta semana</div>
+                </Collapse>
             )}
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className="flex-1 min-w-[120px] h-8 bg-muted border-border text-foreground text-[12px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border">
-                <SelectItem value="all" className="text-foreground focus:bg-muted text-[12px]">Todos</SelectItem>
-                <SelectItem value="agendado" className="text-foreground focus:bg-muted text-[12px]">Pendentes</SelectItem>
-                <SelectItem value="realizado" className="text-foreground focus:bg-muted text-[12px]">Compareceu</SelectItem>
-                <SelectItem value="nao_compareceu" className="text-foreground focus:bg-muted text-[12px]">Não compareceu</SelectItem>
-                <SelectItem value="cancelado" className="text-foreground focus:bg-muted text-[12px]">Cancelados</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              size="sm"
-              variant={googleConnected ? "outline" : "default"}
-              className={googleConnected
-                ? "h-8 px-2 text-[11px] border-border text-muted-foreground"
-                : "h-8 px-2 text-[11px] bg-blue-600 text-white font-semibold"
-              }
-              onClick={() => setGoogleCalendarModalOpen(true)}
-            >
-              <CalendarDays className="h-3.5 w-3.5 mr-1" />
-              {googleConnected ? "Google" : "Google"}
-            </Button>
-          </div>
-        )}
+            {ordem.passados.map((g) => dia(g, true))}
+        </div>
+    );
+}
 
-        {/* ── BODY: SIDEBAR + MAIN ───────────────────────────────────── */}
-        <div className="flex flex-col md:flex-row flex-1 overflow-hidden relative">
+// ── Mês ───────────────────────────────────────────────────────────────────────
+function Mes({
+    data,
+    itens,
+    compacto,
+    aoAbrirDia,
+    aoAbrir,
+    aoRemarcar,
+}: {
+    data: Date;
+    itens: Agendamento[];
+    compacto: boolean;
+    aoAbrirDia: (d: Date) => void;
+    aoAbrir: (ag: Agendamento) => void;
+    aoRemarcar: (ag: Agendamento, novaData: Date) => void;
+}) {
+    const [arrastando, setArrastando] = useState<string | null>(null);
+    const [alvo, setAlvo] = useState<string | null>(null);
+    const porDia = new Map(agruparPorDia(itens).map((g) => [g.chave, g.itens]));
+    const dias = diasDaGrade(gradeDoMes(data));
+    const soltar = (dia: Date) => {
+        const ag = itens.find((a) => a.id === arrastando);
+        if (ag) aoRemarcar(ag, mesmoHorarioEm(ag.data_agendamento, dia));
+        setArrastando(null);
+        setAlvo(null);
+    };
 
-          {/* ── MOBILE SIDEBAR (collapsible panel at top) ─────────── */}
-          {isMobile && showMobileSidebar && (
-            <div className="absolute inset-0 z-30 flex flex-col">
-              {/* Backdrop */}
-              <div
-                className="absolute inset-0 bg-black/40"
-                onClick={() => setShowMobileSidebar(false)}
-              />
-              {/* Panel */}
-              <motion.aside
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -20, opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="relative z-10 bg-card border-b border-border overflow-y-auto p-3 max-h-[80vh] shadow-xl"
-              >
-                <MiniCalendar
-                  date={currentDate}
-                  onDateSelect={(d) => { setCurrentDate(d); setView("day"); setShowMobileSidebar(false); }}
-                  agendamentos={agendamentos}
-                />
-                <div className="my-3 border-t border-border" />
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 px-1">
-                  Proximos eventos
-                </p>
-                <UpcomingEvents agendamentos={agendamentos} onEventClick={(ag) => { handleEventClick(ag); setShowMobileSidebar(false); }} />
-                <MiniGoalWidget userId={user?.id} companyId={effectiveCompanyId || undefined} />
-              </motion.aside>
+    return (
+        <div className="vp-agenda-mes" data-compacto={compacto || undefined}>
+            <div className="vp-agenda-mes__cab" aria-hidden="true">
+                {DIA_CURTO.map((d) => (
+                    <span key={d}>{compacto ? d[0].toUpperCase() : d}</span>
+                ))}
             </div>
-          )}
-
-          {/* ── DESKTOP SIDEBAR ────────────────────────────────────── */}
-          {!isMobile && (
-            <aside className="w-[240px] flex-shrink-0 border-r border-border bg-card/50 flex flex-col overflow-y-auto p-3">
-              {/* Mini calendar */}
-              <MiniCalendar
-                date={currentDate}
-                onDateSelect={(d) => { setCurrentDate(d); setView("day"); }}
-                agendamentos={agendamentos}
-              />
-
-              {/* Divider */}
-              <div className="my-3 border-t border-border" />
-
-              {/* Upcoming */}
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 px-1">
-                Próximos eventos
-              </p>
-              <UpcomingEvents agendamentos={agendamentos} onEventClick={handleEventClick} />
-
-              {/* Divider */}
-              <div className="flex-1" />
-
-              {/* Mini goal widget */}
-              <MiniGoalWidget userId={user?.id} companyId={effectiveCompanyId || undefined} />
-            </aside>
-          )}
-
-          {/* ── MAIN CALENDAR AREA ──────────────────────────────────── */}
-          <main className="flex-1 overflow-hidden bg-background relative">
-            {loading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/60 z-20">
-                <RefreshCw className="h-5 w-5 text-blue-600 animate-spin" />
-              </div>
-            )}
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`${view}-${currentDate.toISOString().slice(0, 10)}`}
-                initial={{ opacity: 0, x: 8 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -8 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                className="h-full"
-              >
-                {view === "month" ? (
-                  <MonthGridView
-                    date={currentDate}
-                    agendamentos={agendamentos}
-                    onEventClick={handleEventClick}
-                    onDayClick={(d) => { setCurrentDate(d); setView("day"); }}
-                    showTeam={showingTeam}
-                    isMobile={isMobile}
-                  />
-                ) : (
-                  <CalendarTimelineView
-                    date={currentDate}
-                    view={isMobile && view === "week" ? "day" : view}
-                    agendamentos={agendamentos}
-                    onEventClick={handleEventClick}
-                    onAgendamentoUpdate={handleAgendamentoUpdate}
-                    showSellerName={showingTeam}
-                    isMobile={isMobile}
-                  />
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </main>
+            <div className="vp-agenda-mes__grade">
+                {dias.map((dia) => {
+                    const chave = chaveDia(dia);
+                    const doDia = porDia.get(chave) ?? [];
+                    const fora = !isSameMonth(dia, data);
+                    const nome = `${rotuloDoDia(dia)}, ${doDia.length ? `${doDia.length} ${compromissos(doDia.length)}` : "nada marcado"}`;
+                    if (compacto) {
+                        const tipos = [...new Set(doDia.map(tipoDe))].slice(0, 3);
+                        return (
+                            <button
+                                key={chave}
+                                type="button"
+                                className="vp-agenda-mes__dia"
+                                data-fora={fora || undefined}
+                                data-hoje={isToday(dia) || undefined}
+                                onClick={() => aoAbrirDia(dia)}
+                                aria-label={nome}
+                            >
+                                <span className="vp-agenda-mes__num">{dia.getDate()}</span>
+                                <span className="vp-agenda-pontos">
+                                    {tipos.map((t) => (
+                                        <i key={t} data-tipo={t} />
+                                    ))}
+                                </span>
+                            </button>
+                        );
+                    }
+                    const mostra = doDia.slice(0, 3);
+                    return (
+                        <div
+                            key={chave}
+                            className="vp-agenda-mes__dia"
+                            data-fora={fora || undefined}
+                            data-hoje={isToday(dia) || undefined}
+                            data-alvo={alvo === chave || undefined}
+                            onDragOver={(e) => {
+                                if (!arrastando) return;
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = "move";
+                                if (alvo !== chave) setAlvo(chave);
+                            }}
+                            onDragLeave={(e) => {
+                                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setAlvo((a) => (a === chave ? null : a));
+                            }}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                soltar(dia);
+                            }}
+                        >
+                            <button type="button" className="vp-agenda-mes__num" onClick={() => aoAbrirDia(dia)} aria-label={`Abrir ${nome}`}>
+                                {dia.getDate()}
+                            </button>
+                            {mostra.map((ag) => (
+                                <button
+                                    key={ag.id}
+                                    type="button"
+                                    className="vp-agenda-mes__ev"
+                                    data-tipo={tipoDe(ag)}
+                                    data-status={statusDe(ag.status)}
+                                    data-arrastando={arrastando === ag.id || undefined}
+                                    draggable
+                                    onDragStart={(e) => {
+                                        e.dataTransfer.effectAllowed = "move";
+                                        e.dataTransfer.setData("text/plain", ag.id);
+                                        setArrastando(ag.id);
+                                    }}
+                                    onDragEnd={() => {
+                                        setArrastando(null);
+                                        setAlvo(null);
+                                    }}
+                                    onClick={() => aoAbrir(ag)}
+                                    title="Arraste para outro dia para remarcar"
+                                >
+                                    <i aria-hidden="true" />
+                                    <time>{hora(ag)}</time>
+                                    <span>{ag.cliente_nome}</span>
+                                </button>
+                            ))}
+                            {doDia.length > 3 && (
+                                <button type="button" className="vp-agenda-mes__mais" onClick={() => aoAbrirDia(dia)}>
+                                    mais {doDia.length - 3}
+                                </button>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
         </div>
-      </div>
+    );
+}
 
-      <AgendamentoDetailsModal
-        agendamento={selectedAgendamento}
-        open={showDetailsModal}
-        onClose={() => { setShowDetailsModal(false); setSelectedAgendamento(null); }}
-        onUpdate={loadAgendamentos}
-      />
+// ── Calendário pequeno do lado ────────────────────────────────────────────────
+function MiniMes({
+    data,
+    visao,
+    itens,
+    aoEscolher,
+    aoMudarMes,
+}: {
+    data: Date;
+    visao: VisaoAgenda;
+    itens: Agendamento[];
+    aoEscolher: (d: Date) => void;
+    aoMudarMes: (delta: number) => void;
+}) {
+    const porDia = new Map(agruparPorDia(itens).map((g) => [g.chave, g.itens]));
+    const semana = semanaDe(data);
+    const nomeMes = MES[data.getMonth()];
+    return (
+        <div className="vp-agenda-mini">
+            <div className="vp-agenda-mini__cab">
+                <b>
+                    <Swap id={`${data.getFullYear()}-${data.getMonth()}`}>
+                        {nomeMes[0].toUpperCase() + nomeMes.slice(1)} de {data.getFullYear()}
+                    </Swap>
+                </b>
+                <span>
+                    <button type="button" className="vp-icone vp-icone--chico" aria-label="Mês anterior" onClick={() => aoMudarMes(-1)}>
+                        <CaretLeft size={14} weight="bold" aria-hidden />
+                    </button>
+                    <button type="button" className="vp-icone vp-icone--chico" aria-label="Próximo mês" onClick={() => aoMudarMes(1)}>
+                        <CaretRight size={14} weight="bold" aria-hidden />
+                    </button>
+                </span>
+            </div>
+            <div className="vp-agenda-mini__grade">
+                {DIA_CURTO.map((d, i) => (
+                    <span key={i} className="vp-agenda-mini__sem" aria-hidden="true">
+                        {d[0].toUpperCase()}
+                    </span>
+                ))}
+                {diasDaGrade(gradeDoMes(data)).map((dia) => {
+                    const chave = chaveDia(dia);
+                    const doDia = porDia.get(chave) ?? [];
+                    const tipos = [...new Set(doDia.map(tipoDe))].slice(0, 3);
+                    const naSemana = visao === "semana" && dentro({ data_agendamento: dia.toISOString() }, semana);
+                    const escolhido = visao === "dia" && isSameDay(dia, data);
+                    return (
+                        <button
+                            key={chave}
+                            type="button"
+                            className="vp-agenda-mini__dia"
+                            data-fora={!isSameMonth(dia, data) || undefined}
+                            data-hoje={isToday(dia) || undefined}
+                            data-semana={naSemana || undefined}
+                            data-inicio={(naSemana && dia.getDay() === 0) || undefined}
+                            data-fim={(naSemana && dia.getDay() === 6) || undefined}
+                            data-escolhido={escolhido || undefined}
+                            aria-pressed={escolhido || naSemana}
+                            aria-label={`${rotuloDoDia(dia)} de ${MES[dia.getMonth()]}, ${doDia.length ? `${doDia.length} ${compromissos(doDia.length)}` : "nada marcado"}`}
+                            onClick={() => aoEscolher(dia)}
+                        >
+                            <span>{dia.getDate()}</span>
+                            <span className="vp-agenda-pontos">
+                                {tipos.map((t) => (
+                                    <i key={t} data-tipo={t} />
+                                ))}
+                            </span>
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
 
-      <GoogleCalendarConfigModal
-        open={googleCalendarModalOpen}
-        onClose={() => setGoogleCalendarModalOpen(false)}
-        onSaved={() => { setGoogleConnected(true); loadAgendamentos(); }}
-      />
-    </>
-  );
+// ── Página ────────────────────────────────────────────────────────────────────
+export default function Calendario() {
+    const isMobile = useIsMobile();
+    const [visao, setVisao] = useState<VisaoAgenda>("semana");
+    const [data, setData] = useState(() => new Date());
+    const [vendedor, setVendedor] = useState("all");
+    const [filtro, setFiltro] = useState<FiltroStatus>("all");
+    const [aberto, setAberto] = useState<Agendamento | null>(null);
+    const [novoAberto, setNovoAberto] = useState(false);
+    const [googleAberto, setGoogleAberto] = useState(false);
+
+    const agenda = useAgenda({ data, vendedor });
+    const agora = new Date();
+    const periodo = periodoDa(visao, data);
+    const chavePeriodo = `${visao}-${chaveDia(periodo.inicio)}`;
+    const temHoje = agora >= periodo.inicio && agora <= periodo.fim;
+
+    const passa = (ag: Agendamento) => filtro === "all" || statusDe(ag.status) === filtro;
+    const noPeriodo = agenda.agendamentos.filter((ag) => dentro(ag, periodo)).sort(porHorario);
+    const visiveis = noPeriodo.filter(passa);
+    const visiveisHoje = visiveis.filter((ag) => isSameDay(parseISO(ag.data_agendamento), agora)).length;
+    const contagem = contarPorTipo(visiveis);
+
+    const andar = (delta: number) =>
+        setData((d) => (visao === "semana" ? addWeeks(d, delta) : visao === "mes" ? addMonths(d, delta) : addDays(d, delta)));
+    const abrirDia = (d: Date) => {
+        setData(d);
+        setVisao("dia");
+    };
+
+    let sub: ReactNode;
+    if (visao === "semana" && temHoje) {
+        sub = (
+            <>
+                <N n={visiveisHoje} /> {compromissos(visiveisHoje)} hoje, <N n={visiveis.length} /> nesta semana
+            </>
+        );
+    } else {
+        const onde = visao === "semana" ? "nesta semana" : visao === "mes" ? "neste mês" : temHoje ? "hoje" : "neste dia";
+        sub = (
+            <>
+                <N n={visiveis.length} /> {compromissos(visiveis.length)} {onde}
+            </>
+        );
+    }
+
+    const rotuloConta =
+        visao === "semana" ? (temHoje ? "Esta semana" : "Nesta semana") : visao === "mes" ? "Neste mês" : temHoje ? "Hoje" : "Neste dia";
+    const vazio =
+        filtro === "all"
+            ? visao === "mes"
+                ? "Nada marcado neste mês."
+                : visao === "dia"
+                  ? "Nada marcado neste dia."
+                  : "Nada marcado nesta semana."
+            : "Nada com esse filtro aqui.";
+
+    const listaProps = { passa, mostrarEquipe: agenda.showingTeam, aoAbrir: setAberto, aoMarcar: agenda.marcar };
+
+    let corpo: ReactNode;
+    if (agenda.erro) {
+        corpo = <div className="vp-vazio">Não consegui carregar a agenda agora. Tente de novo em instantes.</div>;
+    } else if (agenda.carregando) {
+        corpo = (
+            <div className="vp-vazio" aria-busy="true">
+                Carregando a agenda
+            </div>
+        );
+    } else if (visao === "semana") {
+        corpo = <ListaDias {...listaProps} itens={noPeriodo} periodo={periodo} vazio={vazio} />;
+    } else if (visao === "mes") {
+        corpo = (
+            <>
+                <Mes
+                    data={data}
+                    itens={agenda.agendamentos.filter(passa)}
+                    compacto={isMobile}
+                    aoAbrirDia={abrirDia}
+                    aoAbrir={setAberto}
+                    aoRemarcar={agenda.remarcar}
+                />
+                {isMobile && <ListaDias {...listaProps} itens={noPeriodo} periodo={periodo} vazio={vazio} cronologica />}
+            </>
+        );
+    } else {
+        corpo =
+            visiveis.length === 0 ? (
+                <div className="vp-vazio">{vazio}</div>
+            ) : (
+                <CalendarTimelineView date={data} agendamentos={visiveis} onEventClick={setAberto} showSellerName={agenda.showingTeam} />
+            );
+    }
+
+    return (
+        <div className="vp-tela vp-agenda-tela pb-16">
+            <header className="vp-cabeca">
+                <div>
+                    <h1 className="vp-titulo">Agenda</h1>
+                    <p className="vp-sub">
+                        <Swap id={chavePeriodo}>{sub}</Swap>
+                    </p>
+                </div>
+                <div className="vp-cabeca__acoes vp-agenda-acoes-cab">
+                    <div role="tablist" aria-label="Visão" className="vp-segmento">
+                        {VISOES.map((v) => (
+                            <button key={v.id} type="button" role="tab" aria-selected={visao === v.id} onClick={() => setVisao(v.id)}>
+                                {v.nome}
+                            </button>
+                        ))}
+                    </div>
+                    <button type="button" className="vp-botao" aria-label="Novo compromisso" onClick={() => setNovoAberto(true)}>
+                        <Plus size={16} weight="bold" aria-hidden />
+                        <span>
+                            Novo<span className="vp-agenda-novo__resto"> compromisso</span>
+                        </span>
+                    </button>
+                </div>
+            </header>
+
+            <div className="vp-agenda-barra">
+                <div className="vp-agenda-nav">
+                    <button type="button" className="vp-icone" aria-label={ANTERIOR[visao]} onClick={() => andar(-1)}>
+                        <CaretLeft size={16} weight="bold" aria-hidden />
+                    </button>
+                    <button type="button" className="vp-icone" aria-label={PROXIMO[visao]} onClick={() => andar(1)}>
+                        <CaretRight size={16} weight="bold" aria-hidden />
+                    </button>
+                    <b className="vp-agenda-periodo" aria-live="polite">
+                        <Swap id={chavePeriodo}>{rotuloPeriodo(visao, data, agora)}</Swap>
+                    </b>
+                    {!temHoje && (
+                        <button type="button" className="vp-botao vp-botao--quieto vp-botao--chico" onClick={() => setData(new Date())}>
+                            Hoje
+                        </button>
+                    )}
+                </div>
+                <div className="vp-agenda-filtros">
+                    <div role="radiogroup" aria-label="Situação" className="vp-segmento vp-agenda-chips">
+                        {FILTROS.map((f) => (
+                            <button key={f.id} type="button" role="radio" aria-checked={filtro === f.id} onClick={() => setFiltro(f.id)}>
+                                {f.nome}
+                            </button>
+                        ))}
+                    </div>
+                    {agenda.canSeeTeam && (
+                        <select className="vp-agenda-select" aria-label="Vendedor" value={vendedor} onChange={(e) => setVendedor(e.target.value)}>
+                            <option value="all">Todo o time</option>
+                            {agenda.sellers.map((s) => (
+                                <option key={s.id} value={s.id}>
+                                    {s.nome}
+                                </option>
+                            ))}
+                        </select>
+                    )}
+                </div>
+            </div>
+
+            <div className="vp-agenda-grade" data-visao={visao}>
+                <div className="vp-agenda-corpo" key={chavePeriodo}>
+                    {corpo}
+                </div>
+
+                <aside className="vp-agenda-lado" aria-label="Resumo da agenda">
+                    {visao !== "mes" && (
+                        <MiniMes
+                            data={data}
+                            visao={visao}
+                            itens={agenda.agendamentos.filter(passa)}
+                            aoEscolher={setData}
+                            aoMudarMes={(delta) => setData((d) => addMonths(d, delta))}
+                        />
+                    )}
+                    <div className="vp-agenda-conta">
+                        <div className="vp-rotulo">{rotuloConta}</div>
+                        <ul>
+                            {[...TIPOS, ...(contagem.outro > 0 ? (["outro"] as const) : [])].map((t) => (
+                                <li key={t} data-zero={contagem[t] === 0 || undefined}>
+                                    <TipoTile tipo={t} pequeno />
+                                    <N n={contagem[t]} />
+                                    <span>{nomeContado(t, contagem[t])}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                    <button type="button" className="vp-agenda-google" onClick={() => setGoogleAberto(true)}>
+                        <GoogleLogo size={18} weight="bold" aria-hidden />
+                        <span>
+                            <b>Google Agenda</b>
+                            <span>{agenda.googleConnected ? "Conectado. Sincroniza quando você abre a agenda." : "Traga os eventos do seu Google."}</span>
+                        </span>
+                        <CaretRight size={14} weight="bold" aria-hidden />
+                    </button>
+                </aside>
+            </div>
+
+            <Dialog open={novoAberto} onOpenChange={setNovoAberto}>
+                <DialogContent className="vp-dialogo bg-card border-border max-w-[95vw] md:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>Novo compromisso</DialogTitle>
+                    </DialogHeader>
+                    <AgendamentoForm
+                        onSuccess={() => {
+                            setNovoAberto(false);
+                            agenda.recarregar();
+                        }}
+                    />
+                </DialogContent>
+            </Dialog>
+
+            <AgendamentoDetailsModal agendamento={aberto} open={!!aberto} onClose={() => setAberto(null)} onUpdate={agenda.recarregar} />
+
+            <GoogleCalendarConfigModal
+                open={googleAberto}
+                onClose={() => setGoogleAberto(false)}
+                onSaved={() => {
+                    agenda.setGoogleConnected(true);
+                    agenda.recarregar();
+                }}
+            />
+        </div>
+    );
 }
