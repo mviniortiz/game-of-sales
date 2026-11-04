@@ -34,10 +34,33 @@ const exemplo = (s) => s
     .replaceAll("{{ .Token }}", "482913")
     .replaceAll("{{ .SiteURL }}", "https://vyzon.com.br");
 
+const raioX = [
+    "Novo pedido de Raio-X",
+    "",
+    "Carla Souza, Solar Sul Energia",
+    "WhatsApp: +5548999990000",
+    "E-mail: carla@solarsul.com.br",
+    "Propostas por mês: 30 a 60",
+    "Página: dinheiro parado",
+    "Anúncio: video-fatura-03",
+    "",
+    "Chamar agora:",
+    "https://wa.me/5548999990000?text=Oi",
+];
 const previas = [
+    { id: "auth-confirmar-cadastro", nome: "Confirmar cadastro", gatilho: "Supabase Auth, no cadastro (hoje desligado: confirmação automática no painel)", altura: 760, email: m.authConfirmarCadastro() },
     { id: "auth-recuperar-senha", nome: "Recuperar senha", gatilho: "Supabase Auth, quando a pessoa pede em /recuperar-senha", altura: 760, email: m.authRecuperarSenha() },
+    { id: "auth-trocar-email", nome: "Trocar e-mail", gatilho: "Supabase Auth, quando a conta troca de e-mail", altura: 820, email: m.authTrocarEmail() },
+    { id: "auth-convite", nome: "Convite", gatilho: "Supabase Auth, convite feito pelo painel do Supabase", altura: 760, email: m.authConvite() },
+    { id: "auth-link-magico", nome: "Link de acesso", gatilho: "Supabase Auth, link mágico (nenhuma tela usa hoje)", altura: 760, email: m.authLinkMagico() },
+    { id: "auth-reautenticar", nome: "Código de confirmação", gatilho: "Supabase Auth, reautenticação (nenhuma tela usa hoje)", altura: 680, email: m.authReautenticar() },
     { id: "boas-vindas-vendedor", nome: "Boas-vindas de vendedor", gatilho: "Edge admin-create-seller, quando o dono cria um vendedor em Equipe", altura: 820, email: m.boasVindasVendedor({ nome: "Rafael Lima", email: "rafael@solarsul.com.br", senha: "Vz-7fK2q9", empresa: "Solar Sul Energia", appUrl: "https://vyzon.com.br" }) },
+    { id: "demo-marcada", nome: "Conversa marcada", gatilho: "Edge sdr-auto-outreach, quando alguém marca conversa no site (corpo escrito pelo LLM)", altura: 980, email: m.demoMarcada({ assunto: "Oi Carla, tudo certo pra nossa conversa", corpo: "Oi Carla!\n\nAqui é o Markus, do Vyzon. Recebi seu agendamento e os dados da Solar Sul Energia e já comecei a preparar a conversa em cima do seu cenário.\n\nData e link estão logo abaixo. Se precisar remarcar ou tiver alguma dúvida antes, é só responder este e-mail.", quando: "Quinta-feira, 6 de novembro às 14:00", linkMeet: "https://meet.google.com/abc-defg-hij", quemAssina: "Markus" }) },
+    { id: "resposta-suporte", nome: "Resposta do suporte", gatilho: "Edge admin-support-inbox, quando o Markus responde em Admin, Suporte", altura: 680, email: m.respostaSuporte({ assunto: "Re: Não consigo conectar o WhatsApp", texto: "Oi, Carla.\n\nO QR expira em 1 minuto. Abra Configurações, WhatsApp, gere um novo e escaneie pelo celular do número da empresa.\n\nSe aparecer erro de novo, me manda um print que eu olho na hora." }) },
     { id: "aviso-novo-cadastro", nome: "Aviso interno: novo cadastro", gatilho: "Edge notify-signup, quando uma empresa cria a conta (só o Markus recebe)", altura: 720, email: m.avisoNovoCadastro({ empresa: "Solar Sul Energia", nome: "Carla Souza", email: "carla@solarsul.com.br", whatsapp: "5548999990000", origem: "google / raio-x", linkWhatsapp: "https://wa.me/5548999990000?text=Oi" }) },
+    { id: "aviso-raio-x", nome: "Aviso interno: pedido de Raio-X", gatilho: "Edge admin-lead-digest, quando chega pedido de Raio-X (só o Markus recebe)", altura: 760, email: m.avisoInterno({ assunto: "Novo pedido de Raio-X: Carla Souza", titulo: raioX[0], linhas: raioX }) },
+    { id: "aviso-whatsapp-fora", nome: "Aviso interno: servidor de WhatsApp fora", gatilho: "Edge whatsapp-health, a cada 5 minutos quando muda o estado (só o Markus recebe)", altura: 680, email: m.avisoInterno({ assunto: "Servidor de WhatsApp do Vyzon fora do ar", titulo: "Servidor de WhatsApp do Vyzon fora do ar", linhas: ["O servidor de WhatsApp não responde há 3 checagens seguidas (cerca de 15 minutos).", "Erro: timeout after 8000ms", "", "Enquanto ele estiver fora, nenhum cliente recebe nem envia mensagem pelo Vyzon.", "", "Painel do Railway:", "https://railway.com/dashboard"] }) },
+    { id: "aviso-demo-personalizada", nome: "Aviso interno: demo personalizada", gatilho: "Edge create-personalized-demo (fluxo antigo, sem tela que chame hoje)", altura: 900, email: m.avisoDemoPersonalizada({ empresa: "Solar Sul Energia", quando: "quinta-feira, 6 de novembro de 2026 às 14:00", segmento: "Energia solar", oferta: "Sistemas on-grid residenciais", dor: "Orçamento parado no WhatsApp", contato: "Carla Souza, carla@solarsul.com.br, 48999990000", login: "demo-solarsul@vyzon.com.br", senha: "Vz-demo-4821", appUrl: "https://vyzon.com.br" }) },
 ];
 const itens = [];
 for (const p of previas) {

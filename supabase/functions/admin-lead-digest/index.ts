@@ -11,6 +11,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 import { isServiceCall } from "../_shared/serviceAuth.ts";
+import { avisoInterno } from "../_shared/email/mensagens.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -250,24 +251,13 @@ async function buildRaioXDigest(lead: LeadRecord): Promise<string> {
   return lines.join("\n");
 }
 
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
 async function sendAdminEmail(subject: string, message: string): Promise<boolean> {
   if (!ADMIN_EMAIL || !RESEND_API_KEY) {
     console.warn("[digest] ADMIN_EMAIL ou RESEND_API_KEY ausente — pulando e-mail");
     return false;
   }
-  const html = message
-    .split("\n")
-    .map((linha) => {
-      if (/^https?:\/\//.test(linha)) {
-        return `<p><a href="${escapeHtml(linha)}" style="display:inline-block;padding:10px 18px;border-radius:999px;background:#0d1421;color:#fff;text-decoration:none;font-weight:600">Chamar no WhatsApp</a></p>`;
-      }
-      return linha ? `<p style="margin:0 0 6px">${escapeHtml(linha)}</p>` : "<br>";
-    })
-    .join("");
+  const linhas = message.split("\n");
+  const email = avisoInterno({ assunto: subject, titulo: linhas[0] || subject, linhas });
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -275,9 +265,9 @@ async function sendAdminEmail(subject: string, message: string): Promise<boolean
       body: JSON.stringify({
         from: RESEND_FROM_EMAIL,
         to: [ADMIN_EMAIL],
-        subject,
-        html: `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;font-size:15px;color:#111;line-height:1.5">${html}</div>`,
-        text: message,
+        subject: email.assunto,
+        html: email.html,
+        text: email.text,
       }),
     });
     if (!res.ok) {

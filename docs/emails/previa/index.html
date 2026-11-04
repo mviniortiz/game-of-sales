@@ -21,6 +21,25 @@
 <h1>E-mails do Vyzon</h1>
 <p class="sub">Layout único. Cada e-mail em 640px, em 375px e na versão de texto puro.</p>
 <section>
+<h2>Confirmar cadastro</h2>
+<p class="meta">Assunto: Confirme seu e-mail no Vyzon<br>Supabase Auth, no cadastro (hoje desligado: confirmação automática no painel)</p>
+<div class="linha">
+<div class="col"><p>Desktop</p><iframe src="auth-confirmar-cadastro.html" width="640" height="760" title="Confirmar cadastro desktop"></iframe></div>
+<div class="col"><p>375px</p><iframe src="auth-confirmar-cadastro.html" width="375" height="880" title="Confirmar cadastro celular"></iframe></div>
+<div class="col"><p>Texto puro</p><pre>Confirme seu e-mail
+
+Falta um passo para entrar no Vyzon: confirmar que carla@solarsul.com.br é seu. O link vale por 1 hora.
+
+Confirmar e-mail: https://vyzon.com.br/auth/v1/verify?token=exemplo&amp;type=recovery
+
+Não criou conta no Vyzon? Ignore este e-mail.
+
+--
+Você recebeu este e-mail porque alguém criou uma conta no Vyzon com este endereço.
+vyzon.com.br</pre></div>
+</div>
+</section>
+<section>
 <h2>Recuperar senha</h2>
 <p class="meta">Assunto: Redefinir sua senha do Vyzon<br>Supabase Auth, quando a pessoa pede em /recuperar-senha</p>
 <div class="linha">
@@ -36,6 +55,84 @@ Não pediu? Ignore este e-mail. Sua senha atual continua valendo.
 
 --
 Você recebeu este e-mail porque alguém pediu para redefinir a senha desta conta.
+vyzon.com.br</pre></div>
+</div>
+</section>
+<section>
+<h2>Trocar e-mail</h2>
+<p class="meta">Assunto: Confirme seu e-mail novo no Vyzon<br>Supabase Auth, quando a conta troca de e-mail</p>
+<div class="linha">
+<div class="col"><p>Desktop</p><iframe src="auth-trocar-email.html" width="640" height="820" title="Trocar e-mail desktop"></iframe></div>
+<div class="col"><p>375px</p><iframe src="auth-trocar-email.html" width="375" height="940" title="Trocar e-mail celular"></iframe></div>
+<div class="col"><p>Texto puro</p><pre>Confirme o e-mail novo
+
+Recebemos um pedido para trocar o e-mail da conta carla@solarsul.com.br no Vyzon. Depois da confirmação, você entra com este endereço:
+
+carla.souza@solarsul.com.br
+
+Confirmar e-mail novo: https://vyzon.com.br/auth/v1/verify?token=exemplo&amp;type=recovery
+
+Não pediu essa troca? Ignore este e-mail e troque sua senha em Configurações, Segurança.
+
+--
+Você recebeu este e-mail porque alguém pediu para trocar o e-mail desta conta.
+vyzon.com.br</pre></div>
+</div>
+</section>
+<section>
+<h2>Convite</h2>
+<p class="meta">Assunto: Seu acesso ao Vyzon<br>Supabase Auth, convite feito pelo painel do Supabase</p>
+<div class="linha">
+<div class="col"><p>Desktop</p><iframe src="auth-convite.html" width="640" height="760" title="Convite desktop"></iframe></div>
+<div class="col"><p>375px</p><iframe src="auth-convite.html" width="375" height="880" title="Convite celular"></iframe></div>
+<div class="col"><p>Texto puro</p><pre>Seu acesso ao Vyzon
+
+Criaram um acesso ao Vyzon para carla@solarsul.com.br. Defina sua senha pelo botão abaixo e você já entra. O link vale por 1 hora.
+
+Definir senha: https://vyzon.com.br/auth/v1/verify?token=exemplo&amp;type=recovery
+
+Não esperava este convite? Ignore este e-mail.
+
+--
+Você recebeu este e-mail porque alguém convidou este endereço para o Vyzon.
+vyzon.com.br</pre></div>
+</div>
+</section>
+<section>
+<h2>Link de acesso</h2>
+<p class="meta">Assunto: Seu link para entrar no Vyzon<br>Supabase Auth, link mágico (nenhuma tela usa hoje)</p>
+<div class="linha">
+<div class="col"><p>Desktop</p><iframe src="auth-link-magico.html" width="640" height="760" title="Link de acesso desktop"></iframe></div>
+<div class="col"><p>375px</p><iframe src="auth-link-magico.html" width="375" height="880" title="Link de acesso celular"></iframe></div>
+<div class="col"><p>Texto puro</p><pre>Entre no Vyzon
+
+Use o botão abaixo para entrar na conta carla@solarsul.com.br sem digitar senha. O link vale por 1 hora e só funciona uma vez.
+
+Entrar no Vyzon: https://vyzon.com.br/auth/v1/verify?token=exemplo&amp;type=recovery
+
+Não pediu? Ignore este e-mail.
+
+--
+Você recebeu este e-mail porque alguém pediu um link de acesso para esta conta.
+vyzon.com.br</pre></div>
+</div>
+</section>
+<section>
+<h2>Código de confirmação</h2>
+<p class="meta">Assunto: Seu código do Vyzon<br>Supabase Auth, reautenticação (nenhuma tela usa hoje)</p>
+<div class="linha">
+<div class="col"><p>Desktop</p><iframe src="auth-reautenticar.html" width="640" height="680" title="Código de confirmação desktop"></iframe></div>
+<div class="col"><p>375px</p><iframe src="auth-reautenticar.html" width="375" height="800" title="Código de confirmação celular"></iframe></div>
+<div class="col"><p>Texto puro</p><pre>Confirme que é você
+
+Digite este código no Vyzon para continuar:
+
+482913
+
+Não pediu? Ignore este e-mail e troque sua senha em Configurações, Segurança.
+
+--
+Você recebeu este e-mail porque alguém pediu um código de confirmação para esta conta.
 vyzon.com.br</pre></div>
 </div>
 </section>
@@ -62,6 +159,52 @@ vyzon.com.br</pre></div>
 </div>
 </section>
 <section>
+<h2>Conversa marcada</h2>
+<p class="meta">Assunto: Oi Carla, tudo certo pra nossa conversa<br>Edge sdr-auto-outreach, quando alguém marca conversa no site (corpo escrito pelo LLM)</p>
+<div class="linha">
+<div class="col"><p>Desktop</p><iframe src="demo-marcada.html" width="640" height="980" title="Conversa marcada desktop"></iframe></div>
+<div class="col"><p>375px</p><iframe src="demo-marcada.html" width="375" height="1100" title="Conversa marcada celular"></iframe></div>
+<div class="col"><p>Texto puro</p><pre>Sua conversa está marcada
+
+Oi Carla!
+
+Aqui é o Markus, do Vyzon. Recebi seu agendamento e os dados da Solar Sul Energia e já comecei a preparar a conversa em cima do seu cenário.
+
+Data e link estão logo abaixo. Se precisar remarcar ou tiver alguma dúvida antes, é só responder este e-mail.
+
+Quando: Quinta-feira, 6 de novembro às 14:00, horário de Brasília
+Duração: 30 minutos
+
+Entrar no Google Meet: https://meet.google.com/abc-defg-hij
+
+Markus
+Vyzon
+
+--
+Você recebeu este e-mail porque marcou uma conversa no site do Vyzon. Se não foi você, pode ignorar.
+vyzon.com.br</pre></div>
+</div>
+</section>
+<section>
+<h2>Resposta do suporte</h2>
+<p class="meta">Assunto: Re: Não consigo conectar o WhatsApp<br>Edge admin-support-inbox, quando o Markus responde em Admin, Suporte</p>
+<div class="linha">
+<div class="col"><p>Desktop</p><iframe src="resposta-suporte.html" width="640" height="680" title="Resposta do suporte desktop"></iframe></div>
+<div class="col"><p>375px</p><iframe src="resposta-suporte.html" width="375" height="800" title="Resposta do suporte celular"></iframe></div>
+<div class="col"><p>Texto puro</p><pre>Oi, Carla.
+
+O QR expira em 1 minuto. Abra Configurações, WhatsApp, gere um novo e escaneie pelo celular do número da empresa.
+
+Se aparecer erro de novo, me manda um print que eu olho na hora.
+
+Vyzon Suporte
+
+--
+Esta é a resposta ao e-mail que você mandou para o suporte do Vyzon. Para continuar a conversa, é só responder.
+vyzon.com.br</pre></div>
+</div>
+</section>
+<section>
 <h2>Aviso interno: novo cadastro</h2>
 <p class="meta">Assunto: Novo cadastro: Solar Sul Energia<br>Edge notify-signup, quando uma empresa cria a conta (só o Markus recebe)</p>
 <div class="linha">
@@ -77,6 +220,75 @@ Origem: google / raio-x
 O botão abre o WhatsApp com uma mensagem pronta perguntando se a pessoa conseguiu conectar o número e ver o Raio-X.
 
 Chamar no WhatsApp: https://wa.me/5548999990000?text=Oi
+
+--
+Aviso interno do Vyzon. Só você recebe.
+vyzon.com.br</pre></div>
+</div>
+</section>
+<section>
+<h2>Aviso interno: pedido de Raio-X</h2>
+<p class="meta">Assunto: Novo pedido de Raio-X: Carla Souza<br>Edge admin-lead-digest, quando chega pedido de Raio-X (só o Markus recebe)</p>
+<div class="linha">
+<div class="col"><p>Desktop</p><iframe src="aviso-raio-x.html" width="640" height="760" title="Aviso interno: pedido de Raio-X desktop"></iframe></div>
+<div class="col"><p>375px</p><iframe src="aviso-raio-x.html" width="375" height="880" title="Aviso interno: pedido de Raio-X celular"></iframe></div>
+<div class="col"><p>Texto puro</p><pre>Novo pedido de Raio-X
+
+Carla Souza, Solar Sul Energia
+
+WhatsApp: +5548999990000
+E-mail: carla@solarsul.com.br
+Propostas por mês: 30 a 60
+Página: dinheiro parado
+Anúncio: video-fatura-03
+
+Chamar no WhatsApp: https://wa.me/5548999990000?text=Oi
+
+--
+Aviso interno do Vyzon. Só você recebe.
+vyzon.com.br</pre></div>
+</div>
+</section>
+<section>
+<h2>Aviso interno: servidor de WhatsApp fora</h2>
+<p class="meta">Assunto: Servidor de WhatsApp do Vyzon fora do ar<br>Edge whatsapp-health, a cada 5 minutos quando muda o estado (só o Markus recebe)</p>
+<div class="linha">
+<div class="col"><p>Desktop</p><iframe src="aviso-whatsapp-fora.html" width="640" height="680" title="Aviso interno: servidor de WhatsApp fora desktop"></iframe></div>
+<div class="col"><p>375px</p><iframe src="aviso-whatsapp-fora.html" width="375" height="800" title="Aviso interno: servidor de WhatsApp fora celular"></iframe></div>
+<div class="col"><p>Texto puro</p><pre>Servidor de WhatsApp do Vyzon fora do ar
+
+O servidor de WhatsApp não responde há 3 checagens seguidas (cerca de 15 minutos).
+
+Erro: timeout after 8000ms
+
+Enquanto ele estiver fora, nenhum cliente recebe nem envia mensagem pelo Vyzon.
+
+Abrir o Railway: https://railway.com/dashboard
+
+--
+Aviso interno do Vyzon. Só você recebe.
+vyzon.com.br</pre></div>
+</div>
+</section>
+<section>
+<h2>Aviso interno: demo personalizada</h2>
+<p class="meta">Assunto: Demo personalizada: Solar Sul Energia<br>Edge create-personalized-demo (fluxo antigo, sem tela que chame hoje)</p>
+<div class="linha">
+<div class="col"><p>Desktop</p><iframe src="aviso-demo-personalizada.html" width="640" height="900" title="Aviso interno: demo personalizada desktop"></iframe></div>
+<div class="col"><p>375px</p><iframe src="aviso-demo-personalizada.html" width="375" height="1020" title="Aviso interno: demo personalizada celular"></iframe></div>
+<div class="col"><p>Texto puro</p><pre>Demo de Solar Sul Energia pronta
+
+Marcada para quinta-feira, 6 de novembro de 2026 às 14:00. O ambiente leva o nome do lead e dá para mostrar na conversa.
+
+Segmento: Energia solar
+O que vende: Sistemas on-grid residenciais
+Principal dor: Orçamento parado no WhatsApp
+Contato: Carla Souza, carla@solarsul.com.br, 48999990000
+
+Login: demo-solarsul@vyzon.com.br
+Senha: Vz-demo-4821
+
+Abrir o ambiente: https://vyzon.com.br/auth
 
 --
 Aviso interno do Vyzon. Só você recebe.

@@ -13,16 +13,28 @@ additional_redirect_urls = [
 enable_confirmations = true
 
 [auth.email.template.confirmation]
-subject = "Confirme seu email na Vyzon"
+subject = "Confirme seu e-mail no Vyzon"
 content_path = "./supabase/email-templates/confirm-signup.html"
 
 [auth.email.template.recovery]
-subject = "Redefinir sua senha da Vyzon"
+subject = "Redefinir sua senha do Vyzon"
 content_path = "./supabase/email-templates/reset-password.html"
 
 [auth.email.template.email_change]
-subject = "Confirme seu novo email na Vyzon"
+subject = "Confirme seu e-mail novo no Vyzon"
 content_path = "./supabase/email-templates/change-email.html"
+
+[auth.email.template.invite]
+subject = "Seu acesso ao Vyzon"
+content_path = "./supabase/email-templates/invite.html"
+
+[auth.email.template.magic_link]
+subject = "Seu link para entrar no Vyzon"
+content_path = "./supabase/email-templates/magic-link.html"
+
+[auth.email.template.reauthentication]
+subject = "Seu código do Vyzon"
+content_path = "./supabase/email-templates/reauthentication.html"
 
 [functions.google-oauth-callback]
 verify_jwt = false

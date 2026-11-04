@@ -23,7 +23,8 @@ export interface Email {
     assunto: string;
     /** Texto que o cliente de e-mail mostra ao lado do assunto. */
     previa: string;
-    titulo: string;
+    /** Título do cartão. Sem título quando é uma conversa (resposta do suporte). */
+    titulo?: string;
     blocos: Bloco[];
     botao?: { texto: string; url: string };
     /** Mostra o endereço do botão por extenso, para quando o botão não abre. */
@@ -132,6 +133,9 @@ function blocoTexto(b: Bloco): string {
 }
 
 export function renderEmail(e: Email): EmailPronto {
+    const titulo = e.titulo
+        ? `<h1 class="vz-titulo" style="margin:0 0 16px 0;font-family:${FONTE};font-size:24px;line-height:1.25;font-weight:600;letter-spacing:-0.02em;color:${COR.noite};">${esc(e.titulo)}</h1>`
+        : "";
     const corpo = e.blocos.map(blocoHtml).join("\n");
     const acao = e.botao ? botao(e.botao.texto, e.botao.url) : "";
     const reserva = e.botao && e.linkReserva ? linkReserva(e.botao.url) : "";
@@ -195,7 +199,7 @@ a.vz-botao:hover { background-color:#124AA6 !important; }
 <span class="vz-marca-texto" style="font-family:${FONTE};font-size:22px;line-height:1;font-weight:700;letter-spacing:-0.04em;color:${COR.noite};">vyzon</span>
 </td></tr>
 <tr><td class="vz-cartao" style="padding:40px;background-color:${COR.cartao};border-radius:18px;">
-<h1 class="vz-titulo" style="margin:0 0 16px 0;font-family:${FONTE};font-size:24px;line-height:1.25;font-weight:600;letter-spacing:-0.02em;color:${COR.noite};">${esc(e.titulo)}</h1>
+${titulo}
 ${corpo}
 ${acao}
 ${reserva}
@@ -213,7 +217,7 @@ ${assinatura}
 </body>
 </html>`;
 
-    const partes: string[] = [e.titulo, ""];
+    const partes: string[] = e.titulo ? [e.titulo, ""] : [];
     for (const b of e.blocos) {
         const t = blocoTexto(b);
         if (t) partes.push(t, "");
