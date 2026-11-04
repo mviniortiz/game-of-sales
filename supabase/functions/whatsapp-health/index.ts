@@ -17,6 +17,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { avisoInterno } from "../_shared/email/mensagens.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -86,14 +87,16 @@ async function avisar(assunto: string, linhas: string[]): Promise<boolean> {
         console.warn("[whatsapp-health] ADMIN_EMAIL ou RESEND_API_KEY ausente, aviso não enviado:", assunto);
         return false;
     }
+    const email = avisoInterno({ assunto, titulo: assunto, linhas });
     const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
             from: RESEND_FROM_EMAIL,
             to: [ADMIN_EMAIL],
-            subject: assunto,
-            text: linhas.join("\n"),
+            subject: email.assunto,
+            html: email.html,
+            text: email.text,
         }),
     });
     if (!res.ok) console.error("[whatsapp-health] resend", res.status, await res.text().catch(() => ""));
@@ -125,7 +128,9 @@ serve(async (req) => {
             `Erro: ${p.error}`,
             "",
             "Enquanto ele estiver fora, nenhum cliente recebe nem envia mensagem pelo Vyzon.",
-            `Veja o serviço no Railway: ${painel}`,
+            "",
+            "Painel do Railway:",
+            painel,
         ]);
     } else if (mudou && status === "up") {
         avisado = await avisar("Servidor de WhatsApp do Vyzon voltou", [

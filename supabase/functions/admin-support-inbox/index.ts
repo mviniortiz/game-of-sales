@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { respostaSuporte } from "../_shared/email/mensagens.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -109,8 +110,15 @@ serve(async (req) => {
         to: Array.isArray(to) ? to : [to],
         subject,
       };
-      if (html) payload.html = html;
-      if (text) payload.text = text;
+      if (html) {
+        payload.html = html;
+        if (text) payload.text = text;
+      } else {
+        // Só texto (o Suporte manda assim desde 04/11/2026): vai no layout único.
+        const email = respostaSuporte({ assunto: subject, texto: String(text) });
+        payload.html = email.html;
+        payload.text = email.text;
+      }
       if (inReplyTo) {
         payload.headers = { "In-Reply-To": inReplyTo, "References": inReplyTo };
       }

@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { hasLlmKey, llmChat } from "../_shared/llm.ts";
 import { isServiceCall } from "../_shared/serviceAuth.ts";
+import { demoMarcada } from "../_shared/email/mensagens.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +13,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const RESEND_FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") || "Vyzon <noreply@vyzon.com.br>";
+const RESEND_FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") || "Vyzon <suporte@vyzon.com.br>";
 const SDR_REPLY_TO = Deno.env.get("SDR_REPLY_TO") || "mviniciusortiz48@gmail.com";
 const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL");
 const EVOLUTION_API_KEY = Deno.env.get("EVOLUTION_API_KEY");
@@ -73,7 +74,7 @@ async function generateGreeting(lead: Lead, channel: "whatsapp" | "email"): Prom
   const greeting = lead.name ? `Oi ${firstName(lead.name)}` : "Oi";
   const companyContext = lead.company ? ` Tô vendo que você é da ${lead.company}.` : "";
   const painContext = lead.biggest_pain
-    ? ` Recebi no formulário que o maior ponto hoje é "${lead.biggest_pain.toLowerCase()}" — já vou puxar esse recorte pra call.`
+    ? ` Recebi no formulário que o maior ponto hoje é "${lead.biggest_pain.toLowerCase()}". Vou levar esse ponto pra conversa.`
     : "";
 
   // Fallback sem OpenAI
@@ -91,14 +92,14 @@ Vou preparar tudo em função do seu cenário pra call ser útil de verdade, sem
       subject: `${greeting}, tudo certo pra sua demo do Vyzon`,
       body: `${greeting}!
 
-Aqui é o ${SDR_NAME} do Vyzon. Recebi seu agendamento${companyContext ? ` e os dados da ${lead.company}` : ""} — já começo a preparar a call focada no seu cenário real, sem pitch genérico.${painContext}
+Aqui é o ${SDR_NAME} do Vyzon. Recebi seu agendamento${companyContext ? ` e os dados da ${lead.company}` : ""} e já comecei a preparar a conversa em cima do seu cenário.${painContext}
 
-Tudo que você precisa saber pra nossa conversa está logo abaixo. Se precisar reagendar ou tirar alguma dúvida antes, é só responder esse email.`,
+Data e link estão logo abaixo. Se precisar remarcar ou tiver alguma dúvida antes, é só responder este e-mail.`,
     };
   }
 
   // OpenAI personalizado
-  const systemBase = `Você é ${SDR_NAME} do Vyzon. O Vyzon é uma central comercial com a Lume: a Lume lê os atendimentos do WhatsApp, aponta quais leads estão prontos pra avançar e sugere o próximo passo e a resposta, e o time sempre aprova antes de qualquer envio (o controle continua com a pessoa). Quem mais se beneficia são agências e times comerciais que vendem por conversa e não querem deixar lead esfriar no WhatsApp. Tom: amigável, direto, brasileiro, de quem entende a rotina comercial. NUNCA use emojis. NUNCA use travessão (o caractere "—"); prefira vírgula, ponto ou parênteses. NUNCA diga que é "SDR" ou mencione cargo. NUNCA chame o Vyzon de "CRM gamificado", nem prometa que a Lume "responde sozinha" ou "automatiza" o atendimento (ela sugere, o humano aprova). NUNCA faça perguntas de qualificação no primeiro contato. Se o lead forneceu dados específicos (dor, time, objetivo), incorpore naturalmente 1 ou 2 pontos. Se só tem nome/empresa, foque no que VOCÊ vai trazer pra call (demo focada no cenário dele, sem pitch genérico), sem inventar dados. NUNCA repita construções ("Vi que..." em frases seguidas).`;
+  const systemBase = `Você é ${SDR_NAME} do Vyzon. O Vyzon é uma central comercial com a Lume: a Lume lê os atendimentos do WhatsApp, aponta quais leads estão prontos pra avançar e sugere o próximo passo e a resposta, e o time sempre aprova antes de qualquer envio (o controle continua com a pessoa). Quem usa são integradoras de energia solar que vendem pelo WhatsApp e não querem deixar orçamento parado sem resposta. Tom: amigável, direto, brasileiro, de quem entende a rotina comercial. NUNCA use emojis. NUNCA use travessão (o caractere "—"); prefira vírgula, ponto ou parênteses. NUNCA diga que é "SDR" ou mencione cargo. NUNCA chame o Vyzon de "CRM gamificado", nem prometa que a Lume "responde sozinha" ou "automatiza" o atendimento (ela sugere, o humano aprova). NUNCA faça perguntas de qualificação no primeiro contato. Se o lead forneceu dados específicos (dor, time, objetivo), incorpore naturalmente 1 ou 2 pontos. Se só tem nome/empresa, foque no que VOCÊ vai trazer pra call (demo focada no cenário dele, sem pitch genérico), sem inventar dados. NUNCA repita construções ("Vi que..." em frases seguidas).`;
 
   const leadContext = [
     `Nome: ${lead.name || "não informado"}`,
@@ -111,8 +112,8 @@ Tudo que você precisa saber pra nossa conversa está logo abaixo. Se precisar r
   ].filter(Boolean).join("\n");
 
   const systemPrompt = channel === "whatsapp"
-    ? `${systemBase} Formato WhatsApp: máx 500 caracteres, quebras naturais, sem markdown. NÃO inclua data/link da reunião — isso vai em outra mensagem separada. Retorne APENAS JSON: {"body": "..."}`
-    : `${systemBase} Formato email: texto plano, direto, termina sem assinatura (o template adiciona). NÃO inclua dados da reunião no corpo — eles aparecem num bloco separado. Retorne JSON: {"subject": "...", "body": "..."}`;
+    ? `${systemBase} Formato WhatsApp: máx 500 caracteres, quebras naturais, sem markdown. NÃO inclua data/link da reunião, isso vai em outra mensagem separada. Retorne APENAS JSON: {"body": "..."}`
+    : `${systemBase} Formato email: texto plano, direto, termina sem assinatura (o template adiciona). NÃO inclua dados da reunião no corpo, eles aparecem num bloco separado. Retorne JSON: {"subject": "...", "body": "..."}`;
 
   const userPrompt = channel === "whatsapp"
     ? `Escreva a PRIMEIRA mensagem de WhatsApp pra um lead que acabou de agendar a demo. Tom humano e direto.
@@ -125,7 +126,7 @@ A mensagem deve:
 2. Se apresentar ("aqui é o ${SDR_NAME} do Vyzon")
 3. Agradecer o agendamento
 4. Se houver dados específicos no contexto (dor/time/objetivo), incorpore 1-2 naturalmente; se não, mencione que vai puxar o contexto do site/empresa pra call
-5. Dizer que vai preparar a call focada no cenário dele — sem pitch genérico
+5. Dizer que vai preparar a call focada no cenário dele, sem pitch genérico
 6. Fechar convidando a tirar dúvidas
 
 NÃO invente dados que não estão no contexto. NÃO mencione data/link (vai na próxima msg).`
@@ -174,9 +175,9 @@ Vou preparar tudo em função do seu cenário pra call ser útil de verdade, sem
         subject: `${greeting}, tudo certo pra sua demo do Vyzon`,
         body: `${greeting}!
 
-Aqui é o ${SDR_NAME} do Vyzon. Recebi seu agendamento${companyContext} — já começo a preparar a call focada no seu cenário real, sem pitch genérico.${painContext}
+Aqui é o ${SDR_NAME} do Vyzon. Recebi seu agendamento${companyContext} e já comecei a preparar a conversa em cima do seu cenário.${painContext}
 
-Tudo que você precisa saber pra nossa conversa está logo abaixo. Se precisar reagendar ou tirar alguma dúvida antes, é só responder esse email.`,
+Data e link estão logo abaixo. Se precisar remarcar ou tiver alguma dúvida antes, é só responder este e-mail.`,
       };
   }
 }
@@ -263,80 +264,13 @@ async function sendEmail(to: string, subject: string, body: string, lead: Lead):
     return { sent: false, error: "Resend API not configured" };
   }
 
-  const bodyHtml = body.split("\n").map((line) => {
-    const trimmed = line.trim();
-    if (!trimmed) return "";
-    return `<p style="margin:0 0 16px 0;color:#CCFFFF;font-size:16px;line-height:1.6;">${trimmed}</p>`;
-  }).join("");
-
-  // Bloco da reunião
-  let meetingBlock = "";
-  if (lead.scheduled_at) {
-    const when = formatMeetingBRT(lead.scheduled_at);
-    const meetBtn = lead.google_meet_link
-      ? `<a href="${lead.google_meet_link}" style="display:inline-block;background-color:#10B77F;color:#FFFFFF;text-decoration:none;padding:14px 32px;border-radius:12px;font-size:15px;font-weight:600;box-shadow:0 4px 16px rgba(16,183,127,0.3);">Entrar no Google Meet</a>`
-      : "";
-    meetingBlock = `
-          <tr>
-            <td style="padding:8px 40px 16px 40px;">
-              <div style="background-color:#0B0E1A;border:1px solid #1F2540;border-radius:12px;padding:20px 24px;">
-                <p style="margin:0 0 12px 0;color:#10B77F;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Dados da reunião</p>
-                <p style="margin:0 0 6px 0;color:#FFFFFF;font-size:16px;font-weight:600;line-height:1.4;">${when}</p>
-                <p style="margin:0 0 4px 0;color:#8B9CB4;font-size:14px;line-height:1.5;">Horário de Brasília · 30 minutos</p>
-                ${lead.google_meet_link ? `<p style="margin:12px 0 0 0;color:#8B9CB4;font-size:13px;line-height:1.5;word-break:break-all;">${lead.google_meet_link}</p>` : ""}
-              </div>
-            </td>
-          </tr>
-          ${meetBtn ? `<tr><td style="padding:8px 40px 24px 40px;text-align:center;">${meetBtn}</td></tr>` : ""}`;
-  }
-
-  const html = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${subject}</title>
-</head>
-<body style="margin:0;padding:0;background-color:#0B0E1A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0B0E1A;padding:40px 20px;">
-    <tr>
-      <td align="center">
-        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#11152A;border-radius:16px;overflow:hidden;box-shadow:0 10px 40px rgba(16,183,127,0.15);">
-          <tr>
-            <td style="padding:40px 40px 24px 40px;text-align:center;">
-              <img src="https://vyzon.com.br/logo.png" alt="Vyzon" width="140" style="display:block;margin:0 auto;max-width:140px;height:auto;">
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:0 40px 16px 40px;">
-              ${bodyHtml}
-            </td>
-          </tr>
-          ${meetingBlock}
-          <tr>
-            <td style="padding:0 40px;">
-              <div style="border-top:1px solid #1F2540;"></div>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:24px 40px 16px 40px;">
-              <p style="margin:0 0 4px 0;color:#FFFFFF;font-size:15px;font-weight:600;line-height:1.4;">${SDR_NAME}</p>
-              <p style="margin:0;color:#8B9CB4;font-size:13px;line-height:1.5;">Vyzon · Central Comercial com Lume pra quem vende por conversa</p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:0 40px 32px 40px;">
-              <p style="margin:0;color:#8B9CB4;font-size:12px;line-height:1.5;">
-                <a href="https://vyzon.com.br" style="color:#10B77F;text-decoration:none;">vyzon.com.br</a> · Se não foi você que agendou, pode ignorar este email.
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+  const email = demoMarcada({
+    assunto: subject,
+    corpo: body,
+    quando: lead.scheduled_at ? formatMeetingBRT(lead.scheduled_at) : null,
+    linkMeet: lead.google_meet_link,
+    quemAssina: SDR_NAME,
+  });
 
   try {
     const res = await fetch("https://api.resend.com/emails", {
@@ -346,9 +280,9 @@ async function sendEmail(to: string, subject: string, body: string, lead: Lead):
         from: RESEND_FROM_EMAIL,
         reply_to: SDR_REPLY_TO,
         to,
-        subject,
-        html,
-        text: body,
+        subject: email.assunto,
+        html: email.html,
+        text: email.text,
       }),
     });
     if (!res.ok) {

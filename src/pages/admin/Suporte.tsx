@@ -323,26 +323,13 @@ const Suporte = () => {
   const replyMutation = useMutation({
     mutationFn: async () => {
       if (!emailDetail) throw new Error("Nenhum e-mail aberto");
-      const corpo = replyText
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\n/g, "<br>");
-      const html = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a1a;line-height:1.6;">
-        ${corpo}
-        <br><br>
-        <hr style="border:none;border-top:1px solid #e5e5e5;margin:24px 0;">
-        <div style="color:#666;font-size:13px;">
-          <strong>Vyzon Suporte</strong><br>
-          <a href="https://vyzon.com.br" style="color:#1556C0;text-decoration:none;">vyzon.com.br</a>
-        </div>
-      </div>`;
       const { error } = await supabase.functions.invoke("admin-support-inbox", {
         body: {
           action: "reply",
           to: remetente(emailDetail.from).email,
           subject: emailDetail.subject?.startsWith("Re:") ? emailDetail.subject : `Re: ${emailDetail.subject || ""}`,
-          html,
+          // A edge monta o HTML no layout único dos e-mails a partir do texto.
+          text: replyText.trim(),
           inReplyTo: emailDetail.message_id,
         },
       });
