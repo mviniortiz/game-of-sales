@@ -93,6 +93,18 @@ const ObrasRoute = () => {
   return <ProtectedRoute>{page}</ProtectedRoute>;
 };
 
+// Mesmo trato: ?preview= em dev abre a agenda com compromissos de exemplo, sem login.
+const AgendaRoute = () => {
+  const [params] = useSearchParams();
+  const page = (
+    <AppLayout>
+      <Calendario />
+    </AppLayout>
+  );
+  if (import.meta.env.DEV && params.get("preview")) return page;
+  return <ProtectedRoute>{page}</ProtectedRoute>;
+};
+
 const InicioRoute = () => {
   const [params] = useSearchParams();
   const page = (
@@ -386,16 +398,7 @@ const AppShell = () => (
               <Route path="/pulse" element={<Navigate to="/inbox" replace />} />
               {/* F3 2026-05-19: /agenda é a rota principal, /calendario redirect silencioso */}
               <Route path="/obras" element={<ObrasRoute />} />
-              <Route
-                path="/agenda"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Calendario />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/agenda" element={<AgendaRoute />} />
               <Route path="/calendario" element={<Navigate to="/agenda" replace />} />
               {/* F3 2026-05-19: /pipeline é a rota principal, /crm redirect silencioso */}
               <Route

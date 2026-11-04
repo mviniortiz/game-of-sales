@@ -4250,7 +4250,7 @@ export type Database = {
     }
     Enums: {
       app_role: "vendedor" | "admin"
-      appointment_status: "agendado" | "realizado" | "cancelado"
+      appointment_status: "agendado" | "realizado" | "cancelado" | "nao_compareceu"
       attendance_status: "pending" | "show" | "no_show"
       call_result: "venda" | "sem_interesse" | "reagendar"
       user_level: "Bronze" | "Prata" | "Ouro" | "Platina" | "Diamante"
@@ -4386,7 +4386,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["vendedor", "admin"],
-      appointment_status: ["agendado", "realizado", "cancelado"],
+      appointment_status: ["agendado", "realizado", "cancelado", "nao_compareceu"],
       attendance_status: ["pending", "show", "no_show"],
       call_result: ["venda", "sem_interesse", "reagendar"],
       user_level: ["Bronze", "Prata", "Ouro", "Platina", "Diamante"],
