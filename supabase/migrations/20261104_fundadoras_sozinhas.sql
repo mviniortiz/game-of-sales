@@ -101,6 +101,7 @@ set search_path = public
 as $$
 declare
     v_status text;
+    v_stripe text;
     v_ja     record;
     v_numero int;
 begin
@@ -112,7 +113,8 @@ begin
     -- não pegam o mesmo número nem passam do limite.
     perform pg_advisory_xact_lock(hashtext('vyzon:fundadoras'));
 
-    select subscription_status into v_status from public.companies where id = p_company for update;
+    select subscription_status, stripe_subscription_id into v_status, v_stripe
+      from public.companies where id = p_company for update;
     if not found then
         return jsonb_build_object('concedida', false, 'motivo', 'empresa nao encontrada');
     end if;
@@ -128,7 +130,9 @@ begin
     if p_company = '00000000-0000-0000-0000-000000000001'::uuid then
         return jsonb_build_object('concedida', false, 'motivo', 'empresa do vyzon');
     end if;
-    if v_status = 'active' then
+    -- Paga agora, ou já assinou pelo Stripe um dia (quem cancelou não vira
+    -- fundadora ao reconectar).
+    if v_status = 'active' or v_stripe is not null then
         return jsonb_build_object('concedida', false, 'motivo', 'ja paga');
     end if;
     if exists (select 1 from public.profiles where company_id = p_company and coalesce(is_super_admin, false)) then

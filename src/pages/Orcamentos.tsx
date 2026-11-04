@@ -157,7 +157,8 @@ export default function Orcamentos() {
   const { recarregarEmpresas } = useTenant();
   const location = useLocation();
   // Quem volta do relatório pediu o placar: não é empurrado para a configuração.
-  const doRelatorio = !!(location.state as { doRelatorio?: boolean } | null)?.doRelatorio;
+  // Lido uma vez: trocar de aba muda o endereço sem o state e não pode empurrar.
+  const [doRelatorio] = useState(() => !!(location.state as { doRelatorio?: boolean } | null)?.doRelatorio);
   // Conta nova: sem assinatura vai para o Raio-X automático (o grátis); quem
   // assina (ou ganhou a vaga de fundadora) cai uma vez na conversa de
   // configuração da Lume, e quem adiou vê a lista de primeiros passos. Super
