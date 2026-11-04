@@ -175,3 +175,15 @@ Deno.test("linha da empresa entra depois da apresentação, só se for uma frase
   assertEquals(limparLinha("Vi que vocês fazem solar. E aquecimento."), null);
   assertEquals(comLinhaDaEmpresa("Oi, tudo bem? Aqui é o Markus, de Floripa. Pergunta", "Vi que vocês atendem Lages"), "Oi, tudo bem? Aqui é o Markus, de Floripa. Vi que vocês atendem Lages. Pergunta");
 });
+
+Deno.test("mensagens contam a mesma história: o nome, o que já existe e as 10 do Brasil", async () => {
+  const t = await import("./prospectingText.ts");
+  const alvo = { agency_name: "Sol do Vale", city: "Blumenau", rating_count: 42, metadata: { socio: "PAULO" }, niche: null, variant: "encaminha" };
+  assert(t.RESPOSTA_PORTA.includes("Vyzon") && t.RESPOSTA_PORTA.includes("Lume"));
+  for (const v of ["encaminha", "time", "aberta"] as const) {
+    assert(!t.firstMessage(alvo, v).includes("Tô montando"), v);
+  }
+  const seguimento = t.followupMessage(alvo);
+  assert(!seguimento.includes("de SC"));
+  assert(seguimento.includes("10 primeiras integradoras"));
+});

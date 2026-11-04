@@ -68,12 +68,12 @@ export const OFERTA_VAGA =
 const OFERTA_VAGA_DISTRIBUIDORA =
   "Tô liberando de graça, pra sempre, pras 10 primeiras empresas, em troca de me contarem o que funciona e o que falta. Quer uma das vagas?";
 export const RESPOSTA_PORTA = [
-  "Fiz uma ferramenta pra integradora: quando um orçamento fica 2 dias sem resposta do cliente, ela avisa o dono no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.",
+  "Fiz o Vyzon, uma ferramenta pra integradora: quando um orçamento fica 2 dias sem resposta do cliente, a Lume, assistente dele, avisa o dono no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.",
   MARCA_IMAGEM,
   OFERTA_VAGA,
 ].join("\n\n");
 const RESPOSTA_PORTA_DISTRIBUIDORA = [
-  "Fiz uma ferramenta pra distribuidora: quando uma cotação fica 2 dias sem resposta do integrador, ela avisa o vendedor no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.",
+  "Fiz o Vyzon, uma ferramenta pra distribuidora: quando uma cotação fica 2 dias sem resposta do integrador, a Lume, assistente dele, avisa o vendedor no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.",
   MARCA_IMAGEM,
   OFERTA_VAGA_DISTRIBUIDORA,
 ].join("\n\n");
@@ -82,7 +82,7 @@ const RESPOSTA_PORTA_DISTRIBUIDORA = [
 // (get_quote_board) e o aviso vai para o dono do número (quoteTracking). O dono NÃO vê
 // de qual vendedor é cada proposta nem lê a conversa do vendedor.
 const RESPOSTA_PORTA_TIME = [
-  "Tô montando uma ferramenta pra integradora com equipe de venda: cada vendedor conecta o WhatsApp dele, e toda proposta que sai entra numa lista só, que você vê: quanto vale, há quantos dias e se o cliente respondeu. No 2º dia sem resposta, o vendedor recebe a mensagem pronta pra retomar.",
+  "Fiz uma ferramenta pra integradora com equipe de venda: cada vendedor conecta o WhatsApp dele, e toda proposta que sai entra numa lista só, que você vê: quanto vale, há quantos dias e se o cliente respondeu. No 2º dia sem resposta, o vendedor recebe a mensagem pronta pra retomar.",
   "Hoje você consegue ver isso ou depende de perguntar pra cada um?",
 ].join("\n\n");
 const RESPOSTA_PORTA_ABERTA =
@@ -181,38 +181,38 @@ function primeiraMensagemBase(row: ProspectTarget, variant: ProspectVariant, sen
     const i = redacao(nome);
     if (ehDistribuidora(row.niche)) {
       if (dono) return [
-        `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra distribuidora de equipamento solar e queria te fazer uma pergunta rápida sobre as cotações que vocês mandam e o integrador visualiza e não responde. É você que cuida disso na ${nome}?`,
+        `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Fiz uma ferramenta pra distribuidora de equipamento solar e queria te fazer uma pergunta rápida sobre as cotações que vocês mandam e o integrador visualiza e não responde. É você que cuida disso na ${nome}?`,
         `Oi, ${dono}, tudo bem? Sou o ${sender}, de Florianópolis. Estou desenvolvendo uma ferramenta para distribuidoras de equipamento solar e tenho uma pergunta rápida sobre as cotações que vocês enviam e o integrador visualiza mas não responde. Quem cuida disso na ${nome} é você?`,
-        `Oi, ${dono}! Aqui é o ${sender}, de Floripa. Tô montando uma ferramenta pra distribuidora solar e queria te fazer uma pergunta rápida sobre cotação que o integrador visualiza e deixa sem resposta. Você que cuida disso na ${nome}?`,
+        `Oi, ${dono}! Aqui é o ${sender}, de Floripa. Fiz uma ferramenta pra distribuidora solar e queria te fazer uma pergunta rápida sobre cotação que o integrador visualiza e deixa sem resposta. Você que cuida disso na ${nome}?`,
       ][i];
       return [
-        `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra distribuidora de equipamento solar e queria fazer uma pergunta rápida sobre as cotações que vocês mandam e o integrador visualiza e não responde. Consegue me passar pra quem cuida do comercial na ${nome}?`,
+        `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Fiz uma ferramenta pra distribuidora de equipamento solar e queria fazer uma pergunta rápida sobre as cotações que vocês mandam e o integrador visualiza e não responde. Consegue me passar pra quem cuida do comercial na ${nome}?`,
         `Oi, tudo bem? Sou o ${sender}, de Florianópolis. Estou desenvolvendo uma ferramenta para distribuidoras de equipamento solar e tenho uma pergunta rápida sobre as cotações que vocês enviam e o integrador visualiza mas não responde. Pode me passar para quem cuida do comercial na ${nome}?`,
-        `Olá, tudo certo? Aqui é o ${sender}, de Floripa. Tô montando uma ferramenta pra distribuidora solar e queria fazer uma pergunta rápida sobre cotação que o integrador visualiza e deixa sem resposta. Quem cuida do comercial aí na ${nome}?`,
+        `Olá, tudo certo? Aqui é o ${sender}, de Floripa. Fiz uma ferramenta pra distribuidora solar e queria fazer uma pergunta rápida sobre cotação que o integrador visualiza e deixa sem resposta. Quem cuida do comercial aí na ${nome}?`,
       ][i];
     }
     if (dono) return [
-      `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar e queria te fazer uma pergunta rápida sobre as propostas que vocês mandam e o cliente visualiza e não responde. É você que cuida disso na ${nome}?`,
+      `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Fiz uma ferramenta pra integradora solar e queria te fazer uma pergunta rápida sobre as propostas que vocês mandam e o cliente visualiza e não responde. É você que cuida disso na ${nome}?`,
       `Oi, ${dono}, tudo bem? Sou o ${sender}, de Florianópolis. Estou desenvolvendo uma ferramenta para integradoras de energia solar e tenho uma pergunta rápida sobre os orçamentos que vocês enviam e o cliente visualiza mas não responde. Quem cuida disso na ${nome} é você?`,
-      `Oi, ${dono}! Aqui é o ${sender}, de Floripa. Tô montando uma ferramenta pra integradora solar e queria te fazer uma pergunta rápida sobre proposta que o cliente visualiza e deixa sem resposta. Você que cuida disso na ${nome}?`,
+      `Oi, ${dono}! Aqui é o ${sender}, de Floripa. Fiz uma ferramenta pra integradora solar e queria te fazer uma pergunta rápida sobre proposta que o cliente visualiza e deixa sem resposta. Você que cuida disso na ${nome}?`,
     ][i];
     return [
-      `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar e queria fazer uma pergunta rápida sobre as propostas que vocês mandam e o cliente visualiza e não responde. Consegue me passar pra quem cuida disso na ${nome}?`,
+      `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Fiz uma ferramenta pra integradora solar e queria fazer uma pergunta rápida sobre as propostas que vocês mandam e o cliente visualiza e não responde. Consegue me passar pra quem cuida disso na ${nome}?`,
       `Oi, tudo bem? Sou o ${sender}, de Florianópolis. Estou desenvolvendo uma ferramenta para integradoras de energia solar e tenho uma pergunta rápida sobre os orçamentos que vocês enviam e o cliente visualiza mas não responde. Pode me passar para quem cuida disso na ${nome}?`,
-      `Olá, tudo certo? Aqui é o ${sender}, de Floripa. Tô montando uma ferramenta pra integradora solar e queria fazer uma pergunta rápida sobre proposta que o cliente visualiza e deixa sem resposta. Quem cuida disso aí na ${nome}?`,
+      `Olá, tudo certo? Aqui é o ${sender}, de Floripa. Fiz uma ferramenta pra integradora solar e queria fazer uma pergunta rápida sobre proposta que o cliente visualiza e deixa sem resposta. Quem cuida disso aí na ${nome}?`,
     ][i];
   }
   if (variant === "time") {
     const i = redacao(nome);
     if (dono) return [
-      `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar com equipe de vendas e queria te fazer uma pergunta rápida sobre como você acompanha as propostas que seus vendedores mandam pelo WhatsApp. É você que cuida disso na ${nome}?`,
+      `Oi, ${dono}, tudo bem? Aqui é o ${sender}, de Florianópolis. Fiz uma ferramenta pra integradora solar com equipe de vendas e queria te fazer uma pergunta rápida sobre como você acompanha as propostas que seus vendedores mandam pelo WhatsApp. É você que cuida disso na ${nome}?`,
       `Oi, ${dono}, tudo bem? Sou o ${sender}, de Florianópolis. Estou desenvolvendo uma ferramenta para integradoras de energia solar que têm vendedores e tenho uma pergunta rápida sobre como você acompanha as propostas que eles mandam no WhatsApp. Quem cuida disso na ${nome} é você?`,
-      `Oi, ${dono}! Aqui é o ${sender}, de Floripa. Tô montando uma ferramenta pra integradora solar com time de venda e queria te fazer uma pergunta rápida sobre como você acompanha as propostas que os vendedores mandam no WhatsApp. Você que cuida disso na ${nome}?`,
+      `Oi, ${dono}! Aqui é o ${sender}, de Floripa. Fiz uma ferramenta pra integradora solar com time de venda e queria te fazer uma pergunta rápida sobre como você acompanha as propostas que os vendedores mandam no WhatsApp. Você que cuida disso na ${nome}?`,
     ][i];
     return [
-      `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Tô montando uma ferramenta pra integradora solar com equipe de vendas e queria fazer uma pergunta rápida sobre como o dono acompanha as propostas que os vendedores mandam pelo WhatsApp. Consegue me passar pra quem cuida disso na ${nome}?`,
+      `Oi, tudo bem? Aqui é o ${sender}, de Florianópolis. Fiz uma ferramenta pra integradora solar com equipe de vendas e queria fazer uma pergunta rápida sobre como o dono acompanha as propostas que os vendedores mandam pelo WhatsApp. Consegue me passar pra quem cuida disso na ${nome}?`,
       `Oi, tudo bem? Sou o ${sender}, de Florianópolis. Estou desenvolvendo uma ferramenta para integradoras de energia solar que têm vendedores e tenho uma pergunta rápida sobre como o dono acompanha as propostas que eles mandam no WhatsApp. Pode me passar para quem cuida disso na ${nome}?`,
-      `Olá, tudo certo? Aqui é o ${sender}, de Floripa. Tô montando uma ferramenta pra integradora solar com time de venda e queria fazer uma pergunta rápida sobre como o dono acompanha as propostas dos vendedores no WhatsApp. Quem cuida disso aí na ${nome}?`,
+      `Olá, tudo certo? Aqui é o ${sender}, de Floripa. Fiz uma ferramenta pra integradora solar com time de venda e queria fazer uma pergunta rápida sobre como o dono acompanha as propostas dos vendedores no WhatsApp. Quem cuida disso aí na ${nome}?`,
     ][i];
   }
   if (variant === "aberta") {
@@ -287,7 +287,7 @@ export function followupMessage(row?: Pick<ProspectTarget, "metadata" | "niche">
     : PERGUNTA_DOR;
   // Integradora da versão atual: o seguimento leva a oferta em vez de pedir número.
   if (!perfil && !ehDistribuidora(row?.niche) && (!row?.variant || row.variant === "encaminha")) {
-    return `Oi${dono ? `, ${dono}` : ""}, tudo bem? Passando só pra não deixar minha mensagem solta. Fiz uma ferramenta que avisa quando um orçamento fica 2 dias sem resposta e já deixa a retomada pronta, e tô liberando de graça pras 10 primeiras integradoras de SC. Quer que eu te conte como funciona? ${sender}`;
+    return `Oi${dono ? `, ${dono}` : ""}, tudo bem? Passando só pra não deixar minha mensagem solta. Fiz uma ferramenta que avisa quando um orçamento fica 2 dias sem resposta e já deixa a retomada pronta, e tô liberando de graça pras 10 primeiras integradoras. Quer que eu te conte como funciona? ${sender}`;
   }
   return `Oi${dono ? `, ${dono}` : ""}, tudo bem? Passando só pra não deixar minha mensagem solta. É uma pergunta só: ${pergunta.charAt(0).toLowerCase()}${pergunta.slice(1)} ${sender}`;
 }
