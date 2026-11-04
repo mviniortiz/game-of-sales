@@ -30,3 +30,12 @@ Deno.test("página de diretório ou consulta de CNPJ não vira site da empresa",
   }
   assertEquals(lerBusca('{"achou": true, "site": "https://rvsolucoestecnologicas.com.br/"}').site, "https://rvsolucoestecnologicas.com.br/");
 });
+
+Deno.test("site confere pelo nome próprio ou pela cidade, nunca só por 'solar energia'", async () => {
+  const { siteConfere } = await import("./prospectWeb.ts");
+  const rv = { nome: "R V Instalação de Energia Solar", razao: "RV Soluções Fotovoltaicas", cidade: "Xaxim" };
+  assert(siteConfere("RV Soluções Fotovoltaicas, energia solar em Xaxim e região", rv));
+  assert(!siteConfere("A maior empresa de energia solar do Brasil", { nome: "Solar Oeste Soluções em Energia", cidade: "Chapecó" }));
+  assert(siteConfere("Atendemos Xanxerê e região com energia solar", { nome: "Solar Oeste Soluções em Energia", cidade: "Xanxerê" }));
+  assert(!siteConfere("", rv));
+});

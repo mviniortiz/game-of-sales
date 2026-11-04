@@ -17,6 +17,8 @@ export type BuscaWeb = {
   fontes: string[];
   /** O que o Gemini pesquisou no Google (para conferir a busca). */
   buscas?: string[];
+  /** Só no teste seco: o que voltou do Gemini, para conferir. Não é gravado. */
+  bruto?: { chaves: string[]; texto: string; chunks: number };
 };
 
 export const BUSCA_VAZIA: BuscaWeb = { achou: false, instagram: null, site: null, vendeClienteFinal: "duvida", ativa: null, resumo: "", fontes: [] };
@@ -27,7 +29,7 @@ export function perguntaDaBusca(alvo: { nome: string; razao?: string | null; cid
   const quem = [alvo.nome, alvo.razao && alvo.razao !== alvo.nome ? `(razão social ${alvo.razao})` : null, alvo.cidade ? `de ${alvo.cidade}` : null, "SC"]
     .filter(Boolean).join(" ");
   return [
-    `Pesquise no Google (obrigatório, não responda de memória): "${alvo.nome} ${alvo.cidade ?? ""} instagram" e "${alvo.nome} ${alvo.cidade ?? ""} energia solar". A empresa é ${quem}.`,
+    `Pesquise no Google (obrigatório, não responda de memória): site:instagram.com "${alvo.nome}" e também "${alvo.nome}" ${alvo.cidade ?? ""} energia solar. A empresa é ${quem}.`,
     "Responda só com fatos que aparecem nos resultados. Se não achar com segurança que é a mesma empresa (nome e cidade batendo), diga que não achou.",
     "Quero saber: o @ do Instagram da própria empresa, o site da própria empresa (nunca página de diretório, guia, CNPJ ou marketplace), se ela vende e instala sistema fotovoltaico para o cliente final (casa, comércio, agro) ou só presta serviço de instalação para outras empresas.",
     "'ativa' é só sobre publicações: true se um resultado mostra post, obra ou depoimento com data nos últimos 6 meses; false se o último é mais antigo; null se não dá pra saber. Empresa aberta no CNPJ não conta.",
@@ -77,7 +79,24 @@ export async function buscarNaWeb(alvo: { nome: string; razao?: string | null; c
   const meta = cand?.groundingMetadata ?? {};
   const fontes = (meta.groundingChunks ?? []).map((c: any) => c?.web?.title || c?.web?.uri).filter(Boolean);
   const buscas: string[] = (meta.webSearchQueries ?? []).slice(0, 4);
-  // Sem fonte do Google, a resposta veio da memória do modelo: não vale como evidência.
-  if (!fontes.length) return { ...BUSCA_VAZIA, buscas };
-  return { ...lerBusca(texto, fontes), buscas };
+  const bruto = { chaves: Object.keys(meta), texto: texto.slice(0, 500), chunks: (meta.groundingChunks ?? []).length };
+  // Com resposta em JSON o Gemini não devolve groundingChunks (medido em 04/11/2026), só
+  // as pesquisas feitas. Sem pesquisa, a resposta veio da memória: não vale. O site é
+  // conferido depois, abrindo a página (siteConfere).
+  if (!buscas.length) return { ...BUSCA_VAZIA, bruto };
+  return { ...lerBusca(texto, fontes), buscas, bruto };
+}
+
+const GENERICAS = new Set(["solar", "solares", "energia", "energias", "solucoes", "solução", "soluções", "solucao", "sistemas", "sistema", "instalacao", "instalação", "instalacoes", "instalações", "engenharia", "eletrica", "elétrica", "eletricos", "elétricos", "materiais", "servicos", "serviços", "tecnologia", "aplicada", "renovavel", "renovável", "sustentaveis", "sustentáveis", "fotovoltaica", "fotovoltaico", "ltda", "comercio", "comércio"]);
+
+/** A página aberta é da empresa? Precisa citar uma palavra própria do nome (ou da razão
+ *  social) com 4 letras ou mais, ou a cidade. "Solar Energia" sozinho não conta. */
+export function siteConfere(textoDoSite: string, alvo: { nome: string; razao?: string | null; cidade?: string | null }): boolean {
+  const norm = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const pagina = norm(textoDoSite);
+  if (!pagina) return false;
+  const palavras = norm(`${alvo.nome} ${alvo.razao ?? ""}`).split(/[^a-z0-9]+/).filter((w) => w.length >= 4 && !GENERICAS.has(w));
+  if (palavras.some((w) => pagina.includes(w))) return true;
+  const cidade = norm(alvo.cidade ?? "").trim();
+  return cidade.length >= 4 && pagina.includes(cidade);
 }
