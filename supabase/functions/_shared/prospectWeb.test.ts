@@ -23,3 +23,10 @@ Deno.test("a pergunta leva nome, razão e cidade", () => {
   const q = perguntaDaBusca({ nome: "JM Instalação Solar", razao: "JM LTDA", cidade: "Tubarão" });
   assert(q.includes("JM Instalação Solar") && q.includes("JM LTDA") && q.includes("Tubarão"));
 });
+
+Deno.test("página de diretório ou consulta de CNPJ não vira site da empresa", () => {
+  for (const s of ["https://www.solartask.com.br/empresas/x", "https://cnpj.biz/123", "https://www.econodata.com.br/x"]) {
+    assertEquals(lerBusca(`{"achou": true, "site": "${s}"}`).site, null, s);
+  }
+  assertEquals(lerBusca('{"achou": true, "site": "https://rvsolucoestecnologicas.com.br/"}').site, "https://rvsolucoestecnologicas.com.br/");
+});
