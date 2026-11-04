@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-mails do Vyzon: prévia</title>
+<style>
+  body { margin:0; padding:40px 32px 80px; background:#E9E4D6; color:#0F1730; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+  h1 { margin:0 0 4px; font-size:26px; font-weight:600; letter-spacing:-0.02em; }
+  .sub { margin:0 0 40px; color:#566079; font-size:15px; }
+  section { margin:0 0 56px; }
+  h2 { margin:0; font-size:18px; font-weight:600; }
+  .meta { margin:4px 0 16px; color:#566079; font-size:14px; }
+  .linha { display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; }
+  .col p { margin:0 0 8px; font-size:13px; color:#566079; }
+  iframe { border:0; border-radius:12px; background:#F3EFE4; box-shadow:0 0 0 1px rgba(15,23,48,0.08); }
+  pre { margin:0; width:340px; max-height:640px; overflow:auto; padding:16px; border-radius:12px; background:#fff; font-size:12.5px; line-height:1.5; white-space:pre-wrap; word-break:break-word; box-shadow:0 0 0 1px rgba(15,23,48,0.08); }
+</style>
+</head>
+<body>
+<h1>E-mails do Vyzon</h1>
+<p class="sub">Layout único. Cada e-mail em 640px, em 375px e na versão de texto puro.</p>
+<section>
+<h2>Recuperar senha</h2>
+<p class="meta">Assunto: Redefinir sua senha do Vyzon<br>Supabase Auth, quando a pessoa pede em /recuperar-senha</p>
+<div class="linha">
+<div class="col"><p>Desktop</p><iframe src="auth-recuperar-senha.html" width="640" height="760" title="Recuperar senha desktop"></iframe></div>
+<div class="col"><p>375px</p><iframe src="auth-recuperar-senha.html" width="375" height="880" title="Recuperar senha celular"></iframe></div>
+<div class="col"><p>Texto puro</p><pre>Crie uma senha nova
+
+Recebemos um pedido para trocar a senha da conta carla@solarsul.com.br no Vyzon. Se foi você, use o botão abaixo. O link vale por 1 hora.
+
+Criar senha nova: https://vyzon.com.br/auth/v1/verify?token=exemplo&amp;type=recovery
+
+Não pediu? Ignore este e-mail. Sua senha atual continua valendo.
+
+--
+Você recebeu este e-mail porque alguém pediu para redefinir a senha desta conta.
+vyzon.com.br</pre></div>
+</div>
+</section>
+<section>
+<h2>Boas-vindas de vendedor</h2>
+<p class="meta">Assunto: Solar Sul Energia adicionou você no Vyzon<br>Edge admin-create-seller, quando o dono cria um vendedor em Equipe</p>
+<div class="linha">
+<div class="col"><p>Desktop</p><iframe src="boas-vindas-vendedor.html" width="640" height="820" title="Boas-vindas de vendedor desktop"></iframe></div>
+<div class="col"><p>375px</p><iframe src="boas-vindas-vendedor.html" width="375" height="940" title="Boas-vindas de vendedor celular"></iframe></div>
+<div class="col"><p>Texto puro</p><pre>Rafael, seu acesso está pronto
+
+Solar Sul Energia criou sua conta no Vyzon. Entre com os dados abaixo e troque a senha no primeiro acesso, em Configurações, Segurança.
+
+E-mail: rafael@solarsul.com.br
+Senha provisória: Vz-7fK2q9
+
+Entrar no Vyzon: https://vyzon.com.br/auth
+
+A senha é só sua. Não encaminhe este e-mail.
+
+--
+Você recebeu este e-mail porque alguém da Solar Sul Energia criou uma conta com este endereço. Se não conhece a empresa, pode ignorar.
+vyzon.com.br</pre></div>
+</div>
+</section>
+<section>
+<h2>Aviso interno: novo cadastro</h2>
+<p class="meta">Assunto: Novo cadastro: Solar Sul Energia<br>Edge notify-signup, quando uma empresa cria a conta (só o Markus recebe)</p>
+<div class="linha">
+<div class="col"><p>Desktop</p><iframe src="aviso-novo-cadastro.html" width="640" height="720" title="Aviso interno: novo cadastro desktop"></iframe></div>
+<div class="col"><p>375px</p><iframe src="aviso-novo-cadastro.html" width="375" height="840" title="Aviso interno: novo cadastro celular"></iframe></div>
+<div class="col"><p>Texto puro</p><pre>Solar Sul Energia criou a conta
+
+Nome: Carla Souza
+E-mail: carla@solarsul.com.br
+WhatsApp: 5548999990000
+Origem: google / raio-x
+
+O botão abre o WhatsApp com uma mensagem pronta perguntando se a pessoa conseguiu conectar o número e ver o Raio-X.
+
+Chamar no WhatsApp: https://wa.me/5548999990000?text=Oi
+
+--
+Aviso interno do Vyzon. Só você recebe.
+vyzon.com.br</pre></div>
+</div>
+</section>
+</body>
+</html>
