@@ -398,3 +398,16 @@ export function tetoComSinal(teto: number, ultimas: Array<{ dia: string; pessoa:
 export function chipAquecendo(chipDesde: string | null, agora: Date): boolean {
   return Boolean(chipDesde) && diaBr(agora) - diaBr(new Date(chipDesde!)) < DIAS_AQUECENDO;
 }
+
+/** Por que um envio frio falhou. "failed to send" com a sessão aberta é a restrição do
+ *  WhatsApp (16/10/2026). Mas a sessão que caiu e voltou minutos antes também devolve
+ *  esse erro: em 04/11/2026 a conexão reconectou às 9h33 e o envio das 9h36 virou
+ *  "restrição", com pausa de 24h e aquecimento do zero. Queda de conexão só espera e
+ *  tenta de novo; se cair 3 vezes no mesmo dia, aí sim conta como restrição. */
+export type TipoFalha = "conexao" | "restricao" | "comum";
+export function tipoDaFalha(p: { mensagem: string; estadoAgora: string | null; quedaRecente: boolean; quedasHoje: number }): TipoFalha {
+  const failedToSend = /failed to send/i.test(p.mensagem);
+  const deConexao = p.estadoAgora !== "open" || (failedToSend && p.quedaRecente);
+  if (deConexao) return p.quedasHoje >= 2 ? "restricao" : "conexao";
+  return failedToSend ? "restricao" : "comum";
+}
