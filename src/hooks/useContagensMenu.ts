@@ -9,14 +9,14 @@ import { OPEN_QUOTE_STATES } from "@/lib/quoteText";
 export function useContagensMenu() {
     const diary = useEvaDiary();
     const { query } = useQuoteBoard(30, null);
-    const { query: obras } = useObras();
+    const { query: obras, prazos } = useObras();
     const items = query.data?.items ?? [];
 
     return {
         hoje: diary.rascunhos.length,
         orcamentos: query.data?.totals.parked_count ?? 0,
         conversas: items.filter((q) => q.state === "your_turn").length,
-        obras: (obras.data ?? []).filter(travada).length,
+        obras: (obras.data ?? []).filter((o) => travada(o, prazos)).length,
         acompanhando: items.filter((q) => OPEN_QUOTE_STATES.includes(q.state)).length,
     };
 }

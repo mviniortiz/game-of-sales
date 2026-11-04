@@ -65,7 +65,10 @@ Deno.serve(async (req) => {
       const conhecidos = { ...(inst.numeros_conhecidos || {}) };
       if (inst.numero_chip) conhecidos[inst.numero_chip] = { ...(conhecidos[inst.numero_chip] || {}), chip_desde: inst.chip_desde };
       const volta = conhecidos[numero];
-      inst.chip_desde = volta?.chip_desde ?? agora.toISOString();
+      // Só o número aquecido retoma a data antiga. Chip que já passou por aqui e
+      // voltou recomeça hoje: com a data antiga, seguimento e lembrete pegavam
+      // quem foi abordado pelo outro número no meio (03/11/2026).
+      inst.chip_desde = volta?.aquecido ? volta.chip_desde ?? agora.toISOString() : agora.toISOString();
       // Número com histórico volta no ritmo dele; chip que já passou por aqui
       // recomeça a rampa no dia da volta. A pausa vigente continua valendo.
       inst.rampa_desde = volta ? (volta.aquecido ? volta.rampa_desde ?? null : agora.toISOString()) : null;
@@ -73,15 +76,8 @@ Deno.serve(async (req) => {
       await admin.from("prospecting_instances").update({
         numero_chip: numero, chip_desde: inst.chip_desde, rampa_desde: inst.rampa_desde, falhas_envio: {}, numeros_conhecidos: conhecidos,
       }).eq("id", inst.id);
-      // O dono continua no pessoal; o número salvo como dono era o chip antigo.
-      // numero_desde faz o Inbox mostrar só as conversas do número novo.
-      const { data: conn } = await admin.from("channel_connections").select("id, metadata")
-        .eq("provider", "evolution").eq("external_id", instanceName).maybeSingle();
-      if (conn?.id) {
-        await admin.from("channel_connections")
-          .update({ metadata: { ...(conn.metadata || {}), owner_jid: numero, numero_desde: inst.chip_desde } })
-          .eq("id", conn.id);
-      }
+      // owner_jid, numero_atual e o que aparece no app são da troca registrada pelo
+      // webhook quando a sessão abre (registrar_numero_conectado). Aqui é só a rampa.
       const grupo = await groupJid(admin, instanceName, "prospeccao");
       if (grupo) {
         const rampaNova = inst.rampa_desde ?? inst.chip_desde;

@@ -279,6 +279,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
                 )
             `)
             .eq("company_id", companyId)
+            .eq("numero_antigo", false)
             .order("last_message_at", { ascending: false, nullsFirst: false })
             .limit(500),
         // 2. Últimas mensagens (recent activity)
@@ -286,9 +287,11 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
             .from("channel_messages")
             .select(`
                 id, conversation_id, direction, message_type, body, message_timestamp,
-                channel_contacts:contact_id ( name )
+                channel_contacts:contact_id ( name ),
+                channel_conversations!inner ( numero_antigo )
             `)
             .eq("company_id", companyId)
+            .eq("channel_conversations.numero_antigo", false)
             .order("message_timestamp", { ascending: false })
             .limit(RECENT_ACTIVITY_LIMIT),
         // 3. Deals (oportunidades + atenção)
@@ -296,6 +299,7 @@ async function fetchCommandCenterData(companyId: string): Promise<CommandCenterD
             .from("deals")
             .select("id, title, stage, customer_name, customer_phone, updated_at, value, is_hot")
             .eq("company_id", companyId)
+            .eq("is_active", true)
             .not("stage", "in", "(closed_won,closed_lost)")
             .order("updated_at", { ascending: false })
             .limit(200),

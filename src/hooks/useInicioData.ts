@@ -60,7 +60,8 @@ export function usePipelineStages() {
       const { data, error } = await supabase
         .from("deals")
         .select("stage, value")
-        .eq("company_id", effectiveCompanyId!);
+        .eq("company_id", effectiveCompanyId!)
+        .eq("is_active", true);
       if (error) throw error;
 
       // Nome que a própria empresa deu à etapa ("Visita técnica" em vez de
@@ -118,6 +119,7 @@ export function useLeadsHoje() {
         .from("deals")
         .select("id", { count: "exact", head: true })
         .eq("company_id", effectiveCompanyId!)
+        .eq("is_active", true)
         .gte("created_at", start.toISOString())
         .in("stage", ["lead", "qualification"]);
       if (error) throw error;

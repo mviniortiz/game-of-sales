@@ -95,6 +95,7 @@ export function useCockpitData() {
                     .from("deals")
                     .select("value, updated_at")
                     .eq("company_id", companyId!)
+                    .eq("is_active", true)
                     .eq("stage", "closed_won")
                     .gte("updated_at", wonSince.toISOString()),
                 supabase
@@ -107,11 +108,13 @@ export function useCockpitData() {
                     .from("deals")
                     .select("created_at")
                     .eq("company_id", companyId!)
+                    .eq("is_active", true)
                     .gte("created_at", since14.toISOString()),
                 supabase
                     .from("channel_messages")
-                    .select("conversation_id, direction, message_timestamp")
+                    .select("conversation_id, direction, message_timestamp, channel_conversations!inner(numero_antigo)")
                     .eq("company_id", companyId!)
+                    .eq("channel_conversations.numero_antigo", false)
                     .gte("message_timestamp", since14.toISOString())
                     .order("message_timestamp", { ascending: true })
                     .limit(8000),

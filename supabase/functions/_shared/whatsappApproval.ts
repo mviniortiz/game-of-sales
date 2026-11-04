@@ -411,7 +411,7 @@ export async function notifyPendingSuggestions(
     const maxAge = new Date(Date.now() - MAX_DRAFT_AGE_HOURS * 60 * 60 * 1000).toISOString();
     let query = admin
         .from("agent_suggestions")
-        .select("id, company_id, deal_id, kind, suggestion, input_summary, created_at, notify_attempts")
+        .select("id, company_id, deal_id, conversation_id, kind, suggestion, input_summary, created_at, notify_attempts")
         .eq("status", "pending")
         .is("notified_at", null)
         .gte("created_at", maxAge)
@@ -467,11 +467,24 @@ export async function notifyPendingSuggestions(
 
         const { data: deal } = await admin
             .from("deals")
-            .select("id, user_id, customer_name, account_name, customer_phone, stage")
+            .select("id, user_id, customer_name, account_name, customer_phone, stage, is_active")
             .eq("id", s.deal_id)
             .maybeSingle();
         if (!deal?.user_id) {
             result.skipped.push({ id: s.id, reason: "deal sem dono" });
+            continue;
+        }
+        // Card ou conversa de um número que saiu da conexão: aprovar mandaria a
+        // mensagem do número novo para quem falou com o antigo. Expira em vez de entregar.
+        let doNumeroAntigo = deal.is_active === false;
+        if (!doNumeroAntigo && s.conversation_id) {
+            const { data: conv } = await admin.from("channel_conversations")
+                .select("numero_antigo").eq("id", s.conversation_id).maybeSingle();
+            doNumeroAntigo = conv?.numero_antigo === true;
+        }
+        if (doNumeroAntigo) {
+            await admin.from("agent_suggestions").update({ status: "expired" }).eq("id", s.id).eq("status", "pending");
+            result.skipped.push({ id: s.id, reason: "numero antigo" });
             continue;
         }
 
