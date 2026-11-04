@@ -3,7 +3,7 @@
 
 # ── Motores de busca ──────────────────────────────────────────────
 # Bloqueiam fluxos funcionais (onboarding/checkout/senha), relatórios
-# públicos por token (/r/, dado de cliente) e páginas de preview internas.
+# públicos por token (/r/ e /relatorio/, dado de cliente) e páginas de preview internas.
 # Cada bot só obedece ao próprio grupo, então as regras são repetidas
 # por motor de busca (robots.txt não herda entre grupos).
 
@@ -14,6 +14,7 @@ Disallow: /checkout
 Disallow: /recuperar-senha
 Disallow: /redefinir-senha
 Disallow: /r/
+Disallow: /relatorio/
 Disallow: /eva-assist-preview
 Disallow: /eva-studio-preview
 
@@ -24,6 +25,7 @@ Disallow: /checkout
 Disallow: /recuperar-senha
 Disallow: /redefinir-senha
 Disallow: /r/
+Disallow: /relatorio/
 Disallow: /eva-assist-preview
 Disallow: /eva-studio-preview
 
@@ -34,6 +36,7 @@ Disallow: /checkout
 Disallow: /recuperar-senha
 Disallow: /redefinir-senha
 Disallow: /r/
+Disallow: /relatorio/
 Disallow: /eva-assist-preview
 Disallow: /eva-studio-preview
 
@@ -45,58 +48,93 @@ Allow: /
 
 # LLM / AI crawlers — allow explicitly
 # (eles já tinham acesso pelo wildcard, mas declarar explícito é sinal de boa fé
-#  e algumas ferramentas priorizam sites com regra própria)
+#  e algumas ferramentas priorizam sites com regra própria). Relatório por token
+#  tem dado de cliente: fica fechado pra todos.
 
 User-agent: GPTBot
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: OAI-SearchBot
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: ChatGPT-User
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: ClaudeBot
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: Claude-Web
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: anthropic-ai
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: PerplexityBot
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: Perplexity-User
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: Google-Extended
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: CCBot
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: cohere-ai
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: Applebot-Extended
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: Bytespider
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: Amazonbot
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: DuckAssistBot
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: MistralAI-User
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 User-agent: Meta-ExternalAgent
 Allow: /
+Disallow: /r/
+Disallow: /relatorio/
 
 # Fallback — crawlers sem grupo próprio seguem estas regras.
 User-agent: *
@@ -106,6 +144,7 @@ Disallow: /checkout
 Disallow: /recuperar-senha
 Disallow: /redefinir-senha
 Disallow: /r/
+Disallow: /relatorio/
 Disallow: /eva-assist-preview
 Disallow: /eva-studio-preview
 
