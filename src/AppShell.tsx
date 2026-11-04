@@ -81,6 +81,18 @@ const OrcamentosRoute = () => {
 };
 
 // Mesmo trato do OrcamentosRoute: ?preview= em dev abre com dados de exemplo, sem login.
+// Mesmo trato: ?preview= em dev abre com obras de exemplo, sem login.
+const ObrasRoute = () => {
+  const [params] = useSearchParams();
+  const page = (
+    <AppLayout>
+      <Obras />
+    </AppLayout>
+  );
+  if (import.meta.env.DEV && params.get("preview")) return page;
+  return <ProtectedRoute>{page}</ProtectedRoute>;
+};
+
 const InicioRoute = () => {
   const [params] = useSearchParams();
   const page = (
@@ -363,16 +375,7 @@ const AppShell = () => (
               />
               <Route path="/pulse" element={<Navigate to="/inbox" replace />} />
               {/* F3 2026-05-19: /agenda é a rota principal, /calendario redirect silencioso */}
-              <Route
-                path="/obras"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Obras />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/obras" element={<ObrasRoute />} />
               <Route
                 path="/agenda"
                 element={

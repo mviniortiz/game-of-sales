@@ -77,7 +77,7 @@ const Inicio = () => {
     const { profile, companyId } = useAuth();
 
     const { agenda } = useInicioData();
-    const { query: obras } = useObras();
+    const { query: obras, prazos: prazosObra } = useObras();
     const cc = useCommandCenterData();
     const wa = useWhatsappConnection();
     const liveDiary = useEvaDiary();
@@ -152,7 +152,7 @@ const Inicio = () => {
                     <PedemVoce
                         prioridades={pendingAll}
                         orcamentos={quotes}
-                        obras={(obras.data ?? []).filter(travada)}
+                        obras={(obras.data ?? []).filter((o) => travada(o, prazosObra))}
                         carregando={queueLoading}
                         diaResolvido={dayComplete}
                         aoResolver={actions.resolve}

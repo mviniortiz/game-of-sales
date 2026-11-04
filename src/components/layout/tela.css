@@ -1003,3 +1003,58 @@
         transition: none;
     }
 }
+
+/* Obras: prazo de cada etapa (04/11/2026) */
+.vp-cabeca__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+.vp-prazos {
+    margin-bottom: 20px;
+}
+.vp-prazos .vp-sub {
+    margin-top: 4px;
+    max-width: 60ch;
+    font-size: 13.5px;
+}
+.vp-prazos__grade {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 12px;
+    margin-top: 14px;
+}
+@media (min-width: 768px) {
+    .vp-prazos__grade {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+}
+.vp-prazos__dias {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.vp-prazos__dias input {
+    min-width: 0;
+    font-variant-numeric: tabular-nums;
+}
+.vp-prazos__dias span {
+    font-size: 13px;
+    color: var(--vyz-text-muted);
+}
+.vp-prazos .vp-acoes--linha {
+    flex-wrap: wrap;
+    align-items: center;
+}
+.vp-prazos .vp-acoes--linha > * {
+    flex: none;
+}
+.vp-prazos__erro {
+    font-size: 13px;
+    color: var(--vyz-warning);
+}
+.vp-painel__topo > div > span[data-trava] {
+    color: var(--vyz-warning);
+    font-weight: 500;
+}
