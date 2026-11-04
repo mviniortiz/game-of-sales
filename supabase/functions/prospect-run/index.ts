@@ -26,7 +26,7 @@ import {
   brKey, enviarRespostasPorta, firstMessage, lembretesDeConversa, followupMessage, linhaDaEmpresa, notifyDecision, notifyOwner, prospectNumber, randomCode,
   sendHumanText, sendVoiceNote, whatsappKeys,
 } from "../_shared/prospecting.ts";
-import { tipoDaFalha, chipAquecendo, diasAteProximoToque, mensagemDoToque, DISTRIBUIDORA_PAUSADA_ATE, ehDistribuidora, NICHO_DISTRIBUIDORA, nextVariant, TESTE_DORES_DESDE, tetoComSinal, tetoDoChip, VARIANTS, type ProspectVariant } from "../_shared/prospectingText.ts";
+import { tipoDaFalha, diasAteProximoToque, mensagemDoToque, DISTRIBUIDORA_PAUSADA_ATE, ehDistribuidora, NICHO_DISTRIBUIDORA, nextVariant, TESTE_DORES_DESDE, tetoComSinal, tetoDoChip, VARIANTS, type ProspectVariant } from "../_shared/prospectingText.ts";
 import { groupJid } from "../_shared/ownerGroups.ts";
 import { CORTE_ENCAIXE } from "../_shared/prospectFit.ts";
 import { perfilDoNicho } from "../_shared/prospectNichos.ts";
@@ -240,7 +240,7 @@ Deno.serve(async (req) => {
         } else await notifyDecision(admin, { instanceName, destino, userId: inst.user_id, code }, [
           `Bom dia. Tenho ${validos.length} abordagens prontas para hoje:`,
           lista,
-          `Saem entre ${inst.window_start}h e ${inst.window_end}h, uma de cada vez, com ${chipAquecendo(rampa, agora) ? "5 a 10" : "2 a 5"} minutos entre elas.${tetoHoje < inst.daily_cap ? ` O chip ainda está aquecendo: hoje o teto é ${tetoHoje}, contando os seguimentos.` : ""}`,
+          `Saem entre ${inst.window_start}h e ${inst.window_end}h, uma de cada vez, com 30 a 45 minutos entre elas.${tetoHoje < inst.daily_cap ? ` O chip ainda está aquecendo: hoje o teto é ${tetoHoje}, contando os seguimentos.` : ""}`,
         ].join("\n\n"), {
           grupo: "👍 envia hoje · 👎 não envia hoje",
           chat: `Responda ${code} 1 para enviar ou ${code} 2 para não enviar hoje.`,
@@ -331,20 +331,26 @@ Deno.serve(async (req) => {
         && agora.getTime() - new Date(suspeita.em).getTime() < 2 * 3600 * 1000);
       const tipo = tipoDaFalha({ mensagem: (e as Error).message, estadoAgora, quedaRecente: (quedas || 0) > 0, quedasHoje, outraFalhouAntes });
       if (tipo === "suspeita") {
-        // Uma integradora só falhou: pode ser o número dela. Ela vai para o fim da fila
-        // (na 2ª falha, sai), e o próximo envio, daqui a 15 minutos, vai para outra.
+        // Primeira falha com a sessão estável. Em 04/11/2026 era restrição (6h) que só
+        // valia para o aparelho conectado: o celular mandava normal e o aviso só apareceu
+        // ao reconectar. Insistir com outra integradora alongou o problema. Agora pausa 24h
+        // na hora. Se a mesma integradora já tinha falhado antes, o problema é o número
+        // dela: sai da fila e a prospecção segue.
+        const jaFalhou = (alvo.metadata?.falhas_envio || 0) >= 1;
         const falhasAlvo = (alvo.metadata?.falhas_envio || 0) + 1;
         await admin.from("prospecting_allowlist").update({
           metadata: { ...(alvo.metadata || {}), falhas_envio: falhasAlvo },
-          ...(falhasAlvo >= 2
+          ...(jaFalhou
             ? { status: "descartado", notes: `envio falhou ${falhasAlvo} vezes com a sessão estável: ${(e as Error).message}` }
             : seguimento ? {} : { approved_at: agora.toISOString() }),
         }).eq("id", alvo.id);
-        await admin.from("prospecting_instances").update({
-          next_send_at: new Date(agora.getTime() + 15 * 60000).toISOString(),
-          falhas_envio: { ...(inst.falhas_envio?.dia === dia ? inst.falhas_envio : { dia, total: 0 }), suspeita: { em: agora.toISOString(), alvo: alvo.id } },
-        }).eq("id", inst.id);
-        r.suspeita_de_numero = alvo.agency_name;
+        await admin.from("prospecting_instances").update(jaFalhou
+          ? { next_send_at: new Date(agora.getTime() + 45 * 60000).toISOString() }
+          : {
+            pausa_ate: new Date(agora.getTime() + 24 * 3600 * 1000).toISOString(),
+            falhas_envio: { dia, total: 0, restricao: agora.toISOString(), suspeita: { em: agora.toISOString(), alvo: alvo.id } },
+          }).eq("id", inst.id);
+        r[jaFalhou ? "numero_ruim" : "pausa_por_suspeita"] = alvo.agency_name;
         continue;
       }
       if (tipo === "conexao") {
@@ -388,7 +394,9 @@ Deno.serve(async (req) => {
           `Parei a prospecção até amanhã: ${falhasHoje} envios falharam hoje. O último erro foi: ${(e as Error).message.slice(0, 160)}. Confira se o número ainda está conectado no Vyzon.`);
       }
     }
-    const pausaMin = chipAquecendo(rampa, agora) ? 5 + Math.random() * 5 : 2 + Math.random() * 3;
+    // 30 a 45 minutos entre frias, sempre (decisão de 04/11/2026, depois da 2ª restrição
+    // do chip): mensagem a desconhecido em sequência é o padrão que o WhatsApp restringe.
+    const pausaMin = 30 + Math.random() * 15;
     await admin.from("prospecting_instances").update({
       next_send_at: new Date(agora.getTime() + pausaMin * 60000).toISOString(),
     }).eq("id", inst.id);
