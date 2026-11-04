@@ -8,6 +8,8 @@ import { AGORA_SAMPLE_PRIORITIES, SAMPLE_DIARY } from "@/components/inicio/inici
 import { WhatsappDownCard } from "@/components/inicio/WhatsappDownCard";
 import { PalcoEva } from "@/components/inicio/PalcoEva";
 import { PedemVoce } from "@/components/inicio/PedemVoce";
+import { ProspeccaoCard } from "@/components/inicio/ProspeccaoCard";
+import { useProspeccaoHoje } from "@/hooks/useProspeccaoHoje";
 import { useEvaDiary } from "@/hooks/useEvaDiary";
 import { travada, useObras } from "@/hooks/useObras";
 import { Count } from "@/vendor/stageshow/motion/Count";
@@ -79,6 +81,7 @@ const Inicio = () => {
     const cc = useCommandCenterData();
     const wa = useWhatsappConnection();
     const liveDiary = useEvaDiary();
+    const prospeccao = useProspeccaoHoje();
     const [searchParams] = useSearchParams();
     // Só em dev: ?preview=1 mostra a tela com dados de exemplo; ?preview=desconectado, o WhatsApp caído.
     const preview = import.meta.env.DEV ? searchParams.get("preview") : null;
@@ -139,6 +142,13 @@ const Inicio = () => {
             <div className="vp-hoje" data-sentada>
                 <div className="vp-coluna">
                     <PalcoEva rascunho={diary.rascunhos[0] ?? null} enviados={diary.enviados} acompanhando={acompanhando} carregando={diary.loading} />
+                    {!preview && (
+                        <ProspeccaoCard
+                            data={prospeccao.data}
+                            loading={prospeccao.isLoading}
+                            error={prospeccao.error ? (prospeccao.error as Error).message : null}
+                        />
+                    )}
                     <PedemVoce
                         prioridades={pendingAll}
                         orcamentos={quotes}

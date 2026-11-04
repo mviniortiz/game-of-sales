@@ -600,6 +600,8 @@ export type Database = {
           last_message_at: string | null
           last_outbound_at: string | null
           metadata: Json
+          numero: string | null
+          numero_antigo: boolean
           status: string
           unread_count: number
           updated_at: string
@@ -616,6 +618,8 @@ export type Database = {
           last_message_at?: string | null
           last_outbound_at?: string | null
           metadata?: Json
+          numero?: string | null
+          numero_antigo?: boolean
           status?: string
           unread_count?: number
           updated_at?: string
@@ -632,6 +636,8 @@ export type Database = {
           last_message_at?: string | null
           last_outbound_at?: string | null
           metadata?: Json
+          numero?: string | null
+          numero_antigo?: boolean
           status?: string
           unread_count?: number
           updated_at?: string

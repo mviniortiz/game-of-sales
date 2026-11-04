@@ -947,13 +947,23 @@ serve(async (req) => {
   // Abertura e queda da sessão, com o código do motivo, para explicar queda depois.
   if (event === "connection.update") {
     const d = payload?.data ?? {};
-    await createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY).from("whatsapp_connection_log").insert({
-      instance_name: String(payload?.instance || d.instance || ""),
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const instancia = String(payload?.instance || d.instance || "");
+    await admin.from("whatsapp_connection_log").insert({
+      instance_name: instancia,
       state: String(d.state || ""),
       status_reason: Number.isFinite(Number(d.statusReason)) ? Number(d.statusReason) : null,
       wuid: d.wuid ?? null,
       raw: payload,
     });
+    // Sessão aberta diz qual número está conectado. Se mudou, a plataforma passa a
+    // mostrar só as conversas e os cards do número novo (registrar_numero_conectado).
+    const numero = String(d.wuid || "").split("@")[0].split(":")[0];
+    if (String(d.state).toLowerCase() === "open" && instancia && numero) {
+      const { data: troca, error } = await admin.rpc("registrar_numero_conectado", { p_instance: instancia, p_numero: numero });
+      if (error) console.warn("[connection.update] registrar_numero_conectado:", error.message);
+      else if ((troca as any)?.troca) console.log("[connection.update] troca de número", JSON.stringify(troca));
+    }
     return json(200, { ok: true });
   }
 
