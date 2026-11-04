@@ -107,12 +107,10 @@ export function notaDeEncaixe(e: Evidencia, hoje: Date = new Date()): Nota {
     add(anos >= 2 && anos <= 8 ? 5 : anos > 8 ? 3 : 1, `CNPJ há ${anos} ${anos === 1 ? "ano" : "anos"}`);
   }
 
-  // Site e Instagram (até 15): a busca acha a empresa, ela vende para o cliente final e posta.
-  if (e.web?.achou) {
-    add(5, "achou site ou Instagram");
-    if (e.web.vendeClienteFinal === "sim") add(5, "vende para o cliente final");
-    if (e.web.ativa === true) add(5, "postou obra ou orçamento nos últimos 6 meses");
-  }
+  // Site e Instagram (até 15). achou = site conferido ou Instagram; o resto vem da busca.
+  if (e.web?.achou) add(5, "achou site ou Instagram");
+  if (e.web?.vendeClienteFinal === "sim") add(5, "vende para o cliente final");
+  if (e.web?.ativa === true) add(5, "postou obra ou orçamento nos últimos 6 meses");
 
   // O juiz de IA (até 15)
   if (e.juiz?.veredito === "sim") add(15, `IA: ${e.juiz.motivo}`);

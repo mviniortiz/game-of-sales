@@ -8,7 +8,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import { llmChat } from "../_shared/llm.ts";
 import { ehDistribuidora } from "../_shared/prospectingText.ts";
-import { BUSCA_VAZIA, buscarNaWeb, type BuscaWeb } from "../_shared/prospectWeb.ts";
+import { BUSCA_VAZIA, buscarNaWeb, siteConfere, type BuscaWeb } from "../_shared/prospectWeb.ts";
 import { CNAE_ATACADO, CNAE_RAMO, CORTE_ENCAIXE, escolherLugar, notaDeEncaixe, type Evidencia, type Juiz, type LugarGoogle } from "../_shared/prospectFit.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -180,10 +180,18 @@ Deno.serve(async (req) => {
       evid.google = lugar;
       const web = GEMINI_KEY ? await buscarNaWeb(evid, GEMINI_KEY).catch(() => BUSCA_VAZIA) : BUSCA_VAZIA;
       evid.web = web;
-      const site = await textoDoSite(lugar?.site ?? web.site ?? md.site ?? null);
+      let site = await textoDoSite(lugar?.site ?? md.site ?? null);
+      if (!site && web.site) {
+        // Site que veio da busca só vale se a página abrir e for mesmo da empresa.
+        const daBusca = await textoDoSite(web.site);
+        if (siteConfere(daBusca, evid)) site = daBusca;
+        else web.site = null;
+      }
+      // Ponto de presença só com prova: site que abriu e é dela, ou Instagram.
+      evid.web = { achou: Boolean(web.site || web.instagram), vendeClienteFinal: web.vendeClienteFinal, ativa: web.ativa };
       evid.juiz = await julgar(evid, { avaliacoes: avaliacoesTexto, site, web });
       const n = notaDeEncaixe(evid, hoje);
-      const qualif = { nota: n.nota, motivos: n.motivos.slice(0, 6), veto: n.veto, google: lugar, google_buscado: !!PLACES_KEY, juiz: evid.juiz, site_lido: !!site, web: web.achou ? web : null, web_buscado: !!GEMINI_KEY, versao: VERSAO, em: hoje.toISOString() };
+      const qualif = { nota: n.nota, motivos: n.motivos.slice(0, 6), veto: n.veto, google: lugar, google_buscado: !!PLACES_KEY, juiz: evid.juiz, site_lido: !!site, web: web.achou ? (({ bruto: _b, ...w }) => w)(web) : null, web_buscado: !!GEMINI_KEY, versao: VERSAO, em: hoje.toISOString() };
       const patch: Record<string, unknown> = { fit_score: n.nota, metadata: { ...md, qualif } };
       if (n.veto) { patch.status = "descartado"; patch.notes = `qualificação: ${n.veto}`; }
       else if (row.status === "aprovado" && n.nota < CORTE_ENCAIXE) patch.status = "mapeado";
