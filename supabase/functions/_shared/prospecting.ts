@@ -10,7 +10,7 @@ import { saveNotice } from "./ownerGroups.ts";
 import { llmChat } from "./llm.ts";
 import { contextoDaLeitura, perfilDoNicho } from "./prospectNichos.ts";
 import { PREFIXO_AUDIO } from "./transcribe.ts";
-import { AUTO_ENVIO_MS, dividirMensagens, firstMessage, ehDistribuidora, IMAGEM_RETOMADA, MARCA_IMAGEM, nextSlots, parseProspectCommand, pausaEntreMensagens, portaJaFoi, RAIO_X_LINK, randomCode, respostaPorta, tempoDigitando } from "./prospectingText.ts";
+import { AUTO_ENVIO_MS, dividirMensagens, firstMessage, ehDistribuidora, OFERTA_VAGA, primeiroNome, roboDeNovo, IMAGEM_RETOMADA, MARCA_IMAGEM, nextSlots, parseProspectCommand, pausaEntreMensagens, portaJaFoi, RAIO_X_LINK, randomCode, respostaPorta, tempoDigitando } from "./prospectingText.ts";
 export { firstMessage, followupMessage, nextSlots, parseProspectCommand, randomCode } from "./prospectingText.ts";
 
 export const PROSPECT_PREFIX = "PROSPECÇÃO";
@@ -142,7 +142,7 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
       : dor === "time" ? objetivoTime
       : dor === "aberta" ? objetivoAberta
       : [
-        "Objetivo do Markus: quando a pessoa abrir a porta, mostrar em uma frase e num print o que ele está montando e ouvir se a integradora faz algo assim hoje. Só depois, se aparecer dor ou curiosidade, convidar para 20 minutos online ou oferecer o Raio-X.",
+        "Objetivo do Markus: quando a pessoa abrir a porta, mostrar em uma frase e num print o que a ferramenta faz e oferecer uma das 10 vagas grátis para sempre (decisão de 03/11/2026). O próximo passo é ela criar a conta pelo link e conectar o WhatsApp. Reunião de 20 minutos só se ela pedir para conversar.",
         "Por que mostrar e não perguntar número: perguntar 'quantas propostas ficaram sem resposta' a um desconhecido soa como pedir para confessar que perde venda, e as conversas morreram ou travaram ('Porque eu te falaria isso?'). E quem diz que já resolve costuma ter só o aviso de que o cliente abriu; a diferença é a retomada já escrita (medido em 14/10/2026).",
         "O que é, nestas palavras e sem prometer resultado: a Lume acompanha os orçamentos que a integradora manda no WhatsApp; quando um fica 2 dias sem resposta do cliente, ela avisa o dono no WhatsApp com a mensagem de retomada pronta, ele aprova e ela sai do número dele. Nada sai sem o dono aprovar.",
         `Para mostrar, escreva a linha ${MARCA_IMAGEM} sozinha num parágrafo: ela vira o print de como o aviso chega. Só uma vez por conversa: se a conversa até aqui já tem ${MARCA_IMAGEM}, não mande de novo.`,
@@ -150,14 +150,15 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
       ].join(" "),
     `Mal-entendido vem antes de tudo: se a resposta trata o Markus como cliente (pede dados para orçamento, pede desculpa pela demora, diz que vai ver o orçamento dele, acha que ele reclama de outra empresa que sumiu, manda ele para fornecedores), classifique como 'duvida' e desfaça com leveza no primeiro parágrafo: 'Opa, acho que me expliquei mal: não sou cliente.' e diga em uma frase que ele está montando uma ferramenta pra integradora e a pergunta é sobre as propostas que ELES mandam e o cliente visualiza e não responde. Depois siga a regra de 'duvida'. Nunca porta=true nesse caso.`,
     `Texto que começa com ${PREFIXO_AUDIO} veio de áudio e pode ter palavra errada: entenda pelo sentido, não cite a frase dele ao pé da letra e, se algo ficou ambíguo, pergunte em vez de supor.`,
-    "Resposta curta que só cita uma ferramenta, sistema ou jeito de trabalhar ('SolarZ', 'uso CRM', 'planilha', 'no braço') é uma pessoa respondendo a pergunta: nunca é 'automatico'. Robô de atendimento é menu, saudação padrão da empresa ou texto longo de boas-vindas (19/10/2026: 'SolarZ' foi lido como robô).",
-    "Quando a pessoa cita a SolarZ ou outra ferramenta do setor: não fale mal dela e não diga que o Vyzon faz mais. Faça UMA pergunta sobre o que ela ainda não resolve no assunto da primeira mensagem (proposta que o cliente visualiza e some; ou ver as propostas de cada vendedor e quais o cliente não respondeu; ou o que mais faz perder venda). kind: interesse.",
+    "Resposta curta que só cita uma ferramenta, sistema ou jeito de trabalhar ('SolarZ', 'uso CRM', 'planilha', 'no braço') é uma pessoa respondendo a pergunta: nunca é 'automatico'. Robô de atendimento é menu, saudação padrão da empresa, texto longo de boas-vindas ou aviso de fora do horário/ausência (19/10/2026: 'SolarZ' foi lido como robô).",
+    "Retrospectiva de 04/11/2026: 'interesse' só quando a pessoa mostra dor ou intenção. Saudação sozinha ('boa tarde', 'oi'), aviso de fora do horário e nome de ferramenta sozinho ('SolarZ') nunca são 'interesse': saudação e ferramenta são 'duvida', aviso de horário é 'automatico'.",
+    "Quando a pessoa cita a SolarZ ou outra ferramenta do setor: não fale mal dela e não diga que o Vyzon faz mais. Faça UMA pergunta sobre o que ela ainda não resolve no assunto da primeira mensagem (proposta que o cliente visualiza e some; ou ver as propostas de cada vendedor e quais o cliente não respondeu; ou o que mais faz perder venda). kind: duvida.",
     "Classifique a última resposta da integradora e escreva a próxima mensagem do Markus.",
     ofereceuLink
       ? "kind: 'interesse' (quer o link, diz sim, pede para mandar), 'sem_interesse' (recusou), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (pergunta quem é, como funciona, ou pede mais detalhe)."
       : dor === "aberta"
       ? "kind: 'fora_do_perfil' (só instala para outras empresas, não trabalha mais com solar, número errado ou não é a empresa), 'interesse' (contou uma dor ou um problema concreto de venda, qualquer que seja, ou pediu para conversar), 'sem_interesse' (só recusa explícita), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (abriu a porta sem contar nada ainda: 'pode perguntar', 'é comigo', 'oi', ou perguntou quem é)."
-      : "kind: 'fora_do_perfil' (não é o cliente: só instala para outras empresas, não trabalha mais com solar, número errado ou não é a empresa), 'interesse' (respondeu a pergunta com algo concreto, inclusive 'já fazemos follow-up' ou 'já temos ferramenta', ou pediu para conversar/horário), 'sem_interesse' (só recusa explícita: 'não tenho interesse', 'não quero'), 'automatico' (robô, menu, IA ou mensagem padrão de atendimento), 'duvida' (pessoa abriu a porta sem responder ainda: 'pode perguntar', 'é comigo', 'o que precisa?', 'oi', ou perguntou quem é/do que se trata).",
+      : "kind: 'fora_do_perfil' (não é o cliente: só instala para outras empresas, não trabalha mais com solar, número errado ou não é a empresa), 'interesse' (aceitou ou pediu uma das vagas, pediu o link, perguntou preço, contou uma dor concreta de proposta parada ou pediu para conversar/horário), 'sem_interesse' (só recusa explícita: 'não tenho interesse', 'não quero'), 'automatico' (robô, menu, IA, mensagem padrão de atendimento ou aviso de fora do horário), 'duvida' (pessoa abriu a porta sem mostrar intenção: 'pode perguntar', 'é comigo', 'o que precisa?', 'oi', perguntou quem é/do que se trata/como funciona, ou disse que já faz follow-up ou já tem ferramenta).",
     "Regras da mensagem: português do Brasil, curta (até 3 frases no total), sem emoji, sem travessão, sem prometer nada, assina só quando for a primeira frase de apresentação.",
     "Tom: como o Markus digita no WhatsApp com alguém da região, não como atendente. Informal e direto ('pra', 'tá', 'beleza', 'show', 'valeu'), frases curtas, uma ideia por frase, ortografia e acentos certos. Proibido frase de atendimento ou de e-mail: 'Obrigado pelo retorno', 'agradeço o contato', 'fico à disposição', 'Que bom saber', 'perfeitamente', 'gostaria de', 'poderia'. Nada de elogio vazio nem de repetir o que a pessoa disse com outras palavras. No máximo um ponto de exclamação. Quando a pessoa conta um problema ou um número ruim, não reaja com 'show', 'que bom' ou 'beleza': reaja como quem leva a sério ('putz', 'pois é', 'entendi').",
     `Pode dividir em DUAS mensagens de texto, como uma pessoa digitando: uma reação curta e depois a pergunta. Separe com uma linha em branco; cada parágrafo sai como uma mensagem. Nunca mais de duas de texto, além do parágrafo ${MARCA_IMAGEM} quando a regra pedir.`,
@@ -175,8 +176,9 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
         `- interesse, quando ele só pediu para conversar: proponha dois horários entre estes: ${freeSlots} e diga que manda o link da chamada.`,
       ].join("\n")
       : [
-        `- interesse, quando ele diz que já resolve ('fazemos follow-up com todos', 'temos CRM', 'temos uma ferramenta que avisa quando abre'): não feche a conversa e não convide para reunião ainda. Se o print ainda não foi: primeiro parágrafo, uma reação curta ao que ele disse e meia frase do que a Lume faz; segundo, ${MARCA_IMAGEM}; terceiro, UMA pergunta: o de vocês já deixa a mensagem pronta assim ou só avisa? Se o print já foi, pergunte isso sem imagem. Se ele já contou como e mesmo assim não mostrou dor, ofereça conferir de graça com o Raio-X se alguma proposta escapou, sem insistir.`,
-        `- interesse, quando ele mostrou dor ou deu número: agradeça, comente em uma frase o que ele contou (com o número dele) e convide para 20 minutos online com dois horários entre estes: ${freeSlots}, ou ofereça mostrar de graça quanto está parado com o Raio-X.`,
+        `- duvida, quando ele diz que já resolve ('fazemos follow-up com todos', 'temos CRM', 'temos uma ferramenta que avisa quando abre'): não feche a conversa e não convide para reunião. Se o print ainda não foi: primeiro parágrafo, uma reação curta ao que ele disse e meia frase do que a Lume faz; segundo, ${MARCA_IMAGEM}; terceiro, UMA pergunta: o de vocês já deixa a mensagem pronta assim ou só avisa? Se o print já foi, pergunte isso sem imagem. Se ele já respondeu isso e não mostrou dor, ofereça uma das 10 vagas grátis pra ele comparar com o que usa, sem insistir.`,
+        `- interesse, quando ele mostrou dor ou deu número: comente em uma frase o que ele contou (com o número dele) e ofereça uma das 10 vagas grátis para sempre, com a pergunta de sim ou não: quer uma? Não convide para reunião, a não ser que ele peça.`,
+        `- interesse, quando ele aceitou a vaga ('quero', 'sim', 'manda', 'bora'): mande este link exatamente: ${RAIO_X_LINK} e diga em duas frases curtas: leva uns 3 minutos pra criar a conta e conectar o WhatsApp, e que você libera a vaga assim que ele entrar. Se travar, é só chamar aqui. quer: true.`,
         `- interesse, quando ele só pediu para conversar: proponha dois horários entre estes: ${freeSlots} e diga que manda o link da chamada.`,
         `- interesse, quando ele aceitou ver de graça quanto está parado: mande este link exatamente: ${RAIO_X_LINK} e diga só isto sobre a ferramenta: ela lê as conversas do WhatsApp e acha as propostas que ficaram sem resposta do cliente, com o valor parado; leva uns 3 minutos; ela só lê e nada é enviado aos clientes. Não diga que ela sabe se o cliente abriu a proposta.`,
       ].join("\n"),
@@ -186,14 +188,14 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
       ? "- automatico: peça com educação para falar com o dono, dizendo em meia frase que é sobre como ele acompanha as propostas que os vendedores mandam no WhatsApp."
       : dor === "aberta"
       ? "- automatico: peça com educação para falar com o dono ou com quem cuida do comercial, dizendo em meia frase que é uma pergunta rápida sobre o que mais faz perder venda."
-      : "- automatico: peça com educação para falar com o dono ou com quem cuida das propostas, dizendo em meia frase que é sobre orçamento que o cliente visualiza e para de responder. Não mande o print nem peça reunião: isso fica para quando uma pessoa responder.",
+      : "- automatico: uma mensagem só, curta, que um atendente sabe encaminhar: 'Oi! Sou o Markus, de Floripa. Não é orçamento: queria falar com o [primeiro nome do sócio, se veio abaixo; senão, o dono] sobre uma ferramenta pra integradora.' Se o menu pede um número ou opção, escolha a de falar com atendente/outros antes da frase. Não mande o print nem peça reunião: isso fica para quando uma pessoa responder.",
     ofereceuLink
       ? "- duvida: explique em uma frase que é um Raio-X grátis das propostas paradas no WhatsApp, que só lê e não manda nada para cliente, e pergunte se pode mandar o link."
       : dor === "time"
       ? `- duvida ('pode falar', 'é comigo', 'oi', ou perguntou quem é): mostre em dois parágrafos, adaptando este modelo sem encurtar (se perguntaram quem é, comece por 'Sou o Markus, de Floripa.'): '${respostaPorta(row.niche, "time")}'`
       : dor === "aberta"
       ? `- duvida ('pode falar', 'é comigo', 'oi', ou perguntou quem é): faça a pergunta, adaptando este modelo (se perguntaram quem é, comece por 'Sou o Markus, de Floripa.'): '${respostaPorta(row.niche, "aberta")}'`
-      : `- duvida ('pode falar', 'é comigo', 'o que precisa?', 'oi', ou perguntou quem é): mostre agora, em três parágrafos. Primeiro: o que estão montando, com o aviso do 2º dia, a mensagem pronta e o envio pelo número dele, adaptando este modelo sem encurtar: 'Tô montando uma ferramenta pra integradora: quando um orçamento fica 2 dias sem resposta do cliente, ela avisa o dono no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.' (se perguntaram quem é, comece por 'Sou o Markus, de Floripa.'). Segundo: ${MARCA_IMAGEM}. Terceiro: só a pergunta 'Vocês fazem algo assim hoje ou fica no braço?' ou uma variação curta dela. Não peça número nem reunião. Se o print já foi e a pessoa ainda não respondeu sobre ele, só repita a pergunta curta.`,
+      : `- duvida ('pode falar', 'é comigo', 'o que precisa?', 'oi', ou perguntou quem é): mostre agora, em três parágrafos. Primeiro: o que estão montando, com o aviso do 2º dia, a mensagem pronta e o envio pelo número dele, adaptando este modelo sem encurtar: 'Fiz uma ferramenta pra integradora: quando um orçamento fica 2 dias sem resposta do cliente, ela avisa o dono no WhatsApp já com a mensagem de retomada pronta. Ele aprova e sai do número dele.' (se perguntaram quem é, comece por 'Sou o Markus, de Floripa.'). Segundo: ${MARCA_IMAGEM}. Terceiro: a oferta, adaptando este modelo sem encurtar: '${OFERTA_VAGA}'. Não peça número nem reunião. Se o print e a oferta já foram e a pessoa ainda não respondeu sobre eles, só pergunte em uma frase se ela quer uma das vagas.`,
     "- fora_do_perfil: agradeça em uma frase curta e encerre. Não ofereça nada.",
     "- Objeção 'quem visualiza e some não tem interesse' ou 'correr atrás é perder tempo': não discuta nem chame de erro. Concorde em parte em meia frase e faça UMA pergunta: desses que sumiram, algum já voltou depois e fechou com outra empresa? kind: duvida.",
     "- sem_interesse: agradeça, deixe a porta aberta e não insista. Se ele disse que já usa uma ferramenta parecida, pergunte numa frase qual é e o que ela ainda não resolve.",
@@ -203,6 +205,8 @@ export async function readProspectReply(row: ProspectRow, newText: string, freeS
   ].join("\n");
   const user = [
     `Empresa: ${row.agency_name || "(sem nome)"}${row.city ? `, ${row.city}` : ""}.`,
+    primeiroNome((row as any).metadata?.socio) ? `Sócio no cadastro do CNPJ: ${primeiroNome((row as any).metadata?.socio)}.` : "",
+    (row as any).metadata?.qualif?.web?.resumo ? `O que a busca pública achou da empresa (site/Instagram): ${(row as any).metadata.qualif.web.resumo}` : "",
     `Primeira mensagem do Markus:\n${row.first_message || firstMessage(row)}`,
     row.last_reply ? `Conversa até aqui (integradora):\n${row.last_reply}` : "",
     `Nova resposta da integradora:\n${newText}`,
@@ -405,6 +409,17 @@ export async function onProspectInbound(
   }
 
   const lido = await readProspectReply(row as ProspectRow, args.text, nextSlots());
+  // Retrospectiva de 04/11/2026: insistir com o robô não passou dele. O robô recebe uma
+  // mensagem pedindo a pessoa; se responde robô de novo, a conversa fica só anotada,
+  // sem rascunho nem aviso. Se uma pessoa responder depois, volta ao fluxo normal.
+  if (roboDeNovo(lido.kind, row.reply_kind, row.last_reply)) {
+    await admin.from("prospecting_allowlist").update({
+      replied_at: agora, followup_due_at: null, reply_draft: null, reply_code: null,
+      metadata: { ...(row.metadata || {}), robo_encerrado_em: agora },
+      last_reply: `${row.last_reply ? row.last_reply + "\n" : ""}Eles: ${args.text}`.slice(-3000),
+    }).eq("id", row.id);
+    return;
+  }
   const code = await codigoLivre(admin, args.userId);
   // Áudio transcrito nunca dispara envio sozinho: a transcrição pode ter errado.
   // Só abriu a porta e ainda não viu o print: a resposta padrão sai sozinha pelo

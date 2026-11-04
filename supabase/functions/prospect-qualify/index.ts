@@ -8,15 +8,19 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import { llmChat } from "../_shared/llm.ts";
 import { ehDistribuidora } from "../_shared/prospectingText.ts";
+import { BUSCA_VAZIA, buscarNaWeb, type BuscaWeb } from "../_shared/prospectWeb.ts";
 import { CNAE_ATACADO, CNAE_RAMO, CORTE_ENCAIXE, escolherLugar, notaDeEncaixe, type Evidencia, type Juiz, type LugarGoogle } from "../_shared/prospectFit.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const EVA_CRON_SECRET = Deno.env.get("EVA_CRON_SECRET");
 const PLACES_KEY = Deno.env.get("GOOGLE_PLACES_API_KEY");
+const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY");
 const POR_RODADA = 12;
 const AO_MESMO_TEMPO = 4;
-const VERSAO = 2;
+// 3: busca pública do site e do Instagram (04/11/2026). Quem foi qualificado na 2 e
+// ainda não recebeu nada passa de novo.
+const VERSAO = 3;
 
 const CAMPOS = [
   "places.id", "places.displayName", "places.formattedAddress", "places.nationalPhoneNumber",
@@ -72,7 +76,7 @@ async function textoDoSite(url: string | null): Promise<string> {
   }
 }
 
-async function julgar(e: Evidencia, extras: { avaliacoes: string[]; site: string }): Promise<Juiz | null> {
+async function julgar(e: Evidencia, extras: { avaliacoes: string[]; site: string; web: BuscaWeb }): Promise<Juiz | null> {
   const fatos = [
     `Empresa: ${e.nome}${e.razao && e.razao !== e.nome ? ` (razão social: ${e.razao})` : ""}, ${e.cidade ?? "?"} - SC`,
     e.cnae ? `Atividade principal no CNPJ: ${CNAE_RAMO[e.cnae] ?? CNAE_ATACADO[e.cnae] ?? `código ${e.cnae}`}` : null,
@@ -82,6 +86,9 @@ async function julgar(e: Evidencia, extras: { avaliacoes: string[]; site: string
       : e.googleBuscado === false ? "Google Maps não consultado." : "Não encontrada no Google Maps.",
     extras.avaliacoes.length ? `Avaliações recentes de clientes:\n- ${extras.avaliacoes.join("\n- ")}` : null,
     extras.site ? `Texto do site da empresa:\n${extras.site}` : null,
+    extras.web.achou
+      ? `Busca pública (Google, site e Instagram${extras.web.instagram ? ` ${extras.web.instagram}` : ""}): ${extras.web.resumo || "sem resumo"}. Vende para o cliente final: ${extras.web.vendeClienteFinal}. Postou nos últimos 6 meses: ${extras.web.ativa === null ? "?" : extras.web.ativa ? "sim" : "não"}.`
+      : null,
   ].filter(Boolean).join("\n");
   const res = await llmChat({
     messages: [
@@ -101,7 +108,8 @@ async function julgar(e: Evidencia, extras: { avaliacoes: string[]; site: string
           "Fora do ramo no CNAE (comunicação, publicidade, hidráulica, por exemplo) com nome solar: responda 'duvida'.",
           "Nome com 'energia' sem 'solar' (Vext Energia, Donato Energia) e atividade de instalação elétrica, material elétrico ou engenharia: muita integradora se chama assim. Responda 'duvida', nunca 'nao'; 'só instalação elétrica' acima é o eletricista sem energia nem solar no nome.",
         ]).concat([
-          "Use só os fatos dados. Google Maps não consultado não é sinal contra.",
+          "Use só os fatos dados. Google Maps não consultado não é sinal contra, nem a busca pública sem resultado.",
+          "Se a busca pública mostra que a empresa só presta mão de obra de instalação para outras empresas, ou que é de outro ramo, responda 'nao'.",
           'Responda só JSON: {"veredito": "sim" | "nao" | "duvida", "motivo": "até 12 palavras, em português, sem travessão"}',
         ]).join("\n"),
       },
@@ -134,9 +142,15 @@ Deno.serve(async (req) => {
     .select("id, agency_name, city, phone_e164, status, metadata, niche")
     .eq("is_active", true).in("status", ["aprovado", "mapeado"]).is("sent_at", null);
   // Com a chave, também refaz quem foi qualificado sem o Google.
-  consulta = PLACES_KEY
-    ? consulta.or("fit_score.is.null,metadata->qualif->>google_buscado.eq.false")
-    : consulta.is("fit_score", null);
+  // Com a chave, também refaz quem foi qualificado sem o Google ou numa versão anterior.
+  const refazer = [
+    "fit_score.is.null",
+    ...(PLACES_KEY ? ["metadata->qualif->>google_buscado.eq.false"] : []),
+    ...(GEMINI_KEY ? [`metadata->qualif->>versao.neq.${VERSAO}`] : []),
+  ];
+  consulta = consulta.or(refazer.join(","));
+  if (Array.isArray(payload?.ids) && payload.ids.length) consulta = consulta.in("id", payload.ids.slice(0, 10));
+  const seco = payload?.seco === true; // teste: busca e julga, mas não grava
   const { data: fila, error } = await consulta
     .order("status", { ascending: true }) // "aprovado" < "mapeado"
     .limit(limite);
@@ -164,15 +178,17 @@ Deno.serve(async (req) => {
       const avaliacoesTexto = g?.avaliacoesTexto ?? [];
       const lugar = g ? (({ avaliacoesTexto: _t, ...l }) => l)(g) : null;
       evid.google = lugar;
-      const site = await textoDoSite(lugar?.site ?? md.site ?? null);
-      evid.juiz = await julgar(evid, { avaliacoes: avaliacoesTexto, site });
+      const web = GEMINI_KEY ? await buscarNaWeb(evid, GEMINI_KEY).catch(() => BUSCA_VAZIA) : BUSCA_VAZIA;
+      evid.web = web;
+      const site = await textoDoSite(lugar?.site ?? web.site ?? md.site ?? null);
+      evid.juiz = await julgar(evid, { avaliacoes: avaliacoesTexto, site, web });
       const n = notaDeEncaixe(evid, hoje);
-      const qualif = { nota: n.nota, motivos: n.motivos.slice(0, 6), veto: n.veto, google: lugar, google_buscado: !!PLACES_KEY, juiz: evid.juiz, site_lido: !!site, versao: VERSAO, em: hoje.toISOString() };
+      const qualif = { nota: n.nota, motivos: n.motivos.slice(0, 6), veto: n.veto, google: lugar, google_buscado: !!PLACES_KEY, juiz: evid.juiz, site_lido: !!site, web: web.achou ? web : null, web_buscado: !!GEMINI_KEY, versao: VERSAO, em: hoje.toISOString() };
       const patch: Record<string, unknown> = { fit_score: n.nota, metadata: { ...md, qualif } };
       if (n.veto) { patch.status = "descartado"; patch.notes = `qualificação: ${n.veto}`; }
       else if (row.status === "aprovado" && n.nota < CORTE_ENCAIXE) patch.status = "mapeado";
-      await admin.from("prospecting_allowlist").update(patch).eq("id", row.id);
-      resultado.push({ nome: evid.nome, nota: n.nota, veto: n.veto, status: patch.status ?? row.status });
+      if (!seco) await admin.from("prospecting_allowlist").update(patch).eq("id", row.id);
+      resultado.push({ nome: evid.nome, nota: n.nota, veto: n.veto, status: patch.status ?? row.status, ...(seco ? { web, juiz: evid.juiz } : {}) });
     } catch (err) {
       resultado.push({ nome: evid.nome, erro: (err as Error).message });
     }
