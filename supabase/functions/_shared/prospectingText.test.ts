@@ -187,3 +187,18 @@ Deno.test("mensagens contam a mesma história: o nome, o que já existe e as 10 
   assert(!seguimento.includes("de SC"));
   assert(seguimento.includes("10 primeiras integradoras"));
 });
+
+Deno.test("queda de conexão não vira restrição do chip", async () => {
+  const { tipoDaFalha } = await import("./prospectingText.ts");
+  const falhou = "Error: failed to send message";
+  // 04/11/2026: reconectou 3 minutos antes, sessão aberta de novo
+  assertEquals(tipoDaFalha({ mensagem: falhou, estadoAgora: "open", quedaRecente: true, quedasHoje: 0 }), "conexao");
+  // sessão caída agora
+  assertEquals(tipoDaFalha({ mensagem: "timeout", estadoAgora: "close", quedaRecente: false, quedasHoje: 0 }), "conexao");
+  // sessão aberta e estável: é a restrição de 16/10
+  assertEquals(tipoDaFalha({ mensagem: falhou, estadoAgora: "open", quedaRecente: false, quedasHoje: 0 }), "restricao");
+  // terceira queda no mesmo dia já conta como restrição
+  assertEquals(tipoDaFalha({ mensagem: falhou, estadoAgora: "open", quedaRecente: true, quedasHoje: 2 }), "restricao");
+  // erro de número (sem WhatsApp etc.) segue o caminho comum
+  assertEquals(tipoDaFalha({ mensagem: "number not exists", estadoAgora: "open", quedaRecente: false, quedasHoje: 0 }), "comum");
+});

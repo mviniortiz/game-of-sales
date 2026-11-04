@@ -26,7 +26,7 @@ import {
   brKey, enviarRespostasPorta, firstMessage, lembretesDeConversa, followupMessage, linhaDaEmpresa, notifyDecision, notifyOwner, prospectNumber, randomCode,
   sendHumanText, sendVoiceNote, whatsappKeys,
 } from "../_shared/prospecting.ts";
-import { chipAquecendo, diasAteProximoToque, mensagemDoToque, DISTRIBUIDORA_PAUSADA_ATE, ehDistribuidora, NICHO_DISTRIBUIDORA, nextVariant, TESTE_DORES_DESDE, tetoComSinal, tetoDoChip, VARIANTS, type ProspectVariant } from "../_shared/prospectingText.ts";
+import { tipoDaFalha, chipAquecendo, diasAteProximoToque, mensagemDoToque, DISTRIBUIDORA_PAUSADA_ATE, ehDistribuidora, NICHO_DISTRIBUIDORA, nextVariant, TESTE_DORES_DESDE, tetoComSinal, tetoDoChip, VARIANTS, type ProspectVariant } from "../_shared/prospectingText.ts";
 import { groupJid } from "../_shared/ownerGroups.ts";
 import { CORTE_ENCAIXE } from "../_shared/prospectFit.ts";
 import { perfilDoNicho } from "../_shared/prospectNichos.ts";
@@ -316,7 +316,23 @@ Deno.serve(async (req) => {
       // novo em aparelho conectado (chip novo, 16/10/2026: "your account is restricted
       // right now", 4 horas). A culpa é do chip, não do número: pausa 24h sem marcar
       // a integradora. Insistir durante a restrição tende a alongar a próxima.
-      if (/failed to send/i.test((e as Error).message) || (await connectionState(instanceName)) !== "open") {
+      const estadoAgora = await connectionState(instanceName);
+      const { count: quedas } = await admin.from("whatsapp_connection_log").select("id", { count: "exact", head: true })
+        .eq("instance_name", instanceName).neq("state", "open")
+        .gte("created_at", new Date(agora.getTime() - 15 * 60000).toISOString());
+      const quedasHoje = inst.falhas_envio?.dia === dia ? inst.falhas_envio.conexao || 0 : 0;
+      const tipo = tipoDaFalha({ mensagem: (e as Error).message, estadoAgora, quedaRecente: (quedas || 0) > 0, quedasHoje });
+      if (tipo === "conexao") {
+        // Conexão caiu: espera 15 minutos e tenta de novo, sem pausar o dia, sem zerar o
+        // aquecimento e sem marcar a integradora.
+        await admin.from("prospecting_instances").update({
+          next_send_at: new Date(agora.getTime() + 15 * 60000).toISOString(),
+          falhas_envio: { ...(inst.falhas_envio?.dia === dia ? inst.falhas_envio : { dia, total: 0 }), conexao: quedasHoje + 1 },
+        }).eq("id", inst.id);
+        r.queda_de_conexao = true;
+        continue;
+      }
+      if (tipo === "restricao") {
         await admin.from("prospecting_instances").update({
           pausa_ate: new Date(agora.getTime() + 24 * 3600 * 1000).toISOString(),
           rampa_desde: agora.toISOString(), // depois da restrição, a rampa recomeça
