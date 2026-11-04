@@ -169,12 +169,7 @@ const BlogPostV2 = () => {
                     </p>
                 </Rise>
 
-                <Rise delay={0.05}>
-                    <div className="mt-9 vz-post-cover">
-                        <BlogCover post={post} large />
-                    </div>
-                </Rise>
-
+                {/* Download logo abaixo do resumo: quem chega buscando "modelo pdf/word" acha sem rolar */}
                 {post.downloads?.length ? (
                     <div className="mt-8 rounded-2xl px-6 py-5" style={{ background: "#fff", border: "1px solid var(--lp-line)" }}>
                         <p className="text-[15px] font-semibold" style={{ color: "var(--lp-ink)" }}>Baixe o modelo grátis, sem cadastro</p>
@@ -190,6 +185,12 @@ const BlogPostV2 = () => {
                         </div>
                     </div>
                 ) : null}
+
+                <Rise delay={0.05}>
+                    <div className="mt-9 vz-post-cover">
+                        <BlogCover post={post} large />
+                    </div>
+                </Rise>
 
                 <div className="mt-10 flex flex-col gap-5">
                     {post.content.map((block, i) => (
