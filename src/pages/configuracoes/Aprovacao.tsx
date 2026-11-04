@@ -51,41 +51,42 @@ export default function Aprovacao() {
     },
   });
 
-  const card = "rounded-[14px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-5";
-
   return (
-    <div className="space-y-4">
-      <section className={card} aria-labelledby="aprov-numero">
-        <h2 id="aprov-numero" className="text-[13px] font-medium text-[var(--vyz-text-muted)]">Os rascunhos chegam no número</h2>
+    <div className="vp-pilha">
+      <section className="vp-cartao" aria-labelledby="aprov-numero">
+        <h2 id="aprov-numero" className="vp-rotulo">Os rascunhos chegam no número</h2>
         {q.isLoading ? (
           <div className="mt-2 h-7 w-56 rounded-md bg-[var(--vyz-surface-2)] animate-pulse motion-reduce:animate-none" />
         ) : q.data?.owner ? (
           <p className="mt-1 text-[22px] font-semibold tabular-nums tracking-[-0.02em] text-[var(--vyz-text-primary)]">{q.data.owner}</p>
         ) : (
-          <p className="mt-1 text-[14px] text-[var(--vyz-text)]">
+          <p className="mt-1 text-[15px] text-[var(--vyz-text)]">
             {q.data?.connected
               ? "Ainda não identificado. O número aparece aqui sozinho depois da próxima mensagem enviada pelo WhatsApp conectado."
               : "Nenhum WhatsApp conectado."}{" "}
             {!q.data?.connected && (
-              <Link to="/inbox?connect=1" className="font-medium text-[var(--vyz-accent)] underline-offset-2 hover:underline">
+              <Link to="/inbox?connect=1" className="rounded-sm font-medium text-[var(--vyz-accent)] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--vyz-accent)]">
                 Conectar agora
               </Link>
             )}
           </p>
         )}
-        <p className="mt-2 text-[12.5px] text-[var(--vyz-text-muted)]">
+        <p className="vp-sub">
           É o próprio número da empresa conectado ao Vyzon. A Lume escreve para ele como uma conversa sua consigo mesmo.
         </p>
         {!!q.data?.pending && (
-          <p className="mt-3 inline-flex rounded-full bg-[var(--vyz-accent-soft-10)] px-3 py-1 text-[12.5px] font-medium text-[var(--vyz-accent)]">
+          <p className="vp-chip mt-3 inline-block" data-tom="sol">
             {q.data.pending} {q.data.pending === 1 ? "rascunho esperando" : "rascunhos esperando"} a sua resposta
           </p>
         )}
       </section>
 
-      <section className={card} aria-labelledby="aprov-como">
-        <h2 id="aprov-como" className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--vyz-text-primary)]">Como responder</h2>
-        <ol className="mt-3 space-y-3 text-[13.5px] text-[var(--vyz-text)]">
+      <section className="vp-cartao" aria-labelledby="aprov-como">
+        <h2 id="aprov-como" className="vp-rotulo">Como responder</h2>
+        <p className="vp-sub">
+          Cada rascunho traz um código curto; com mais de um esperando, comece a resposta pelo código.
+        </p>
+        <ol className="mt-4 space-y-3 text-[14px] text-[var(--vyz-text)]">
           <li className="flex gap-3">
             <Key>1</Key>
             <span>Envia a mensagem para o cliente do jeito que a Lume escreveu. Também vale "ok" ou "sim".</span>
@@ -99,14 +100,11 @@ export default function Aprovacao() {
             <span>Uma mensagem sua, com pelo menos 12 caracteres, substitui o rascunho e é o que vai para o cliente.</span>
           </li>
         </ol>
-        <p className="mt-4 text-[12.5px] text-[var(--vyz-text-muted)]">
-          Cada rascunho traz um código curto; com mais de um esperando, comece a resposta pelo código.
-        </p>
       </section>
 
-      <section className={card} aria-labelledby="aprov-regras">
-        <h2 id="aprov-regras" className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--vyz-text-primary)]">Regras fixas</h2>
-        <ul className="mt-3 space-y-2 text-[13.5px] text-[var(--vyz-text)]">
+      <section className="vp-cartao" aria-labelledby="aprov-regras">
+        <h2 id="aprov-regras" className="vp-rotulo">Regras fixas</h2>
+        <ul className="mt-3 space-y-2 text-[14px] text-[var(--vyz-text)]">
           <li>Nada é enviado ao cliente sem a sua resposta.</li>
           <li>Rascunho sem resposta em {DRAFT_HOURS} horas expira e nunca é enviado.</li>
           <li>No máximo {PER_DAY} rascunhos por dia chegam no seu WhatsApp, para não virar ruído.</li>
@@ -118,7 +116,7 @@ export default function Aprovacao() {
 
 function Key({ children }: { children: string }) {
   return (
-    <kbd className="grid h-7 min-w-7 shrink-0 place-items-center rounded-[8px] border border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-2)] px-1.5 font-sans text-[12.5px] font-semibold text-[var(--vyz-text-primary)]">
+    <kbd className="grid h-7 min-w-7 shrink-0 place-items-center rounded-[8px] bg-[var(--vyz-surface-2)] px-1.5 font-sans text-[13px] font-semibold text-[var(--vyz-text-primary)]">
       {children}
     </kbd>
   );

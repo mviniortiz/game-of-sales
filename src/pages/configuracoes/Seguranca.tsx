@@ -1,10 +1,7 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, Lock, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { CircleNotch, Eye, EyeSlash } from "@phosphor-icons/react";
 import { formatError } from "@/lib/utils";
 
 export default function Seguranca() {
@@ -44,72 +41,89 @@ export default function Seguranca() {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="rounded-2xl border border-[#E6EDF5] bg-white overflow-hidden shadow-[0_1px_2px_rgba(11,18,32,0.04)]">
-        <div className="px-5 py-3.5 border-b border-[#E6EDF5] flex items-center gap-2.5">
-          <Lock className="h-4 w-4 text-[#1556C0]" />
-          <h2 className="text-[13px] font-semibold text-[#0F1730]">Alterar senha</h2>
+    <div className="vp-pilha">
+      <section className="vp-cartao" aria-labelledby="seg-senha">
+        <h2 id="seg-senha" className="vp-rotulo">Alterar senha</h2>
+        <p className="vp-sub">Mínimo de 8 caracteres.</p>
+        <div className="mt-5 grid gap-x-4 sm:grid-cols-2">
+          <SenhaCampo
+            label="Nova senha"
+            placeholder="Mínimo 8 caracteres"
+            value={newPassword}
+            onChange={setNewPassword}
+            visivel={showNew}
+            onAlternar={() => setShowNew(!showNew)}
+          />
+          <SenhaCampo
+            label="Confirmar"
+            placeholder="Repita a senha"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            visivel={showConfirm}
+            onAlternar={() => setShowConfirm(!showConfirm)}
+          />
         </div>
-        <div className="px-5 py-5 space-y-4">
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Nova senha</Label>
-              <div className="relative">
-                <Input
-                  type={showNew ? "text" : "password"}
-                  placeholder="Mínimo 8 caracteres"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="pr-10 h-9 text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNew(!showNew)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showNew ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                </button>
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Confirmar</Label>
-              <div className="relative">
-                <Input
-                  type={showConfirm ? "text" : "password"}
-                  placeholder="Repita a senha"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pr-10 h-9 text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showConfirm ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-end">
-            <Button onClick={handleChange} disabled={changing || !newPassword || !confirmPassword} size="sm" className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90">
-              {changing && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Alterar senha
-            </Button>
-          </div>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            className="vp-botao"
+            onClick={handleChange}
+            disabled={changing || !newPassword || !confirmPassword}
+          >
+            {changing && <CircleNotch size={16} className="animate-spin motion-reduce:animate-none" aria-hidden />}
+            Alterar senha
+          </button>
         </div>
-      </div>
+      </section>
 
-      <div className="rounded-2xl border border-[#E6EDF5] bg-white overflow-hidden shadow-[0_1px_2px_rgba(11,18,32,0.04)]">
-        <div className="px-5 py-3.5 border-b border-[#E6EDF5] flex items-center gap-2.5">
-          <ShieldCheck className="h-4 w-4 text-[#1556C0]" />
-          <h2 className="text-[13px] font-semibold text-[#0F1730]">Sessões</h2>
-        </div>
-        <div className="px-5 py-5">
-          <p className="text-xs text-muted-foreground">
-            Você está conectado neste dispositivo. Em breve, gerencie sessões ativas por aqui.
-          </p>
-        </div>
+      <section className="vp-cartao" aria-labelledby="seg-sessoes">
+        <h2 id="seg-sessoes" className="vp-rotulo">Sessões</h2>
+        <p className="vp-sub">
+          Você está conectado neste dispositivo. Em breve, gerencie sessões ativas por aqui.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function SenhaCampo({
+  label,
+  placeholder,
+  value,
+  onChange,
+  visivel,
+  onAlternar,
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+  visivel: boolean;
+  onAlternar: () => void;
+}) {
+  const id = useId();
+  return (
+    <div className="vp-campo">
+      <label className="vp-rotulo" htmlFor={id}>{label}</label>
+      <div className="relative">
+        <input
+          id={id}
+          type={visivel ? "text" : "password"}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete="new-password"
+          style={{ paddingRight: 44 }}
+        />
+        <button
+          type="button"
+          onClick={onAlternar}
+          aria-label={visivel ? "Esconder senha" : "Mostrar senha"}
+          aria-pressed={visivel}
+          className="vp-icone vp-icone--chico absolute right-1 top-1/2 -translate-y-1/2"
+        >
+          {visivel ? <EyeSlash size={16} aria-hidden /> : <Eye size={16} aria-hidden />}
+        </button>
       </div>
     </div>
   );

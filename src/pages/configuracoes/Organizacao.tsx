@@ -2,9 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -13,9 +10,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Building2, Upload, X } from "lucide-react";
+import { Buildings, CircleNotch, UploadSimple, X } from "@phosphor-icons/react";
 import { formatError } from "@/lib/utils";
 import { SOLAR_SEGMENT } from "@/lib/eva/blueprint";
+import { usePreviewConfig } from "./preview";
 
 const TEAM_SIZES = [
   { value: "1", label: "Só eu" },
@@ -62,6 +60,7 @@ export default function Organizacao() {
   const { activeCompanyId } = useTenant();
   const effectiveCompanyId = activeCompanyId || companyId;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const preview = usePreviewConfig();
 
   const [companyName, setCompanyName] = useState("");
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
@@ -160,184 +159,150 @@ export default function Organizacao() {
     setSaving(false);
   };
 
-  if (!isAdmin) {
-    return (
-      <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] p-8 text-center">
-        <p className="text-sm text-muted-foreground">
-          Apenas admins podem editar a organização.
-        </p>
-      </div>
-    );
+  if (!isAdmin && !preview) {
+    return <div className="vp-vazio">Apenas admins podem editar a organização.</div>;
   }
 
   return (
-    <div className="space-y-5">
-      <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-[#E6EDF5] flex items-center gap-2.5">
-          <Building2 className="h-4 w-4 text-[#1556C0]" />
-          <h2 className="text-[13px] font-semibold text-[#0F1730]">
-            Dados da empresa
-          </h2>
-        </div>
-        <div className="px-5 py-5 space-y-5">
-          {/* Logo */}
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              {companyLogo ? (
-                <img
-                  src={companyLogo}
-                  alt="Logo"
-                  className="w-16 h-16 rounded-xl object-contain bg-muted/50 shrink-0 border border-border/50"
-                />
+    <section className="vp-cartao" aria-labelledby="org-dados">
+      <h2 id="org-dados" className="vp-rotulo">Dados da empresa</h2>
+      <p className="vp-sub">Nome, logo e contato da sua empresa.</p>
+
+      <div className="mt-5 flex items-center gap-4">
+        {companyLogo ? (
+          <img
+            src={companyLogo}
+            alt="Logo da empresa"
+            width={64}
+            height={64}
+            className="h-16 w-16 shrink-0 rounded-xl bg-[var(--vyz-bg)] object-contain"
+          />
+        ) : (
+          <div className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-[var(--vyz-bg)] text-[var(--vyz-text-dim)]">
+            <Buildings size={24} aria-hidden />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="vp-rotulo">Logo</p>
+          <p className="vp-campo__ajuda mt-0.5">PNG ou JPG, até 2MB</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+              onChange={handleLogoUpload}
+              className="hidden"
+            />
+            <button
+              type="button"
+              className="vp-botao vp-botao--quieto"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingLogo}
+            >
+              {uploadingLogo ? (
+                <CircleNotch size={16} className="animate-spin motion-reduce:animate-none" aria-hidden />
               ) : (
-                <div className="w-16 h-16 rounded-xl bg-muted/50 flex items-center justify-center shrink-0 border border-border/50">
-                  <Building2 className="h-6 w-6 text-muted-foreground/50" />
-                </div>
+                <UploadSimple size={16} aria-hidden />
               )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <Label className="text-xs text-muted-foreground">Logo</Label>
-              <p className="text-[11px] text-muted-foreground/70 mt-0.5 mb-2">
-                PNG ou JPG, até 2MB
-              </p>
-              <div className="flex gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/jpg,image/svg+xml"
-                  onChange={handleLogoUpload}
-                  className="hidden"
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingLogo}
-                >
-                  {uploadingLogo ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                  ) : (
-                    <Upload className="h-3.5 w-3.5 mr-1.5" />
-                  )}
-                  {companyLogo ? "Trocar" : "Enviar"}
-                </Button>
-                {companyLogo && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleRemoveLogo}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="h-3.5 w-3.5 mr-1" />
-                    Remover
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="h-px bg-[var(--vyz-border)]" />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="org-name" className="text-xs text-muted-foreground">
-                Nome da empresa
-              </Label>
-              <Input
-                id="org-name"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                className="h-9 text-sm"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="org-cnpj" className="text-xs text-muted-foreground">CNPJ</Label>
-              <Input
-                id="org-cnpj"
-                value={cnpj}
-                onChange={(e) => setCnpj(maskCNPJ(e.target.value))}
-                placeholder="00.000.000/0000-00"
-                className="h-9 text-sm"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">
-                Tamanho do time
-              </Label>
-              <Select value={teamSize} onValueChange={setTeamSize}>
-                <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TEAM_SIZES.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>
-                      {s.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="org-segment" className="text-xs text-muted-foreground">Segmento</Label>
-              <Select value={companySegment} onValueChange={setCompanySegment}>
-                <SelectTrigger id="org-segment" className="h-9 text-sm">
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SEGMENT_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                  {/* Valor antigo fora da lista continua selecionável, sem ser apagado ao salvar. */}
-                  {companySegment && !SEGMENT_OPTIONS.some((o) => o.value === companySegment) && (
-                    <SelectItem value={companySegment}>{companySegment}</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              {companySegment === SOLAR_SEGMENT && (
-                <p className="text-[11px] text-muted-foreground">A Lume usa o pacote de energia solar.</p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="org-website" className="text-xs text-muted-foreground">Website</Label>
-              <Input
-                id="org-website"
-                value={website}
-                onChange={(e) => setWebsite(e.target.value)}
-                placeholder="https://suaempresa.com.br"
-                className="h-9 text-sm"
-              />
-            </div>
-
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="org-phone" className="text-xs text-muted-foreground">
-                Telefone comercial
-              </Label>
-              <Input
-                id="org-phone"
-                value={phone}
-                onChange={(e) => setPhone(maskPhone(e.target.value))}
-                placeholder="(11) 99999-9999"
-                className="h-9 text-sm"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-1">
-            <Button onClick={handleSave} disabled={saving} size="sm" className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90">
-              {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Salvar alterações
-            </Button>
+              {companyLogo ? "Trocar" : "Enviar"}
+            </button>
+            {companyLogo && (
+              <button type="button" className="vp-botao vp-botao--quieto" onClick={handleRemoveLogo}>
+                <X size={16} aria-hidden />
+                Remover
+              </button>
+            )}
           </div>
         </div>
       </div>
-    </div>
+
+      <div className="vp-separa my-5" />
+
+      <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
+        <label className="vp-campo sm:col-span-2">
+          <span className="vp-rotulo">Nome da empresa</span>
+          <input id="org-name" value={companyName} onChange={(e) => setCompanyName(e.target.value)} autoComplete="organization" />
+        </label>
+
+        <label className="vp-campo">
+          <span className="vp-rotulo">CNPJ</span>
+          <input
+            id="org-cnpj"
+            value={cnpj}
+            onChange={(e) => setCnpj(maskCNPJ(e.target.value))}
+            placeholder="00.000.000/0000-00"
+            inputMode="numeric"
+          />
+        </label>
+
+        <div className="vp-campo">
+          <span className="vp-rotulo" id="org-team-label">Tamanho do time</span>
+          <Select value={teamSize} onValueChange={setTeamSize}>
+            <SelectTrigger aria-labelledby="org-team-label">
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
+            <SelectContent>
+              {TEAM_SIZES.map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="vp-campo">
+          <label htmlFor="org-segment" className="vp-rotulo">Segmento</label>
+          <Select value={companySegment} onValueChange={setCompanySegment}>
+            <SelectTrigger id="org-segment">
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
+            <SelectContent>
+              {SEGMENT_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+              {/* Valor antigo fora da lista continua selecionável, sem ser apagado ao salvar. */}
+              {companySegment && !SEGMENT_OPTIONS.some((o) => o.value === companySegment) && (
+                <SelectItem value={companySegment}>{companySegment}</SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+          {companySegment === SOLAR_SEGMENT && (
+            <p className="vp-campo__ajuda">A Lume usa o pacote de energia solar.</p>
+          )}
+        </div>
+
+        <label className="vp-campo">
+          <span className="vp-rotulo">Website</span>
+          <input
+            id="org-website"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+            placeholder="https://suaempresa.com.br"
+            inputMode="url"
+          />
+        </label>
+
+        <label className="vp-campo sm:col-span-2">
+          <span className="vp-rotulo">Telefone comercial</span>
+          <input
+            id="org-phone"
+            value={phone}
+            onChange={(e) => setPhone(maskPhone(e.target.value))}
+            placeholder="(11) 99999-9999"
+            inputMode="tel"
+          />
+        </label>
+      </div>
+
+      <div className="flex justify-end pt-1">
+        <button type="button" className="vp-botao" onClick={handleSave} disabled={saving}>
+          {saving && <CircleNotch size={16} className="animate-spin motion-reduce:animate-none" aria-hidden />}
+          Salvar alterações
+        </button>
+      </div>
+    </section>
   );
 }

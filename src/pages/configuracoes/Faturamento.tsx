@@ -3,24 +3,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { usePlan } from "@/hooks/usePlan";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import {
-  Star, Crown, Rocket, Check, ArrowRight, Users, CreditCard,
-  Loader2, AlertTriangle, Calendar, HeartCrack,
-} from "lucide-react";
+import { ArrowRight, CalendarBlank, Check, CircleNotch, CreditCard, Users, type Icon } from "@phosphor-icons/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { PLAN_FEATURES, PlanType } from "@/config/planConfig";
 import { PLANS, formatPrice } from "@/config/plans";
 import { whatsappUrl } from "@/config/contact";
 import { formatError, normalizeSubscriptionStatus, type SubscriptionStatus } from "@/lib/utils";
+import { usePreviewConfig } from "./preview";
 
-// Ícones por plano — os dados (preço, features, limites) vêm da fonte única
-// em src/config/plans.ts, nada de lista hardcoded aqui.
-const PLAN_ICONS: Record<PlanType, React.ComponentType<any>> = {
-  free: Star,
-  pro: Rocket,
-};
+// Preço, features e limites vêm da fonte única em src/config/plans.ts.
 
 interface Subscription {
   status: SubscriptionStatus;
@@ -36,6 +27,7 @@ export default function Faturamento() {
   const { activeCompanyId } = useTenant();
   const { currentPlan, planInfo } = usePlan();
   const navigate = useNavigate();
+  const preview = usePreviewConfig();
 
   const effectiveCompanyId = activeCompanyId || companyId;
 
@@ -48,7 +40,11 @@ export default function Faturamento() {
   const [confirmando, setConfirmando] = useState(searchParams.get("assinatura") === "ok");
 
   const load = async () => {
-    if (!effectiveCompanyId) return;
+    if (!effectiveCompanyId) {
+      // Preview de dev sem login: mostra a tela vazia em vez do carregando eterno.
+      if (preview) setLoading(false);
+      return;
+    }
     setLoading(true);
 
     const [companyRes, teamRes] = await Promise.all([
@@ -118,35 +114,33 @@ export default function Faturamento() {
     }
   };
 
-  if (!isAdmin) {
-    return (
-      <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] p-8 text-center">
-        <p className="text-sm text-muted-foreground">
-          Apenas admins podem acessar faturamento.
-        </p>
-      </div>
-    );
+  if (!isAdmin && !preview) {
+    return <div className="vp-vazio">Apenas admins podem acessar faturamento.</div>;
   }
 
   if (confirmando) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-16 text-center" role="status">
-        <Loader2 className="h-5 w-5 animate-spin motion-reduce:animate-none text-muted-foreground" />
-        <p className="text-sm font-medium text-foreground">Confirmando o pagamento</p>
-        <p className="text-xs text-muted-foreground">Leva poucos segundos.</p>
+      <div className="vp-cartao" role="status">
+        <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
+          <CircleNotch size={20} className="animate-spin text-[var(--vyz-text-muted)] motion-reduce:animate-none" aria-hidden />
+          <p className="vp-rotulo">Confirmando o pagamento</p>
+          <p className="vp-campo__ajuda">Leva poucos segundos.</p>
+        </div>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      <div className="vp-vazio" aria-busy="true">
+        <div className="flex items-center justify-center py-10">
+          <CircleNotch size={20} className="animate-spin motion-reduce:animate-none" aria-hidden />
+          <span className="sr-only">Carregando o plano</span>
+        </div>
       </div>
     );
   }
 
-  const PlanIcon = PLAN_ICONS[currentPlan];
   const status = subscription?.status || "active";
   const isCancelled = status === "cancelled" || !!subscription?.cancelled_at;
   const currentPlanData = PLANS[currentPlan];
@@ -155,144 +149,122 @@ export default function Faturamento() {
     ? new Date(subscription.ends_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })
     : null;
 
+  const statusChip: { texto: string; tom?: "ok" | "sol" | "ruim" } = !subscription
+    ? { texto: "Sem dados" }
+    : isCancelled
+      ? { texto: "Cancelado", tom: "ruim" }
+      : status === "expired"
+        ? { texto: "Vencido", tom: "sol" }
+        : status !== "active"
+          ? { texto: "Sem plano" }
+          : { texto: "Ativo", tom: "ok" };
 
   return (
-    <div className="space-y-5">
-      {/* Cancellation banner */}
+    <div className="vp-pilha">
       {isCancelled && endsAtFormatted && (
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
-            <Calendar className="h-4 w-4 text-amber-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">
-              Assinatura cancelada, ativa até {endsAtFormatted}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-              Você mantém acesso ao <strong className="text-foreground">{planInfo.label}</strong> até
-              essa data. Após isso, a conta vira Free. Pode reativar a qualquer momento.
+        <section className="vp-cartao vp-cartao--sol flex flex-col gap-4 sm:flex-row sm:items-center" aria-labelledby="fat-cancelada">
+          <CalendarBlank size={20} className="hidden shrink-0 text-[var(--vyz-warning)] sm:block" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <h2 id="fat-cancelada" className="vp-rotulo">Assinatura cancelada, ativa até {endsAtFormatted}</h2>
+            <p className="vp-sub">
+              Você mantém acesso ao <strong className="font-semibold text-[var(--vyz-text-primary)]">{planInfo.label}</strong> até
+              essa data. Depois dela, a conta fica sem assinatura. Pode reativar a qualquer momento.
             </p>
           </div>
-          <Button
-            size="sm"
+          <button
+            type="button"
+            className="vp-botao self-start sm:self-center"
             disabled={abrindoPortal}
             onClick={() => (subscription?.stripe_customer_id && status === "active" ? abrirPortal() : navigate("/upgrade"))}
-            className="h-8 text-xs rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 shrink-0"
           >
             Reativar
-          </Button>
-        </div>
+          </button>
+        </section>
       )}
 
-      {/* Plan card */}
-      <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] overflow-hidden">
-        <div className="grid sm:grid-cols-[1fr_auto] divide-y sm:divide-y-0 sm:divide-x divide-[#E6EDF5]">
-          <div className="p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
-                currentPlan === "pro" ? "bg-[rgba(21,86,192,0.12)]" :
-                "bg-[#F1F5F9]"
-              }`}>
-                <PlanIcon className={`h-5 w-5 ${
-                  currentPlan === "pro" ? "text-[#1556C0]" :
-                  "text-[#64748B]"
-                }`} />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-base font-bold text-foreground">Plano {planInfo.label}</p>
-                  <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
-                    !subscription ? "bg-[var(--vyz-surface-2)] text-[var(--vyz-text-muted)]" :
-                    isCancelled ? "bg-[var(--vyz-danger-bg)] text-[var(--vyz-danger)]" :
-                    status === "expired" ? "bg-[var(--vyz-warning-bg)] text-[var(--vyz-warning)]" :
-                    status !== "active" ? "bg-[var(--vyz-surface-2)] text-[var(--vyz-text-muted)]" :
-                    "bg-[var(--vyz-success-bg)] text-[var(--vyz-success)]"
-                  }`}>
-                    {!subscription ? "Sem dados" : isCancelled ? "Cancelado" : status === "expired" ? "Vencido" : status !== "active" ? "Sem plano" : "Ativo"}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {currentPlanData.monthlyPrice
-                    ? `${formatPrice(currentPlanData.monthlyPrice)}/mês`
-                    : formatPrice(currentPlanData.monthlyPrice)}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-              {currentPlanData.features.map((f, i) => (
-                <span key={i} className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                  <Check className="h-3 w-3 text-emerald-500/70" />{f}
-                </span>
-              ))}
-            </div>
+      <section className="vp-cartao grid gap-6 sm:grid-cols-[1fr_240px]" aria-labelledby="fat-plano">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 id="fat-plano" className="text-[18px] font-semibold tracking-[-0.01em] text-[var(--vyz-text-primary)]">
+              Plano {planInfo.label}
+            </h2>
+            <span className="vp-chip" data-tom={statusChip.tom}>{statusChip.texto}</span>
           </div>
+          <p className="vp-sub">
+            {currentPlanData.monthlyPrice
+              ? `${formatPrice(currentPlanData.monthlyPrice)}/mês`
+              : formatPrice(currentPlanData.monthlyPrice)}
+          </p>
+          {currentPlanData.features.length > 0 && (
+            <ul className="mt-4 space-y-2">
+              {currentPlanData.features.map((f, i) => (
+                <li key={i} className="flex items-start gap-2 text-[14px] text-[var(--vyz-text)]">
+                  <Check size={16} weight="bold" className="mt-0.5 shrink-0 text-[var(--vyz-success)]" aria-hidden />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-          {/* Usage meters */}
-          <div className="p-6 space-y-3 sm:min-w-[240px]">
-            <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Uso atual</p>
-            <div className="space-y-2.5">
-              <UsageRow
-                used={teamCount}
-                limit={PLAN_FEATURES[currentPlan].maxUsers}
-                label="Pessoas na equipe"
-                icon={Users}
-              />
-            </div>
+        <div className="border-t border-[var(--vyz-surface-2)] pt-5 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
+          <p className="vp-rotulo">Uso atual</p>
+          <div className="mt-3">
+            <UsageRow used={teamCount} limit={currentPlanData.limits.users} label="Pessoas na equipe" icon={Users} />
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Assinar: quem ainda não paga (sem plano, vencido ou cancelado) */}
       {status !== "active" && (
-        <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] p-5 flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-[13px] font-semibold text-foreground">Assinar o Vyzon</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
+        <section className="vp-cartao flex flex-col gap-4 sm:flex-row sm:items-center" aria-labelledby="fat-assinar">
+          <div className="min-w-0 flex-1">
+            <h2 id="fat-assinar" className="vp-rotulo">Assinar o Vyzon</h2>
+            <p className="vp-sub">
               {formatPrice(PLANS.pro.monthlyPrice)}/mês, tudo liberado. Pagamento no cartão de crédito.
             </p>
           </div>
-          <Button
-            size="sm"
-            onClick={() => navigate("/upgrade")}
-            className="h-9 rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 shrink-0"
-          >
+          <button type="button" className="vp-botao self-start sm:self-center" onClick={() => navigate("/upgrade")}>
             Assinar
-            <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-          </Button>
-        </div>
+            <ArrowRight size={16} aria-hidden />
+          </button>
+        </section>
       )}
 
       {/* Assinatura no cartão: cartão, faturas e cancelamento ficam no portal do Stripe */}
       {status === "active" && !isCancelled && subscription?.stripe_customer_id && (
-        <div className="rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] p-5 flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-[13px] font-semibold text-foreground">Gerenciar assinatura</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
+        <section className="vp-cartao flex flex-col gap-4 sm:flex-row sm:items-center" aria-labelledby="fat-gerenciar">
+          <div className="min-w-0 flex-1">
+            <h2 id="fat-gerenciar" className="vp-rotulo">Gerenciar assinatura</h2>
+            <p className="vp-sub">
               Trocar o cartão, baixar as faturas ou cancelar. Cancelando, o acesso segue até o fim do mês já pago.
             </p>
           </div>
-          <Button
-            size="sm"
-            variant="outline"
+          <button
+            type="button"
+            className="vp-botao vp-botao--quieto self-start sm:self-center"
             disabled={abrindoPortal}
             onClick={abrirPortal}
-            className="h-9 rounded-full shrink-0"
           >
-            {abrindoPortal ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin motion-reduce:animate-none" /> : <CreditCard className="h-3.5 w-3.5 mr-1.5" />}
+            {abrindoPortal ? (
+              <CircleNotch size={16} className="animate-spin motion-reduce:animate-none" aria-hidden />
+            ) : (
+              <CreditCard size={16} aria-hidden />
+            )}
             Abrir
-          </Button>
-        </div>
+          </button>
+        </section>
       )}
 
       {/* Paga por fora do cartão (combinada antes do Stripe): muda pelo suporte */}
       {status === "active" && !subscription?.stripe_customer_id && (
-        <p className="px-1 text-[11px] text-muted-foreground leading-relaxed">
+        <p className="px-1 text-[13px] leading-relaxed text-[var(--vyz-text-muted)]">
           Sua assinatura foi combinada direto com o Vyzon. Para mudar a forma de pagamento ou cancelar,{" "}
           <a
             href={whatsappUrl("Oi! Quero mudar a assinatura do Vyzon.")}
             target="_blank"
             rel="noreferrer"
-            className="font-medium text-foreground underline underline-offset-2"
+            className="rounded-sm font-medium text-[var(--vyz-text-primary)] underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--vyz-accent)]"
           >
             fale com o suporte
           </a>
@@ -304,25 +276,32 @@ export default function Faturamento() {
 }
 
 function UsageRow({
-  used, limit, label, icon: Icon,
-}: { used: number; limit: number; label: string; icon: React.ComponentType<any> }) {
+  used, limit, label, icon: RowIcon,
+}: { used: number; limit: number; label: string; icon: Icon }) {
   const isUnlimited = limit === Infinity;
   const pct = isUnlimited ? 12 : Math.min(100, (used / limit) * 100);
   const nearLimit = !isUnlimited && pct >= 80;
 
   return (
-    <div className="space-y-1">
-      <div className="flex items-center gap-2 text-[11px]">
-        <Icon className="h-3 w-3 text-muted-foreground/60" />
-        <span className="text-muted-foreground flex-1">{label}</span>
-        <span className={`font-medium tabular-nums ${nearLimit ? "text-amber-400" : "text-foreground"}`}>
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2 text-[13px]">
+        <RowIcon size={16} className="text-[var(--vyz-text-muted)]" aria-hidden />
+        <span className="flex-1 text-[var(--vyz-text-muted)]">{label}</span>
+        <span className={`font-semibold tabular-nums ${nearLimit ? "text-[var(--vyz-warning)]" : "text-[var(--vyz-text-primary)]"}`}>
           {used}{isUnlimited ? "" : ` / ${limit}`}
-          {isUnlimited && <span className="text-muted-foreground/50 ml-1 text-[10px]">∞</span>}
+          {isUnlimited && <span className="ml-1 text-[12px] text-[var(--vyz-text-dim)]">∞</span>}
         </span>
       </div>
-      <div className="h-1 rounded-full bg-muted/50 overflow-hidden">
+      <div
+        className="h-1.5 overflow-hidden rounded-full bg-[var(--vyz-surface-2)]"
+        role="meter"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={isUnlimited ? undefined : limit}
+        aria-valuenow={used}
+      >
         <div
-          className={`h-full rounded-full transition-all ${nearLimit ? "bg-amber-500" : "bg-[#1556C0]"}`}
+          className={`h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none ${nearLimit ? "bg-[var(--vyz-warning)]" : "bg-[var(--vyz-accent)]"}`}
           style={{ width: `${pct}%` }}
         />
       </div>

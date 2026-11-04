@@ -1,11 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, User } from "lucide-react";
+import { CircleNotch } from "@phosphor-icons/react";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { formatError } from "@/lib/utils";
 
@@ -77,37 +74,33 @@ export default function Perfil() {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="rounded-2xl border border-[#E6EDF5] bg-white overflow-hidden" style={{ boxShadow: "0 1px 2px rgba(11,18,32,0.04)" }}>
-        <div className="px-5 py-3.5 border-b border-[#E6EDF5] flex items-center gap-2.5">
-          <User className="h-4 w-4 text-[#1556C0]" />
-          <h2 className="text-[13px] font-semibold text-[#0F1730]">Informações pessoais</h2>
-        </div>
-        <div className="px-5 py-5 space-y-5">
-          <AvatarUpload
-            currentAvatarUrl={avatarUrl}
-            userInitials={nome ? getInitials(nome) : "U"}
-            onUpload={handleAvatarUpload}
-            uploading={uploading}
-          />
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Nome</Label>
-              <Input value={nome} onChange={(e) => setNome(e.target.value)} className="h-9 text-sm" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Email</Label>
-              <Input value={email} disabled className="h-9 text-sm bg-muted/50" />
-            </div>
-          </div>
-          <div className="flex justify-end">
-            <Button onClick={handleSave} disabled={loading} size="sm" className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90">
-              {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Salvar
-            </Button>
-          </div>
-        </div>
+    <section className="vp-cartao" aria-labelledby="perfil-dados">
+      <h2 id="perfil-dados" className="vp-rotulo">Informações pessoais</h2>
+      <p className="vp-sub">Seu nome e sua foto, como aparecem para o seu time.</p>
+      <div className="mt-5">
+        <AvatarUpload
+          currentAvatarUrl={avatarUrl}
+          userInitials={nome ? getInitials(nome) : "U"}
+          onUpload={handleAvatarUpload}
+          uploading={uploading}
+        />
       </div>
-    </div>
+      <div className="mt-5 grid gap-x-4 sm:grid-cols-2">
+        <label className="vp-campo">
+          <span className="vp-rotulo">Nome</span>
+          <input value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="name" />
+        </label>
+        <label className="vp-campo">
+          <span className="vp-rotulo">Email</span>
+          <input value={email} disabled />
+        </label>
+      </div>
+      <div className="flex justify-end">
+        <button type="button" className="vp-botao" onClick={handleSave} disabled={loading}>
+          {loading && <CircleNotch size={16} className="animate-spin motion-reduce:animate-none" aria-hidden />}
+          Salvar
+        </button>
+      </div>
+    </section>
   );
 }
