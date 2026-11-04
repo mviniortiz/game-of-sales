@@ -104,6 +104,25 @@ const InicioRoute = () => {
   return <ProtectedRoute esqueleto="mesa">{page}</ProtectedRoute>;
 };
 
+// Configurações: em dev, ?preview=1 abre o layout e as abas sem login nem AdminRoute,
+// para revisar o visual. As abas mostram o estado vazio ou carregando sem sessão.
+const ConfiguracoesRoute = () => {
+  const [params] = useSearchParams();
+  const page = (
+    <AppLayout>
+      <ConfiguracoesLayout />
+    </AppLayout>
+  );
+  if (import.meta.env.DEV && params.get("preview")) return page;
+  return <ProtectedRoute>{page}</ProtectedRoute>;
+};
+
+const ConfAdmin = ({ children }: { children: React.ReactNode }) => {
+  const [params] = useSearchParams();
+  if (import.meta.env.DEV && params.get("preview")) return <>{children}</>;
+  return <AdminRoute>{children}</AdminRoute>;
+};
+
 const PreProdRoute = ({ children, fallback = "/dashboard" }: { children: React.ReactNode; fallback?: string }) => {
   const { isSuperAdmin } = useAuth();
   if (!isSuperAdmin) return <Navigate to={fallback} replace />;
@@ -280,25 +299,16 @@ const AppShell = () => (
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/configuracoes"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <ConfiguracoesLayout />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              >
+              <Route path="/configuracoes" element={<ConfiguracoesRoute />}>
                 <Route index element={null} />
                 <Route path="perfil" element={<ConfPerfil />} />
                 <Route path="seguranca" element={<ConfSeguranca />} />
                 <Route
                   path="organizacao"
                   element={
-                    <AdminRoute>
+                    <ConfAdmin>
                       <ConfOrganizacao />
-                    </AdminRoute>
+                    </ConfAdmin>
                   }
                 />
                 {/* Equipe é gerida em Gestão; link antigo segue funcionando. */}
@@ -306,41 +316,41 @@ const AppShell = () => (
                 <Route
                   path="faturamento"
                   element={
-                    <AdminRoute>
+                    <ConfAdmin>
                       <ConfFaturamento />
-                    </AdminRoute>
+                    </ConfAdmin>
                   }
                 />
                 <Route
                   path="integracoes"
                   element={
-                    <AdminRoute>
+                    <ConfAdmin>
                       <ConfIntegracoes />
-                    </AdminRoute>
+                    </ConfAdmin>
                   }
                 />
                 <Route
                   path="tags"
                   element={
-                    <AdminRoute>
+                    <ConfAdmin>
                       <ConfTags />
-                    </AdminRoute>
+                    </ConfAdmin>
                   }
                 />
                 <Route
                   path="importar"
                   element={
-                    <AdminRoute>
+                    <ConfAdmin>
                       <ConfImportar />
-                    </AdminRoute>
+                    </ConfAdmin>
                   }
                 />
                 <Route
                   path="aprovacao"
                   element={
-                    <AdminRoute>
+                    <ConfAdmin>
                       <ConfAprovacao />
-                    </AdminRoute>
+                    </ConfAdmin>
                   }
                 />
                 {/* Webhooks de leads (Google Sheets / Meta Lead Ads / etc.): setup via
@@ -349,9 +359,9 @@ const AppShell = () => (
                 <Route
                   path="webhooks-leads"
                   element={
-                    <AdminRoute>
+                    <ConfAdmin>
                       <ConfWebhooksLeads />
-                    </AdminRoute>
+                    </ConfAdmin>
                   }
                 />
                 {/* F4E.2 2026-05-19: Contexto da Agência (membros leem, admin edita).

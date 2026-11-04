@@ -994,12 +994,147 @@
     flex: none;
     color: var(--vyz-text-muted);
 }
+/* Abas de Configurações: campos com Select do Radix e textarea, botão desligado,
+   botão de excluir e o diálogo (que abre num portal, fora de .vp-tela). */
+.vp-campo > button[role="combobox"],
+.vp-campo textarea {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--vyz-border);
+    border-radius: 10px;
+    background: var(--vyz-surface-1);
+    font-size: 16px;
+    color: var(--vyz-text-primary);
+}
+.vp-campo textarea {
+    height: auto;
+    min-height: 88px;
+    padding: 10px 12px;
+}
+@media (min-width: 768px) {
+    .vp-campo > button[role="combobox"],
+    .vp-campo textarea {
+        font-size: 14px;
+    }
+}
+.vp-campo input::placeholder,
+.vp-campo textarea::placeholder {
+    color: var(--vyz-text-dim);
+}
+.vp-campo input:disabled {
+    background: var(--vyz-bg);
+    color: var(--vyz-text-muted);
+    cursor: not-allowed;
+}
+.vp-campo input:focus-visible,
+.vp-campo select:focus-visible,
+.vp-campo textarea:focus-visible,
+.vp-campo > button[role="combobox"]:focus-visible,
+.vp-campo > button[role="combobox"]:focus {
+    outline: 2px solid var(--vyz-accent);
+    outline-offset: 1px;
+    border-color: var(--vyz-accent);
+    box-shadow: none;
+}
+.vp-campo__ajuda {
+    font-size: 13px;
+    color: var(--vyz-text-muted);
+}
+.vp-botao:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+.vp-botao--quieto:disabled:hover {
+    background: var(--vyz-surface-1);
+}
+.vp-botao--perigo {
+    background: var(--vyz-danger);
+}
+.vp-botao--perigo:hover {
+    background: var(--vyz-danger);
+    opacity: 0.9;
+}
+.vp-icone {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border-radius: 10px;
+    color: var(--vyz-text-muted);
+    transition: background-color 150ms var(--vp-ease, ease), color 150ms var(--vp-ease, ease);
+}
+.vp-icone:hover {
+    background: var(--vyz-surface-2);
+    color: var(--vyz-text-primary);
+}
+.vp-icone:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.vp-icone:disabled:hover {
+    background: transparent;
+    color: var(--vyz-text-muted);
+}
+.vp-icone--perigo {
+    color: var(--vyz-danger);
+}
+.vp-icone--perigo:hover {
+    background: var(--vyz-danger-bg);
+    color: var(--vyz-danger);
+}
+.vp-icone:focus-visible {
+    outline: 2px solid var(--vyz-accent);
+    outline-offset: 2px;
+}
+/* Fundo, borda e raio do diálogo vão em classes Tailwind (o cn() do shadcn resolve
+   o conflito com a base); aqui só o que o portal perde por estar fora de .vp-tela. */
+.vp-dialogo {
+    --vp-ease: var(--vyz-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.vp-cartao--sol {
+    background: var(--vyz-sol-soft);
+}
+.vp-campo--junto {
+    margin-bottom: 0;
+}
+.vp-botao--chico {
+    min-height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
+}
+.vp-icone--chico {
+    width: 32px;
+    height: 32px;
+}
+.vp-cartao__cab {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px 16px;
+}
+.vp-cartao__cab .vp-sub {
+    margin-top: 4px;
+    font-size: 14px;
+}
+.vp-pilha {
+    display: grid;
+    gap: 16px;
+}
+.vp-separa {
+    border-top: 1px solid var(--vyz-surface-2);
+}
+
 @media (prefers-reduced-motion: reduce) {
     .vp-linha,
     .vp-noite,
     .vp-botao,
     .vp-tile,
-    .vp-palco {
+    .vp-palco,
+    .vp-icone {
         transition: none;
     }
 }

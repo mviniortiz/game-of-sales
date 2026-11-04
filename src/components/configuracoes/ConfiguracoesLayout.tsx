@@ -15,6 +15,7 @@ import {
   type Icon,
 } from "@phosphor-icons/react";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePreviewConfig } from "@/pages/configuracoes/preview";
 
 type NavItem = {
   id: string;
@@ -78,14 +79,17 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
 export default function ConfiguracoesLayout() {
   const location = useLocation();
   const { isAdmin } = useAuth();
+  // Preview de dev (?preview=1): mostra todas as abas e mantém o parâmetro ao navegar.
+  const preview = usePreviewConfig();
+  const linkDe = (path: string) => (preview && path.startsWith("/configuracoes/") ? `${path}?preview=1` : path);
   const currentSection = location.pathname.split("/")[2] || "perfil";
   const naRaiz = !location.pathname.split("/")[2];
   const header = TITLES[currentSection] || TITLES.perfil;
 
   const visibleGroups = useMemo(
     () =>
-      GROUPS.map((g) => ({ ...g, items: g.items.filter((it) => !it.adminOnly || isAdmin) })).filter((g) => g.items.length > 0),
-    [isAdmin],
+      GROUPS.map((g) => ({ ...g, items: g.items.filter((it) => !it.adminOnly || isAdmin || preview) })).filter((g) => g.items.length > 0),
+    [isAdmin, preview],
   );
 
   const itemClass = (active: boolean) =>
@@ -107,7 +111,7 @@ export default function ConfiguracoesLayout() {
             <section key={group.label} className="vp-cartao vp-cartao--lista" aria-label={group.label}>
               <div className="vp-rotulo">{group.label}</div>
               {group.items.map((item) => (
-                <NavLink key={item.id} to={item.path} className="vp-conf">
+                <NavLink key={item.id} to={linkDe(item.path)} className="vp-conf">
                   <b>{item.label}</b>
                   <span>{TITLES[item.id]?.subtitle ?? ""}</span>
                   <CaretRight size={14} weight="bold" aria-hidden />
@@ -135,7 +139,7 @@ export default function ConfiguracoesLayout() {
             {visibleGroups.flatMap((g) => g.items).map((item) => {
               const active = currentSection === item.id;
               return (
-                <NavLink key={item.id} to={item.path} aria-current={active ? "page" : undefined} className={`${itemClass(active)} h-8 whitespace-nowrap`}>
+                <NavLink key={item.id} to={linkDe(item.path)} aria-current={active ? "page" : undefined} className={`${itemClass(active)} h-8 whitespace-nowrap`}>
                   <item.icon size={16} weight={active ? "fill" : "regular"} className={active ? "text-[var(--vyz-accent)]" : ""} aria-hidden />
                   {item.label}
                 </NavLink>
@@ -152,7 +156,7 @@ export default function ConfiguracoesLayout() {
                     const active = currentSection === item.id;
                     return (
                       <li key={item.id}>
-                        <NavLink to={item.path} aria-current={active ? "page" : undefined} className={`${itemClass(active)} h-9`}>
+                        <NavLink to={linkDe(item.path)} aria-current={active ? "page" : undefined} className={`${itemClass(active)} h-9`}>
                           <item.icon
                             size={18}
                             weight={active ? "fill" : "regular"}
