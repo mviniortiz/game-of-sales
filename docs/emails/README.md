@@ -33,33 +33,32 @@ As cores são os tokens `--vyz-*` do app.
 
 Fica de fora: `outreach-dispatch` (cold email em texto puro, de propósito).
 
-## Aplicar à mão (nada disso foi feito)
+## Estado em produção
 
-### Painel do Supabase: Authentication, Emails, Templates
+Aplicado em 04/11/2026, depois do merge do PR #53:
 
-Cole o HTML do arquivo e troque o assunto em cada um:
+- Painel do Supabase: os 6 templates e os assuntos da tabela acima, aplicados pela
+  API de management (`PATCH /v1/projects/<ref>/config/auth`) e conferidos campo a
+  campo. Teste de recuperar senha entregue no Gmail com o layout novo e os
+  placeholders trocados.
+- Edges no ar: admin-create-seller, sdr-auto-outreach, notify-signup,
+  whatsapp-health, admin-lead-digest, create-personalized-demo e
+  admin-support-inbox.
 
-| Template | Assunto | Arquivo |
-|---|---|---|
-| Confirm signup | Confirme seu e-mail no Vyzon | `confirm-signup.html` |
-| Reset password | Redefinir sua senha do Vyzon | `reset-password.html` |
-| Change email address | Confirme seu e-mail novo no Vyzon | `change-email.html` |
-| Invite user | Seu acesso ao Vyzon | `invite.html` |
-| Magic link | Seu link para entrar no Vyzon | `magic-link.html` |
-| Reauthentication | Seu código do Vyzon | `reauthentication.html` |
-
-Os textos dizem que o link vale 1 hora porque `mailer_otp_exp = 3600` no painel
-(conferido em 04/11/2026). Se mudar lá, mude em `mensagens.ts` e rode o gerador.
-
-### Edges a subir
+Ao mudar um texto: edite `mensagens.ts`, rode `node scripts/emails/gerar.mjs`, e
+depois do merge cole o template no painel (Authentication, Emails, Templates) ou
+suba a edge:
 
 ```bash
-npx supabase functions deploy admin-create-seller sdr-auto-outreach notify-signup whatsapp-health admin-lead-digest create-personalized-demo admin-support-inbox
+npx supabase functions deploy <edge>
 ```
 
-A tela de Suporte passa a mandar só o texto e a edge monta o HTML. A ordem do deploy
-não quebra nada: edge velha com front novo manda texto puro, edge nova com front
-velho usa o HTML que o front mandou.
+Os textos dizem que o link vale 1 hora porque `mailer_otp_exp = 3600` no painel.
+Se mudar lá, mude em `mensagens.ts` e rode o gerador.
+
+O nome do remetente das edges vem do secret `RESEND_FROM_EMAIL` (hoje
+"Markus — Vyzon", com travessão); o dos e-mails de auth vem do SMTP do painel
+("Vyzon" <contato@vyzon.com.br>).
 
 ## Achados que ficaram de fora
 
