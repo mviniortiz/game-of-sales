@@ -8,7 +8,7 @@ import "./avisoDemo.css";
 
 // O aviso no WhatsApp do dono, no formato da aprovação real
 // (_shared/whatsappApproval.ts), simplificado para "responda 1" sem o código
-// curto nem nome interno. A Lume lê, acha a proposta parada, o aviso chega, o dono
+// curto. O aviso vem da Lume, como o real (EVA_PREFIX). A Lume lê, acha a proposta parada, o aviso chega, o dono
 // responde 1 e a mensagem sai. Dados de exemplo. Feito com o kit Stageshow.
 type Cena = { eva: EvaBotState; selo: boolean; aviso: boolean; um: boolean; enviada: boolean };
 
@@ -44,7 +44,7 @@ export default function AvisoDemo() {
             {(s, _rect, layout) => (
                 <div className="ad-cena">
                     <span className="ad-eva">
-                        <EvaBot size={150} state={s.eva} />
+                        <EvaBot size={150} state={s.eva} label="Lume" />
                     </span>
                     <div className="ad-selo" data-show={s.selo ? "" : undefined}>
                         <Clock aria-hidden="true" />
@@ -55,10 +55,10 @@ export default function AvisoDemo() {
                     </div>
                     <Phone width={layout === "compact" ? 318 : 360} className="ad-phone" wallpaper="#efeae2" time="9:02">
                         <div className="ad-topo">
-                            <span className="ad-avatar">V</span>
+                            <span className="ad-avatar">L</span>
                             <span>
-                                <b>Aviso do Vyzon</b>
-                                <small>no seu WhatsApp</small>
+                                <b>Lume</b>
+                                <small>assistente do Vyzon</small>
                             </span>
                         </div>
                         <Thread className="ad-thread">

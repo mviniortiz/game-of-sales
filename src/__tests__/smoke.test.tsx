@@ -156,7 +156,11 @@ describe('Smoke Tests - Public Pages', () => {
             </MemoryRouter>
         );
         expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/chega pronta no seu whatsapp/i);
-        expect(screen.getByRole('link', { name: /criar minha conta/i })).toHaveAttribute('href', '/criar-conta?segmento=energia_solar');
+        // Um botão só na página inteira, sempre com o mesmo texto e o mesmo destino.
+        const ctas = screen.getAllByRole('link', { name: /^ver minhas propostas paradas$/i });
+        expect(ctas.length).toBeGreaterThanOrEqual(4);
+        for (const cta of ctas) expect(cta).toHaveAttribute('href', '/criar-conta?segmento=energia_solar');
+        expect(screen.queryByText(/não precisa conectar nada/i)).not.toBeInTheDocument();
         expect(screen.queryByText(/markus/i)).not.toBeInTheDocument();
     });
 });

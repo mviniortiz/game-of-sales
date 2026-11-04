@@ -27,46 +27,41 @@ responde:
 
 Fale a língua dele: orçamento, proposta, conta de luz, kWp, telhado,
 "vou ver em casa", parcela, financiamento. Evite vocabulário do produto no
-topo (Raio-X, EVA, placar, rascunho, aprovação A2).
+topo (Raio-X, placar, rascunho, aprovação A2). A Lume entra no topo já
+explicada: "a Lume, assistente do Vyzon".
 
-## Ordem das seções (molde de 19/10/2026)
+## Ordem das seções (página curta de 04/11/2026)
 
-1. **Topo**: linha de dor ("Mandou o orçamento de energia solar e o cliente
-   sumiu?"), título com promessa e prazo ("No 2º dia sem resposta, a
-   mensagem pra chamar de volta chega pronta no seu WhatsApp"), subtítulo
-   com o mecanismo (responde 1, sai do seu número, nada vai sem aprovar).
-   Depois vêm o botão principal "Me mostra quanto tá parado", que desce para a
-   calculadora, a linha "Leva 30 segundos e não precisa conectar nada." e a
-   linha de preço.
-   À direita (abaixo, no celular), o **aviso no WhatsApp do dono** (objeto
-   Conversa): mensagem pronta para o Carlos, "Responda 1", o 1 e "Enviada".
-2. **Números de mercado com fonte** (NumeroComFonte): 18% de conversão e 25
-   orçamentos por mês, Greener 1º semestre de 2026, no lugar de depoimento.
-   Só número de fora, com estudo e período.
-3. **Calculadora** em faixa noite (`#conta`), o caminho sem conectar nada: o dono
-   informa quantos orçamentos manda por mês, quantos viram venda e o valor médio,
-   números que ele sabe de cabeça. Começa na média da Greener e o resultado sai na
-   Fatura, com o botão "Ver meu número de verdade" para o cadastro. Evento `calc_use`.
-4. **Mock do produto**, claro: lista de propostas com carimbos de estado e a
-   conversa do Carlos depois da aprovação.
-5. **Conheça a EVA**: cartão noite largo, bot grande cortado pela borda, passando
-   pelos estados com legenda. É aqui que o nome EVA é apresentado.
-6. **Como funciona como linha do tempo da proposta**: uma vez (conecta o
-   WhatsApp), dia 0 (manda orçamento como sempre), dia 1 (cliente visualiza
-   e não responde), dia 2 (chega o aviso, único cartão noite).
-7. **Incluso + cartão de preço**: só o que existe no app. Plano único de
-   R$ 97/mês; as 10 primeiras integradoras usam de graça para sempre, em troca
-   de feedback (03/11/2026). Sem contrato (confirmado pelo
-   Markus em 19/10/2026). O botão leva ao cadastro.
-8. **Objeções reais**, com as frases acima e a resposta de cada uma.
-9. **FAQ**, espelhado no FAQPage do `index.html`.
-10. **Bloco final do Raio-X grátis** (`#raio-x`): o que a pessoa recebe e o botão
-   para o cadastro. O rodapé tem o link de suporte no WhatsApp.
+Dado de 30 dias (`landing_events`): 665 sessões, 69 passaram do topo, 17
+clicaram no botão do topo, 13 criaram a conta. O topo decide quase tudo.
 
-Desde 01/11/2026 a página vende sozinha, sem conversa com o Markus. Vigie o
-cadastro: conectar o WhatsApp num site recém-conhecido é pedir muito, e na
-campanha de out/2026, com o cadastro como botão principal, foram 115 visitas,
-9 cliques no botão e 0 cadastros. Por isso o topo leva primeiro à calculadora.
+Nomes: Vyzon é o produto, a Lume é quem faz o trabalho. O aviso real no
+WhatsApp começa com "Lume" (`EVA_PREFIX`), e o celular do topo também.
+
+Um botão só na página inteira, sempre "Ver minhas propostas paradas", sempre
+para `/criar-conta?segmento=energia_solar`. Embaixo do botão do topo:
+"Grátis e sem cartão. Você cria a conta, conecta o WhatsApp e em uns 3 minutos
+vê as propostas paradas dos últimos 90 dias." (SignupV2 + RaioXAuto).
+
+1. **Topo**: linha de dor, título com promessa e prazo, subtítulo que
+   apresenta a Lume como assistente do Vyzon (responde 1, sai do seu número,
+   nada vai sem aprovar), o botão e a linha de baixo. À direita (abaixo, no
+   celular), o aviso da Lume no WhatsApp do dono (`AvisoDemo`).
+2. **Números**: só o 18% da Greener (1º sem. 2026), numa faixa fina.
+3. **Como funciona** em 3 passos (manda a proposta, no 2º dia a Lume avisa,
+   responde 1 e sai), com a lista de propostas que entram sozinhas ao lado.
+   Conectar o WhatsApp vira uma linha de rodapé da seção.
+4. **Objeções reais** (as 4 mais fortes), em faixa sol.
+5. **Preço**: 3 itens que servem ao objetivo e o cartão noite das 10
+   primeiras (R$ 0 para sempre; o time libera e avisa no WhatsApp; da 11ª em
+   diante, preço de `plans.ts`; sem contrato). Escala é só um link de texto.
+6. **FAQ** curto, espelhado no FAQPage do `index.html`. É o único lugar com
+   o nome Raio-X, explicado na mesma frase.
+7. **Fim** (`#raio-x`): o mesmo botão. O rodapé tem o suporte no WhatsApp.
+
+Saíram em 04/11/2026: calculadora (o número grande seguido de "nem tudo isso
+volta" fazia a pessoa desconfiar), mock repetido do produto, "Conheça a Lume" e
+a linha do tempo de 4 dias. Não volte a contar o ciclo mais de uma vez.
 
 ## Direção visual: sistema "EVA em campo" (LP.9, 01/11/2026)
 
@@ -77,15 +72,15 @@ https://claude.ai/artifact/L2qfp4yTM3RBvSL3yN5mjo. No código, o bloco LP.9 de
 Brasil é escura com âmbar ou neon (SolarMarket, Solfácil) e nenhum concorrente
 tem personagem, então a EVA é a estrela.
 
-- A EVA (`EvaBot`) aparece em toda faixa forte, sentada na borda de cima de um
-  cartão (`EvaSentada`). A seção `ConhecaEva` a apresenta de perto.
+- A Lume (`EvaBot`) aparece em toda faixa forte, sentada na borda de cima de um
+  cartão (`EvaSentada`).
 - A demo do topo (`src/components/landing/AvisoDemo.tsx`) usa o kit Stageshow de
   Benji Taylor (MIT), copiado em `src/vendor/stageshow`, e carrega em pedaço
   separado. Tela de produto ilustrada segue as regras dessa skill.
 - Topo em creme com o amarelo só como palco do celular e da EVA (`.vs-topo`).
   Amarelo na tela inteira foi rejeitado pelo Markus em 01/11/2026.
-- Ritmo de fundo, sempre em cor chapada: topo, creme, noite `.vs-noite`
-  (calculadora), creme, sol `.vs-sol` (objeções), creme. Faixas iguais nunca
+- Ritmo de fundo, sempre em cor chapada: topo, creme, sol `.vs-sol`
+  (objeções), creme com o cartão noite do preço, creme. Faixas iguais nunca
   ficam coladas. Cartão branco sem sombra, raio de 22px, volta às cores do papel
   sozinho (`.vs-fatura`, `.vs-conversa`, `.vs-cartao`).
 - Geist, a mesma fonte do app, em tudo: 600 com letras fechadas nos títulos
@@ -93,8 +88,8 @@ tem personagem, então a EVA é a estrela.
 - Marca-texto `.vs-marca` atrás de texto `--lp-ink`, uma vez por tela: branco em
   sol, sol em branco. Azul `.vs-azul` só na segunda metade de título sobre creme,
   em links e no corpo da EVA.
-- Objetos gráficos: Fatura, Conversa, LinhaDoTempo com a EVA em cada dia (só o
-  Dia 2 em noite) e carimbo de estado, sempre com a palavra.
+- Objetos gráficos: o celular do topo, a lista de propostas e o carimbo de
+  estado, sempre com a palavra.
 - Botão principal `.vs-btn`: pill `--lp-ink`, sombra dura azul no hover. Sobre noite, `.vs-btn--sol`.
 - Foto real (do Markus, de integradora parceira com autorização) entra quando
   existir. A EVA ocupa esse lugar até lá; banco de imagem e telhado com painel
@@ -140,8 +135,8 @@ cliente real.
 1. Em 5 segundos dá para entender para quem é, o que faz e quanto custa?
 2. O botão principal aparece na primeira tela do celular (375px)?
 3. Toda afirmação de produto existe no código e todo número tem fonte?
-4. Algum termo interno (Raio-X, EVA, A2) aparece antes da metade da página
-   sem explicação?
+4. Algum termo interno (Raio-X, Lume, A2) aparece sem explicação na mesma frase?
+   Todo botão tem o mesmo texto e o mesmo destino?
 5. `<noscript>` e FAQPage do `index.html` batem com a página?
 6. Prints em 375px e 1366px sem rolagem lateral, e `tsc` + `npm run build`
    passando.
