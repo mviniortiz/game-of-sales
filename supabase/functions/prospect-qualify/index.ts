@@ -15,8 +15,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const EVA_CRON_SECRET = Deno.env.get("EVA_CRON_SECRET");
 const PLACES_KEY = Deno.env.get("GOOGLE_PLACES_API_KEY");
-const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY");
-// 8 por rodada, 2 ao mesmo tempo: a busca do Gemini tem limite por minuto (a rodada de 12
+const BUSCA_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+// 8 por rodada, 2 ao mesmo tempo: a busca tem limite por minuto (a rodada de 12
 // com 4 em paralelo falhou inteira em 04/11/2026).
 const POR_RODADA = 8;
 const AO_MESMO_TEMPO = 2;
@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
   const refazer = [
     "fit_score.is.null",
     ...(PLACES_KEY ? ["metadata->qualif->>google_buscado.eq.false"] : []),
-    ...(GEMINI_KEY ? [`metadata->qualif->>versao.neq.${VERSAO}`] : []),
+    ...(BUSCA_KEY ? [`metadata->qualif->>versao.neq.${VERSAO}`] : []),
   ];
   consulta = consulta.or(refazer.join(","));
   if (Array.isArray(payload?.ids) && payload.ids.length) consulta = consulta.in("id", payload.ids.slice(0, 10));
@@ -181,9 +181,9 @@ Deno.serve(async (req) => {
       const lugar = g ? (({ avaliacoesTexto: _t, ...l }) => l)(g) : null;
       evid.google = lugar;
       let webErro: string | null = null;
-      const web = GEMINI_KEY ? await buscarNaWeb(evid, GEMINI_KEY).catch((e) => { webErro = String((e as Error).message).slice(0, 200); return { ...BUSCA_VAZIA }; }) : { ...BUSCA_VAZIA };
+      const web = BUSCA_KEY ? await buscarNaWeb(evid, BUSCA_KEY).catch((e) => { webErro = String((e as Error).message).slice(0, 200); return { ...BUSCA_VAZIA }; }) : { ...BUSCA_VAZIA };
       if (webErro && /busca 429/.test(webErro)) {
-        // Cota do Gemini: não julga nem grava. A empresa fica na fila para a próxima rodada.
+        // Limite da API: não julga nem grava. A empresa fica na fila para a próxima rodada.
         resultado.push({ nome: evid.nome, web_erro: webErro });
         return;
       }
@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
       evid.web = { achou: Boolean(web.site || web.instagram), vendeClienteFinal: web.vendeClienteFinal, ativa: web.ativa };
       evid.juiz = await julgar(evid, { avaliacoes: avaliacoesTexto, site, web });
       const n = notaDeEncaixe(evid, hoje);
-      const qualif = { nota: n.nota, motivos: n.motivos.slice(0, 6), veto: n.veto, google: lugar, google_buscado: !!PLACES_KEY, juiz: evid.juiz, site_lido: !!site, web: web.achou ? (({ bruto: _b, ...w }) => w)(web) : null, web_buscado: !!GEMINI_KEY && !webErro, web_erro: webErro,
+      const qualif = { nota: n.nota, motivos: n.motivos.slice(0, 6), veto: n.veto, google: lugar, google_buscado: !!PLACES_KEY, juiz: evid.juiz, site_lido: !!site, web: web.achou ? (({ bruto: _b, ...w }) => w)(web) : null, web_buscado: !!BUSCA_KEY && !webErro, web_erro: webErro,
         // Busca que falhou (cota, rede) não fecha a versão: a próxima rodada tenta de novo.
         versao: webErro ? (md.qualif?.versao ?? VERSAO - 1) : VERSAO, em: hoje.toISOString() };
       const patch: Record<string, unknown> = { fit_score: n.nota, metadata: { ...md, qualif } };
@@ -216,7 +216,7 @@ Deno.serve(async (req) => {
   for (let i = 0; i < lista.length; i += AO_MESMO_TEMPO) {
     await Promise.all(lista.slice(i, i + AO_MESMO_TEMPO).map(qualificar));
     if (resultado.some((r) => /places 4\d\d/.test(r.erro ?? ""))) break; // chave inválida ou cota
-    if (resultado.some((r) => /busca 429/.test(r.web_erro ?? ""))) break; // cota do Gemini: para a rodada
+    if (resultado.some((r) => /busca 429/.test(r.web_erro ?? ""))) break; // limite da API: para a rodada
   }
   return Response.json({ ok: true, qualificadas: resultado.filter((r) => r.nota !== undefined).length, resultado });
 });

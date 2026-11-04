@@ -1,8 +1,8 @@
 // Busca pública da empresa (site e Instagram) para a qualificação da prospecção.
 // Pedido do Markus na retrospectiva de 04/11/2026: entender a empresa antes de abordar,
 // para tirar da fila quem só presta mão de obra de instalação e dar contexto à IA que
-// responde. Usa o Gemini com a busca do Google (grounding): lê o que o Google mostra
-// do perfil e do site, sem raspar o Instagram e sem login. Só dado público da empresa
+// responde. Usa a busca na web da API da Anthropic: lê o que a busca mostra do perfil e
+// do site, sem raspar o Instagram e sem login. Só dado público da empresa
 // (nada de pessoa física além do nome do sócio que já vem do CNPJ).
 
 export type BuscaWeb = {
@@ -15,21 +15,21 @@ export type BuscaWeb = {
   ativa: boolean | null;
   resumo: string;
   fontes: string[];
-  /** O que o Gemini pesquisou no Google (para conferir a busca). */
+  /** O que a busca pesquisou (para conferir a busca). */
   buscas?: string[];
-  /** Só no teste seco: o que voltou do Gemini, para conferir. Não é gravado. */
+  /** Só no teste seco: o que voltou da busca, para conferir. Não é gravado. */
   bruto?: { chaves: string[]; texto: string; chunks: number };
 };
 
 export const BUSCA_VAZIA: BuscaWeb = { achou: false, instagram: null, site: null, vendeClienteFinal: "duvida", ativa: null, resumo: "", fontes: [] };
 
-const MODELO = "gemini-2.5-flash";
+const MODELO = "claude-haiku-5-5";
 
 export function perguntaDaBusca(alvo: { nome: string; razao?: string | null; cidade?: string | null }): string {
   const quem = [alvo.nome, alvo.razao && alvo.razao !== alvo.nome ? `(razão social ${alvo.razao})` : null, alvo.cidade ? `de ${alvo.cidade}` : null, "SC"]
     .filter(Boolean).join(" ");
   return [
-    `Pesquise no Google (obrigatório, não responda de memória): site:instagram.com "${alvo.nome}" e também "${alvo.nome}" ${alvo.cidade ?? ""} energia solar. A empresa é ${quem}.`,
+    `Pesquise na web (obrigatório, não responda de memória): site:instagram.com "${alvo.nome}" e também "${alvo.nome}" ${alvo.cidade ?? ""} energia solar. A empresa é ${quem}.`,
     "Responda só com fatos que aparecem nos resultados. Se não achar com segurança que é a mesma empresa (nome e cidade batendo), diga que não achou.",
     "Quero saber: o @ do Instagram da própria empresa, o site da própria empresa (nunca página de diretório, guia, CNPJ ou marketplace), se ela vende e instala sistema fotovoltaico para o cliente final (casa, comércio, agro) ou só presta serviço de instalação para outras empresas.",
     "'ativa' é só sobre publicações: true se um resultado mostra post, obra ou depoimento com data nos últimos 6 meses; false se o último é mais antigo; null se não dá pra saber. Empresa aberta no CNPJ não conta.",
@@ -40,7 +40,7 @@ export function perguntaDaBusca(alvo: { nome: string; razao?: string | null; cid
 /** Sites de diretório, guia e consulta de CNPJ: não são o site da empresa. */
 const DIRETORIO = /solartask|cnpj|econodata|guiamais|apontador|telelistas|solutudo|empresaqui|casadosdados|serasa|linkedin|facebook|instagram|google\.|mercadolivre|olx|portalsolar|bndes/i;
 
-/** Lê a resposta do Gemini. Tolera cerca de markdown e texto em volta do JSON. */
+/** Lê a resposta da busca. Tolera cerca de markdown e texto em volta do JSON. */
 export function lerBusca(texto: string, fontes: string[] = []): BuscaWeb {
   const m = String(texto || "").match(/\{[\s\S]*\}/);
   if (!m) return BUSCA_VAZIA;
@@ -61,28 +61,32 @@ export function lerBusca(texto: string, fontes: string[] = []): BuscaWeb {
   };
 }
 
+/** Busca com a ferramenta web_search da API da Anthropic (decisão do Markus em 04/11/2026:
+ *  o Gemini grátis travou na cota e a Places API é cara). Cobra dos créditos da API:
+ *  cerca de US$ 10 por mil buscas, mais o texto lido. max_uses 2: Instagram e site. */
 export async function buscarNaWeb(alvo: { nome: string; razao?: string | null; cidade?: string | null }, chave: string): Promise<BuscaWeb> {
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent`, {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "x-goog-api-key": chave },
+    headers: { "Content-Type": "application/json", "x-api-key": chave, "anthropic-version": "2023-06-01" },
     body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: perguntaDaBusca(alvo) }] }],
-      tools: [{ google_search: {} }],
-      generationConfig: { temperature: 0, maxOutputTokens: 600, thinkingConfig: { thinkingBudget: 0 } },
+      model: MODELO,
+      // O Haiku pensa antes de responder: com 700 o JSON chegava cortado (04/11/2026).
+      max_tokens: 3000,
+      output_config: { effort: "low" },
+      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 2, user_location: { type: "approximate", country: "BR", region: "Santa Catarina" } }],
+      messages: [{ role: "user", content: perguntaDaBusca(alvo) }],
     }),
-    signal: AbortSignal.timeout(25000),
+    signal: AbortSignal.timeout(60000),
   });
   if (!res.ok) throw new Error(`busca ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const data = await res.json();
-  const cand = data?.candidates?.[0];
-  const texto = (cand?.content?.parts ?? []).map((p: any) => p.text ?? "").join("");
-  const meta = cand?.groundingMetadata ?? {};
-  const fontes = (meta.groundingChunks ?? []).map((c: any) => c?.web?.title || c?.web?.uri).filter(Boolean);
-  const buscas: string[] = (meta.webSearchQueries ?? []).slice(0, 4);
-  const bruto = { chaves: Object.keys(meta), texto: texto.slice(0, 500), chunks: (meta.groundingChunks ?? []).length };
-  // Com resposta em JSON o Gemini não devolve groundingChunks (medido em 04/11/2026), só
-  // as pesquisas feitas. Sem pesquisa, a resposta veio da memória: não vale. O site é
-  // conferido depois, abrindo a página (siteConfere).
+  const blocos: any[] = data?.content ?? [];
+  const buscas = blocos.filter((b) => b.type === "server_tool_use").map((b) => String(b.input?.query ?? "")).filter(Boolean);
+  const fontes = blocos.filter((b) => b.type === "web_search_tool_result" && Array.isArray(b.content))
+    .flatMap((b) => b.content.map((r: any) => r.url)).filter(Boolean);
+  const texto = blocos.filter((b) => b.type === "text").map((b) => b.text).join("");
+  const bruto = { chaves: blocos.map((b) => b.type), texto: texto.slice(0, 500), chunks: fontes.length };
+  // Sem pesquisa feita, a resposta veio da memória: não vale. O site é conferido depois.
   if (!buscas.length) return { ...BUSCA_VAZIA, bruto };
   return { ...lerBusca(texto, fontes), buscas, bruto };
 }
