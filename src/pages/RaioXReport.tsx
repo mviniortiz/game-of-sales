@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { buscarVagaFundadora } from "@/hooks/useVagaFundadora";
+import { fraseFundadora, type VagaFundadora } from "@/lib/fundadora";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { EvaBot } from "@/components/eva/EvaBot";
 
@@ -64,10 +66,26 @@ const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", curren
 const dias = (n: number) => (n === 0 ? "hoje" : n === 1 ? "há 1 dia" : `há ${n} dias`);
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
+// Em dev, /relatorio/preview (com ?fundadora=1) abre um relatório de exemplo sem login.
+const EXEMPLO: Report = {
+    company_name: "Solar Exemplo",
+    created_at: "2026-11-04T12:00:00Z",
+    summary: { messages_read: 4120, window_days: 90, descartadas: 6 },
+    can_edit: true,
+    items: [
+        { first_name: "Carla", status: "your_turn", days_since_quote: 4, days_silent: 2, amount: 38900, kwp: 8.4, detected_by: "pdf", reading: null, draft: "Oi Carla, tudo bem? Vi que você perguntou do prazo de instalação. Consigo te passar hoje.", evidencia: "Proposta_Carla_8kWp.pdf" },
+        { first_name: "Rogério", status: "no_reply", days_since_quote: 9, days_silent: 9, amount: 52300, kwp: 11.2, detected_by: "pdf", reading: null, draft: "Oi Rogério, conseguiu olhar a proposta dos 11 kWp?", evidencia: "Orcamento_Rogerio.pdf" },
+        { first_name: "Marta", status: "went_quiet", days_since_quote: 47, days_silent: 40, amount: 27100, kwp: null, detected_by: "text", reading: null, draft: null, evidencia: "fica R$ 27.100 com instalação" },
+    ],
+};
+
 const RaioXReport = () => {
     const { token = "" } = useParams();
+    const [params] = useSearchParams();
+    const preview = import.meta.env.DEV && token === "preview";
     const [report, setReport] = useState<Report | null>(null);
     const [state, setState] = useState<"loading" | "ready" | "missing">("loading");
+    const [vaga, setVaga] = useState<VagaFundadora | null>(null);
 
     useEffect(() => {
         document.title = "Raio-X das propostas | Vyzon";
@@ -81,6 +99,12 @@ const RaioXReport = () => {
 
     useEffect(() => {
         let alive = true;
+        if (preview) {
+            setReport(EXEMPLO);
+            setState("ready");
+            if (params.get("fundadora")) setVaga({ fundadora: true, numero: 3, vagas_restantes: 7, limite: 10 });
+            return;
+        }
         // RPC nova ainda fora dos tipos gerados.
         void supabase.rpc("get_raio_x_report" as never, { p_token: token } as never).then(({ data }) => {
             if (!alive) return;
@@ -92,7 +116,23 @@ const RaioXReport = () => {
         return () => {
             alive = false;
         };
-    }, [token]);
+    }, [token, preview, params]);
+
+    const isAdmin = Boolean(report?.can_edit);
+
+    // Quem é da empresa pode ter ganhado a vaga de fundadora ao conectar: aí o
+    // fim do relatório leva a configurar a Lume em vez de assinar. Sem sessão a
+    // RPC nega e fica o caminho de sempre.
+    useEffect(() => {
+        if (!isAdmin || preview) return;
+        let alive = true;
+        void buscarVagaFundadora(null).then((v) => {
+            if (alive) setVaga(v);
+        });
+        return () => {
+            alive = false;
+        };
+    }, [isAdmin, preview]);
 
     const toggle = async (index: number, excluded: boolean) => {
         if (!report) return;
@@ -110,8 +150,6 @@ const RaioXReport = () => {
         if (error) setReport(prev);
         return !error;
     };
-
-    const isAdmin = Boolean(report?.can_edit);
 
     const view = useMemo(() => {
         const all = report?.items ?? [];
@@ -174,8 +212,10 @@ const RaioXReport = () => {
     const created = new Date(report.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
     const rowProps = { isAdmin, onToggle: (index: number, ex: boolean) => void toggle(index, ex), onAmount: setAmount };
 
+    const fundadora = vaga?.fundadora && vaga.numero ? vaga : null;
+
     return (
-        <Shell>
+        <Shell placar={isAdmin}>
             <header className="pt-6 md:pt-12">
                 <p className="text-[13px] md:text-sm" style={{ color: "var(--lp-ink-55)" }}>
                     Raio-X das propostas · {report.company_name ?? "sua empresa"} · {created}
@@ -257,15 +297,27 @@ const RaioXReport = () => {
                 <h2 className="lp-display text-[24px] leading-tight md:text-2xl" style={{ color: "var(--lp-ink)" }}>
                     Nenhuma mensagem foi enviada aos seus clientes.
                 </h2>
-                <p className="mt-3 max-w-[560px] text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
-                    As retomadas deste relatório são rascunhos. Com o Vyzon ligado, a Lume acompanha cada proposta nova que sai do seu WhatsApp e te chama
-                    quando ela para. Você confere, responde 1 e a mensagem sai do seu número.
-                </p>
+                {fundadora ? (
+                    <>
+                        <p className="mt-3 max-w-[560px] text-[16px] font-medium leading-relaxed" style={{ color: "var(--lp-ink)" }}>
+                            {fraseFundadora(fundadora.numero!, fundadora.limite)}
+                        </p>
+                        <p className="mt-2 max-w-[560px] text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
+                            As retomadas deste relatório são rascunhos. Daqui pra frente, a Lume acompanha cada proposta nova que sai do seu WhatsApp e te
+                            chama quando ela para. Você confere, responde 1 e a mensagem sai do seu número. Antes, conte a ela o que vocês vendem.
+                        </p>
+                    </>
+                ) : (
+                    <p className="mt-3 max-w-[560px] text-[15px] leading-relaxed" style={{ color: "var(--lp-ink-70)" }}>
+                        As retomadas deste relatório são rascunhos. Com o Vyzon ligado, a Lume acompanha cada proposta nova que sai do seu WhatsApp e te chama
+                        quando ela para. Você confere, responde 1 e a mensagem sai do seu número.
+                    </p>
+                )}
                 <Link
-                    to={isAdmin ? "/upgrade" : "/criar-conta?segmento=energia_solar"}
+                    to={fundadora ? "/configurar-eva" : isAdmin ? "/upgrade" : "/criar-conta?segmento=energia_solar"}
                     className="vz-btn vz-btn--primary mt-6 inline-flex w-full justify-center sm:w-auto"
                 >
-                    <span>{isAdmin ? "Ligar a Lume nas minhas propostas" : "Fazer o Raio-X do meu WhatsApp"}</span>
+                    <span>{fundadora ? "Configurar a Lume" : isAdmin ? "Ligar a Lume nas minhas propostas" : "Fazer o Raio-X do meu WhatsApp"}</span>
                     <span className="vz-btn__arrow" aria-hidden="true">
                         →
                     </span>
@@ -281,13 +333,24 @@ const RaioXReport = () => {
     );
 };
 
-const Shell = ({ children }: { children: React.ReactNode }) => (
+// Quem é da empresa volta ao placar já na janela de 90 dias que o Raio-X leu.
+const Shell = ({ children, placar = false }: { children: React.ReactNode; placar?: boolean }) => (
     <div className="lp-v2 min-h-screen" style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}>
         <div className="mx-auto w-full max-w-[880px] px-4 sm:px-5 md:px-8">
-            <div className="flex items-center justify-between py-5">
+            <div className="flex items-center justify-between gap-3 py-5">
                 <Link to="/" aria-label="Vyzon, início">
                     <ThemeLogo className="h-[22px] w-auto" />
                 </Link>
+                {placar && (
+                    <Link
+                        to="/orcamentos?dias=90"
+                        state={{ doRelatorio: true }}
+                        className="rounded-full px-3 py-2 text-[14px] font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lp-blue)]"
+                        style={{ color: "var(--lp-ink-70)" }}
+                    >
+                        Ver no placar
+                    </Link>
+                )}
             </div>
             {children}
         </div>

@@ -3,7 +3,7 @@
 // estado de cada orçamento (nunca respondeu, respondeu e sumiu, esperando
 // você...) é calculado no banco (view quote_tracking_live); a tela só agrupa e mostra.
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowUpDown, ArrowUpRight, Check, FileText, MessageCircle, MoreHorizontal, RotateCcw, Search, X } from "lucide-react";
@@ -30,9 +30,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { EVA_SETUP_PATH, raioXDismissKey, setupDismissKey, useEvaSetup } from "@/hooks/useEvaSetup";
 import { PrimeirosPassos } from "@/components/quotes/PrimeirosPassos";
 import { usePlano } from "@/hooks/usePlano";
+import { useVagaFundadora } from "@/hooks/useVagaFundadora";
+import { fraseFundadora } from "@/lib/fundadora";
 
 const PERIODS = [7, 30, 90] as const;
 type Period = (typeof PERIODS)[number];
+// ?dias=90 vem do Raio-X e do relatório: a mesma janela que a Lume leu.
+const periodFromParam = (v: string | null): Period => {
+  const n = Number(v);
+  return (PERIODS as readonly number[]).includes(n) ? (n as Period) : 30;
+};
 
 type Tab = "parked" | "your_turn" | "talking" | "closed";
 // A aba fica no endereço (?aba=) para o Início e os avisos levarem direto a ela.
@@ -72,7 +79,7 @@ const SURFACE_SHADOW = "0 1px 2px rgba(15,23,42,0.04)";
 export default function Orcamentos() {
   const [searchParams, setSearchParams] = useSearchParams();
   const preview = import.meta.env.DEV ? searchParams.get("preview") : null;
-  const [days, setDays] = useState<Period>(30);
+  const [days, setDays] = useState<Period>(() => periodFromParam(searchParams.get("dias")));
   const tab = tabFromParam(searchParams.get("aba"));
   const setTab = (t: Tab) =>
     setSearchParams((prev) => {
@@ -147,14 +154,27 @@ export default function Orcamentos() {
     try { return !!setup.companyId && localStorage.getItem(raioXDismissKey(setup.companyId)) === "1"; } catch { return true; }
   })();
   const { pago, carregando: planoCarregando } = usePlano();
+  const { recarregarEmpresas } = useTenant();
+  const location = useLocation();
+  // Quem volta do relatório pediu o placar: não é empurrado para a configuração.
+  // Lido uma vez: trocar de aba muda o endereço sem o state e não pode empurrar.
+  const [doRelatorio] = useState(() => !!(location.state as { doRelatorio?: boolean } | null)?.doRelatorio);
   // Conta nova: sem assinatura vai para o Raio-X automático (o grátis); quem
-  // assina cai uma vez na conversa de configuração da Lume, e quem adiou vê a
-  // lista de primeiros passos. Super admin operando outra empresa nunca é levado.
+  // assina (ou ganhou a vaga de fundadora) cai uma vez na conversa de
+  // configuração da Lume, e quem adiou vê a lista de primeiros passos. Super
+  // admin operando outra empresa nunca é levado.
   useEffect(() => {
     if (preview || !isAdmin || isSuperAdmin || planoCarregando) return;
     if (!pago && setup.fezRaioX === false && !adiouRaioX) navigate("/raio-x", { replace: true });
-    else if (pago && setup.configured === false && !adiou) navigate(EVA_SETUP_PATH, { replace: true });
-  }, [preview, pago, planoCarregando, setup.fezRaioX, setup.configured, isAdmin, isSuperAdmin, adiou, adiouRaioX, navigate]);
+    else if (pago && setup.configured === false && !adiou && !doRelatorio) navigate(EVA_SETUP_PATH, { replace: true });
+  }, [preview, pago, planoCarregando, setup.fezRaioX, setup.configured, isAdmin, isSuperAdmin, adiou, adiouRaioX, doRelatorio, navigate]);
+  // Vaga de fundadora: sai no banco quando o WhatsApp conecta. Se a empresa
+  // carregada ainda está sem plano, lê de novo para liberar o app.
+  const vaga = useVagaFundadora(!preview);
+  const fundadora = vaga.data?.fundadora ? vaga.data : null;
+  useEffect(() => {
+    if (fundadora && !pago && !planoCarregando) recarregarEmpresas();
+  }, [fundadora, pago, planoCarregando, recarregarEmpresas]);
   const data = board.data;
   const isEmpty = !!data && data.items.length === 0 && data.totals.total_count === 0;
   // Sem parado mas com cliente esperando, abre direto no que pede ação.
@@ -196,6 +216,18 @@ export default function Orcamentos() {
         </section>
       )}
 
+      {!preview && fundadora?.numero && setup.configured === false && (
+        <section aria-label="Vaga de fundadora" className="mt-4 flex flex-col gap-3 rounded-2xl border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div className="min-w-0">
+            <p className="text-[14px] font-semibold text-[var(--vyz-text-strong)]">{fraseFundadora(fundadora.numero, fundadora.limite)}</p>
+            <p className="mt-0.5 text-[13px] text-[var(--vyz-text-muted)]">Conte à Lume o que vocês vendem para as retomadas saírem no tom da sua empresa.</p>
+          </div>
+          <Link to={EVA_SETUP_PATH} className={`${BTN_PRIMARY} ${FOCUS} shrink-0`}>
+            Configurar a Lume
+          </Link>
+        </section>
+      )}
+
       {!preview && pago && isAdmin && setup.companyId && setup.configured !== null && (
         <div className="mb-4">
           <PrimeirosPassos companyId={setup.companyId} configured={setup.configured} connected={wa.connected} />
@@ -211,7 +243,7 @@ export default function Orcamentos() {
           retrying={board.isFetching}
         />
       ) : isEmpty ? (
-        <EmptyState days={days} connected={wa.connected} checking={wa.loading} />
+        <EmptyState days={days} connected={wa.connected} checking={wa.loading} pago={pago || !!preview} />
       ) : data ? (
         <>
           <Resumo totals={data.totals} onPick={setTab} />
@@ -605,9 +637,11 @@ const BTN_PRIMARY = `${BTN_BASE} bg-[var(--vyz-accent)] text-white hover:bg-[var
 const BTN_OUTLINE = `${BTN_BASE} border border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-1)] text-[var(--vyz-text-strong)] hover:bg-[var(--vyz-surface-2)]`;
 
 // Vazio com WhatsApp conectado: nenhuma proposta na janela escolhida. Contas
-// conectadas depois de 08/10/2026 já trazem as propostas dos últimos 30 dias
+// conectadas depois de 08/10/2026 já trazem as propostas do histórico
 // (quote-seed-history); as anteriores só contam o que sai depois da conexão.
-function EmptyState({ days, connected, checking }: { days: number; connected: boolean; checking: boolean }) {
+// Sem assinatura, só o que a conta tem: o placar se enche sozinho. A retomada e
+// as Conversas (/inbox) são da assinatura.
+function EmptyState({ days, connected, checking, pago }: { days: number; connected: boolean; checking: boolean; pago: boolean }) {
   return (
     <section
       className="mt-6 rounded-[10px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-6 sm:p-8"
@@ -622,15 +656,27 @@ function EmptyState({ days, connected, checking }: { days: number; connected: bo
           ? "Seu WhatsApp está conectado. Cada orçamento que você enviar, em PDF ou numa mensagem com valor, entra aqui sozinho, com o valor e há quantos dias o cliente não responde."
           : "Assim que você enviar um orçamento pelo WhatsApp, em PDF ou numa mensagem com valor, ele aparece aqui."}
       </p>
-      <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-[var(--vyz-text)]">
-        Se o cliente não responder em 2 dias, ou responder e sumir, a Lume prepara a retomada e manda pra você aprovar no
-        seu WhatsApp. Nada sai sem o seu ok.
-      </p>
+      {pago ? (
+        <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-[var(--vyz-text)]">
+          Se o cliente não responder em 2 dias, ou responder e sumir, a Lume prepara a retomada e manda pra você aprovar no
+          seu WhatsApp. Nada sai sem o seu ok.
+        </p>
+      ) : (
+        <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-[var(--vyz-text)]">
+          Com a assinatura, a Lume também te avisa no 2º dia sem resposta e escreve a retomada.
+        </p>
+      )}
       {checking ? null : connected ? (
-        <Link to="/inbox" className={`${BTN_OUTLINE} ${FOCUS} mt-6`}>
-          <MessageCircle className="h-4 w-4" aria-hidden />
-          Abrir conversas
-        </Link>
+        pago ? (
+          <Link to="/inbox" className={`${BTN_OUTLINE} ${FOCUS} mt-6`}>
+            <MessageCircle className="h-4 w-4" aria-hidden />
+            Abrir conversas
+          </Link>
+        ) : (
+          <Link to="/upgrade" className={`${BTN_OUTLINE} ${FOCUS} mt-6`}>
+            Ver a assinatura
+          </Link>
+        )
       ) : (
         <Link to="/inbox?connect=1" className={`${BTN_PRIMARY} ${FOCUS} mt-6`}>
           <MessageCircle className="h-4 w-4" aria-hidden />

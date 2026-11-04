@@ -116,6 +116,13 @@ const InicioRoute = () => {
   return <ProtectedRoute esqueleto="mesa">{page}</ProtectedRoute>;
 };
 
+// Mesmo trato: ?preview=conectar|lendo|pronto|fundadora em dev abre o Raio-X sem login.
+const RaioXRoute = () => {
+  const [params] = useSearchParams();
+  if (import.meta.env.DEV && params.get("preview")) return <RaioXAuto />;
+  return <ProtectedRoute><RaioXAuto /></ProtectedRoute>;
+};
+
 // Configurações: em dev, ?preview=1 abre o layout e as abas sem login nem AdminRoute,
 // para revisar o visual. As abas mostram o estado vazio ou carregando sem sessão.
 const ConfiguracoesRoute = () => {
@@ -178,7 +185,7 @@ const AppShell = () => (
               {/* 2026-09-16: Orçamentos é a tela principal (APP_HOME). */}
               <Route path="/orcamentos" element={<OrcamentosRoute />} />
               <Route path="/configurar-eva" element={<ProtectedRoute><ConfigurarEva /></ProtectedRoute>} />
-              <Route path="/raio-x" element={<ProtectedRoute><RaioXAuto /></ProtectedRoute>} />
+              <Route path="/raio-x" element={<RaioXRoute />} />
               {/* F4A 2026-05-19: /inicio renderiza Inicio (Central da Operação).
                   /dashboard antigo continua acessível como fallback (não removido em F4A,
                   só não está no menu). F3 fez redirect /dashboard → /inicio que segue válido. */}

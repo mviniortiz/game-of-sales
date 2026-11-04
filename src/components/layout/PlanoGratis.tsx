@@ -1,6 +1,8 @@
 // Conta sem assinatura (sem teste grátis desde 08/10/2026): o grátis é o Raio-X
-// e o placar. A faixa lembra o que falta; o bloqueio cobre as telas em que a Lume
+// e o placar. A faixa lembra o que falta, só no placar e depois do Raio-X (no
+// primeiro minuto ela só atrapalha); o bloqueio cobre as telas em que a Lume
 // age (Inbox, funil, Lume Studio...), sempre com o caminho para assinar.
+// Fundadora conta como paga: nada disto aparece para ela.
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { EvaBot } from "@/components/eva/EvaBot";
 import { WhatsAppConnectModal } from "@/components/inbox/WhatsAppConnectModal";
@@ -28,16 +30,16 @@ export function ConectarSemPlano() {
 
 export function FaixaPlanoGratis() {
     return (
-        <div className="flex items-center gap-3 border-b border-[var(--vyz-border)] bg-white px-3 py-2 sm:px-4">
-            <p className="min-w-0 flex-1 text-[13px] leading-snug text-[#475569]">
-                <span className="font-semibold text-[#0F1730]">Plano grátis: Raio-X e placar.</span>{" "}
-                <span className="hidden sm:inline">Para a Lume avisar no 2º dia e escrever as retomadas, assine o Vyzon.</span>
+        <div className="flex items-center gap-3 border-b border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-3 py-2 sm:px-4">
+            <p className="min-w-0 flex-1 text-[13px] leading-snug text-[var(--vyz-text-muted)]">
+                A Lume ainda não está acompanhando suas propostas.
+                <span className="hidden sm:inline"> Ligada, ela avisa no 2º dia sem resposta e escreve a retomada.</span>
             </p>
             <Link
                 to="/upgrade"
-                className={`inline-flex h-8 shrink-0 items-center rounded-full bg-[var(--vyz-accent)] px-3.5 text-[13px] font-semibold text-white transition-colors duration-150 ${EASE} hover:bg-[var(--vyz-accent-dark)]`}
+                className={`shrink-0 rounded-full text-[13px] font-semibold text-[var(--vyz-text-strong)] underline underline-offset-4 transition-colors duration-150 ${EASE} hover:text-[var(--vyz-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]`}
             >
-                Assinar
+                Ligar a Lume
             </Link>
         </div>
     );

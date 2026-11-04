@@ -8,7 +8,7 @@
 // o trabalho acontecer parece mais curto e dá mais valor ao resultado do que
 // ler balões. O fim é a revelação do número, antes do relatório.
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
@@ -18,7 +18,10 @@ import { VyzonMark } from "@/components/brand/VyzonMark";
 import { WhatsAppConnectModal } from "@/components/inbox/WhatsAppConnectModal";
 import { EvaBot, type EvaBotState } from "@/components/eva/EvaBot";
 import { APP_HOME } from "@/config/routes";
-import { raioXDismissKey } from "@/hooks/useEvaSetup";
+import { EVA_SETUP_PATH, raioXDismissKey } from "@/hooks/useEvaSetup";
+import { buscarVagaFundadora } from "@/hooks/useVagaFundadora";
+import { fraseFundadora, type VagaFundadora } from "@/lib/fundadora";
+import { PASSOS_PRIMEIRO_ACESSO, rotuloPasso, SO_LEIO } from "@/lib/primeiroAcesso";
 import { logLandingEvent } from "@/lib/landingFunnel";
 import { CONTACT, whatsappUrl } from "@/config/contact";
 import { Check } from "lucide-react";
@@ -30,8 +33,10 @@ const BTN_PRIMARY = `inline-flex h-12 w-full items-center justify-center rounded
 type Fase = "inicio" | "conectar" | "lendo" | "montando" | "pronto" | "erro";
 type Resumo = { quotes: number; stuck: number; stuck_value: number; stuck_without_value: number; your_turn: number; descartadas?: number };
 
-const ETAPAS = ["Conectar", "Ler", "Separar", "Pronto"];
-const etapaDe: Record<Fase, number> = { inicio: 0, conectar: 0, lendo: 1, montando: 2, pronto: 3, erro: 2 };
+// O primeiro acesso tem 3 passos, os mesmos do cadastro: a conta já foi feita.
+// A configuração da Lume (/configurar-eva) vem depois, com nome próprio.
+const ETAPAS = PASSOS_PRIMEIRO_ACESSO;
+const etapaDe: Record<Fase, number> = { inicio: 1, conectar: 1, lendo: 2, montando: 2, pronto: 2, erro: 2 };
 const evaDe: Record<Fase, EvaBotState> = { inicio: "idle", conectar: "idle", lendo: "thinking", montando: "pondering", pronto: "happy", erro: "idle" };
 
 const MONTANDO = [
@@ -48,10 +53,11 @@ const medir = (evento: "view" | "cta_click" | "form_submit" | "form_error" | "wh
     logLandingEvent(FUNIL, "solar", evento, props);
 
 // O que pesa na hora de conectar o WhatsApp num site novo. Tudo confere com o
-// produto: a leitura não envia nada, e o aparelho aparece (e sai) em Aparelhos
-// conectados, como o WhatsApp Web.
+// produto: a leitura não envia nada, a saída para o lead sempre espera o dono
+// responder no WhatsApp dele, e o aparelho aparece (e sai) em Aparelhos
+// conectados, como o WhatsApp Web. A 1ª frase é a mesma do modal de conexão.
 const GARANTIAS = [
-    "Eu só leio. Nada é enviado para cliente nenhum.",
+    SO_LEIO,
     "Seu número e seu celular continuam iguais.",
     "Você desconecta quando quiser, em Aparelhos conectados.",
 ];
@@ -96,10 +102,15 @@ function Contador({ rotulo, valor }: { rotulo: string; valor: number }) {
     );
 }
 
+// Em dev, ?preview=conectar|lendo|pronto|fundadora abre a tela sem login.
+const RESUMO_EXEMPLO: Resumo = { quotes: 23, stuck: 9, stuck_value: 187400, stuck_without_value: 2, your_turn: 2 };
+
 export default function RaioXAuto() {
     const navigate = useNavigate();
+    const [params] = useSearchParams();
+    const preview = import.meta.env.DEV ? params.get("preview") : null;
     const { profile, companyId: authCompanyId } = useAuth();
-    const { activeCompanyId } = useTenant();
+    const { activeCompanyId, recarregarEmpresas } = useTenant();
     const companyId = activeCompanyId || authCompanyId || null;
     const wa = useWhatsappConnection();
     const { leitura, aguardar, vivo } = useLeituraHistorico(companyId);
@@ -108,6 +119,7 @@ export default function RaioXAuto() {
     const [erro, setErro] = useState<string | null>(null);
     const [resultado, setResultado] = useState<{ token: string; resumo: Resumo } | null>(null);
     const [giro, setGiro] = useState(0);
+    const [vaga, setVaga] = useState<VagaFundadora | null>(null);
     const iniciou = useRef(false);
     const nome = (profile?.nome || "").split(" ")[0];
 
@@ -116,7 +128,18 @@ export default function RaioXAuto() {
     }, []);
 
     useEffect(() => {
-        if (wa.loading || iniciou.current) return;
+        if (!preview) return;
+        iniciou.current = true;
+        if (preview === "lendo") setFase("lendo");
+        else if (preview === "pronto" || preview === "fundadora") {
+            setResultado({ token: "preview", resumo: RESUMO_EXEMPLO });
+            if (preview === "fundadora") setVaga({ fundadora: true, numero: 3, vagas_restantes: 7, limite: 10 });
+            setFase("pronto");
+        } else setFase("conectar");
+    }, [preview]);
+
+    useEffect(() => {
+        if (preview || wa.loading || iniciou.current) return;
         iniciou.current = true;
         medir("view", { step: wa.connected ? "ja_conectado" : "conectar" });
         if (wa.connected) void montar();
@@ -143,6 +166,16 @@ export default function RaioXAuto() {
             const d = data as { token?: string; summary?: Resumo; message?: string } | null;
             if (d?.token && d.summary) {
                 medir("form_submit", { step: "pronto", paradas: d.summary.stuck });
+                // A vaga de fundadora sai no banco quando o WhatsApp conecta
+                // (trigger em channel_connections). Lê aqui, com a empresa de
+                // novo, para o plano liberado valer no resto do app.
+                const v = await buscarVagaFundadora(companyId);
+                if (!vivo.current) return;
+                if (v?.fundadora) {
+                    medir("form_submit", { step: "fundadora", numero: v.numero ?? 0 });
+                    recarregarEmpresas();
+                }
+                setVaga(v);
                 setResultado({ token: d.token, resumo: d.summary });
                 setFase("pronto");
                 return;
@@ -177,7 +210,7 @@ export default function RaioXAuto() {
                         <VyzonMark size={30} />
                         <div className="min-w-0">
                             <p className="text-[14px] font-semibold leading-tight">Raio-X do seu WhatsApp</p>
-                            <p className="truncate text-[12px] text-[var(--vyz-text-muted)]">{fase === "pronto" ? "Passo 3 de 3 · Pronto" : etapa === 0 ? "Passo 2 de 3 · Conectar o WhatsApp" : "Passo 3 de 3 · Seu Raio-X"}</p>
+                            <p className="truncate text-[12px] text-[var(--vyz-text-muted)]">{rotuloPasso(etapa)}</p>
                         </div>
                     </div>
                     {podeAdiar && (
@@ -203,9 +236,10 @@ export default function RaioXAuto() {
                             <li key={e} className="flex items-center gap-1.5">
                                 <span
                                     aria-current={k === etapa ? "step" : undefined}
-                                    className={`rounded-full px-2.5 py-1 transition-colors duration-300 ${k < etapa ? "text-[var(--vyz-text-strong)]" : k === etapa ? "bg-[#0B1220] text-white" : "text-[var(--vyz-text-muted)]"}`}
+                                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 transition-colors duration-300 ${k < etapa ? "text-[var(--vyz-text-strong)]" : k === etapa ? "bg-[#0B1220] text-white" : "text-[var(--vyz-text-muted)]"}`}
                                 >
-                                    {k < etapa ? "✓ " : ""}{e}
+                                    {k < etapa && <Check className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />}
+                                    {e}
                                 </span>
                                 {k < ETAPAS.length - 1 && <span className="h-px w-3 bg-[var(--vyz-border-strong)] sm:w-5" aria-hidden />}
                             </li>
@@ -221,6 +255,7 @@ export default function RaioXAuto() {
                     <div className="mt-6 w-full" aria-live="polite">
                         {(fase === "inicio" || fase === "conectar") && (
                             <div className="rx-entra">
+                                <p className="mb-2 text-[14px] font-medium text-[var(--vyz-text-muted)]">Oi, eu sou a Lume, a assistente do Vyzon.</p>
                                 <h1 className="text-[24px] font-semibold leading-tight tracking-[-0.02em] text-[var(--vyz-text-strong)] sm:text-[28px]">
                                     {nome ? `${nome}, vou` : "Vou"} achar as propostas que ficaram paradas no seu WhatsApp.
                                 </h1>
@@ -278,10 +313,12 @@ export default function RaioXAuto() {
                         {fase === "pronto" && resultado && (
                     <Revelacao
                         resumo={resultado.resumo}
+                        vaga={vaga}
                         onVer={() => {
                             medir("cta_click", { step: "ver_relatorio" });
                             navigate(`/relatorio/${resultado.token}`);
                         }}
+                        onConfigurar={() => medir("cta_click", { step: "configurar_lume" })}
                     />
                 )}
 
@@ -314,6 +351,7 @@ export default function RaioXAuto() {
                 onClose={() => setConectar(false)}
                 onConnected={() => {
                     setConectar(false);
+                    if (preview) return;
                     void montar();
                 }}
             />
@@ -321,7 +359,7 @@ export default function RaioXAuto() {
     );
 }
 
-function Revelacao({ resumo, onVer }: { resumo: Resumo; onVer: () => void }) {
+function Revelacao({ resumo, vaga, onVer, onConfigurar }: { resumo: Resumo; vaga: VagaFundadora | null; onVer: () => void; onConfigurar: () => void }) {
     const valor = useCorrida(resumo.stuck_value, 1400);
     const temValor = resumo.stuck_value > 0;
     const titulo =
@@ -361,6 +399,21 @@ function Revelacao({ resumo, onVer }: { resumo: Resumo; onVer: () => void }) {
                 </button>
             </div>
             <p className="mt-3 text-[12px] text-[var(--vyz-text-muted)]">Com a retomada pronta das maiores. Você confere e corrige.</p>
+            {vaga?.fundadora && vaga.numero && (
+                <div className="mx-auto mt-7 max-w-md rounded-2xl border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-4 py-4 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:px-5">
+                    <p className="text-[15px] font-semibold leading-snug text-[var(--vyz-text-strong)]">{fraseFundadora(vaga.numero, vaga.limite)}</p>
+                    <p className="mt-1 text-[13px] leading-relaxed text-[var(--vyz-text-muted)]">
+                        O próximo passo é me contar o que vocês vendem, para as retomadas saírem no tom da sua empresa.
+                    </p>
+                    <Link
+                        to={EVA_SETUP_PATH}
+                        onClick={onConfigurar}
+                        className="mt-3 inline-flex rounded-full text-[14px] font-semibold text-[var(--vyz-accent)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                    >
+                        Configurar a Lume
+                    </Link>
+                </div>
+            )}
         </div>
     );
 }

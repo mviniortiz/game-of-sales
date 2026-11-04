@@ -22,6 +22,8 @@ interface TenantContextType {
   isSuperAdmin: boolean;
   loading: boolean;
   refreshKey: number;
+  /** Lê de novo a empresa (plano e assinatura) sem voltar ao estado de carregando. */
+  recarregarEmpresas: () => void;
   // Plan-related fields
   currentPlan: PlanType;
   planFeatures: PlanFeatures;
@@ -41,8 +43,15 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  // Sobe quando o plano pode ter mudado no banco (ex.: a vaga de fundadora
+  // liberada ao conectar o WhatsApp) e relê a empresa.
+  const [recarga, setRecarga] = useState(0);
+  const recarregarEmpresas = useCallback(() => setRecarga((n) => n + 1), []);
 
   const userId = user?.id ?? null;
+  // Conta nova: a empresa é vinculada depois do login (onboarding_assign_company);
+  // quando o profile ganha a empresa, a lista é lida de novo.
+  const profileCompanyId = profile?.company_id ?? null;
 
   useEffect(() => {
     if (!userId) {
@@ -164,8 +173,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
     };
 
     loadTenantData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+  }, [userId, profileCompanyId, recarga]);
 
   const switchCompany = useCallback((companyId: string) => {
     // Validate that the company exists in the user's companies list
@@ -222,13 +230,14 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
     isSuperAdmin,
     loading,
     refreshKey,
+    recarregarEmpresas,
     currentPlan,
     planFeatures,
     planInfo,
     hasFeature,
     getUserLimit,
     getProductLimit,
-  }), [activeCompanyId, companies, switchCompany, isSuperAdmin, loading, refreshKey, currentPlan, planFeatures, planInfo, hasFeature, getUserLimit, getProductLimit]);
+  }), [activeCompanyId, companies, switchCompany, isSuperAdmin, loading, refreshKey, recarregarEmpresas, currentPlan, planFeatures, planInfo, hasFeature, getUserLimit, getProductLimit]);
 
   return (
     <TenantContext.Provider value={contextValue}>
