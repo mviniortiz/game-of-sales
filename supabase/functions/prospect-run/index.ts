@@ -23,10 +23,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { connectedNumber, connectionState, instanceNameFor, resolveOwnerNumber } from "../_shared/whatsappApproval.ts";
 import {
-  brKey, enviarRespostasPorta, firstMessage, lembretesDeConversa, followupMessage, notifyDecision, notifyOwner, prospectNumber, randomCode,
+  brKey, enviarRespostasPorta, firstMessage, lembretesDeConversa, followupMessage, linhaDaEmpresa, notifyDecision, notifyOwner, prospectNumber, randomCode,
   sendHumanText, sendVoiceNote, whatsappKeys,
 } from "../_shared/prospecting.ts";
-import { chipAquecendo, DISTRIBUIDORA_PAUSADA_ATE, ehDistribuidora, NICHO_DISTRIBUIDORA, nextVariant, TESTE_DORES_DESDE, tetoComSinal, tetoDoChip, VARIANTS, type ProspectVariant } from "../_shared/prospectingText.ts";
+import { chipAquecendo, diasAteProximoToque, mensagemDoToque, DISTRIBUIDORA_PAUSADA_ATE, ehDistribuidora, NICHO_DISTRIBUIDORA, nextVariant, TESTE_DORES_DESDE, tetoComSinal, tetoDoChip, VARIANTS, type ProspectVariant } from "../_shared/prospectingText.ts";
 import { groupJid } from "../_shared/ownerGroups.ts";
 import { CORTE_ENCAIXE } from "../_shared/prospectFit.ts";
 import { perfilDoNicho } from "../_shared/prospectNichos.ts";
@@ -55,6 +55,23 @@ Deno.serve(async (req) => {
   const relatorio: any[] = [];
 
   const { data: instancias } = await admin.from("prospecting_instances").select("*").eq("is_active", true);
+  // Prévia (payload.previa = N): as primeiras mensagens das N próximas da fila, com a linha
+  // da empresa. Não grava, não manda e não pede aprovação.
+  if (payload?.previa) {
+    const previa: any[] = [];
+    for (const inst of instancias || []) {
+      const { data: fila } = await admin.from("prospecting_allowlist")
+        .select("id, agency_name, city, rating_count, first_message, fit_score, variant, metadata, niche")
+        .eq("user_id", inst.user_id).eq("is_active", true).eq("status", "mapeado").gte("fit_score", CORTE_ENCAIXE)
+        .or(`niche.is.null,niche.neq."${NICHO_DISTRIBUIDORA}"`)
+        .order("fit_score", { ascending: false }).limit(Math.min(Number(payload.previa) || 5, 10));
+      for (const c of fila || []) {
+        const linha = await linhaDaEmpresa(c);
+        previa.push({ empresa: c.agency_name, nota: c.fit_score, linha, mensagem: firstMessage(c, "encaminha", "Markus", linha) });
+      }
+    }
+    return Response.json({ ok: true, previa });
+  }
   for (const inst of instancias || []) {
     const r: any = { user: inst.user_id };
     relatorio.push(r);
@@ -193,11 +210,15 @@ Deno.serve(async (req) => {
           const variant: ProspectVariant | null = novoNicho ? null : jaTinha ? c.variant : nextVariant(contagem);
           if (!jaTinha && variant) contagem[variant] = (contagem[variant] || 0) + 1;
           c.variant = variant;
+          // Primeira linha sobre a própria empresa, só na encaminha e quando a busca achou algo.
+          (c as any).linha = !jaTinha && variant === "encaminha" ? await linhaDaEmpresa(c) : null;
+          if (!jaTinha) c.first_message = firstMessage(c, variant ?? undefined, "Markus", (c as any).linha);
           await admin.from("prospecting_allowlist").update({
             status: auto ? "aprovado" : "aguardando_aprovacao",
             ...(auto ? { approved_at: agora.toISOString() } : {}),
             variant,
-            first_message: jaTinha ? c.first_message : firstMessage(c, variant ?? undefined),
+            first_message: c.first_message,
+            metadata: { ...(c.metadata || {}), linha_empresa: (c as any).linha ?? null },
             followup_message: followupMessage(c),
           }).eq("id", c.id);
         }
@@ -209,7 +230,7 @@ Deno.serve(async (req) => {
         const lista = validos.map((c: any, i: number) => {
           const motivos = ((c.metadata?.qualif?.motivos ?? []) as string[]).slice(0, 2).join(", ");
           const rotulo = perfilDoNicho(c.niche)?.singular ?? (ehDistribuidora(c.niche) ? "distribuidora (teste)" : null);
-          return `${i + 1}. ${c.agency_name}${c.city ? ` (${c.city})` : ""}${rotulo ? ` · ${rotulo}` : ""} · nota ${c.fit_score}${motivos ? ` · ${motivos}` : ""}`;
+          return `${i + 1}. ${c.agency_name}${c.city ? ` (${c.city})` : ""}${rotulo ? ` · ${rotulo}` : ""} · nota ${c.fit_score}${motivos ? ` · ${motivos}` : ""}${(c as any).linha ? `\n   "${(c as any).linha}"` : ""}`;
         }).join("\n");
         const destino = (await groupJid(admin, instanceName, "prospeccao")) || ownerNumber;
         if (auto) {
@@ -243,8 +264,11 @@ Deno.serve(async (req) => {
     ]);
     if ((enviadosHoje || 0) + (seguimentosHoje || 0) >= tetoHoje) { r.teto_do_dia = tetoHoje; continue; }
 
+    // Sequência (04/11/2026): followup_due_at é o próximo toque e metadata.toque o último
+    // feito. Quem já teve o seguimento único de antes (followup_sent_at sem toque) acabou.
     let consultaSeguimento = admin.from("prospecting_allowlist").select("*")
-      .eq("user_id", inst.user_id).eq("status", "enviado").is("followup_sent_at", null)
+      .eq("user_id", inst.user_id).eq("status", "enviado")
+      .or("followup_sent_at.is.null,metadata->>toque.not.is.null")
       .lte("followup_due_at", agora.toISOString());
     // "Passando só pra não deixar minha mensagem solta" vindo de outro número não faz sentido.
     if (inst.chip_desde) consultaSeguimento = consultaSeguimento.gte("sent_at", inst.chip_desde);
@@ -264,16 +288,25 @@ Deno.serve(async (req) => {
     }
     try {
       if (seguimento) {
-        if (inst.followup_audio_url) await sendVoiceNote(instanceName, destinoAlvo, inst.followup_audio_url);
-        else await sendHumanText(instanceName, destinoAlvo, alvo.followup_message || followupMessage(alvo));
-        await admin.from("prospecting_allowlist").update({ followup_sent_at: agora.toISOString() }).eq("id", alvo.id);
-        r.seguimento = alvo.agency_name;
+        const toque = (Number(alvo.metadata?.toque) || 1) + 1;
+        if (toque === 2 && inst.followup_audio_url) await sendVoiceNote(instanceName, destinoAlvo, inst.followup_audio_url);
+        else await sendHumanText(instanceName, destinoAlvo, toque === 2 ? (alvo.followup_message || followupMessage(alvo)) : mensagemDoToque(toque, alvo));
+        const dias = diasAteProximoToque(toque, alvo);
+        await admin.from("prospecting_allowlist").update({
+          followup_sent_at: agora.toISOString(),
+          // Pelo calendário desde o primeiro envio, mas nunca menos de 2 dias depois deste toque
+          // (toque atrasado pelo teto do chip não puxa o seguinte para o dia seguinte).
+          followup_due_at: dias === null ? null : new Date(Math.max(new Date(alvo.sent_at).getTime() + dias * 86400000, agora.getTime() + 2 * 86400000)).toISOString(),
+          metadata: { ...(alvo.metadata || {}), toque },
+        }).eq("id", alvo.id);
+        r.seguimento = `${alvo.agency_name} (toque ${toque})`;
       } else {
         await sendHumanText(instanceName, destinoAlvo, alvo.first_message || firstMessage(alvo));
         await admin.from("prospecting_allowlist").update({
           status: "enviado",
           sent_at: agora.toISOString(),
-          followup_due_at: new Date(agora.getTime() + FOLLOWUP_DIAS * 86400000).toISOString(),
+          followup_due_at: new Date(agora.getTime() + (diasAteProximoToque(1, alvo) ?? FOLLOWUP_DIAS) * 86400000).toISOString(),
+          metadata: { ...(alvo.metadata || {}), toque: 1 },
         }).eq("id", alvo.id);
         r.enviado = alvo.agency_name;
       }

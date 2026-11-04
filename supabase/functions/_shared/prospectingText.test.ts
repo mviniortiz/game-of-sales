@@ -149,3 +149,29 @@ Deno.test("robô de novo só encerra depois que o Markus já pediu a pessoa", as
   assert(!roboDeNovo("automatico", null, "Eles: menu"), "primeiro robô");
   assert(!roboDeNovo("duvida", "automatico", "Eles: menu\nMarkus: oi"), "pessoa respondeu");
 });
+
+Deno.test("sequência de 4 toques na encaminha; nicho e distribuidora seguem com um só", async () => {
+  const { diasAteProximoToque, mensagemDoToque } = await import("./prospectingText.ts");
+  const int = { niche: "integradora solar", variant: "encaminha" };
+  assertEquals([1, 2, 3, 4].map((t) => diasAteProximoToque(t, int)), [3, 7, 12, null]);
+  assertEquals([1, 2].map((t) => diasAteProximoToque(t, { niche: "distribuidora solar", variant: "encaminha" })), [4, null]);
+  assertEquals([1, 2].map((t) => diasAteProximoToque(t, { niche: "integradora solar", variant: "time" })), [4, null]);
+  const row = { ...int, agency_name: "Sol do Vale", metadata: { socio: "PAULO CHAVES" } };
+  const t3 = mensagemDoToque(3, row);
+  const t4 = mensagemDoToque(4, row);
+  assert(t3.startsWith("Oi, Paulo") && t3.includes("Sol do Vale") && t3.includes("só lê"));
+  assert(t4.includes("parar de te chamar"));
+  for (const t of [t3, t4, mensagemDoToque(2, row)]) assert(!/[—–]/.test(t) && !t.includes("http"), t);
+});
+
+Deno.test("linha da empresa entra depois da apresentação, só se for uma frase limpa", async () => {
+  const { comLinhaDaEmpresa, limparLinha } = await import("./prospectingText.ts");
+  const alvo = { agency_name: "Kammers Solar", city: "Ituporanga", rating_count: 0, niche: "integradora solar", metadata: { socio: "JOAO KAMMERS" } };
+  const comLinha = firstMessage(alvo, "encaminha", "Markus", "Vi que vocês instalam solar em casa e comércio em Ituporanga e região");
+  assert(/(Florianópolis|Floripa)\. Vi que vocês instalam solar em casa e comércio em Ituporanga e região\. /.test(comLinha), comLinha);
+  assertEquals(firstMessage(alvo, "encaminha", "Markus", null), firstMessage(alvo, "encaminha"));
+  assertEquals(limparLinha("Vi que vocês são referência! Top"), null);
+  assertEquals(limparLinha("Gostei do Instagram"), null);
+  assertEquals(limparLinha("Vi que vocês fazem solar. E aquecimento."), null);
+  assertEquals(comLinhaDaEmpresa("Oi, tudo bem? Aqui é o Markus, de Floripa. Pergunta", "Vi que vocês atendem Lages"), "Oi, tudo bem? Aqui é o Markus, de Floripa. Vi que vocês atendem Lages. Pergunta");
+});

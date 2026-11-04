@@ -134,7 +134,29 @@ export function primeiroNome(nome?: string | null): string | null {
  *  - pergunta: o formato aprovado em 09/10/2026 (quem é, por que eles, pergunta, pedido de 20 min);
  *  - numero: abre com o dado da Greener (22 orçamentos por mês) e pergunta quantos somem;
  *  - curta: uma pergunta só, sem pedir reunião; o convite vem depois que ele responder. */
-export function firstMessage(row: ProspectTarget, variant: ProspectVariant = "pergunta", sender = "Markus"): string {
+export function firstMessage(row: ProspectTarget, variant: ProspectVariant = "pergunta", sender = "Markus", linha?: string | null): string {
+  const texto = primeiraMensagemBase(row, variant, sender);
+  return variant === "encaminha" ? comLinhaDaEmpresa(texto, linha) : texto;
+}
+
+/** Linha sobre a própria empresa logo depois da apresentação (decisão de 04/11/2026):
+ *  o dono vê que alguém olhou a empresa dele. Sai da busca pública (prospectWeb.ts) e
+ *  vai no lote de aprovação, para o Markus ver antes de sair. */
+export function comLinhaDaEmpresa(texto: string, linha?: string | null): string {
+  const l = limparLinha(linha);
+  if (!l) return texto;
+  return texto.replace(/(de Florian[oó]polis\.|de Floripa[.!]) /, `$1 ${l} `);
+}
+
+/** Uma frase, começando com "Vi que", sem travessão, emoji, link ou exclamação. */
+export function limparLinha(linha?: string | null): string | null {
+  const l = String(linha || "").replace(/\s*[—–]\s*/g, ", ").replace(/\s+/g, " ").trim();
+  if (!/^Vi que /.test(l) || l.length > 160 || /https?:|www\.|@|!|\p{Extended_Pictographic}/u.test(l)) return null;
+  if ((l.match(/[.?]/g) || []).length > 1) return null;
+  return /[.]$/.test(l) ? l : `${l}.`;
+}
+
+function primeiraMensagemBase(row: ProspectTarget, variant: ProspectVariant, sender: string): string {
   const nome = row.agency_name || "sua empresa";
   const dono = primeiroNome(row.metadata?.socio);
   // Nicho novo: um formato só (o da encaminha), no vocabulário dele.
@@ -268,6 +290,34 @@ export function followupMessage(row?: Pick<ProspectTarget, "metadata" | "niche">
     return `Oi${dono ? `, ${dono}` : ""}, tudo bem? Passando só pra não deixar minha mensagem solta. Fiz uma ferramenta que avisa quando um orçamento fica 2 dias sem resposta e já deixa a retomada pronta, e tô liberando de graça pras 10 primeiras integradoras de SC. Quer que eu te conte como funciona? ${sender}`;
   }
   return `Oi${dono ? `, ${dono}` : ""}, tudo bem? Passando só pra não deixar minha mensagem solta. É uma pergunta só: ${pergunta.charAt(0).toLowerCase()}${pergunta.slice(1)} ${sender}`;
+}
+
+/** Sequência da integradora na versão atual (decisão de 04/11/2026): dia 0 a abordagem,
+ *  dia 3 a oferta das vagas, dia 7 o Raio-X, dia 12 a despedida. Cada toque conta no teto
+ *  do chip. Qualquer resposta para a sequência (followup_due_at vai a null). */
+export const DIAS_DOS_TOQUES = [0, 3, 7, 12];
+
+/** A sequência longa vale para integradora na encaminha; o resto tem só o seguimento. */
+export function temSequencia(row?: Pick<ProspectTarget, "niche"> & { variant?: string | null }): boolean {
+  return !perfilDoNicho(row?.niche) && !ehDistribuidora(row?.niche) && (!row?.variant || row.variant === "encaminha");
+}
+
+/** Dias depois do primeiro envio para o próximo toque, ou null quando a sequência acabou. */
+export function diasAteProximoToque(toqueFeito: number, row?: Pick<ProspectTarget, "niche"> & { variant?: string | null }): number | null {
+  // Fora da sequência: um seguimento só, no dia 4, como sempre foi.
+  if (!temSequencia(row)) return toqueFeito === 1 ? 4 : null;
+  return toqueFeito >= DIAS_DOS_TOQUES.length ? null : DIAS_DOS_TOQUES[toqueFeito];
+}
+
+/** Texto do toque (2, 3 ou 4). O 2 é o seguimento de sempre. */
+export function mensagemDoToque(toque: number, row: Pick<ProspectTarget, "metadata" | "niche" | "agency_name"> & { variant?: string | null }, sender = "Markus"): string {
+  if (toque <= 2 || !temSequencia(row)) return followupMessage(row, sender);
+  const dono = primeiroNome(row.metadata?.socio);
+  const nome = row.agency_name || "sua empresa";
+  if (toque === 3) {
+    return `Oi${dono ? `, ${dono}` : ""}, tudo bem? Se ajudar a decidir: a ferramenta mostra de graça quanto tem de orçamento parado no WhatsApp da ${nome}, com o valor somado. Leva uns 3 minutos e ela só lê, não manda nada pra cliente. Quer ver?`;
+  }
+  return `Oi${dono ? `, ${dono}` : ""}. Vou parar de te chamar por aqui pra não encher. Se um dia orçamento parado virar dor aí na ${nome}, é só responder esta mensagem. Abraço, ${sender}`;
 }
 
 /** Próximos horários livres do Markus: dias úteis, a partir das 15h, pulando hoje. */

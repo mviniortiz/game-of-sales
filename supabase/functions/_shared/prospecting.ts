@@ -10,7 +10,7 @@ import { saveNotice } from "./ownerGroups.ts";
 import { llmChat } from "./llm.ts";
 import { contextoDaLeitura, perfilDoNicho } from "./prospectNichos.ts";
 import { PREFIXO_AUDIO } from "./transcribe.ts";
-import { AUTO_ENVIO_MS, dividirMensagens, firstMessage, ehDistribuidora, OFERTA_VAGA, primeiroNome, roboDeNovo, IMAGEM_RETOMADA, MARCA_IMAGEM, nextSlots, parseProspectCommand, pausaEntreMensagens, portaJaFoi, RAIO_X_LINK, randomCode, respostaPorta, tempoDigitando } from "./prospectingText.ts";
+import { AUTO_ENVIO_MS, dividirMensagens, firstMessage, ehDistribuidora, OFERTA_VAGA, primeiroNome, roboDeNovo, limparLinha, IMAGEM_RETOMADA, MARCA_IMAGEM, nextSlots, parseProspectCommand, pausaEntreMensagens, portaJaFoi, RAIO_X_LINK, randomCode, respostaPorta, tempoDigitando } from "./prospectingText.ts";
 export { firstMessage, followupMessage, nextSlots, parseProspectCommand, randomCode } from "./prospectingText.ts";
 
 export const PROSPECT_PREFIX = "PROSPECÇÃO";
@@ -107,6 +107,36 @@ export async function sendVoiceNote(instanceName: string, number: string, audioU
     method: "POST",
     body: JSON.stringify({ number, audio: audioUrl, delay: 3000, presence: "recording" }),
   }, 30000);
+}
+
+/** Frase "Vi que..." sobre a empresa, só com o que a busca pública achou (qualif.web).
+ *  Sem resumo ou se a IA falhar, devolve null e a primeira mensagem sai sem ela. */
+export async function linhaDaEmpresa(row: { agency_name?: string | null; city?: string | null; metadata?: any }): Promise<string | null> {
+  const web = row.metadata?.qualif?.web;
+  if (!web?.resumo) return null;
+  try {
+    const res = await llmChat({
+      messages: [
+        {
+          role: "system",
+          content: [
+            "Você escreve UMA frase curta que o Markus põe no começo de uma mensagem de WhatsApp para o dono de uma integradora de energia solar, para mostrar que olhou a empresa dele.",
+            "Comece com 'Vi que vocês'. Use só fatos do resumo: o que fazem, para quem ou onde. Até 16 palavras.",
+            "Sem elogio, sem adjetivo de propaganda ('referência', 'líder', 'qualidade'), sem número, sem citar CNPJ, CNAE, Facebook ou Instagram, sem travessão, sem exclamação.",
+            "Português do Brasil informal, como o Markus digita ('pra', 'tão'). Se o resumo não diz nada concreto sobre o que a empresa faz, responda só: NADA",
+          ].join("\n"),
+        },
+        { role: "user", content: `Empresa: ${row.agency_name ?? ""}${row.city ? `, ${row.city}` : ""}\nResumo da busca: ${web.resumo}` },
+      ],
+      max_completion_tokens: 120,
+    }, { label: "prospect-linha", prefer: "anthropic" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const t = String(data?.choices?.[0]?.message?.content || "").trim().replace(/^["']|["']$/g, "");
+    return t.toUpperCase().startsWith("NADA") ? null : limparLinha(t);
+  } catch {
+    return null;
+  }
 }
 
 export type ReplyRead = { kind: "interesse" | "sem_interesse" | "automatico" | "duvida" | "fora_do_perfil"; draft: string; porta: boolean; quer: boolean };
