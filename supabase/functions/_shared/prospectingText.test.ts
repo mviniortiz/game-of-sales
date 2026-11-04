@@ -195,8 +195,10 @@ Deno.test("queda de conexão não vira restrição do chip", async () => {
   assertEquals(tipoDaFalha({ mensagem: falhou, estadoAgora: "open", quedaRecente: true, quedasHoje: 0 }), "conexao");
   // sessão caída agora
   assertEquals(tipoDaFalha({ mensagem: "timeout", estadoAgora: "close", quedaRecente: false, quedasHoje: 0 }), "conexao");
-  // sessão aberta e estável: é a restrição de 16/10
-  assertEquals(tipoDaFalha({ mensagem: falhou, estadoAgora: "open", quedaRecente: false, quedasHoje: 0 }), "restricao");
+  // sessão estável, primeira falha: suspeita do número (Solar Garcia, 04/11)
+  assertEquals(tipoDaFalha({ mensagem: falhou, estadoAgora: "open", quedaRecente: false, quedasHoje: 0 }), "suspeita");
+  // outra integradora tinha falhado logo antes: é a restrição de 16/10
+  assertEquals(tipoDaFalha({ mensagem: falhou, estadoAgora: "open", quedaRecente: false, quedasHoje: 0, outraFalhouAntes: true }), "restricao");
   // terceira queda no mesmo dia já conta como restrição
   assertEquals(tipoDaFalha({ mensagem: falhou, estadoAgora: "open", quedaRecente: true, quedasHoje: 2 }), "restricao");
   // erro de número (sem WhatsApp etc.) segue o caminho comum

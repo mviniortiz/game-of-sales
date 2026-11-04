@@ -399,15 +399,24 @@ export function chipAquecendo(chipDesde: string | null, agora: Date): boolean {
   return Boolean(chipDesde) && diaBr(agora) - diaBr(new Date(chipDesde!)) < DIAS_AQUECENDO;
 }
 
-/** Por que um envio frio falhou. "failed to send" com a sessão aberta é a restrição do
- *  WhatsApp (16/10/2026). Mas a sessão que caiu e voltou minutos antes também devolve
- *  esse erro: em 04/11/2026 a conexão reconectou às 9h33 e o envio das 9h36 virou
- *  "restrição", com pausa de 24h e aquecimento do zero. Queda de conexão só espera e
- *  tenta de novo; se cair 3 vezes no mesmo dia, aí sim conta como restrição. */
-export type TipoFalha = "conexao" | "restricao" | "comum";
-export function tipoDaFalha(p: { mensagem: string; estadoAgora: string | null; quedaRecente: boolean; quedasHoje: number }): TipoFalha {
+/** Por que um envio frio falhou. "failed to send" é a frase da Whatsmiau para qualquer
+ *  falha de envio, então sozinha não prova nada:
+ *  - sessão caída agora, ou queda nos 15 minutos antes (04/11/2026, 9h33 e 9h36): conexão.
+ *    Espera e tenta de novo; na 3ª queda do dia conta como restrição.
+ *  - com a sessão estável, a primeira falha é só suspeita: pode ser o número daquela
+ *    integradora (04/11, Solar Garcia falhou duas vezes enquanto número novo saía do
+ *    celular). A integradora vai para o fim da fila e o próximo envio vai para outra.
+ *  - restrição de verdade (16/10/2026) é quando outra integradora também falha logo em
+ *    seguida. Aí pausa 24h. */
+export type TipoFalha = "conexao" | "suspeita" | "restricao" | "comum";
+export function tipoDaFalha(p: {
+  mensagem: string; estadoAgora: string | null; quedaRecente: boolean; quedasHoje: number;
+  /** Outra integradora falhou com "failed to send" nas últimas 2 horas. */
+  outraFalhouAntes?: boolean;
+}): TipoFalha {
   const failedToSend = /failed to send/i.test(p.mensagem);
   const deConexao = p.estadoAgora !== "open" || (failedToSend && p.quedaRecente);
   if (deConexao) return p.quedasHoje >= 2 ? "restricao" : "conexao";
-  return failedToSend ? "restricao" : "comum";
+  if (!failedToSend) return "comum";
+  return p.outraFalhouAntes ? "restricao" : "suspeita";
 }
