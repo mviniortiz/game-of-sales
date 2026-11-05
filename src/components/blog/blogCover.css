@@ -1,0 +1,225 @@
+/* Capas do blog: kit Stageshow sobre os fundos chapados do sistema Lume em campo
+   (LP.9). A caixa tem a proporção da cena desde o primeiro quadro, então nada
+   pula quando o Stage mede o tamanho. */
+.vbc {
+  --vbc-paper: #fff;
+  --vbc-chat: var(--lp-chat-bg, #efeae2);
+  --vbc-out: var(--lp-chat-out, #d9fdd3);
+  --vbc-rascunho: #fff3cc;
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: 22px;
+  isolation: isolate;
+}
+.vbc--sol { background: var(--lp-sol, #ffc933); }
+.vbc--noite { background: var(--lp-noite, #0f1730); }
+.vbc--azul { background: var(--lp-blue, #1556c0); }
+.vbc--creme { background: var(--vb-areia, #e8e1cf); }
+.vbc .vbc-stage { position: absolute; inset: 0; background: transparent; font-family: var(--lp-font-display); color: var(--lp-ink); }
+.vbc .vbc-stage .ss-stage { background: transparent; }
+
+/* Os objetos sobem um pouco quando o cartão do post recebe o ponteiro. */
+.vbc-chat,
+.vbc-doc,
+.vbc-lista,
+.vbc-janela {
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vbc-selo,
+.vbc-arquivo,
+.vbc-eva {
+  transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .vb-card:hover .vbc-chat,
+  .vb-card:hover .vbc-doc,
+  .vb-card:hover .vbc-lista,
+  .vb-card:hover .vbc-janela { transform: translateY(-6px); }
+  .vb-card:hover .vbc-selo,
+  .vb-card:hover .vbc-arquivo { transform: translate(6px, -10px); }
+  .vb-card:hover .vbc-eva { transform: translateY(-8px); }
+}
+
+/* Conversa de WhatsApp: cabeçalho branco e fundo bege do app. */
+.vbc-chat {
+  position: absolute;
+  top: 40px;
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--vbc-chat);
+  box-shadow: 0 1px 0 rgba(15, 23, 48, 0.06), 0 18px 40px -18px rgba(15, 23, 48, 0.45);
+}
+.vbc--sol .vbc-chat,
+.vbc--creme .vbc-chat { box-shadow: 0 0 0 1px rgba(15, 23, 48, 0.08), 0 18px 40px -22px rgba(15, 23, 48, 0.4); }
+.vbc-chat__topo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--vbc-paper);
+  font-size: 15px;
+  line-height: 1.2;
+}
+.vbc-chat__topo b { display: block; font-weight: 600; }
+.vbc-chat__topo small { display: block; font-size: 12px; color: var(--lp-ink-subtle); }
+.vbc-chat__topo .ss-bar { display: block; margin-top: 6px; }
+.vbc-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--lp-blue);
+  color: #fff;
+  font-weight: 700;
+}
+.vbc-avatar--cliente { background: #2f7d5b; }
+.vbc .vbc-thread {
+  --ss-me: var(--vbc-out);
+  --ss-me-text: var(--lp-ink);
+  --ss-them: var(--vbc-paper);
+  --ss-them-text: var(--lp-ink);
+  --ss-thread-size: 15px;
+  flex: 1;
+  min-height: 0;
+  padding: 10px 12px 52px;
+}
+/* O aviso sobe mais e corta menos: o balão inteiro cabe acima da borda. */
+.vbc .vbc-chat--aviso { top: 26px; height: 330px; }
+.vbc .vbc-chat--aviso .vbc-thread { padding-bottom: 44px; }
+.vbc-aviso { display: grid; gap: 4px; }
+.vbc-aviso b { font-weight: 600; }
+.vbc-aviso small { font-size: 12.5px; color: var(--lp-ink-muted); }
+.vbc-rascunho { margin: 3px 0; padding: 7px 9px; border-radius: 9px; background: var(--vbc-rascunho); font-weight: 500; }
+
+/* Selo de espera no canto do cartão, metade para fora. */
+.vbc-selo {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--vbc-paper);
+  color: var(--lp-ink);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 0 0 1px rgba(15, 23, 48, 0.08), 0 10px 24px -12px rgba(15, 23, 48, 0.45);
+}
+.vbc-selo svg { width: 17px; height: 17px; color: var(--lp-wait); }
+
+.vbc-eva { position: absolute; z-index: 2; line-height: 0; }
+
+/* Proposta em papel. */
+.vbc-doc {
+  position: absolute;
+  top: 36px;
+  height: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px 22px 0;
+  border-radius: 8px;
+  background: var(--vbc-paper);
+  box-shadow: 0 0 0 1px rgba(15, 23, 48, 0.06), 0 22px 44px -22px rgba(15, 23, 48, 0.5);
+}
+.vbc-doc__titulo { margin: 4px 0 0; font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
+.vbc-doc__linhas { display: grid; gap: 7px; margin: 0; font-size: 12.5px; }
+.vbc-doc__linhas > div { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 7px; border-bottom: 1px solid var(--lp-line); }
+.vbc-doc__linhas dt { color: var(--lp-ink-subtle); }
+.vbc-doc__linhas dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.vbc-doc__destaque {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--vbc-rascunho);
+  font-size: 12.5px;
+}
+.vbc-doc__destaque b { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+
+/* Arquivo do WhatsApp, metade para fora do papel. */
+.vbc-arquivo {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 192px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--vbc-out);
+  font-size: 14px;
+  line-height: 1.25;
+  box-shadow: 0 0 0 1px rgba(15, 23, 48, 0.06), 0 10px 24px -12px rgba(15, 23, 48, 0.45);
+}
+.vbc-arquivo b { display: block; font-weight: 600; }
+.vbc-arquivo small { display: block; font-size: 12px; color: var(--lp-ink-subtle); }
+.vbc-arquivo__ico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: #c0392b;
+  color: #fff;
+}
+.vbc-arquivo__ico svg { width: 18px; height: 18px; }
+
+/* Lista de propostas, como a da home. */
+.vbc-lista {
+  position: absolute;
+  height: 320px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--vbc-paper);
+  font-size: 14.5px;
+  line-height: 1.3;
+  box-shadow: 0 0 0 1px rgba(15, 23, 48, 0.06), 0 22px 44px -24px rgba(15, 23, 48, 0.5);
+}
+.vbc-lista__topo { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--lp-line); }
+.vbc-lista__topo b { font-weight: 600; }
+.vbc-lista ul { margin: 0; padding: 0; list-style: none; }
+.vbc-lista li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--lp-line); }
+.vbc-lista__cliente { display: grid; gap: 6px; min-width: 0; }
+.vbc-lista__cliente b { font-weight: 500; }
+.vbc-lista__valor { display: grid; justify-items: end; gap: 4px; }
+.vbc-lista__valor b { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.vbc-carimbo {
+  display: inline-flex;
+  align-items: center;
+  border: 2px solid currentColor;
+  border-radius: 7px;
+  padding: 1px 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.vbc-carimbo--espera { color: var(--lp-wait); }
+.vbc-carimbo--ok { color: var(--lp-ok); }
+.vbc-carimbo--neutro { color: var(--lp-ink-muted); }
+
+/* Janela de assistente de IA: pergunta enviada e a resposta começando. */
+.vbc .vbc-janela { box-shadow: 0 0 0 1px rgba(15, 23, 48, 0.08), 0 24px 48px -24px rgba(0, 0, 0, 0.6); }
+.vbc .vbc-thread--chat { --ss-me: #eef0f4; --ss-me-text: var(--lp-ink); --ss-thread-size: 14.5px; padding: 14px 18px 40px; height: 100%; }
+.vbc-resposta { display: grid; gap: 8px; }
+.vbc-resposta .ss-bar { display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vbc-chat, .vbc-doc, .vbc-lista, .vbc-janela, .vbc-selo, .vbc-arquivo, .vbc-eva { transition: none; }
+  .vb-card:hover .vbc-chat, .vb-card:hover .vbc-doc, .vb-card:hover .vbc-lista, .vb-card:hover .vbc-janela,
+  .vb-card:hover .vbc-selo, .vb-card:hover .vbc-arquivo, .vb-card:hover .vbc-eva { transform: none; }
+}
