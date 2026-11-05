@@ -12,7 +12,8 @@
 (function () {
     // House 02 (Lily J, Mixkit 744): 122,99 BPM, primeira batida em 0,017 s.
     // Valores do scripts/audiomap.mjs. O filme começa no segundo 0 da trilha.
-    const BPM = 122.99, FASE = 0.017;
+    // Trilha por filme: window.TRILHA = { bpm, fase } antes do base.js (fase no tempo do filme).
+    const BPM = (window.TRILHA && window.TRILHA.bpm) || 122.99, FASE = (window.TRILHA && window.TRILHA.fase != null) ? window.TRILHA.fase : 0.017;
     const BEAT = 60 / BPM;
     /** Tempo (s) da batida k do filme. Toda entrada de cena ancora numa batida. */
     const B = (k) => +(FASE + k * BEAT).toFixed(4);
@@ -186,5 +187,97 @@
             window.__timelines[id] = tl;
         },
     };
+
+    // ── Motion v2 (04/11/2026, guia oficial skills/hyperframes/references/motion.md) ──
+    /** Quebra o texto em palavras (.w), mantendo spans internos (marca). */
+    function quebra(el) {
+        if (el.dataset.quebrado) return [...el.querySelectorAll(".w")];
+        const anda = (n) => [...n.childNodes].forEach((c) => {
+            if (c.nodeType === 3) {
+                const frag = document.createDocumentFragment();
+                c.textContent.split(/(\s+)/).forEach((p) => {
+                    if (!p) return;
+                    if (/^\s+$/.test(p)) frag.appendChild(document.createTextNode(p));
+                    else { const w = document.createElement("span"); w.className = "w"; w.style.display = "inline-block"; w.textContent = p; frag.appendChild(w); }
+                });
+                c.replaceWith(frag);
+            } else if (c.nodeType === 1 && !c.classList.contains("w")) anda(c);
+        });
+        anda(el); el.dataset.quebrado = "1";
+        return [...el.querySelectorAll(".w")];
+    }
+    Object.assign(api, {
+        quebra,
+        /** Título palavra por palavra: blur 6 px -> 0 e opacidade, 0,07 s entre palavras, sem deslocar. */
+        palavras(tl, sel, t, { gap = 0.07, dur = 0.16, blur = 6 } = {}) {
+            const ws = $$(sel).flatMap(quebra);
+            antes(tl, ws, { opacity: 0, filter: `blur(${blur}px)` });
+            tl.fromTo(ws, { opacity: 0, filter: `blur(${blur}px)` }, { opacity: 1, filter: "blur(0px)", duration: dur, stagger: gap, ease: "expo.out", ...ir }, t);
+            return ws.length * gap + dur;
+        },
+        /** Saída da linha: blur e some, palavra por palavra. */
+        apaga(tl, sel, t, { gap = 0.03 } = {}) {
+            const ws = $$(sel).flatMap(quebra);
+            tl.to(ws, { opacity: 0, filter: "blur(8px)", duration: 0.16, stagger: gap, ease: "power3.in" }, t);
+        },
+        /** Caça-níquel: a palavra rola pelas opções (~0,11 s cada) e para na última. */
+        slot(tl, sel, opcoes, t, { passo = 0.11 } = {}) {
+            const el = $(sel);
+            opcoes.forEach((o, i) => {
+                const ti = t + i * passo, ultimo = i === opcoes.length - 1;
+                tl.set(el, { textContent: o }, ti);
+                tl.fromTo(el, { yPercent: -30, filter: "blur(5px)" }, { yPercent: 0, filter: "blur(0px)", duration: ultimo ? 0.3 : passo, ease: ultimo ? "back.out(1.6)" : "none", ...ir }, ti);
+            });
+        },
+        /** Íris: o mundo novo abre em círculo a partir de (x, y). */
+        iris(tl, x, y, cor, t, { dur = 0.4 } = {}) {
+            const el = document.createElement("div");
+            el.style.cssText = `position:absolute;inset:0;z-index:45;background:${cor};visibility:hidden`;
+            $("#camera").appendChild(el);
+            antes(tl, el, { autoAlpha: 0, clipPath: `circle(0px at ${x}px ${y}px)` });
+            tl.set(el, { autoAlpha: 1 }, t);
+            tl.to(el, { clipPath: `circle(2300px at ${x}px ${y}px)`, duration: dur, ease: "power3.in" }, t);
+            tl.set(el, { autoAlpha: 0 }, t + dur + 0.02);
+        },
+        /** Objeto que vira o mundo: um retângulo sai da caixa do elemento e cobre a tela. */
+        vira(tl, sel, cor, t, { dur = 0.5, de = null, raio = 24 } = {}) {
+            const r = $(sel).getBoundingClientRect(), root = $("#root").getBoundingClientRect();
+            const L = r.left - root.left, T = r.top - root.top, R = 1080 - L - r.width, Bm = 1920 - T - r.height;
+            const el = document.createElement("div");
+            el.style.cssText = "position:absolute;inset:0;z-index:45;visibility:hidden";
+            $("#camera").appendChild(el);
+            const caixa = { v: 0 };
+            const pinta = () => { const k = caixa.v, q = (x) => (x * (1 - k)).toFixed(1);
+                el.style.clipPath = `inset(${q(T)}px ${q(R)}px ${q(Bm)}px ${q(L)}px round ${(raio * (1 - k)).toFixed(1)}px)`; };
+            antes(tl, el, { autoAlpha: 0, backgroundColor: de || cor });
+            tl.set(el, { autoAlpha: 1 }, t);
+            tl.fromTo(caixa, { v: 0 }, { v: 1, duration: dur, ease: "power2.inOut", onUpdate: pinta, onStart: pinta, ...ir }, t);
+            tl.fromTo(el, { backgroundColor: de || cor }, { backgroundColor: cor, duration: dur, ease: "power2.inOut", ...ir }, t);
+            tl.set(el, { autoAlpha: 0 }, t + dur + 0.02);
+            pinta();
+        },
+        /** Chicote: sai de lado com rastro (0,22 s, acelera). */
+        chicoteSai(tl, sel, t, { x = -900 } = {}) {
+            tl.to(sel, { x: `+=${x}`, filter: "blur(14px)", opacity: 0, duration: 0.22, ease: "power3.in" }, t);
+        },
+        /** Chicote: entra de lado borrado e firma em ~0,3 s. */
+        chicoteEntra(tl, sel, t, { x = 900 } = {}) {
+            antes(tl, sel, { x, opacity: 0, filter: "blur(14px)" });
+            tl.fromTo(sel, { x, opacity: 0, filter: "blur(14px)" }, { x: 0, opacity: 1, filter: "blur(0px)", duration: 0.34, ease: "expo.out", ...ir }, t);
+        },
+        /** Soco de câmera: aproxima no elemento (o centro dele vira a origem) e segura. */
+        soco(tl, sel, t, { s = 1.3, dur = 0.5 } = {}) {
+            const r = $(sel).getBoundingClientRect(), root = $("#root").getBoundingClientRect();
+            const cx = 540, cy = r.top - root.top + r.height / 2; // close centrado na horizontal: nada sai pela borda
+            tl.set("#camera", { transformOrigin: `${cx}px ${cy}px` }, t - 0.002);
+            tl.to("#camera", { scale: s, duration: dur, ease: "expo.out" }, t);
+        },
+        solta(tl, t, { dur = 0.35 } = {}) { tl.to("#camera", { scale: 1, duration: dur, ease: "power2.inOut" }, t); },
+        /** Nasce grande e borrado e assenta. */
+        pousa(tl, sel, t, { de = 1.12, dur = 0.55 } = {}) {
+            antes(tl, sel, { autoAlpha: 0, scale: de, filter: "blur(10px)" });
+            tl.fromTo(sel, { autoAlpha: 0, scale: de, filter: "blur(10px)" }, { autoAlpha: 1, scale: 1, filter: "blur(0px)", duration: dur, ease: "expo.out", ...ir }, t);
+        },
+    });
     window.VF = api;
 })();

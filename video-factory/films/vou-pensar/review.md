@@ -13,3 +13,6 @@ Final 1080×1920/60 direto (`--1080`), 24,9 s, -14,1 LUFS, pico -2,2 dBTP. Check
 | 9 Som e voz | 2 |
 | 10 Acabamento | 1 (1080 direto, sem a passada 4K) |
 **19/20, aprovado.** Serve para anúncio de meio de funil (quem já mandou orçamento e ouviu "vou pensar").
+
+## v2 · 21,3 s · -14,2 LUFS · check 0.9.13 limpo · transcrição igual à copy
+Hook 2, dor 2, fidelidade 2 (aviso com texto do código, rascunho curto e ilustrativo), humano aprova 2 ("1" com close, selo), identidade 2, leitura 2, ritmo 2, sem IA 2, som 2, acabamento 1. **19/20.**

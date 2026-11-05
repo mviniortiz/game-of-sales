@@ -13,3 +13,6 @@ Final 1080×1920/60, 22,4 s, -14,1 LUFS, pico -2,1 dBTP. Check limpo; transcriç
 | 9 Som e voz | 2 |
 | 10 Acabamento | 1 |
 **19/20, aprovado.** Serve pra quem já usa CRM e acha que não precisa.
+
+## v2 · 18,2 s · -14,1 LUFS · check limpo · transcrição igual à copy
+Hook 2 ("0 orçamentos cadastrados"), dor 2, fidelidade 2, humano aprova 2 (aviso + "1" com close), identidade 2, leitura 2, ritmo 2, sem IA 2, som 2, acabamento 1. **19/20.**

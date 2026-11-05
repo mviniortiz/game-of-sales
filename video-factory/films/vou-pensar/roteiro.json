@@ -1,39 +1,19 @@
 {
   "slug": "vou-pensar",
-  "duracao": 24.9,
+  "duracao": 21.3,
   "trilha": {
-    "arquivo": "~/Movies/vyzon-film/trilha/house-02-lily-j-mixkit-744.mp3",
-    "bpm": 122.99,
-    "fase": 0.017,
-    "inicio": 0,
-    "ganho_db": -11,
-    "ducking_db": -12,
-    "fade_out": 1.2,
+    "arquivo": "~/Movies/vyzon-film/trilha/lume-eleven-music-01.mp3",
+    "bpm": 119.9,
+    "fase": 0,
+    "inicio": 7.974,
+    "ganho_db": -10,
+    "ducking_db": -11,
+    "fade_out": 1.0,
     "automacao": [
       {
         "beat": 0,
         "lp_hz": 20000,
         "ganho_db": 0
-      },
-      {
-        "beat": 7.6,
-        "lp_hz": 20000,
-        "ganho_db": 0
-      },
-      {
-        "beat": 8,
-        "lp_hz": 900,
-        "ganho_db": -2
-      },
-      {
-        "beat": 17.4,
-        "lp_hz": 900,
-        "ganho_db": -2
-      },
-      {
-        "beat": 18,
-        "lp_hz": 20000,
-        "ganho_db": 1
       }
     ]
   },
@@ -47,51 +27,38 @@
   "falas": [
     {
       "id": "L1",
-      "arquivo": "V1-t1.wav",
+      "arquivo": "VP1-t1.wav",
       "beat": 0,
       "offset": 0.1,
-      "texto": "O cliente disse que ia pensar e sumiu?",
+      "texto": "Cliente disse que ia pensar?",
       "semLegenda": true
     },
     {
       "id": "L2",
-      "arquivo": "V2-t1.wav",
-      "beat": 8,
-      "offset": 0.1,
-      "texto": "Vou pensar quase nunca é um não. É uma dúvida que ele não falou.",
-      "legenda": [
-        [
-          0.1,
-          "“Vou pensar” quase nunca é um não."
-        ],
-        [
-          2.44,
-          "É uma dúvida que ele não falou."
-        ]
-      ]
+      "arquivo": "VP2-t1.wav",
+      "beat": 4,
+      "offset": 0.05,
+      "texto": "E nunca mais respondeu.",
+      "semLegenda": true
     },
     {
       "id": "L3",
-      "arquivo": "V3-t2.wav",
-      "beat": 18,
-      "offset": 0.15,
-      "texto": "A Lume lê a conversa e escreve a mensagem que pergunta no que ele ficou pensando.",
+      "arquivo": "VP3-t1.wav",
+      "beat": 17,
+      "offset": 0.05,
+      "texto": "A Lume te avisa e já escreve a mensagem.",
       "legenda": [
         [
-          0.04,
-          "A Lume lê a conversa e escreve a mensagem"
-        ],
-        [
-          2.58,
-          "que pergunta no que ele ficou pensando."
+          0.05,
+          "A Lume te avisa e já escreve a mensagem."
         ]
       ]
     },
     {
       "id": "L4",
       "arquivo": "V4-t1.wav",
-      "beat": 28.5,
-      "offset": 0.1,
+      "beat": 23,
+      "offset": 0.05,
       "texto": "Você responde um, e ela sai do seu número.",
       "legenda": [
         [
@@ -102,23 +69,10 @@
     },
     {
       "id": "L5",
-      "arquivo": "V5-t2.wav",
+      "arquivo": "VP5-t1.wav",
       "beat": 36,
       "offset": 0.1,
-      "texto": "Nada vai para o cliente sem você aprovar.",
-      "legenda": [
-        [
-          0.02,
-          "Nada vai para o cliente sem você aprovar."
-        ]
-      ]
-    },
-    {
-      "id": "L6",
-      "arquivo": "CTA-t2.wav",
-      "beat": 44,
-      "offset": 0.1,
-      "texto": "Veja suas propostas paradas. É grátis.",
+      "texto": "A Lume lembra. Você fecha.",
       "semLegenda": true
     }
   ],
@@ -126,85 +80,79 @@
     {
       "arquivo": "hook-thud-v1.mp3",
       "beat": 0,
-      "offset": -0.017,
-      "ganho_db": -6
+      "offset": 0,
+      "ganho_db": -7
     },
     {
       "arquivo": "tick-v2.mp3",
-      "beat": 9,
+      "beat": 2,
       "offset": -0.14,
       "ganho_db": -11
     },
     {
       "arquivo": "pop-light-v1.mp3",
-      "beat": 10,
-      "offset": -0.01,
-      "ganho_db": -11
+      "beat": 4,
+      "offset": 0,
+      "ganho_db": -12
     },
     {
       "arquivo": "zoom-air-v1.mp3",
-      "beat": 12,
-      "offset": -0.19,
-      "ganho_db": -14
+      "beat": 8,
+      "offset": -0.4,
+      "ganho_db": -13
     },
     {
-      "arquivo": "zoom-air-v1.mp3",
-      "beat": 14,
-      "offset": -0.19,
-      "ganho_db": -14
+      "arquivo": "tick-v2.mp3",
+      "beat": 10.5,
+      "offset": -0.14,
+      "ganho_db": -12
     },
     {
       "arquivo": "morph-v1.mp3",
-      "beat": 17,
-      "offset": 0.0,
+      "beat": 13,
+      "offset": -0.4,
       "ganho_db": -12
     },
     {
       "arquivo": "riser-chargeup-v1.mp3",
-      "beat": 18,
+      "beat": 17,
       "offset": -1.04,
-      "ganho_db": -12
-    },
-    {
-      "arquivo": "pop-light-v1.mp3",
-      "beat": 19,
-      "offset": -0.01,
       "ganho_db": -13
     },
     {
       "arquivo": "notify-v1.mp3",
-      "beat": 22,
-      "offset": 0.1,
-      "ganho_db": -7
+      "beat": 17,
+      "offset": 0.05,
+      "ganho_db": -8
     },
     {
       "arquivo": "approve-click-v1.mp3",
-      "beat": 28.5,
-      "offset": -0.025,
+      "beat": 23,
+      "offset": -0.02,
       "ganho_db": -6
     },
     {
-      "arquivo": "pop-light-v1.mp3",
-      "beat": 29.5,
-      "offset": -0.01,
+      "arquivo": "morph-v1.mp3",
+      "beat": 29,
+      "offset": -0.45,
       "ganho_db": -12
     },
     {
       "arquivo": "tick-v2.mp3",
-      "beat": 38,
+      "beat": 30.5,
       "offset": -0.14,
       "ganho_db": -10
     },
     {
       "arquivo": "pop-light-v1.mp3",
-      "beat": 39.5,
-      "offset": -0.01,
+      "beat": 31.8,
+      "offset": 0,
       "ganho_db": -10
     },
     {
       "arquivo": "payoff-v1.mp3",
-      "beat": 44,
-      "offset": -0.015,
+      "beat": 36,
+      "offset": -0.4,
       "ganho_db": -9
     }
   ],
