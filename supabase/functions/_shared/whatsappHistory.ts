@@ -23,6 +23,9 @@ export function parseTextFromMsg(msg: any): string | null {
   if (m.extendedTextMessage?.text) return m.extendedTextMessage.text;
   if (m.imageMessage?.caption) return m.imageMessage.caption;
   if (m.videoMessage?.caption) return m.videoMessage.caption;
+  // PDF com legenda ("segue a proposta, R$ 28.900"): o valor costuma estar aqui.
+  if (m.documentMessage?.caption) return m.documentMessage.caption;
+  if (m.documentWithCaptionMessage?.message?.documentMessage?.caption) return m.documentWithCaptionMessage.message.documentMessage.caption;
   return null;
 }
 
@@ -35,6 +38,8 @@ export function detectMsgType(msg: any): { type: string; mimetype?: string; capt
   if (m.audioMessage) return { type: "audio", mimetype: m.audioMessage.mimetype, audioDuration: Number(m.audioMessage.seconds || 0) || undefined, mediaUrl: m.audioMessage.url };
   if (m.stickerMessage) return { type: "sticker", mimetype: m.stickerMessage.mimetype, mediaUrl: m.stickerMessage.url };
   if (m.documentMessage) return { type: "document", mimetype: m.documentMessage.mimetype, caption: m.documentMessage.fileName, mediaUrl: m.documentMessage.url };
+  const docLegenda = m.documentWithCaptionMessage?.message?.documentMessage;
+  if (docLegenda) return { type: "document", mimetype: docLegenda.mimetype, caption: docLegenda.fileName, mediaUrl: docLegenda.url };
   if (m.locationMessage || m.liveLocationMessage) return { type: "location" };
   if (m.contactMessage) return { type: "contact" };
   if (m.reactionMessage) return { type: "reaction" };

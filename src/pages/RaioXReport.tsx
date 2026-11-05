@@ -38,7 +38,7 @@ type Item = {
 type Report = {
     company_name: string | null;
     created_at: string;
-    summary: { messages_read: number; window_days: number; descartadas?: number };
+    summary: { messages_read: number; window_days: number; descartadas?: number; history_messages?: number };
     items: Item[];
     can_edit?: boolean;
 };
@@ -100,7 +100,9 @@ const RaioXReport = () => {
     useEffect(() => {
         let alive = true;
         if (preview) {
-            setReport(EXEMPLO);
+            // ?vazio=sem_leitura | sem_proposta mostra os relatórios vazios.
+            const v = params.get("vazio");
+            setReport(v ? { ...EXEMPLO, items: [], summary: { ...EXEMPLO.summary, history_messages: v === "sem_leitura" ? 0 : 6461 } } : EXEMPLO);
             setState("ready");
             if (params.get("fundadora")) setVaga({ fundadora: true, numero: 3, vagas_restantes: 7, limite: 10 });
             return;
@@ -213,6 +215,11 @@ const RaioXReport = () => {
     const rowProps = { isAdmin, onToggle: (index: number, ex: boolean) => void toggle(index, ex), onAmount: setAmount };
 
     const fundadora = vaga?.fundadora && vaga.numero ? vaga : null;
+    // Relatório vazio tem três razões diferentes (QA de 04/11/2026): o histórico não
+    // chegou, chegou e não tinha proposta, ou tinha e nenhuma parou. Antes as três
+    // apareciam como "Nenhuma proposta parada".
+    const lidas = report.summary.history_messages ?? report.summary.messages_read;
+    const vazio = view.stuck > 0 ? null : lidas === 0 ? "sem_leitura" : view.quotes === 0 ? "sem_proposta" : "tudo_respondido";
 
     return (
         <Shell placar={isAdmin}>
@@ -220,10 +227,25 @@ const RaioXReport = () => {
                 <p className="text-[13px] md:text-sm" style={{ color: "var(--lp-ink-55)" }}>
                     Raio-X das propostas · {report.company_name ?? "sua empresa"} · {created}
                 </p>
-                {view.stuck === 0 ? (
-                    <h1 className="lp-display mt-4" style={{ fontSize: "clamp(2rem, 6vw, 3.5rem)", lineHeight: 1.05, letterSpacing: "-0.04em", color: "var(--lp-ink)" }}>
-                        Nenhuma proposta parada.
-                    </h1>
+                {vazio ? (
+                    <>
+                        <h1 className="lp-display mt-4" style={{ fontSize: "clamp(2rem, 6vw, 3.5rem)", lineHeight: 1.05, letterSpacing: "-0.04em", color: "var(--lp-ink)" }}>
+                            {vazio === "sem_leitura" ? "Ainda não consegui ler seu WhatsApp." : vazio === "sem_proposta" ? "Não achei proposta enviada." : "Nenhuma proposta parada."}
+                        </h1>
+                        <p className="mt-3 max-w-[560px] text-[16px] leading-relaxed md:text-[17px]" style={{ color: "var(--lp-ink-70)" }}>
+                            {vazio === "sem_leitura"
+                                ? "As conversas antigas não chegaram a tempo. Às vezes o WhatsApp demora alguns minutos para mandar o histórico. Espere uns 5 minutos e faça de novo."
+                                : vazio === "sem_proposta"
+                                  ? `Li ${lidas.toLocaleString("pt-BR")} mensagens dos últimos ${report.summary.window_days} dias e nenhuma parecia proposta. Conto PDF enviado ou mensagem com valor e palavra de orçamento. Proposta mandada por outro número, por e-mail ou como foto não aparece aqui.`
+                                  : `Todas as ${plural(view.quotes, "proposta", "propostas")} dos últimos ${report.summary.window_days} dias tiveram resposta do cliente.`}
+                        </p>
+                        {vazio === "sem_leitura" && isAdmin && (
+                            <Link to="/raio-x" className="vz-btn vz-btn--primary mt-6 inline-flex w-full justify-center sm:w-auto">
+                                <span>Fazer o Raio-X de novo</span>
+                                <span className="vz-btn__arrow" aria-hidden="true">→</span>
+                            </Link>
+                        )}
+                    </>
                 ) : (
                     <>
                         <h1 className="lp-display mt-3" style={{ fontSize: "clamp(2.6rem, 11vw, 5rem)", lineHeight: 1, letterSpacing: "-0.045em", color: "var(--lp-ink)" }}>
@@ -267,11 +289,11 @@ const RaioXReport = () => {
                     <Faixa href="#esfriaram" titulo="Esfriaram" rows={view.cold} tom="frio" />
                 </nav>
             )}
-            <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--lp-ink-55)" }}>
-                Li {report.summary.messages_read.toLocaleString("pt-BR")} mensagens dos últimos {report.summary.window_days} dias e achei {plural(view.quotes, "proposta", "propostas")}.
+            {(vazio === null || vazio === "tudo_respondido") && <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--lp-ink-55)" }}>
+                Li {lidas.toLocaleString("pt-BR")} mensagens dos últimos {report.summary.window_days} dias e achei {plural(view.quotes, "proposta", "propostas")}.
                 {(report.summary.descartadas ?? 0) > 0 &&
                     ` Deixei fora da conta ${plural(report.summary.descartadas ?? 0, "arquivo ou mensagem que não era proposta", "arquivos ou mensagens que não eram proposta")} (ficha técnica, boleto, comprovante, conversa pessoal).`}
-            </p>
+            </p>}
 
             {view.stuck > 0 && (
                 <section className="mt-12 md:mt-14" aria-labelledby="plano">
