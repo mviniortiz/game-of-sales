@@ -95,7 +95,7 @@
   transition: color 200ms ease, transform 120ms ease;
 }
 .vb-filtro__op:hover { color: var(--lp-ink); }
-.vb-filtro__op[aria-selected="true"] { color: #fff; }
+.vb-filtro__op[aria-pressed="true"] { color: #fff; }
 .vb-filtro__op:active { transform: scale(0.97); }
 .vb-filtro__op:focus-visible { outline: 2px solid var(--lp-blue); outline-offset: 2px; }
 

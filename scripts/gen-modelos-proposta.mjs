@@ -51,6 +51,7 @@ const residencial = {
     blocos: [
         {
             type: "cover",
+            num: "01",
             eyebrow: "Proposta de energia solar",
             title: "Sistema de energia solar para [Nome do cliente]",
             meta: [
@@ -185,6 +186,7 @@ const empresa = {
     blocos: [
         {
             type: "cover",
+            num: "01",
             eyebrow: "Proposta de energia solar para empresas",
             title: "Energia solar para [Razão social]",
             meta: [
@@ -315,7 +317,7 @@ function blocoHtml(b) {
         case "cover":
             return `<header class="cover${b.compact ? " compact" : ""}">
   <div class="cover-top"><div class="logo">LOGO DA SUA EMPRESA</div>${b.compact ? "" : `<div class="empresa">${campos("[Nome da sua empresa]")}<br>${campos("[WhatsApp] · [e-mail]")}</div>`}</div>
-  <p class="eyebrow">${esc(b.eyebrow)}</p>
+  <p class="eyebrow">${b.num ? `<span class="num">${esc(b.num)}</span>&nbsp;&nbsp;&nbsp;` : ""}${esc(b.eyebrow)}</p>
   <h1>${campos(b.title)}</h1>
   ${b.compact ? `<p class="validade">${b.meta.map(([k, v]) => `${esc(k)} ${campos(v)}`).join(" · ")}</p>` : `<dl class="meta">${b.meta.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${campos(v)}</dd></div>`).join("")}</dl>`}
 </header>`;
@@ -521,7 +523,7 @@ function blocoDocx(b, celular) {
             return [
                 topo,
                 espaco(celular ? 240 : 600),
-                para(b.eyebrow, { size: 9.5, bold: true, color: COR.acento, after: 80 }),
+                para(b.num ? `${b.num}   ${b.eyebrow}` : b.eyebrow, { size: 9.5, bold: true, color: COR.acento, after: 80 }),
                 para(b.title, { size: celular ? 19 : 26, bold: true, after: 200, line: 260 }),
                 new Paragraph({ children: [], border: { top: linha(COR.tinta, 8) }, spacing: { after: 60 } }),
                 tabela(meta, porLinha === 1 ? [100] : [50, 50]),

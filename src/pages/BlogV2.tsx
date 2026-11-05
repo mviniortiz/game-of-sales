@@ -38,10 +38,10 @@ function FiltroCategorias({ ativo, onChange }: { ativo: Filtro; onChange: (f: Fi
         return () => window.removeEventListener("resize", medir);
     }, [ativo]);
     return (
-        <div ref={wrap} className="vb-filtro" role="tablist" aria-label="Filtrar por assunto">
+        <div ref={wrap} className="vb-filtro" role="group" aria-label="Filtrar por assunto">
             {marca && <span className="vb-filtro__marca" style={{ transform: `translateX(${marca.x}px)`, width: marca.w }} aria-hidden="true" />}
             {FILTROS.map((f) => (
-                <button key={f} type="button" role="tab" aria-selected={f === ativo} data-f={f} className="vb-filtro__op" onClick={() => onChange(f)}>
+                <button key={f} type="button" aria-pressed={f === ativo} data-f={f} className="vb-filtro__op" onClick={() => onChange(f)}>
                     {f}
                 </button>
             ))}
