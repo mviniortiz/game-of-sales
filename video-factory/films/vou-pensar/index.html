@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Vyzon · Vou pensar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=block" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/CustomEase.min.js"></script>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="tema.css">
+<style>
+  #legenda { top: 1190px; }
+  .t { position: absolute; left: 90px; right: 90px; font: 600 112px/1.0 var(--f-display); letter-spacing: -.045em; }
+  /* 1 · gancho */
+  #c1 .quem { position: absolute; left: 90px; top: 300px; font: 600 40px var(--f-ui); }
+  #c1 .fala { position: absolute; left: 90px; top: 370px; padding: 30px 52px 36px; border-radius: 52px 52px 52px 12px; background: #fff;
+    font: 600 150px/1 var(--f-display); letter-spacing: -.05em; color: var(--ink); }
+  #c1 .visto { position: absolute; left: 90px; top: 770px; display: inline-flex; align-items: center; gap: 12px; padding: 12px 24px; border-radius: 16px; background: rgba(255,255,255,.7); font: 500 38px var(--f-ui); }
+  #c1 .dias { position: absolute; left: 90px; top: 880px; }
+  #c1 .dias .n { display: inline-block; font: 600 230px/.9 var(--f-num); letter-spacing: -.05em; color: var(--blue); }
+  #c1 .dias .rot { font: 600 64px/1.05 var(--f-display); letter-spacing: -.03em; margin-top: 10px; }
+  #c1-eva { --s: 560px; position: absolute; right: -120px; bottom: -40px; }
+  /* 2 · afundou nas conversas */
+  #c2 .t { top: 230px; font-size: 96px; }
+  #c2 .lista { position: absolute; left: 90px; width: 900px; top: 560px; border-radius: 28px; background: #fff; overflow: hidden; }
+  #c2 .chat { display: flex; align-items: center; gap: 22px; padding: 18px 26px; border-bottom: 2px solid var(--line); }
+  #c2 .av { flex: none; width: 70px; height: 70px; border-radius: 50%; background: #5b6b8c; display: grid; place-items: center; font: 600 32px var(--f-ui); color: #fff; }
+  #c2 .nome { font: 600 36px var(--f-ui); }
+  #c2 .prev { font: 400 30px var(--f-ui); color: var(--subtle); }
+  #c2 .hora { margin-left: auto; font: 500 28px var(--f-ui); color: #1fa855; }
+  #c2 .chat--rafael .hora { color: var(--subtle); }
+  #c2-eva { --s: 200px; right: 110px; top: 374px; }
+  /* 3 · a Lume não esquece */
+  #c3 .t { top: 300px; color: #fff; text-align: center; font-size: 100px; }
+  #c3-eva { --s: 520px; position: absolute; left: 280px; top: 720px; }
+  /* 4 · o aviso no drop */
+  #c4 .conversa { top: 420px; color: var(--ink); }
+  #c4 .conversa__avatar { background: var(--blue); }
+  #c4 .conversa__corpo { height: 600px; }
+  #c4 .bolha--aviso { font-size: 38px; max-width: 94%; }
+  #c4 .bolha--aviso .bolha__meta { font-size: 32px; }
+  #c4-eva { --s: 250px; right: 110px; top: 190px; }
+  /* 5 · saiu do número dele */
+  #c5 .selo { position: absolute; left: 90px; top: 360px; }
+  #c5 .conversa { top: 450px; }
+  #c5 .bolha { font-size: 46px; }
+  #c5-eva { --s: 220px; right: 96px; top: 238px; }
+  /* 6 · fechamento */
+  #c6 .cta { position: absolute; left: 90px; right: 90px; top: 250px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  #c6-eva { --s: 420px; margin-bottom: 30px; }
+  #c6 .h { font: 600 132px/1.0 var(--f-display); letter-spacing: -.05em; }
+  #c6 .btn { margin-top: 56px; font-weight: 600; }
+  #c6 .depois-btn { margin-top: 22px; font-size: 36px; }
+  #c6 .logo { display: flex; align-items: center; gap: 14px; margin-top: 40px; }
+  #c6 .logo span { font: 600 56px var(--f-ui); letter-spacing: -.03em; }
+</style>
+<script>window.TRILHA = { bpm: 119.9, fase: 0 };</script>
+</head>
+<body>
+<div id="root" data-composition-id="root" data-start="0" data-duration="21.3" data-width="1080" data-height="1920" data-motion-blur="on">
+ <div id="tc"></div>
+ <div id="camera">
+
+  <!-- 1 · GANCHO (B0–B8) -->
+  <section class="cena cena--sol" id="c1">
+    <div class="eva" id="c1-eva"></div>
+    <p class="quem">Rafael · 16:52</p>
+    <p class="fala" id="c1-fala">“Vou pensar.”</p>
+    <p class="visto depois" id="c1-visto">visto ✓✓</p>
+    <div class="dias depois" id="c1-dias"><span class="n" id="c1-n">1 dia</span><p class="rot">sem resposta.</p></div>
+  </section>
+
+  <!-- 2 · DOR (B8–B13): afundou no meio das conversas -->
+  <section class="cena cena--creme" id="c2">
+    <h2 class="t" id="c2-t">Afundou no meio das conversas.</h2>
+    <div class="eva sentada" id="c2-eva"></div>
+    <div class="lista" id="c2-lista">
+      <div class="chat"><span class="av">J</span><div><p class="nome">Juliana</p><p class="prev">Quanto fica pra 6 placas?</p></div><span class="hora">agora</span></div>
+      <div class="chat"><span class="av">F</span><div><p class="nome">Fornecedor</p><p class="prev">Inversor chega quinta</p></div><span class="hora">10:14</span></div>
+      <div class="chat"><span class="av">M</span><div><p class="nome">Marcos obra</p><p class="prev">Foto do telhado</p></div><span class="hora">09:50</span></div>
+      <div class="chat"><span class="av">P</span><div><p class="nome">Paula</p><p class="prev">Pode vir amanhã?</p></div><span class="hora">09:12</span></div>
+      <div class="chat chat--rafael" id="c2-rafael"><span class="av">R</span><div><p class="nome">Rafael</p><p class="prev">Vou pensar.</p></div><span class="hora" id="c2-quando">segunda</span></div>
+    </div>
+  </section>
+
+  <!-- 3 · RESPIRO (B13–B17): a música abaixa, a Lume procura -->
+  <section class="cena cena--noite" id="c3">
+    <h2 class="t" id="c3-t">A Lume não esquece ninguém.</h2>
+    <div class="eva eva--noite" id="c3-eva"></div>
+  </section>
+
+  <!-- 4 · PRODUTO NO DROP (B17–B29) -->
+  <section class="cena cena--noite" id="c4">
+    <div class="eva eva--noite sentada" id="c4-eva"></div>
+    <div class="conversa" id="c4-conv">
+      <div class="conversa__topo"><div class="conversa__avatar">V</div><div><p class="conversa__nome">Aviso do Vyzon</p><p class="conversa__status">no seu WhatsApp</p></div></div>
+      <div class="conversa__corpo">
+        <div class="bolha bolha--aviso" id="c4-aviso">
+          <p class="av"><strong>Lume [K7] rascunho pronto</strong></p>
+          <p class="av" style="margin-top:8px">Lead: Rafael</p>
+          <p class="av bolha__rascunho" id="c4-rasc">Oi, Rafael! Ficou alguma dúvida na parcela?</p>
+          <p class="av bolha__meta">Responda 1 para enviar, 2 para descartar, ou escreva o texto corrigido.</p>
+          <span class="bolha__hora">09:02</span>
+        </div>
+        <div class="bolha bolha--saida" id="c4-um" style="font-size:60px;font-weight:600;padding:10px 30px 8px">1<span class="bolha__hora" style="font-weight:400">09:03</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · PROVA (B29–B35) -->
+  <section class="cena cena--creme" id="c5">
+    <span class="carimbo carimbo--ok selo" id="c5-selo">Saiu do seu número</span>
+    <div class="eva sentada" id="c5-eva"></div>
+    <div class="conversa" id="c5-conv">
+      <div class="conversa__topo"><div class="conversa__avatar">R</div><div><p class="conversa__nome">Rafael</p><p class="conversa__status">online</p></div></div>
+      <div class="conversa__corpo">
+        <div class="bolha bolha--saida" id="c5-msg">Oi, Rafael! Ficou alguma dúvida na parcela?<span class="bolha__hora">09:03 <span class="ticks" id="c5-ticks"><svg width="44" height="30" viewBox="0 0 44 30"><path d="M3 16 L10 23 L24 7" fill="none" stroke="#8696a0" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 20 L20 23 L35 7" fill="none" stroke="#8696a0" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span></div>
+        <div class="bolha digitando" id="c5-dig"><i></i><i></i><i></i></div>
+        <div class="bolha" id="c5-cli">Era a parcela. Manda!<span class="bolha__hora">09:14</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · FECHAMENTO (B35 até o fim): logo só aqui -->
+  <section class="cena cena--sol" id="c6">
+    <div class="cta">
+      <div class="eva" id="c6-eva"></div>
+      <p class="h" id="c6-h">A Lume lembra.<br><span class="marca" id="c6-marca">Você fecha.</span></p>
+      <div class="btn" id="c6-btn">Ver minhas propostas paradas</div>
+      <p class="depois-btn" id="c6-gratis">Grátis e sem cartão · vyzon.com.br</p>
+      <div class="logo" id="c6-logo">
+        <svg width="60" height="62" viewBox="16 14.5 68 69"><defs><mask id="gap" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><rect x="25" y="13" width="26" height="72" rx="13" transform="rotate(-22 38 49)" fill="#000" stroke="#000" stroke-width="9"/></mask></defs><rect x="49" y="13" width="26" height="72" rx="13" transform="rotate(22 62 49)" fill="#2563EB" mask="url(#gap)"/><rect x="25" y="13" width="26" height="72" rx="13" transform="rotate(-22 38 49)" fill="#0f1730"/></svg>
+        <span>vyzon</span>
+      </div>
+    </div>
+  </section>
+
+ </div>
+ <div id="legenda"></div>
+</div>
+<script src="legendas.js"></script>
+<script src="base.js"></script>
+<script>
+// Trilha Lume (Eleven Music, 119,9 BPM) começando em 7,974 s: B(k) = k · 0,5004 s; o drop cai em B17.
+window.__timelines = window.__timelines || {}; // o lint do HyperFrames procura esta linha
+const { B } = VF;
+const DUR = 21.3;
+const tl = VF.montar();
+VF.tempo(tl, DUR);
+VF.legendas(tl);
+
+// 1 · GANCHO: a bolha já está no quadro 0; visto; os dias rolam.
+VF.cena(tl, "#c1", 0, B(8));
+VF.evaVive(tl, "#c1-eva", 0, B(8));
+VF.evaOlhar(tl, "#c1-eva", -18, B(1));
+VF.pousa(tl, "#c1-visto", B(2), { de: 0.9, dur: 0.4 });
+VF.evaPisca(tl, "#c1-eva", B(3));
+VF.antes(tl, "#c1-dias", { autoAlpha: 0 });
+tl.set("#c1-dias", { autoAlpha: 1 }, B(4));
+VF.slot(tl, "#c1-n", ["1 dia", "2 dias", "3 dias", "4 dias", "5 dias", "6 dias", "7 dias"], B(4));
+VF.evaEstado(tl, "#c1-eva", "alerta", B(5.5));
+VF.chicoteSai(tl, "#c1-fala, #c1-visto, #c1 .quem", B(7.6), { x: -900 });
+
+// 2 · DOR: as conversas novas por cima, o Rafael lá embaixo, apagando.
+VF.cena(tl, "#c2", B(8), B(13));
+VF.vira(tl, "#c1-dias", "#f3efe4", B(8) - 0.42, { de: "#ffc933", dur: 0.42, raio: 20 });
+VF.palavras(tl, "#c2-t", B(8));
+const chats = [...document.querySelectorAll("#c2 .chat")];
+VF.antes(tl, chats, { autoAlpha: 0, y: -30 });
+tl.fromTo(chats, { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.06, ease: "expo.out", immediateRender: false }, B(8.5));
+VF.pousa(tl, "#c2-eva", B(8.5), { de: 0.8, dur: 0.4 });
+VF.evaVive(tl, "#c2-eva", B(8), B(13));
+VF.evaOlhar(tl, "#c2-eva", 14, B(10));
+tl.to("#c2-rafael", { opacity: 0.42, duration: 0.5, ease: "power2.inOut" }, B(10.5));
+tl.set("#c2-quando", { textContent: "há 7 dias" }, B(10.5));
+VF.evaEstado(tl, "#c2-eva", "lendo", B(11.5));
+
+// 3 · RESPIRO: íris escura a partir da Lume; ela procura.
+VF.iris(tl, 980, 470, "#0f1730", B(13) - 0.4, { dur: 0.4 });
+VF.cena(tl, "#c3", B(13), B(17));
+VF.palavras(tl, "#c3-t", B(13) + 0.05);
+VF.pousa(tl, "#c3-eva", B(13), { de: 0.7, dur: 0.6 });
+VF.evaLendo(tl, "#c3-eva", B(13.5), 0.9);
+VF.evaEstado(tl, "#c3-eva", "alerta", B(16));
+tl.to("#c3-eva", { scale: 0.48, x: 305, y: -665, duration: 0.42, ease: "power3.inOut" }, B(17) - 0.42);
+VF.apaga(tl, "#c3-t", B(17) - 0.3);
+
+// 4 · PRODUTO NO DROP: o aviso pousa; close no rascunho; o dono responde 1 com close.
+VF.cena(tl, "#c4", B(17), B(29));
+tl.set("#legenda", { color: "#fff" }, B(17));
+VF.pousa(tl, "#c4-conv", B(17), { de: 1.18, dur: 0.6 });
+VF.antes(tl, "#c4-eva", { autoAlpha: 0 });
+tl.set("#c4-eva", { autoAlpha: 1 }, B(17));
+VF.evaVive(tl, "#c4-eva", B(17), B(29));
+VF.evaEstado(tl, "#c4-eva", "escrevendo", B(17));
+VF.antes(tl, ["#c4-aviso .av", "#c4-um"], { autoAlpha: 0 });
+tl.fromTo("#c4-aviso .av", { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.3, stagger: 0.08, ease: "expo.out", immediateRender: false }, B(17) + 0.25);
+VF.soco(tl, "#c4-rasc", B(18.5), { s: 1.22, dur: 0.6 });
+VF.evaEstado(tl, "#c4-eva", "alerta", B(20));
+VF.solta(tl, B(22.3), { dur: 0.4 });
+VF.pousa(tl, "#c4-um", B(23), { de: 1.6, dur: 0.4 });
+VF.evaEstado(tl, "#c4-eva", "saiu", B(24));
+VF.soco(tl, "#c4-um", B(23.2), { s: 1.18, dur: 0.45 });
+VF.solta(tl, B(27.5), { dur: 0.35 });
+
+// 5 · PROVA: o "1" vira o mundo creme; a mensagem chega do número dele; o cliente responde.
+VF.vira(tl, "#c4-um", "#f3efe4", B(29) - 0.45, { de: "#d9fdd3", dur: 0.45, raio: 18 });
+VF.cena(tl, "#c5", B(29), B(36));
+tl.set("#legenda", { color: "#0f1730" }, B(29));
+VF.pousa(tl, "#c5-conv", B(29), { de: 1.06, dur: 0.45 });
+VF.chicoteEntra(tl, "#c5-msg", B(29) + 0.08, { x: 700 });
+VF.pousa(tl, "#c5-selo", B(30), { de: 1.4, dur: 0.35 });
+VF.pousa(tl, "#c5-eva", B(29), { de: 0.8, dur: 0.4 });
+VF.evaEstado(tl, "#c5-eva", "saiu", B(30));
+VF.evaVive(tl, "#c5-eva", B(29), B(36));
+VF.visto(tl, "#c5-ticks", B(30.5));
+tl.set(["#c5-dig", "#c5-cli"], { autoAlpha: 0 }, 0);
+VF.digitando(tl, "#c5-dig", B(31), B(31.8) - B(31));
+VF.bolha(tl, "#c5-cli", B(31.8));
+
+// 6 · FECHAMENTO: íris de sol a partir da resposta do cliente.
+const rc = document.getElementById("c5-cli").getBoundingClientRect();
+VF.iris(tl, rc.left + rc.width / 2, rc.top + rc.height / 2, "#ffc933", B(36) - 0.4, { dur: 0.4 });
+VF.cena(tl, "#c6", B(36));
+VF.pousa(tl, "#c6-eva", B(36), { de: 0.7, dur: 0.5 });
+VF.evaEstado(tl, "#c6-eva", "saiu", B(36.5));
+VF.evaVive(tl, "#c6-eva", B(36), DUR);
+VF.palavras(tl, "#c6-h", B(36) + 0.1, { gap: 0.09 });
+VF.marca(tl, "#c6-marca", B(37.5));
+VF.pousa(tl, "#c6-btn", B(38), { de: 1.1, dur: 0.45 });
+VF.entra(tl, "#c6-gratis", B(38.1), { y: 20, dur: 0.5, ease: "settle" });
+VF.entra(tl, "#c6-logo", B(38.15), { y: 20, dur: 0.5, ease: "settle" });
+VF.evaPisca(tl, "#c6-eva", B(40));
+tl.to("#tc", { opacity: 1, duration: 0.01 }, DUR - 0.01); // fixa a duração da timeline
+VF.registrar("root", tl);
+</script>
+</body>
+</html>

@@ -14,6 +14,13 @@ Leia antes do primeiro frame.
 
 ## Marca (inegociável)
 
+**Desde 04/11/2026 a assistente se chama Lume** (o aviso real começa com "Lume",
+`EVA_PREFIX` em `_shared/whatsappApproval.ts`; a home usa "Lume"). Em filme novo é
+sempre Lume, na tela e na voz; "EVA" abaixo é o nome antigo do mesmo bot. Todo
+post (reel ou carrossel) segue `video-factory/PADRAO.md`: a Lume em todas as cenas,
+dor → a Lume resolve → o dono aprova, CTA "Ver minhas propostas paradas" (grátis e
+sem cartão). Filmes no padrão: `vou-pensar`, `quanto-parado`, `sem-cadastro`.
+
 - Vyzon é para **integradores de energia solar que vendem pelo WhatsApp**
   (agências foram abandonadas em 08/10/2026; não usar).
 - Pitch em produção: "Mandou a proposta e o cliente sumiu?" A EVA acompanha cada
@@ -123,7 +130,8 @@ Regras: nunca começar pelo logo; uma grande ideia visual por filme.
    --events` para medir um vídeo de referência, `snapshot --at <t,…> --against
    <ref.mp4>`, `<nome>.motion.json` para o check provar ordem e tempo, e
    `hyperframes audio <final.mp4> --json` para conferir onde caem os hits.
-5. Rough: `bash scripts/render-filme.sh <slug> --rascunho`. Final: o mesmo sem a
+5. Rough: `bash scripts/render-filme.sh <slug> --rascunho`. Final leve (pedido do
+   Markus em 04/11/2026, o 4K trava o Mac): `--1080` renderiza direto em 1080×1920/60. Final: o mesmo sem a
    flag (4K/60 high crf 15 → Lanczos 1080 → `mixa-frases.mjs` → `-rev` → folha →
    screening). O áudio é montado fora do HyperFrames, em Node.
 

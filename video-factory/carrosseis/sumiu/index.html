@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Vyzon · Carrossel · Sumiu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=block" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/CustomEase.min.js"></script>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="tema.css">
+<style>
+  /* Carrossel 1080×1350 (4:5). Padrão em video-factory/PADRAO.md: margem 90, rodapé fixo. */
+  html, body, #root { width: 1080px; height: 1350px; }
+  .s { position: absolute; inset: 0; visibility: hidden; }
+  .s:first-of-type { visibility: visible; }
+  .rodape { position: absolute; left: 90px; right: 90px; bottom: 56px; display: flex; justify-content: space-between; font: 600 28px var(--f-ui); letter-spacing: -.01em; opacity: .7; }
+  .s .titulo { position: absolute; left: 90px; right: 90px; top: 110px; font: 600 104px/1.0 var(--f-display); letter-spacing: -.045em; }
+  .s .apoio { position: absolute; left: 90px; right: 90px; font: 400 42px/1.3 var(--f-ui); letter-spacing: -.01em; }
+  .cena--noite .rodape, .cena--noite .titulo, .cena--noite .apoio { color: #fff; }
+  .cena--noite .marca { color: var(--sol); background-image: none; }
+  .marca { background-size: 100% 100%; }
+  .conversa { left: 90px; width: 900px; }
+  .bolha { font-size: 36px; }
+  .bolha--aviso { font-size: 32px; max-width: 94%; }
+  .bolha--aviso .bolha__meta { font-size: 29px; }
+  .eva { position: absolute; }
+  /* 1 · capa */
+  #s1 .titulo { top: 130px; font-size: 124px; }
+  #s1 .eva { --s: 620px; right: -110px; bottom: -150px; }
+  #s1 .apoio { top: 760px; width: 520px; font-weight: 600; font-size: 44px; }
+  /* 2 · a dor */
+  #s2 .conversa { top: 440px; }
+  #s2 .eva { --s: 200px; right: 110px; top: 258px; }
+  /* 3 · a Lume avisa */
+  #s3 .conversa { top: 470px; color: var(--ink); }
+  #s3 .conversa__avatar { background: var(--blue); }
+  #s3 .eva { --s: 220px; right: 110px; top: 274px; }
+  /* 4 · você responde 1 */
+  #s4 .conversa { top: 470px; color: var(--ink); }
+  #s4 .conversa__avatar { background: var(--blue); }
+  #s4 .eva { --s: 200px; right: 110px; top: 288px; }
+  /* 5 · sai do seu número */
+  #s5 .selo { position: absolute; left: 90px; top: 450px; }
+  #s5 .conversa { top: 540px; }
+  #s5 .eva { --s: 200px; right: 110px; top: 358px; }
+  /* 6 · você no controle */
+  #s6 .eva { --s: 460px; left: 310px; bottom: -40px; }
+  #s6 .apoio { top: 520px; }
+  /* 7 · fechamento */
+  #s7 .cta { position: absolute; left: 90px; right: 90px; top: 120px; display: flex; flex-direction: column; align-items: center; text-align: center; color: #fff; }
+  #s7 .eva { position: relative; --s: 300px; margin-bottom: 36px; }
+  #s7 .h { font: 600 110px/1.02 var(--f-display); letter-spacing: -.045em; }
+  #s7 .h .amarelo { color: var(--sol); }
+  #s7 .btn { margin-top: 56px; background: var(--sol); color: var(--ink); font-weight: 600; }
+  #s7 .depois-btn { margin-top: 22px; font-size: 34px; color: #c9cfdc; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="root" data-start="0" data-duration="7" data-width="1080" data-height="1350">
+ <div id="camera">
+
+  <section class="s cena--sol" id="s1">
+    <h1 class="titulo">Mandou a proposta e o cliente <span class="marca">sumiu?</span></h1>
+    <p class="apoio">A Lume, assistente do Vyzon, lembra por você.</p>
+    <div class="eva" id="e1"></div>
+    <div class="rodape"><span>vyzon</span><span></span></div>
+  </section>
+
+  <section class="s cena--creme" id="s2">
+    <h2 class="titulo" style="font-size:88px">Ele viu.<br>E não respondeu.</h2>
+    <div class="eva" id="e2"></div>
+    <div class="conversa">
+      <div class="conversa__topo"><div class="conversa__avatar">C</div><div><p class="conversa__nome">Carlos</p><p class="conversa__status">visto por último hoje às 14:03</p></div></div>
+      <div class="conversa__corpo">
+        <span class="conversa__dia">Segunda</span>
+        <div class="bolha bolha--saida">
+          <div class="pdf"><div class="pdf__icone" data-layout-ignore>PDF</div><div><p class="pdf__nome">Proposta_8,4kWp.pdf</p><p class="pdf__meta">R$ 24.900 · 2 páginas</p></div></div>
+          Segue a proposta, Carlos. Qualquer dúvida me chama.
+          <span class="bolha__hora">14:02 <span class="ticks"><svg width="44" height="30" viewBox="0 0 44 30"><path d="M3 16 L10 23 L24 7" fill="none" stroke="#53bdeb" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 20 L20 23 L35 7" fill="none" stroke="#53bdeb" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+        </div>
+      </div>
+    </div>
+    <div class="rodape"><span>vyzon</span><span>2/7</span></div>
+  </section>
+
+  <section class="s cena--noite" id="s3">
+    <h2 class="titulo" style="font-size:84px">No 2º dia sem resposta, a <span class="marca">Lume te avisa.</span></h2>
+    <div class="eva eva--noite" id="e3"></div>
+    <div class="conversa">
+      <div class="conversa__topo"><div class="conversa__avatar">V</div><div><p class="conversa__nome">Aviso do Vyzon</p><p class="conversa__status">no seu WhatsApp</p></div></div>
+      <div class="conversa__corpo">
+        <div class="bolha bolha--aviso">
+          <p><strong>Lume [A2] rascunho pronto</strong></p>
+          <p style="margin-top:8px">Lead: Carlos</p>
+          <p>Por que agora: proposta sem resposta há 2 dias</p>
+          <p class="bolha__rascunho">Oi, Carlos, conseguiu olhar a proposta? Se ajudar, te mando a simulação com financiamento.</p>
+          <p class="bolha__meta">Responda 1 para enviar, 2 para descartar, ou escreva o texto corrigido.</p>
+          <span class="bolha__hora">09:02</span>
+        </div>
+      </div>
+    </div>
+    <div class="rodape"><span>vyzon</span><span>3/7</span></div>
+  </section>
+
+  <section class="s cena--creme" id="s4">
+    <h2 class="titulo" style="font-size:96px">Você responde <span class="marca">1.</span></h2>
+    <p class="apoio" style="top:236px">Ou 2 pra descartar. Ou corrige o texto.</p>
+    <div class="eva" id="e4"></div>
+    <div class="conversa">
+      <div class="conversa__topo"><div class="conversa__avatar">V</div><div><p class="conversa__nome">Aviso do Vyzon</p><p class="conversa__status">no seu WhatsApp</p></div></div>
+      <div class="conversa__corpo">
+        <div class="bolha bolha--aviso"><p class="bolha__rascunho" style="margin-top:0">Oi, Carlos, conseguiu olhar a proposta? Se ajudar, te mando a simulação com financiamento.</p><span class="bolha__hora">09:02</span></div>
+        <div class="bolha bolha--saida" style="font-size:48px;font-weight:600;padding:10px 26px 8px">1<span class="bolha__hora" style="font-weight:400">09:03</span></div>
+        <div class="bolha">Sai em 20 segundos para Carlos. Mande "desfazer" para cancelar.<span class="bolha__hora">09:03</span></div>
+      </div>
+    </div>
+    <div class="rodape"><span>vyzon</span><span>4/7</span></div>
+  </section>
+
+  <section class="s cena--creme" id="s5">
+    <h2 class="titulo" style="font-size:88px">Sai do seu número, com o seu nome.</h2>
+    <span class="carimbo carimbo--ok selo">Saiu do seu número</span>
+    <div class="eva" id="e5"></div>
+    <div class="conversa">
+      <div class="conversa__topo"><div class="conversa__avatar">C</div><div><p class="conversa__nome">Carlos</p><p class="conversa__status">online</p></div></div>
+      <div class="conversa__corpo">
+        <div class="bolha bolha--saida">Oi, Carlos, conseguiu olhar a proposta? Se ajudar, te mando a simulação com financiamento.<span class="bolha__hora">09:03 <span class="ticks"><svg width="44" height="30" viewBox="0 0 44 30"><path d="M3 16 L10 23 L24 7" fill="none" stroke="#53bdeb" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 20 L20 23 L35 7" fill="none" stroke="#53bdeb" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span></div>
+        <div class="bolha">Oi! Vi sim, me manda a simulação que eu mostro pra minha esposa.<span class="bolha__hora">09:11</span></div>
+      </div>
+    </div>
+    <div class="rodape"><span>vyzon · conversa de exemplo</span><span>5/7</span></div>
+  </section>
+
+  <section class="s cena--sol" id="s6">
+    <h2 class="titulo">Nada vai pro cliente sem você <span class="marca">aprovar.</span></h2>
+    <p class="apoio">Se você não responder em 48 horas, nada sai.</p>
+    <div class="eva" id="e6"></div>
+    <div class="rodape"><span>vyzon</span><span>6/7</span></div>
+  </section>
+
+  <section class="s cena--noite" id="s7">
+    <div class="cta">
+      <div class="eva eva--noite" id="e7"></div>
+      <p class="h">A Lume sugere.<br><span class="amarelo">Você aprova.</span></p>
+      <div class="btn">Ver minhas propostas paradas</div>
+      <p class="depois-btn">Grátis e sem cartão · vyzon.com.br</p>
+    </div>
+    <div class="rodape"><span>vyzon</span><span>7/7</span></div>
+  </section>
+
+ </div>
+</div>
+<script src="base.js"></script>
+<script>
+window.__timelines = window.__timelines || {}; // o lint do HyperFrames procura esta linha
+// Cada slide ocupa 1 s da composição; o carrossel é tirado em snapshots no meio de cada segundo.
+const tl = VF.montar();
+const slides = [...document.querySelectorAll(".s")];
+slides.forEach((s, i) => { tl.set(s, { autoAlpha: i === 0 ? 1 : 0 }, 0); tl.set(s, { autoAlpha: 1 }, i); if (i < slides.length - 1) tl.set(s, { autoAlpha: 0 }, i + 1); });
+// estados da Lume por slide (os mesmos do app): olho, alerta, olho, saiu, saiu, olho
+const estado = { e1: "olho", e2: "lendo", e3: "alerta", e4: "olho", e5: "saiu", e6: "saiu", e7: "olho" };
+Object.entries(estado).forEach(([id, st], i) => VF.evaEstado(tl, "#" + id, st, Math.max(0, i + 0.05)));
+tl.to({}, { duration: 0.01 }, 6.99);
+VF.registrar("root", tl);
+</script>
+</body>
+</html>

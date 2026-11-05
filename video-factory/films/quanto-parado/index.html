@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Vyzon · Quanto está parado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=block" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/CustomEase.min.js"></script>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="tema.css">
+<style>
+  #legenda { top: 1190px; }
+  /* 1 · gancho: o número que ninguém sabe */
+  #c1 .kicker { position: absolute; left: 90px; right: 90px; top: 280px; color: var(--ink); text-transform: none; letter-spacing: 0; font-size: 52px; font-weight: 600; }
+  #c1 .gr { position: absolute; left: 90px; right: 90px; top: 440px; font: 600 250px/.95 var(--f-num); letter-spacing: -.05em; }
+  #c1 .gr .q { display: inline-block; min-width: 3ch; }
+  #c1-eva { --s: 600px; position: absolute; right: -130px; bottom: -40px; }
+  /* 2 · as propostas paradas caem e o total sobe */
+  #c2 .topo { position: absolute; left: 90px; right: 90px; top: 250px; }
+  #c2 .topo .rot { font: 600 46px var(--f-ui); }
+  #c2 .topo .total { font: 600 130px/1 var(--f-num); letter-spacing: -.04em; color: var(--wait); }
+  #c2 .grade { position: absolute; left: 90px; width: 900px; top: 560px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  #c2 .card { padding: 18px 20px; border-radius: 20px; background: #fff; }
+  #c2 .card .v { font: 600 42px var(--f-num); }
+  #c2 .card .d { font: 400 28px var(--f-ui); color: var(--subtle); }
+  #c2-eva { --s: 220px; right: 110px; top: 236px; }
+  /* 3 · o Raio-X no drop */
+  #c3 .barra { position: absolute; left: 90px; right: 90px; top: 300px; }
+  #c3 .barra .rot { font: 600 46px var(--f-ui); color: #fff; }
+  #c3 .barra .trilho { margin-top: 22px; height: 22px; border-radius: 999px; background: rgba(255,255,255,.14); overflow: hidden; }
+  #c3 .barra .enche { height: 100%; width: 100%; background: var(--sol); transform-origin: 0 50%; }
+  #c3 .lista { position: absolute; left: 90px; width: 900px; top: 560px; border-radius: 28px; background: #fff; overflow: hidden; color: var(--ink); }
+  #c3 .lista__topo { padding: 22px 30px; border-bottom: 2px solid var(--line); font: 600 36px var(--f-ui); }
+  #c3 .linha { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px 30px; border-bottom: 2px solid var(--line); }
+  #c3 .linha:last-child { border-bottom: 0; }
+  #c3 .linha__quem { font: 600 36px/1.15 var(--f-ui); }
+  #c3 .linha__meta { font: 400 30px var(--f-ui); color: var(--subtle); }
+  #c3 .linha__dir { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  #c3 .linha__valor { font: 600 42px var(--f-num); }
+  #c3 .pronta { display: inline-flex; padding: 4px 16px; border-radius: 999px; background: var(--sol); font: 600 28px var(--f-ui); }
+  #c3-eva { --s: 240px; right: 110px; top: 356px; }
+  #c3-grande { --s: 520px; position: absolute; left: 280px; top: 640px; }
+  /* 4 · fechamento */
+  #c4 .cta { position: absolute; left: 90px; right: 90px; top: 250px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  #c4-eva { --s: 420px; margin-bottom: 30px; }
+  #c4 .h { font: 600 132px/1.0 var(--f-display); letter-spacing: -.05em; }
+  #c4 .sub { margin-top: 26px; font: 500 42px/1.25 var(--f-ui); }
+  #c4 .btn { margin-top: 44px; font-weight: 600; }
+  #c4 .depois-btn { margin-top: 22px; font-size: 36px; }
+  #c4 .logo { display: flex; align-items: center; gap: 14px; margin-top: 36px; }
+  #c4 .logo span { font: 600 56px var(--f-ui); letter-spacing: -.03em; }
+</style>
+<script>window.TRILHA = { bpm: 119.9, fase: 0 };</script>
+</head>
+<body>
+<div id="root" data-composition-id="root" data-start="0" data-duration="17.8" data-width="1080" data-height="1920" data-motion-blur="on">
+ <div id="tc"></div>
+ <div id="camera">
+
+  <!-- 1 · GANCHO (B0–B7) -->
+  <section class="cena cena--sol" id="c1">
+    <div class="eva" id="c1-eva"></div>
+    <p class="kicker">Parado no seu WhatsApp agora:</p>
+    <p class="gr" id="c1-gr">R$ <span class="q" id="c1-q">???</span></p>
+  </section>
+
+  <!-- 2 · DOR (B7–B17) -->
+  <section class="cena cena--creme" id="c2">
+    <div class="topo"><p class="rot" id="c2-rot">12 propostas sem resposta</p><p class="total">R$ <span id="c2-total">0</span></p></div>
+    <div class="eva sentada" id="c2-eva"></div>
+    <div class="grade" id="c2-grade"></div>
+  </section>
+
+  <!-- 3 · PRODUTO NO DROP (B17–B29) -->
+  <section class="cena cena--noite" id="c3">
+    <div class="eva eva--noite" id="c3-grande"></div>
+    <div class="barra" id="c3-barra"><p class="rot">Raio-X · lendo 90 dias</p><div class="trilho"><div class="enche" id="c3-enche"></div></div></div>
+    <div class="eva eva--noite sentada" id="c3-eva"></div>
+    <div class="lista" id="c3-lista"><p class="lista__topo">As maiores, com a mensagem pronta</p><div id="c3-linhas"></div></div>
+  </section>
+
+  <!-- 4 · FECHAMENTO (B29 até o fim): logo só aqui -->
+  <section class="cena cena--sol" id="c4">
+    <div class="cta">
+      <div class="eva" id="c4-eva"></div>
+      <p class="h" id="c4-h">Veja o seu <span class="marca" id="c4-marca">número.</span></p>
+      <p class="sub" id="c4-sub">A mensagem só sai quando você responde 1.</p>
+      <div class="btn" id="c4-btn">Ver minhas propostas paradas</div>
+      <p class="depois-btn" id="c4-gratis">Grátis e sem cartão · vyzon.com.br</p>
+      <div class="logo" id="c4-logo">
+        <svg width="60" height="62" viewBox="16 14.5 68 69"><defs><mask id="gap" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><rect x="25" y="13" width="26" height="72" rx="13" transform="rotate(-22 38 49)" fill="#000" stroke="#000" stroke-width="9"/></mask></defs><rect x="49" y="13" width="26" height="72" rx="13" transform="rotate(22 62 49)" fill="#2563EB" mask="url(#gap)"/><rect x="25" y="13" width="26" height="72" rx="13" transform="rotate(-22 38 49)" fill="#0f1730"/></svg>
+        <span>vyzon</span>
+      </div>
+    </div>
+  </section>
+
+ </div>
+ <div id="legenda"></div>
+</div>
+<script src="legendas.js"></script>
+<script src="base.js"></script>
+<script>
+// Trilha Lume (Eleven Music, 119,9 BPM) começando em 7,974 s: B(k) = k · 0,5004 s; o drop cai em B17.
+window.__timelines = window.__timelines || {}; // o lint do HyperFrames procura esta linha
+const { B } = VF;
+const DUR = 17.8;
+// Exemplo ilustrativo (o mesmo da home): 12 propostas, média de R$ 25 mil, soma R$ 300.000.
+const PROPOSTAS = [
+  ["Residência Oliveira", "6,2 kWp", 24900, 3], ["Clínica Vida", "11 kWp", 39800, 4], ["Casa Fernandes", "4,5 kWp", 18700, 9],
+  ["Padaria Trigo Bom", "9,8 kWp", 33600, 6], ["Sítio Santa Luzia", "15 kWp", 52300, 12], ["Residência Moura", "5,4 kWp", 21300, 2],
+  ["Apartamento Costa", "3,8 kWp", 16400, 15], ["Oficina do Beto", "8,1 kWp", 28900, 5], ["Residência Lima", "4,9 kWp", 19200, 7],
+  ["Igreja da Vila", "6,8 kWp", 25800, 20], ["Residência Prado", "2,4 kWp", 10600, 11], ["Residência Alves", "2 kWp", 8500, 8],
+];
+const brl = (v) => "R$ " + Math.round(v).toLocaleString("pt-BR");
+document.getElementById("c2-grade").innerHTML = PROPOSTAS.map(([, , v, d]) => `<div class="card"><p class="v">${brl(v)}</p><p class="d">há ${d} dias</p></div>`).join("");
+const maiores = [...PROPOSTAS].sort((a, b) => b[2] - a[2]).slice(0, 4);
+document.getElementById("c3-linhas").innerHTML = maiores.map(([q, k, v, d], i) =>
+  `<div class="linha"><div><p class="linha__quem">${q}</p><p class="linha__meta">${k} · há ${d} dias</p></div><div class="linha__dir"><span class="linha__valor">${brl(v)}</span>${i < 3 ? '<span class="pronta">mensagem pronta</span>' : '<span class="carimbo carimbo--espera" style="font-size:28px;padding:2px 12px;border-width:3px">sem resposta</span>'}</div></div>`).join("");
+
+const tl = VF.montar();
+VF.tempo(tl, DUR);
+VF.legendas(tl);
+
+// 1 · GANCHO: "R$ ???" no quadro 0; os dígitos giram sem parar.
+VF.cena(tl, "#c1", 0, B(7));
+VF.evaVive(tl, "#c1-eva", 0, B(7));
+VF.evaOlhar(tl, "#c1-eva", -18, B(1));
+const giro = ["8?.?", "1??", "2?7", "?4?", "31?", "??9", "1?2", "26?", "???"];
+for (let r = 0; r < 2; r++) VF.slot(tl, "#c1-q", giro, B(1.5 + r * 2), { passo: 0.07 });
+VF.evaEstado(tl, "#c1-eva", "lendo", B(3));
+VF.evaEstado(tl, "#c1-eva", "alerta", B(5.5));
+VF.chicoteSai(tl, "#c1 .kicker", B(6.6), { x: -900 });
+
+// 2 · DOR: o número sai do gancho e vira o mundo creme; as propostas caem; o total sobe.
+VF.vira(tl, "#c1-gr", "#f3efe4", B(7) - 0.42, { de: "#ffc933", dur: 0.42, raio: 10 });
+VF.cena(tl, "#c2", B(7), B(17));
+VF.palavras(tl, "#c2-rot", B(7) + 0.05);
+VF.pousa(tl, "#c2-eva", B(7), { de: 0.8, dur: 0.4 });
+VF.evaVive(tl, "#c2-eva", B(7), B(17));
+const cards = [...document.querySelectorAll("#c2 .card")];
+VF.antes(tl, cards, { autoAlpha: 0, y: -60, scale: 0.9 });
+tl.fromTo(cards, { autoAlpha: 0, y: -60, scale: 0.9 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.45, stagger: 0.1, ease: "expo.out", immediateRender: false }, B(8));
+VF.contar(tl, "#c2-total", 0, 300000, B(8), 0.1 * 11 + 0.45);
+VF.evaLendo(tl, "#c2-eva", B(8), 1.4);
+VF.evaEstado(tl, "#c2-eva", "alerta", B(12));
+VF.soco(tl, "#c2-grade", B(12), { s: 1.08, dur: 0.5 });
+VF.solta(tl, B(16) - 0.2, { dur: 0.3 });
+
+// 3 · PRODUTO NO DROP: íris escura do total; o Raio-X lê 90 dias; as maiores ganham a mensagem.
+VF.iris(tl, 540, 360, "#0f1730", B(17) - 0.4, { dur: 0.4 });
+VF.cena(tl, "#c3", B(17), B(29));
+tl.set("#legenda", { color: "#fff" }, B(17));
+VF.pousa(tl, "#c3-barra", B(17), { de: 1.1, dur: 0.4 });
+VF.pousa(tl, "#c3-grande", B(17), { de: 0.7, dur: 0.5 });
+VF.evaLendo(tl, "#c3-grande", B(17.5), 1.4);
+VF.antes(tl, "#c3-enche", { scaleX: 0 });
+tl.fromTo("#c3-enche", { scaleX: 0 }, { scaleX: 1, duration: 2.0, ease: "none", immediateRender: false }, B(17.3));
+tl.to("#c3-grande", { scale: 0.46, x: 310, y: -424, duration: 0.42, ease: "power3.inOut" }, B(21.5) - 0.42);
+tl.set("#c3-grande", { autoAlpha: 0 }, B(21.5));
+VF.antes(tl, "#c3-eva", { autoAlpha: 0 });
+tl.set("#c3-eva", { autoAlpha: 1 }, B(21.5));
+VF.evaVive(tl, "#c3-eva", B(21.5), B(29));
+VF.evaEstado(tl, "#c3-eva", "escrevendo", B(21.5));
+VF.pousa(tl, "#c3-lista", B(21.5), { de: 1.12, dur: 0.5 });
+const prontas = [...document.querySelectorAll("#c3 .pronta")];
+VF.antes(tl, prontas, { autoAlpha: 0, scale: 0.6 });
+prontas.forEach((el, i) => tl.fromTo(el, { autoAlpha: 0, scale: 0.6 }, { autoAlpha: 1, scale: 1, duration: 0.3, ease: "back.out(1.6)", immediateRender: false }, B(23 + i * 0.5)));
+VF.evaEstado(tl, "#c3-eva", "alerta", B(24.5));
+VF.soco(tl, "#c3-linhas", B(24.5), { s: 1.1, dur: 0.6 });
+VF.solta(tl, B(28.2), { dur: 0.3 });
+
+// 4 · FECHAMENTO: íris de sol a partir da primeira "mensagem pronta".
+const rp = prontas[0].getBoundingClientRect();
+VF.iris(tl, rp.left + rp.width / 2, rp.top + rp.height / 2, "#ffc933", B(29) - 0.4, { dur: 0.4 });
+VF.cena(tl, "#c4", B(29));
+tl.set("#legenda", { color: "#0f1730" }, B(29));
+tl.set("#camera", { scale: 1 }, B(29));
+VF.pousa(tl, "#c4-eva", B(29), { de: 0.7, dur: 0.5 });
+VF.evaEstado(tl, "#c4-eva", "saiu", B(29.5));
+VF.evaVive(tl, "#c4-eva", B(29), DUR);
+VF.palavras(tl, "#c4-h", B(29) + 0.1, { gap: 0.09 });
+VF.marca(tl, "#c4-marca", B(30));
+VF.entra(tl, "#c4-sub", B(30), { y: 20, dur: 0.5, ease: "settle" });
+VF.pousa(tl, "#c4-btn", B(31), { de: 1.1, dur: 0.45 });
+VF.entra(tl, "#c4-gratis", B(31.1), { y: 20, dur: 0.5, ease: "settle" });
+VF.entra(tl, "#c4-logo", B(31.2), { y: 20, dur: 0.5, ease: "settle" });
+VF.evaOlhar(tl, "#c4-eva", -14, B(32));
+VF.evaPisca(tl, "#c4-eva", B(33));
+VF.evaOlhar(tl, "#c4-eva", 12, B(34));
+tl.to("#tc", { opacity: 1, duration: 0.01 }, DUR - 0.01); // fixa a duração da timeline
+VF.registrar("root", tl);
+</script>
+</body>
+</html>
