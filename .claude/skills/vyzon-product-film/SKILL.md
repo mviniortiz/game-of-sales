@@ -105,9 +105,24 @@ Regras: nunca começar pelo logo; uma grande ideia visual por filme.
    e trilha ancoram no `roteiro.json`.
 3. Movimento só na timeline GSAP (render avança quadro a quadro). Armadilhas já
    pagas, ver style guide §6.1.
-4. `hyperframes check` no projeto (overlap de texto mascarado é falso positivo;
-   `media_missing_id` é real: todo `<audio>` precisa de `id`; `container_overflow`
-   do rolo da conversa é intencional).
+4. `hyperframes check` no projeto (HyperFrames **0.9.13** desde 04/11/2026). O
+   check agora tem uma etapa Craft, e ela entra no gate (item 6, leitura mobile):
+   - `line_unread` é defeito: a linha fica na tela 0,5 s + 0,3 s por palavra, e a
+     última linha do filme pelo menos 2 s. Os filmes de out/2026 (`dia-2`,
+     `parado`, `eva-campo`) ainda falham nisso; filme novo não pode.
+   - `text_below_floor` (piso de 28 px) é defeito, salvo textura marcada com
+     `data-layout-ignore`.
+   - Ruído esperado: `film_silent`/`audio_none` (o áudio é montado fora, em Node),
+     `gsap_timeline_set_initial_hide` (a `.cena` já nasce escondida no CSS),
+     overlap de texto mascarado e `container_overflow` do rolo da conversa.
+   - Real: `media_missing_id` (todo `<audio>` precisa de `id`) e
+     `font_family_without_font_face` (só use família que o HyperFrames resolve;
+     `Arial Narrow` como fallback derruba o check).
+   Ferramentas novas do 0.9.13 que valem aqui (detalhe no style guide §6.2):
+   `data-motion-blur="on"` no root, `hyperframes measure frames <ref.mp4>
+   --events` para medir um vídeo de referência, `snapshot --at <t,…> --against
+   <ref.mp4>`, `<nome>.motion.json` para o check provar ordem e tempo, e
+   `hyperframes audio <final.mp4> --json` para conferir onde caem os hits.
 5. Rough: `bash scripts/render-filme.sh <slug> --rascunho`. Final: o mesmo sem a
    flag (4K/60 high crf 15 → Lanczos 1080 → `mixa-frases.mjs` → `-rev` → folha →
    screening). O áudio é montado fora do HyperFrames, em Node.

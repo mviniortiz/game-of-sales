@@ -120,6 +120,58 @@ registro EVA em campo ela senta na borda de cima dos cartões (`.sentada`).
   saída em -130, senão sobram pontinhos das letras de baixo.
 - Saída de elemento já posicionado usa valor relativo (`y: "+=40"`), não absoluto.
 - `filter` em transição de cartão pode render preto: escureça por opacidade.
+- (0.9.7+) `overlapping_gsap_tweens` acusa `set()` que cai no meio de um tween
+  da mesma propriedade: mova o `set` para antes ou depois do tween.
+- (0.9.13) o lint marca `data-automation` e `data-fx-chain` que o render não lê.
+  Não usamos: a automação da trilha mora no `roteiro.json`.
+- Fonte sem `@font-face` e fora da lista que o HyperFrames resolve é erro de
+  check, mesmo sendo só fallback.
+
+### 6.2 HyperFrames 0.9.13: o que entra e o que fica de fora
+
+**Entra (com a régua dos §6 e §10):**
+- **Blur de movimento:** `data-motion-blur="on"` no elemento root. Translação usa
+  filtro barato; giro e zoom usam captura. Serve nos movimentos rápidos (cartão
+  atravessando, câmera na virada, saída `throw`). Em texto parado ou UI que
+  só aparece, desligue com `data-motion-blur="off"` no trecho. Shutter padrão
+  240°, e 360° já fica forte demais pra nós. Depois de ligar, rode o check
+  (`motion_blur_*`) e olhe o rascunho.
+- **Transições com causa** (referência oficial, `skills/hyperframes/references/motion.md`
+  no repo heygen-com/hyperframes): troca com blur no mesmo palco (sai em
+  opacidade com ~8 px de blur em 0,13 a 0,2 s e entra nítido em 0,13 s), morph
+  de contêiner (o aviso da EVA vira a mensagem enviada), objeto que vira o
+  mundo (o cartão da proposta cresce e vira a cena seguinte), carregar através
+  (o resultado encolhe e pousa na próxima tela) e dip cut. Use de 3 a 4 tipos
+  por filme, cada um causado por algo na tela.
+- **Saída 40 a 50% mais curta que a entrada.** O próximo elemento começa quando
+  o anterior está entre 30 e 50% feito. Palavras entram com 60 a 120 ms de
+  intervalo. Título que pousou fica parado.
+- **Blocos do registry** (`npx hyperframes add <nome>`, sempre recolorido com os
+  tokens do registro do filme):
+  - `caret-swap`: troca uma frase digitando a substituta. Bom pro hook ("cliente
+    sumiu" → "cliente voltou"). O caret vem em gradiente: troque pela cor chapada
+    do token.
+  - `filmed-screen`: tela filmada com perspectiva e foco. Use em plano de
+    produto real (Inbox, placar), nunca em mock genérico.
+  - `text-state-swap`, `focus-swap`: trocas de estado de texto e cartão.
+  - `pendulum-swing`: só se for o único overshoot do filme, no gesto da virada.
+  - `echo-smear` e `cinemagraph`: só com motivo escrito na EDL. `cinemagraph`
+    pede vídeo real.
+
+**Fica de fora (regra 5 do CLAUDE.md e §10):** os 36 blocos de shader WebGPU
+novos (aurora, blob, chrome-orb, color-wheel, falling-lines, flowing-gradient,
+fractal-noise, frost, gabor-noise, godrays, goo, heatmap, hologram,
+holographic, lens-flare, light-edge, liquid-metal, marble, mesh-gradient,
+nebula, obsidian, plasma, plastic, prism, ripples, sine-wave, spiral, strands,
+stripes, sun-burst, swirl, thin-film, voronoi, water, waveform, worley-noise).
+Junto com eles ficam fora `gooey-split`, os `transitions-*` e `vfx-*` de
+catálogo e os `*-wipe`. É exatamente a cara de IA genérica que o Vyzon recusa:
+orbe, glow, plasma e fundo que se mexe sozinho.
+
+**Medir referência:** quando o Markus mandar um vídeo de referência (§11), rode
+`npx hyperframes measure frames ref.mp4 --events` para tirar cortes, eases e
+velocidade antes de copiar o ritmo. Compare com o nosso usando
+`snapshot --at <t,…> --against ref.mp4`.
 
 ## 7. Ritmo (referência)
 
