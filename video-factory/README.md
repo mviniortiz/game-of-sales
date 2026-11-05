@@ -13,7 +13,7 @@ Fora do app: nada aqui entra no build do Vite nem no `package.json` da raiz.
 video-factory/
   env.sh                  source antes de tudo: Node (nvm), ffmpeg no PATH, Brave no HyperFrames
   bin/ffmpeg, bin/ffprobe ffmpeg do Remotion (já vem em node_modules da raiz)
-  package.json            só o hyperframes@0.8.92
+  package.json            só o hyperframes@0.9.13 (desde 04/11/2026)
   molde-vyzon-solar/      base.css (tokens LP.8, conversa, fatura, preço, EvaBot, legenda)
                           base.js (batidas, curvas, atalhos de movimento seek-safe)
   molde-eva-campo/        tema.css (registro EVA em campo: tokens por cima do molde-vyzon-solar)
@@ -58,18 +58,22 @@ brutos/<slug>.mov                       gravações do Markus para os reels com 
 O Mac não tem Homebrew, Python de usuário nem ffmpeg completo, e não precisa:
 
 1. Node 22+ via nvm (`~/.nvm`). `env.sh` carrega.
-2. `cd video-factory && npm install` instala só o `hyperframes@0.8.92`
+2. `cd video-factory && npm install` instala só o `hyperframes@0.9.13`
    (~120 MB em `node_modules`, inclui sharp e esbuild nativos).
 3. ffmpeg: os wrappers em `bin/` preferem `bin/full/` (ffmpeg e ffprobe 9.0.2
    estáticos para Mac arm64 de https://ffmpeg.martin-riedl.de, assinados com
    Developer ID, ~57 MB de zip, baixados com OK do Markus em 24/10/2026; fora
    do git). Para instalar de novo: baixe `macos/arm64/<versão>/ffmpeg.zip` e
    `ffprobe.zip`, confira o `.sha256` publicado e descompacte em `bin/full/`.
-   Sem eles, os wrappers caem no ffmpeg 7.1 do Remotion
-   (`node_modules/@remotion/compositor-darwin-arm64`), que basta para os filmes
-   de produto (mix, ducking, passa-baixa e limitador são em Node) mas **não**
-   para vídeo dentro do HyperFrames: a extração de quadros usa os filtros
-   `fps`, `format`, `setpts` e `settb`, que essa build não tem.
+   **Desde o HyperFrames 0.9.13 o `bin/full/` é obrigatório.** O encode do
+   render usa o filtro `setparams`, e o ffmpeg 7.1 do Remotion
+   (`node_modules/@remotion/compositor-darwin-arm64`) não tem esse filtro. Sem
+   o `bin/full/`, todo render quebra com "No such filter: 'setparams'". Ele
+   também já não tinha `fps`, `format`, `setpts` e `settb` para vídeo dentro do
+   HyperFrames. Numa worktree nova, o `bin/full/` não vem junto (ele fica fora
+   do git): crie um link pra cópia que já existe no Mac, com
+   `ln -s <worktree com bin/full>/video-factory/bin/full video-factory/bin/full`.
+   Hoje essa cópia está na worktree `musing-rubin-005bb8`.
 4. Navegador: `HYPERFRAMES_BROWSER_PATH` aponta para o Brave
    (`/Applications/Brave Browser.app`). Não foi preciso baixar o
    chrome-headless-shell.

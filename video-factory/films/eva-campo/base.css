@@ -9,8 +9,8 @@
   --line: #d9dde4; --blue: #1556c0; --blue-deep: #0e3e8a; --tint: #e8effb; --marker: #ffd84a;
   --wa: #25d366; --chat: #efeae2; --out: #d9fdd3; --wait: #a14a07; --ok: #0f7b4f;
   --tick-blue: #53bdeb; --eva: #a78bfa;
-  --f-display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;
-  --f-num: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --f-display: 'Archivo', system-ui, sans-serif;
+  --f-num: 'Barlow Condensed', sans-serif;
   --f-ui: 'Geist', 'Inter', system-ui, sans-serif;
   --shadow: 0 2px 4px rgba(13,20,33,.06), 0 40px 80px -40px rgba(13,20,33,.45);
 }
