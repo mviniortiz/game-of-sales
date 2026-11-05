@@ -42,6 +42,9 @@ const NOT_QUOTE_FILES = /boleto|comprovante|recibo|nota[\s_-]?fiscal|(?:^|[^a-z]
 const NUM = String.raw`\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?`;
 const PREFIXED = new RegExp(String.raw`r\$\s*(${NUM})`, "g");
 const SUFFIXED = new RegExp(String.raw`(?<![\d.,])(${NUM})\s*reais\b`, "g");
+// "25 mil", "25,5 mil", "32k" (QA de 04/11/2026: integrador escreve assim e a
+// proposta ficava fora). "mil reais" já cai aqui; "r$ 25 mil" também.
+const THOUSANDS = /(?<![\d.,])(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:mil\b|k\b)/g;
 
 function normalize(text: string): string {
     return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -64,8 +67,14 @@ type FoundAmount = { value: number; start: number; end: number };
 /** Recebe texto já normalizado. Valores em ordem de aparição. */
 function findAmounts(t: string): FoundAmount[] {
     const out: FoundAmount[] = [];
+    for (const m of t.matchAll(THOUSANDS)) {
+        const v = Number(m[1].replace(",", "."));
+        if (Number.isFinite(v) && v > 0) out.push({ value: Math.round(v * 1000), start: m.index!, end: m.index! + m[0].length });
+    }
     for (const re of [PREFIXED, SUFFIXED]) {
         for (const m of t.matchAll(re)) {
+            // "r$ 25 mil" já entrou como 25000: o 25 sozinho não conta.
+            if (out.some((o) => m.index! <= o.start && o.start <= m.index! + m[0].length + 1)) continue;
             const v = parseBRL(m[1]);
             if (v !== null) out.push({ value: v, start: m.index!, end: m.index! + m[0].length });
         }

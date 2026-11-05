@@ -33,7 +33,7 @@ export async function buildRaioX(admin: SupabaseClient, companyId: string, opts:
             .eq("company_id", companyId)
             .eq("direction", "outbound")
             .gte("message_timestamp", since)
-            .or("message_type.eq.document,body.ilike.%r$%,body.ilike.%reais%")
+            .or("message_type.eq.document,body.ilike.%r$%,body.ilike.%reais%,body.ilike.% mil%,body.ilike.%k %")
             .order("message_timestamp", { ascending: true })
             .range(from, from + PAGE - 1);
         if (error) throw new Error(`leitura falhou: ${error.message}`);
@@ -142,7 +142,18 @@ export async function buildRaioX(admin: SupabaseClient, companyId: string, opts:
         };
     });
 
-    const summary = { ...summarize(items), descartadas: descartadas.length, messages_read: [...byConv.values()].reduce((a, m) => a + m.length, 0), window_days: WINDOW_DAYS };
+    // Quantas mensagens a empresa tem na janela: separa "não li nada" (histórico não
+    // chegou) de "li e não achei proposta" no relatório.
+    const { count: historico } = await admin.from("channel_messages").select("id", { count: "exact", head: true })
+        .eq("company_id", companyId).gte("message_timestamp", since);
+    const summary = {
+        ...summarize(items),
+        descartadas: descartadas.length,
+        candidatas: found.length,
+        messages_read: [...byConv.values()].reduce((a, m) => a + m.length, 0),
+        history_messages: historico ?? 0,
+        window_days: WINDOW_DAYS,
+    };
     // Para o placar: a proposta de cada conversa com o contato e o nome.
     const quotes = ranked.map((i) => ({
         ...i,

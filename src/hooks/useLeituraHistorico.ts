@@ -53,6 +53,9 @@ export function useLeituraHistorico(companyId: string | null) {
             parado = l.mensagens > 0 && l.mensagens === anterior ? parado + 1 : 0;
             anterior = l.mensagens;
             if (parado >= 4 && Date.now() - inicio > 15_000) break;
+            // Nada chegou em 1 minuto: o histórico não vai vir agora. O relatório
+            // sai dizendo isso em vez de deixar a pessoa olhando 3 minutos.
+            if (l.mensagens === 0 && Date.now() - inicio > 60_000) break;
         }
         return ultima;
     }, [contar]);

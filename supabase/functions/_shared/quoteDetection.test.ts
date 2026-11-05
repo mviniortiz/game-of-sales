@@ -122,3 +122,11 @@ Deno.test("proposta sem rótulo de preço devolve null em vez de chutar", () => 
 Deno.test("valor com legenda embaixo, sem rótulo antes", () => {
     assertEquals(pickProposalAmount("R$ 27.800,00\ninvestimento no seu sistema"), 27800);
 });
+
+Deno.test("valor escrito em mil ou k conta (QA de 04/11/2026)", () => {
+    assertEquals(text("Proposta do sistema de 8 kWp: fica em 25 mil com instalação").amount, 25000);
+    assertEquals(text("orçamento: 32,5 mil à vista").amount, 32500);
+    assertEquals(text("proposta R$ 28 mil").amount, 28000);
+    assertEquals(text("o investimento sai por 41k").amount, 41000);
+    assertEquals(text("valor total R$ 23.900,00").amount, 23900);
+});

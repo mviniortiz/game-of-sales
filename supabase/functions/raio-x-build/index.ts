@@ -9,6 +9,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildRaioX } from "./build.ts";
 import { seedQuotesFromHistory } from "../_shared/quoteSeed.ts";
+import { isServiceCall } from "../_shared/serviceAuth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -24,6 +25,21 @@ const json = (body: unknown, status = 200) =>
 
 Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+    // Teste de bastidor (QA de 04/11/2026): monta o relatório de uma empresa sem gravar
+    // nada e sem rascunho de retomada. Só service_role ou o segredo do cron.
+    if (isServiceCall(req)) {
+        const b = await req.json().catch(() => ({})) as { company_id?: string; seco?: boolean };
+        if (!b.seco || !b.company_id) return json({ error: "só teste seco: company_id e seco" }, 400);
+        const adminSeco = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+        const t0 = Date.now();
+        try {
+            const built = await buildRaioX(adminSeco, b.company_id, { drafts: false });
+            return json({ seco: true, ms: Date.now() - t0, summary: built.summary, items: built.items.slice(0, 15), descartadas: built.descartadas.slice(0, 10) });
+        } catch (e) {
+            return json({ error: e instanceof Error ? e.message : "falhou" }, 500);
+        }
+    }
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return json({ error: "unauthorized" }, 401);
@@ -82,6 +98,9 @@ Deno.serve(async (req) => {
     if (autoatendimento) {
         try {
             await seedQuotesFromHistory(admin, companyId, user.id);
+            // Marca que o Raio-X rodou: sem isso, o placar da conta grátis manda de volta
+            // para /raio-x (useEvaSetup.fezRaioX lê quote_seed_at).
+            await admin.from("companies").update({ quote_seed_at: new Date().toISOString() }).eq("id", companyId);
         } catch (e) {
             console.warn("[raio-x-build] placar:", e instanceof Error ? e.message : e);
         }
