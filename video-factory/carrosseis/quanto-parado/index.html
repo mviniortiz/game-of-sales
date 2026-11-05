@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Vyzon · Carrossel · Quanto parado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=block" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/CustomEase.min.js"></script>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="tema.css">
+<style>
+  /* Carrossel 1080×1350 (4:5). Padrão em video-factory/PADRAO.md: margem 90, rodapé fixo. */
+  html, body, #root { width: 1080px; height: 1350px; }
+  .s { position: absolute; inset: 0; visibility: hidden; }
+  .s:first-of-type { visibility: visible; }
+  .rodape { position: absolute; left: 90px; right: 90px; bottom: 56px; display: flex; justify-content: space-between; font: 600 28px var(--f-ui); letter-spacing: -.01em; opacity: .7; }
+  .s .titulo { position: absolute; left: 90px; right: 90px; top: 110px; font: 600 104px/1.0 var(--f-display); letter-spacing: -.045em; }
+  .s .apoio { position: absolute; left: 90px; right: 90px; font: 400 42px/1.3 var(--f-ui); letter-spacing: -.01em; }
+  .cena--noite .rodape, .cena--noite .titulo, .cena--noite .apoio { color: #fff; }
+  .cena--noite .marca { color: var(--sol); background-image: none; }
+  .marca { background-size: 100% 100%; }
+  .conversa { left: 90px; width: 900px; }
+  .bolha { font-size: 36px; }
+  .bolha--aviso { font-size: 32px; max-width: 94%; }
+  .bolha--aviso .bolha__meta { font-size: 29px; }
+  .eva { position: absolute; }
+  .lista { position: absolute; left: 90px; width: 900px; border-radius: 28px; background: #fff; border: 2px solid var(--line); overflow: hidden; color: var(--ink); }
+  .lista__topo { display: flex; align-items: center; justify-content: space-between; padding: 22px 28px; border-bottom: 2px solid var(--line); font: 600 34px var(--f-ui); }
+  .total { padding: 4px 14px; border-radius: 10px; background: #fdf1e5; color: #a14a07; font: 600 30px var(--f-num); }
+  .linha { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 28px; border-bottom: 2px solid var(--line); }
+  .linha:last-child { border-bottom: 0; }
+  .linha__quem { font: 600 32px/1.15 var(--f-ui); }
+  .linha__meta { margin-top: 2px; font: 400 28px var(--f-ui); color: var(--subtle); }
+  .linha__dir { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .linha__valor { font: 600 36px var(--f-num); }
+  .linha .carimbo { font-size: 28px; padding: 0 10px; border-width: 3px; }
+  .pronta { padding: 2px 14px; border-radius: 999px; background: var(--sol); color: var(--ink); font: 600 28px var(--f-ui); }
+  #s1 .titulo { top: 130px; font-size: 118px; }
+  #s1 .eva { --s: 600px; right: -110px; bottom: -150px; }
+  #s1 .apoio { top: 840px; width: 480px; font-weight: 600; font-size: 44px; }
+  #s2 .lista { top: 470px; }
+  #s2 .eva { --s: 190px; right: 110px; top: 296px; }
+  #s3 .grande { position: absolute; left: 90px; right: 90px; top: 360px; font: 600 160px/.95 var(--f-num); letter-spacing: -.05em; color: var(--sol); }
+  #s3 .apoio { top: 600px; font: 600 64px/1.1 var(--f-display); letter-spacing: -.03em; }
+  #s3 .eva { --s: 300px; right: 80px; bottom: 120px; }
+  #s4 .passos { position: absolute; left: 90px; right: 90px; top: 420px; display: flex; flex-direction: column; gap: 34px; }
+  #s4 .passo { display: flex; gap: 26px; align-items: flex-start; font: 500 42px/1.25 var(--f-ui); }
+  #s4 .n { flex: none; width: 70px; height: 70px; border-radius: 50%; display: grid; place-items: center; background: #fff; font: 600 36px var(--f-num); }
+  #s4 .passo:nth-child(2) .n { background: var(--noite); color: var(--sol); }
+  #s4 .eva { --s: 300px; right: 80px; bottom: 110px; }
+  #s5 .lista { top: 470px; }
+  #s5 .eva { --s: 190px; right: 110px; top: 296px; }
+  #s6 .eva { --s: 460px; left: 310px; bottom: -40px; }
+  #s6 .apoio { top: 560px; }
+  #s7 .cta { position: absolute; left: 90px; right: 90px; top: 150px; display: flex; flex-direction: column; align-items: center; text-align: center; color: #fff; }
+  #s7 .eva { position: relative; --s: 300px; margin-bottom: 36px; }
+  #s7 .h { font: 600 116px/1.02 var(--f-display); letter-spacing: -.045em; }
+  #s7 .h .amarelo { color: var(--sol); }
+  #s7 .btn { margin-top: 56px; background: var(--sol); color: var(--ink); font-weight: 600; }
+  #s7 .depois-btn { margin-top: 22px; font-size: 34px; color: #c9cfdc; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="root" data-start="0" data-duration="7" data-width="1080" data-height="1350">
+ <div id="camera">
+  <section class="s cena--sol" id="s1">
+    <h1 class="titulo">Quanto dinheiro está parado no seu WhatsApp <span class="marca">agora?</span></h1>
+    <p class="apoio">A Lume faz essa conta pra você.</p>
+    <div class="eva" id="e1"></div>
+    <div class="rodape"><span>vyzon</span><span></span></div>
+  </section>
+  <section class="s cena--creme" id="s2">
+    <h2 class="titulo" style="font-size:84px">Cada proposta sem resposta é dinheiro esperando.</h2>
+    <div class="eva" id="e2"></div>
+    <div class="lista"><div class="lista__topo"><span>Propostas acompanhadas</span><span class="total">R$ 117.000 parados</span></div><div class="linha"><div><p class="linha__quem">Residência Oliveira</p><p class="linha__meta">6,2 kWp · há 3 dias</p></div><div class="linha__dir"><span class="linha__valor">R$ 24.900</span><span class="carimbo carimbo--espera">sem resposta</span></div></div><div class="linha"><div><p class="linha__quem">Clínica Vida</p><p class="linha__meta">11 kWp · há 4 dias</p></div><div class="linha__dir"><span class="linha__valor">R$ 39.800</span><span class="carimbo carimbo--espera">sem resposta</span></div></div><div class="linha"><div><p class="linha__quem">Casa Fernandes</p><p class="linha__meta">4,5 kWp · há 9 dias</p></div><div class="linha__dir"><span class="linha__valor">R$ 18.700</span><span class="carimbo carimbo--espera">sem resposta</span></div></div><div class="linha"><div><p class="linha__quem">Padaria Trigo Bom</p><p class="linha__meta">9,8 kWp · há 6 dias</p></div><div class="linha__dir"><span class="linha__valor">R$ 33.600</span><span class="carimbo carimbo--espera">sem resposta</span></div></div><div class="linha"><div><p class="linha__quem">Sítio Santa Luzia</p><p class="linha__meta">15 kWp · há 12 dias</p></div><div class="linha__dir"><span class="linha__valor">R$ 52.300</span><span class="carimbo carimbo--espera">sem resposta</span></div></div>
+    <div class="rodape"><span>vyzon · lista de exemplo</span><span>2/7</span></div>
+  </section>
+  <section class="s cena--noite" id="s3">
+    <h2 class="titulo" style="font-size:72px">12 propostas de R$ 25 mil sem resposta são</h2>
+    <p class="grande">R$ 300 mil</p>
+    <p class="apoio">esperando alguém<br>chamar de volta.</p>
+    <div class="eva eva--noite" id="e3"></div>
+    <div class="rodape"><span>vyzon · exemplo</span><span>3/7</span></div>
+  </section>
+  <section class="s cena--creme" id="s4">
+    <h2 class="titulo" style="font-size:88px">O Raio-X mostra o seu número em uns 3 minutos.</h2>
+    <div class="passos">
+      <p class="passo"><span class="n">1</span><span>Você conecta o WhatsApp pelo QR Code.</span></p>
+      <p class="passo"><span class="n">2</span><span>A Lume lê os últimos 90 dias.</span></p>
+      <p class="passo"><span class="n">3</span><span>Sai a lista do que ficou sem resposta, e quanto soma.</span></p>
+    </div>
+    <div class="eva" id="e4"></div>
+    <div class="rodape"><span>vyzon</span><span>4/7</span></div>
+  </section>
+  <section class="s cena--creme" id="s5">
+    <h2 class="titulo" style="font-size:84px">As maiores já vêm com a <span class="marca">mensagem pronta.</span></h2>
+    <div class="eva" id="e5"></div>
+    <div class="lista"><div class="lista__topo"><span>Paradas, da maior para a menor</span></div><div class="linha"><div><p class="linha__quem">Sítio Santa Luzia</p><p class="linha__meta">15 kWp · há 12 dias</p></div><div class="linha__dir"><span class="linha__valor">R$ 52.300</span><span class="pronta">mensagem pronta</span></div></div><div class="linha"><div><p class="linha__quem">Clínica Vida</p><p class="linha__meta">11 kWp · há 4 dias</p></div><div class="linha__dir"><span class="linha__valor">R$ 39.800</span><span class="pronta">mensagem pronta</span></div></div><div class="linha"><div><p class="linha__quem">Padaria Trigo Bom</p><p class="linha__meta">9,8 kWp · há 6 dias</p></div><div class="linha__dir"><span class="linha__valor">R$ 33.600</span><span class="pronta">mensagem pronta</span></div></div><div class="linha"><div><p class="linha__quem">Oficina do Beto</p><p class="linha__meta">8,1 kWp · há 5 dias</p></div><div class="linha__dir"><span class="linha__valor">R$ 28.900</span><span class="carimbo carimbo--espera">sem resposta</span></div></div></div>
+    <div class="rodape"><span>vyzon · lista de exemplo</span><span>5/7</span></div>
+  </section>
+  <section class="s cena--sol" id="s6">
+    <h2 class="titulo">É grátis. E nada vai pra <span class="marca">cliente nenhum.</span></h2>
+    <p class="apoio">O Raio-X só lê. Mensagem só sai quando você responde 1.</p>
+    <div class="eva" id="e6"></div>
+    <div class="rodape"><span>vyzon</span><span>6/7</span></div>
+  </section>
+  <section class="s cena--noite" id="s7">
+    <div class="cta">
+      <div class="eva eva--noite" id="e7"></div>
+      <p class="h">Veja o seu<br><span class="amarelo">número.</span></p>
+      <div class="btn">Ver minhas propostas paradas</div>
+      <p class="depois-btn">Grátis e sem cartão · vyzon.com.br</p>
+    </div>
+    <div class="rodape"><span>vyzon</span><span>7/7</span></div>
+  </section>
+ </div>
+</div>
+<script src="base.js"></script>
+<script>
+window.__timelines = window.__timelines || {}; // o lint do HyperFrames procura esta linha
+// Cada slide ocupa 1 s da composição; o carrossel é tirado em snapshots no meio de cada segundo.
+const tl = VF.montar();
+const slides = [...document.querySelectorAll(".s")];
+slides.forEach((s, i) => { tl.set(s, { autoAlpha: i === 0 ? 1 : 0 }, 0); tl.set(s, { autoAlpha: 1 }, i); if (i < slides.length - 1) tl.set(s, { autoAlpha: 0 }, i + 1); });
+// estados da Lume por slide (os mesmos do app): olho, alerta, olho, saiu, saiu, olho
+const estado = { e1: "olho", e2: "lendo", e3: "alerta", e4: "lendo", e5: "escrevendo", e6: "saiu", e7: "olho" };
+Object.entries(estado).forEach(([id, st], i) => VF.evaEstado(tl, "#" + id, st, Math.max(0, i + 0.05)));
+tl.to({}, { duration: 0.01 }, 6.99);
+VF.registrar("root", tl);
+</script>
+</body>
+</html>

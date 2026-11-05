@@ -1,7 +1,7 @@
 #!/bin/bash
 # Render completo de um filme: legenda → check → vídeo 4K/60 → Lanczos 1080 →
 # mix/master → versão de revisão com tempo queimado → folha de quadros → screening.
-# Uso: bash scripts/render-filme.sh <slug> [--rascunho]
+# Uso: bash scripts/render-filme.sh <slug> [--rascunho | --1080]
 set -euo pipefail
 VF="$(cd "$(dirname "$0")/.." && pwd)"; source "$VF/env.sh"
 SLUG="$1"; MODO="${2:-}"
@@ -11,6 +11,9 @@ node "$VF/scripts/gera-legendas.mjs" "$F/roteiro.json"
 (cd "$F" && hyperframes lint . || true)
 if [ "$MODO" = "--rascunho" ]; then
   (cd "$F" && hyperframes render . --quality draft --fps 30 --output "$OUT/$SLUG-video.mp4")
+elif [ "$MODO" = "--1080" ]; then
+  # final direto em 1080×1920/60, sem a passada em 4K (bem mais leve no Mac)
+  (cd "$F" && hyperframes render . --fps 60 --quality high --crf 16 --output "$OUT/$SLUG-video.mp4")
 else
   (cd "$F" && hyperframes render . --resolution portrait-4k --fps 60 --quality high --crf 15 --output "$OUT/$SLUG-4k.mp4")
   ffmpeg -v error -y -i "$OUT/$SLUG-4k.mp4" -vf "scale=1080:1920:flags=lanczos" -c:v libx264 -preset slow -crf 16 -pix_fmt yuv420p -movflags +faststart -an "$OUT/$SLUG-video.mp4"

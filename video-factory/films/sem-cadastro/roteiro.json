@@ -1,0 +1,46 @@
+{
+  "slug": "sem-cadastro",
+  "duracao": 22.4,
+  "trilha": {
+    "arquivo": "~/Movies/vyzon-film/trilha/house-02-lily-j-mixkit-744.mp3",
+    "bpm": 122.99, "fase": 0.017, "inicio": 0,
+    "ganho_db": -11, "ducking_db": -12, "fade_out": 1.2,
+    "automacao": [
+      { "beat": 0, "lp_hz": 900, "ganho_db": -2 },
+      { "beat": 8.4, "lp_hz": 900, "ganho_db": -2 },
+      { "beat": 9, "lp_hz": 20000, "ganho_db": 0 },
+      { "beat": 27.6, "lp_hz": 20000, "ganho_db": 0 },
+      { "beat": 28.2, "lp_hz": 1400, "ganho_db": -1 },
+      { "beat": 29, "lp_hz": 20000, "ganho_db": 1 }
+    ]
+  },
+  "vozDir": "~/Movies/vyzon-film/voz/nov/aparadas",
+  "sfxDir": "~/Movies/vyzon-film/sfx",
+  "voz": { "nome": "Nassif ulzsiMeCbfKyTPCNhCD5", "modelo": "eleven_v4", "ganho_db": 0 },
+  "falas": [
+    { "id": "L1", "arquivo": "S1-t2.wav", "beat": 0, "offset": 0.1, "texto": "CRM só funciona se alguém cadastra cada orçamento.", "semLegenda": true },
+    { "id": "L2", "arquivo": "S2-t1.wav", "beat": 9, "offset": 0.1, "texto": "No Váizom, a proposta que sai do seu WhatsApp entra na lista sozinha.",
+      "legenda": [[0.04, "No Vyzon, a proposta que sai do seu WhatsApp"], [2.87, "entra na lista sozinha."]] },
+    { "id": "L3", "arquivo": "S3-t2.wav", "beat": 21, "offset": 0.1, "texto": "Com o valor e o dia do envio. Você não cadastra nada.", "semLegenda": true },
+    { "id": "L4", "arquivo": "S4-t1.wav", "beat": 29, "offset": 0.1, "texto": "No segundo dia sem resposta, a Lume te avisa com a mensagem pronta.",
+      "legenda": [[0.04, "No 2º dia sem resposta,"], [1.7, "a Lume te avisa com a mensagem pronta."]] },
+    { "id": "L5", "arquivo": "V4-t1.wav", "beat": 39, "offset": 0.1, "texto": "Você responde um, e ela sai do seu número.", "semLegenda": true }
+  ],
+  "sfx": [
+    { "arquivo": "hook-thud-v1.mp3", "beat": 0, "offset": -0.017, "ganho_db": -6 },
+    { "arquivo": "zoom-air-v1.mp3", "beat": 9, "offset": -0.19, "ganho_db": -14 },
+    { "arquivo": "pop-light-v1.mp3", "beat": 10, "offset": -0.01, "ganho_db": -12 },
+    { "arquivo": "morph-v1.mp3", "beat": 12, "offset": 0.0, "ganho_db": -12 },
+    { "arquivo": "tick-v2.mp3", "beat": 13, "offset": -0.14, "ganho_db": -11 },
+    { "arquivo": "pop-light-v1.mp3", "beat": 15, "offset": 0.08, "ganho_db": -12 },
+    { "arquivo": "morph-v1.mp3", "beat": 17, "offset": 0.0, "ganho_db": -12 },
+    { "arquivo": "tick-v2.mp3", "beat": 18, "offset": -0.14, "ganho_db": -11 },
+    { "arquivo": "hook-thud-v2.mp3", "beat": 21, "offset": -0.017, "ganho_db": -10 },
+    { "arquivo": "riser-chargeup-v1.mp3", "beat": 29, "offset": -1.04, "ganho_db": -12 },
+    { "arquivo": "tick-v2.mp3", "beat": 30, "offset": -0.14, "ganho_db": -10 },
+    { "arquivo": "notify-v1.mp3", "beat": 31, "offset": 0.1, "ganho_db": -7 },
+    { "arquivo": "payoff-v1.mp3", "beat": 39, "offset": -0.015, "ganho_db": -9 },
+    { "arquivo": "zoom-air-v1.mp3", "beat": 41, "offset": -0.19, "ganho_db": -14 }
+  ],
+  "master": { "lufs": -14, "true_peak": -1.5 }
+}

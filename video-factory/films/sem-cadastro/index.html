@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Vyzon · Sem cadastro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=block" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/CustomEase.min.js"></script>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="tema.css">
+<style>
+  .lista { position: absolute; left: 90px; width: 900px; border-radius: 28px; background: #fff; border: 2px solid var(--line); overflow: hidden; color: var(--ink); }
+  .lista__topo { padding: 24px 30px; border-bottom: 2px solid var(--line); font: 600 38px var(--f-ui); }
+  .linha { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 30px; border-bottom: 2px solid var(--line); background: #fff; }
+  .linha:last-child { border-bottom: 0; }
+  .linha__quem { font: 600 36px/1.15 var(--f-ui); }
+  .linha__meta { margin-top: 4px; font: 400 30px var(--f-ui); color: var(--subtle); }
+  .linha__dir { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .linha__valor { font: 600 40px var(--f-num); }
+  .linha .carimbo { font-size: 28px; padding: 2px 12px; border-width: 3px; }
+  .carimbo--ok { color: #0f7b4f; }
+  #ghost { position: absolute; z-index: 30; visibility: hidden; border-radius: 20px; background: #d9fdd3; }
+  /* 1 · gancho: o formulário vazio do CRM */
+  #c1 .bloco { position: absolute; left: 90px; right: 90px; top: 250px; }
+  #c1 .kicker { margin-bottom: 36px; color: var(--ink); text-transform: none; letter-spacing: 0; font-size: 42px; font-weight: 600; }
+  #c1 .hl { font-size: 128px; line-height: 1; }
+  #c1 .form { position: absolute; left: 90px; width: 640px; top: 900px; padding: 30px 32px; border-radius: 24px; background: #fff; color: var(--ink); }
+  #c1 .form__titulo { font: 600 36px var(--f-ui); margin-bottom: 18px; }
+  #c1 .campo { margin-top: 14px; padding: 14px 18px; border: 2px solid var(--line); border-radius: 12px; font: 400 32px var(--f-ui); color: var(--subtle); }
+  #c1 .caret { display: inline-block; width: 4px; height: 34px; vertical-align: -6px; margin-right: 8px; background: var(--ink); }
+  #c1-eva { --s: 520px; position: absolute; right: -70px; bottom: -40px; }
+  /* 2 · a proposta sai do WhatsApp e entra na lista sozinha */
+  #c2 .conversa { top: 250px; }
+  #c2 .conversa__corpo { height: 330px; }
+  #c2 .bolha { font-size: 40px; }
+  #c2 .pdf__nome { font-size: 36px; }
+  #c2 .troca { position: absolute; left: 26px; right: 26px; top: 30px; display: flex; flex-direction: column; gap: 18px; }
+  #c2 .lista { top: 890px; }
+  #c2-eva { --s: 220px; right: 110px; top: 696px; }
+  /* 3 · você não cadastra nada */
+  #c3 .bloco { position: absolute; left: 90px; right: 90px; top: 260px; }
+  #c3 .kicker { color: var(--ink); text-transform: none; letter-spacing: 0; font-size: 50px; font-weight: 600; }
+  #c3 .hl { margin-top: 24px; font-size: 140px; line-height: 1; }
+  #c3 .lista { top: 820px; }
+  #c3 .lista .linha { padding: 26px 34px; }
+  #c3 .lista .linha__quem { font-size: 46px; }
+  #c3 .lista .linha__meta { font-size: 36px; }
+  #c3 .lista .linha__valor { font-size: 54px; }
+  #c3-eva { --s: 480px; position: absolute; left: 300px; bottom: -60px; }
+  /* 4 · no 2º dia a Lume avisa */
+  #c4 .lista { top: 250px; }
+  #c4 .conversa { top: 640px; color: var(--ink); }
+  #c4 .conversa__avatar { background: var(--blue); }
+  #c4 .bolha--aviso { font-size: 36px; max-width: 94%; }
+  #c4 .bolha--aviso .bolha__meta { font-size: 32px; }
+  #c4-eva { --s: 240px; right: 110px; top: 418px; }
+  /* 5 · fechamento */
+  #c5 .cta { position: absolute; left: 90px; right: 90px; top: 300px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  #c5-eva { --s: 400px; margin-bottom: 40px; }
+  #c5 .hl { font-size: 116px; line-height: 1.02; }
+  #c5 .btn { margin-top: 60px; font-weight: 600; }
+  #c5 .depois-btn { margin-top: 26px; font-size: 36px; color: var(--ink); }
+  #c5 .logo { display: flex; align-items: center; gap: 14px; margin-top: 46px; }
+  #c5 .logo span { font: 600 60px var(--f-ui); letter-spacing: -.03em; color: var(--ink); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="root" data-start="0" data-duration="22.4" data-width="1080" data-height="1920" data-motion-blur="on">
+ <div id="tc"></div>
+ <div id="camera">
+
+  <!-- 1 · GANCHO (B0): o formulário vazio esperando alguém -->
+  <section class="cena cena--sol" id="c1">
+    <div class="eva" id="c1-eva"></div>
+    <div class="bloco">
+      <p class="kicker">Já tem CRM?</p>
+      <h1 class="hl">CRM só funciona se alguém <span class="marca" id="c1-marca">cadastra.</span></h1>
+    </div>
+    <div class="form" id="c1-form" data-motion-blur="off">
+      <p class="form__titulo">Novo orçamento</p>
+      <p class="campo"><span class="caret" id="c1-caret"></span>Cliente</p>
+      <p class="campo">Valor</p>
+      <p class="campo">Data de envio</p>
+    </div>
+  </section>
+
+  <!-- 2 · PRODUTO (B9): a proposta que sai do WhatsApp entra na lista -->
+  <section class="cena cena--creme" id="c2">
+    <div class="conversa" id="c2-conv">
+      <div class="conversa__topo">
+        <div class="conversa__avatar" id="c2-av">M</div>
+        <div><p class="conversa__nome" id="c2-nome">Marina</p><p class="conversa__status">online</p></div>
+      </div>
+      <div class="conversa__corpo">
+        <div class="troca" id="c2-a">
+          <span class="conversa__dia" style="align-self:center">Hoje</span>
+          <div class="bolha bolha--saida" id="c2-pdf">
+            <div class="pdf"><div class="pdf__icone" data-layout-ignore>PDF</div><div><p class="pdf__nome">Proposta_5,4kWp.pdf</p><p class="pdf__meta">R$ 21.300 · 2 páginas</p></div></div>
+            <span class="bolha__hora">10:12</span>
+          </div>
+        </div>
+        <div class="troca" id="c2-b">
+          <span class="conversa__dia" style="align-self:center">Hoje</span>
+          <div class="bolha bolha--saida" id="c2-txt">João, fica <span class="num" style="font-size:40px">R$ 46.800</span> em até 60x.<span class="bolha__hora">11:40</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="eva sentada" id="c2-eva"></div>
+    <div class="lista" id="c2-lista">
+      <p class="lista__topo">Propostas acompanhadas</p>
+      <div class="linha"><div><p class="linha__quem">Residência Oliveira</p><p class="linha__meta">há 1 dia</p></div><div class="linha__dir"><span class="linha__valor">R$ 24.900</span></div></div>
+      <div class="linha" id="c2-l1"><div><p class="linha__quem">Marina</p><p class="linha__meta">enviada hoje, 10:12</p></div><div class="linha__dir"><span class="linha__valor">R$ 21.300</span></div></div>
+      <div class="linha" id="c2-l2"><div><p class="linha__quem">João</p><p class="linha__meta">enviada hoje, 11:40</p></div><div class="linha__dir"><span class="linha__valor">R$ 46.800</span></div></div>
+    </div>
+  </section>
+
+  <!-- 3 · PAYOFF DO MEIO (B21) -->
+  <section class="cena cena--sol" id="c3">
+    <div class="bloco">
+      <p class="kicker ln"><span>Com o valor e o dia do envio.</span></p>
+      <h2 class="hl"><span class="ln"><span>Você não</span></span><span class="ln"><span>cadastra <span class="marca" id="c3-marca">nada.</span></span></span></h2>
+    </div>
+    <div class="lista" id="c3-lista">
+      <div class="linha"><div><p class="linha__quem">Marina</p><p class="linha__meta">enviada hoje, 10:12</p></div><div class="linha__dir"><span class="linha__valor">R$ 21.300</span></div></div>
+    </div>
+    <div class="eva" id="c3-eva"></div>
+  </section>
+
+  <!-- 4 · VIRADA (B29): dois dias depois, a Lume avisa -->
+  <section class="cena cena--noite" id="c4">
+    <div class="lista" id="c4-lista">
+      <div class="linha"><div><p class="linha__quem">Marina</p><p class="linha__meta" id="c4-meta">enviada hoje, 10:12</p></div><div class="linha__dir"><span class="linha__valor">R$ 21.300</span><span class="carimbo carimbo--espera" id="c4-carimbo">sem resposta</span></div></div>
+    </div>
+    <div class="eva eva--noite sentada" id="c4-eva"></div>
+    <div class="conversa" id="c4-conv">
+      <div class="conversa__topo">
+        <div class="conversa__avatar">V</div>
+        <div><p class="conversa__nome">Aviso do Vyzon</p><p class="conversa__status">no seu WhatsApp</p></div>
+      </div>
+      <div class="conversa__corpo">
+        <div class="bolha bolha--aviso" id="c4-aviso">
+          <p class="av"><strong>Lume [M4] rascunho pronto</strong></p>
+          <p class="av" style="margin-top:10px">Lead: Marina</p>
+          <p class="av">Por que agora: proposta sem resposta há 2 dias</p>
+          <p class="av bolha__rascunho">Oi, Marina, conseguiu olhar a proposta?</p>
+          <p class="av bolha__meta">Responda 1 para enviar, 2 para descartar, ou escreva o texto corrigido.</p>
+          <span class="bolha__hora">09:02</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · FECHAMENTO (B39): logo só aqui -->
+  <section class="cena cena--sol" id="c5">
+    <div class="cta">
+      <div class="eva" id="c5-eva"></div>
+      <h2 class="hl"><span class="ln"><span>Você responde 1.</span></span><span class="ln"><span>Ela sai do</span></span><span class="ln"><span><span class="marca" id="c5-marca">seu número.</span></span></span></h2>
+      <div class="btn" id="c5-btn">Ver minhas propostas paradas</div>
+      <p class="depois-btn" id="c5-gratis">Grátis e sem cartão · vyzon.com.br</p>
+      <div class="logo" id="c5-logo">
+        <svg width="64" height="66" viewBox="16 14.5 68 69"><defs><mask id="gap" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><rect x="25" y="13" width="26" height="72" rx="13" transform="rotate(-22 38 49)" fill="#000" stroke="#000" stroke-width="9"/></mask></defs><rect x="49" y="13" width="26" height="72" rx="13" transform="rotate(22 62 49)" fill="#2563EB" mask="url(#gap)"/><rect x="25" y="13" width="26" height="72" rx="13" transform="rotate(-22 38 49)" fill="#0f1730"/></svg>
+        <span>vyzon</span>
+      </div>
+    </div>
+  </section>
+
+ </div>
+ <div id="legenda"></div>
+</div>
+<script src="legendas.js"></script>
+<script src="base.js"></script>
+<script>
+// Batidas (House 02, 122,99 BPM): B(k) = 0,017 + k · 0,4879 s. Voz e efeitos em roteiro.json.
+window.__timelines = window.__timelines || {}; // o lint do HyperFrames procura esta linha
+const { B } = VF;
+const DUR = 22.4;
+const tl = VF.montar();
+VF.respira(tl, DUR);
+VF.tempo(tl, DUR);
+VF.legendas(tl);
+const root = document.getElementById("root").getBoundingClientRect();
+const caixa = (id) => { const r = document.getElementById(id).getBoundingClientRect(); return { left: r.left - root.left, top: r.top - root.top, width: r.width, height: r.height }; };
+
+// 1 · GANCHO (B0–B9): o formulário vazio, o cursor piscando, ninguém preenche.
+VF.cena(tl, "#c1", 0, B(9));
+VF.evaVive(tl, "#c1-eva", 0, B(9));
+VF.marca(tl, "#c1-marca", B(1));
+for (let k = 0; k < 14; k++) tl.to("#c1-caret", { autoAlpha: k % 2 ? 1 : 0, duration: 0.01 }, B(1) + k * 0.26);
+VF.evaOlhar(tl, "#c1-eva", -18, B(2));
+VF.evaPisca(tl, "#c1-eva", B(4));
+VF.evaEstado(tl, "#c1-eva", "lendo", B(6));
+tl.to("#c1 .bloco, #c1-form", { autoAlpha: 0, y: "-=50", duration: 0.24, ease: "throw" }, B(9) - 0.24);
+tl.to("#c1-eva", { autoAlpha: 0, y: "+=80", duration: 0.24, ease: "throw" }, B(9) - 0.24);
+
+// 2 · PRODUTO (B9–B21): cada proposta enviada voa da conversa e vira uma linha da lista.
+VF.cena(tl, "#c2", B(9), B(21));
+VF.entra(tl, "#c2-conv", B(9), { y: 100 });
+VF.entra(tl, "#c2-lista", B(9) + 0.12, { y: 100 });
+VF.entra(tl, "#c2-eva", B(9) + 0.12, { y: 100 });
+VF.evaVive(tl, "#c2-eva", B(9), B(21));
+VF.antes(tl, ["#c2-b", "#c2-l1", "#c2-l2"], { autoAlpha: 0 });
+VF.bolha(tl, "#c2-pdf", B(10));
+const ghost = Object.assign(document.createElement("div"), { id: "ghost" });
+document.getElementById("camera").appendChild(ghost);
+const voa = (de, para, t) => {
+  const a = caixa(de), b = caixa(para);
+  tl.set(ghost, { autoAlpha: 1, ...a, borderRadius: 20, backgroundColor: "#d9fdd3" }, t);
+  tl.to(ghost, { ...b, borderRadius: 0, backgroundColor: "#ffffff", duration: 0.5, ease: "heavy" }, t);
+  tl.fromTo("#" + para, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.16, ease: "settle", immediateRender: false }, t + 0.42);
+  tl.set(ghost, { autoAlpha: 0 }, t + 0.58);
+};
+VF.antes(tl, ghost, { autoAlpha: 0 });
+VF.evaOlhar(tl, "#c2-eva", -10, B(11));
+voa("c2-pdf", "c2-l1", B(12));
+VF.evaEstado(tl, "#c2-eva", "olho", B(13));
+// troca de conversa: blur no mesmo palco
+tl.to("#c2-a", { autoAlpha: 0, filter: "blur(8px)", duration: 0.16, ease: "throw" }, B(15) - 0.16);
+tl.set("#c2-nome", { textContent: "João" }, B(15));
+tl.set("#c2-av", { textContent: "J" }, B(15));
+tl.fromTo("#c2-b", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.14, ease: "settle", immediateRender: false }, B(15));
+VF.antes(tl, "#c2-txt", { autoAlpha: 0, scale: 0.9, y: 24 });
+VF.bolha(tl, "#c2-txt", B(15) + 0.1);
+voa("c2-txt", "c2-l2", B(17));
+VF.evaEstado(tl, "#c2-eva", "saiu", B(18));
+tl.to("#c2-conv, #c2-lista, #c2-eva", { autoAlpha: 0, y: "-=40", duration: 0.16, ease: "throw" }, B(21) - 0.16);
+
+// 3 · PAYOFF DO MEIO (B21–B29)
+VF.cena(tl, "#c3", B(21), B(29));
+VF.lineIn(tl, "#c3 .ln", B(21), { stagger: 0.12 });
+VF.entra(tl, "#c3-lista", B(21) + 0.2, { y: 60, dur: 0.6, ease: "settle" });
+VF.marca(tl, "#c3-marca", B(23));
+VF.entra(tl, "#c3-eva", B(21), { y: 200, dur: 0.6, ease: "settle" });
+VF.evaEstado(tl, "#c3-eva", "saiu", B(23));
+VF.evaVive(tl, "#c3-eva", B(21), B(29));
+VF.lineOut(tl, "#c3 .ln", B(29) - 0.3, { dur: 0.28 });
+tl.to("#c3-lista, #c3-eva", { autoAlpha: 0, y: "+=40", duration: 0.2, ease: "throw" }, B(29) - 0.2);
+
+// 4 · VIRADA (B29–B39): dois dias sem resposta; a Lume acende e o aviso chega.
+VF.cena(tl, "#c4", B(29), B(39));
+tl.set("#legenda", { color: "#fff" }, B(29));
+tl.fromTo("#camera", { scale: 1.0 }, { scale: 1.03, duration: 0.7, ease: "heavy", immediateRender: false }, B(29));
+VF.entra(tl, "#c4-lista", B(29), { y: 80, dur: 0.6, ease: "settle" });
+VF.antes(tl, "#c4-carimbo", { autoAlpha: 0, scale: 0.8 });
+tl.set("#c4-meta", { textContent: "há 2 dias" }, B(30));
+tl.fromTo("#c4-carimbo", { autoAlpha: 0, scale: 0.8 }, { autoAlpha: 1, scale: 1, duration: 0.26, ease: "snap", immediateRender: false }, B(30));
+VF.entra(tl, "#c4-conv", B(29) + 0.15, { y: 140, dur: 0.75, ease: "virada" });
+VF.entra(tl, "#c4-eva", B(29) + 0.15, { y: 140, dur: 0.75, ease: "virada" });
+VF.evaVive(tl, "#c4-eva", B(29), B(39));
+VF.evaLendo(tl, "#c4-eva", B(29), 0.9);
+VF.evaEstado(tl, "#c4-eva", "alerta", B(31));
+VF.antes(tl, ["#c4-aviso", "#c4-aviso .av", "#c4-aviso .bolha__hora"], { autoAlpha: 0 });
+VF.bolha(tl, "#c4-aviso", B(31) + 0.12, { dur: 0.45 });
+tl.fromTo("#c4-aviso .av", { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.3, stagger: 0.07, ease: "settle", immediateRender: false }, B(31) + 0.2);
+tl.fromTo("#c4-aviso .bolha__hora", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.2, immediateRender: false }, B(31) + 0.6);
+VF.evaPisca(tl, "#c4-eva", B(34));
+VF.evaOlhar(tl, "#c4-eva", -14, B(35));
+tl.fromTo("#c4-conv", { y: 0 }, { y: -14, duration: 2.2, ease: "drift", immediateRender: false }, B(34));
+tl.to("#c4-lista, #c4-conv, #c4-eva", { autoAlpha: 0, scale: 0.97, duration: 0.14, ease: "throw" }, B(39) - 0.14);
+
+// 5 · FECHAMENTO (B39 até o fim)
+VF.cena(tl, "#c5", B(39));
+tl.set("#legenda", { color: "#0f1730" }, B(39));
+tl.set("#camera", { scale: 1.0 }, B(39));
+VF.entra(tl, "#c5-eva", B(39), { y: 120, dur: 0.6, ease: "settle" });
+VF.evaEstado(tl, "#c5-eva", "saiu", B(40));
+VF.evaVive(tl, "#c5-eva", B(39), DUR);
+VF.lineIn(tl, "#c5 .ln", B(39), { stagger: 0.12 });
+VF.marca(tl, "#c5-marca", B(40));
+VF.entra(tl, "#c5-btn", B(41), { y: 40, dur: 0.6, ease: "settle" });
+VF.entra(tl, "#c5-gratis", B(41) + 0.12, { y: 24, dur: 0.6, ease: "settle" });
+VF.entra(tl, "#c5-logo", B(41) + 0.24, { y: 24, dur: 0.6, ease: "settle" });
+tl.to("#tc", { opacity: 1, duration: 0.01 }, DUR - 0.01); // fixa a duração da timeline
+VF.registrar("root", tl);
+</script>
+</body>
+</html>
