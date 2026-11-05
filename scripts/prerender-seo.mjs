@@ -344,6 +344,10 @@ function renderBlogBlock(b) {
     if (b.type === "ol") return `<ol style="padding-left:22px;color:#222;margin:0 0 16px;">${b.items.map((it) => `<li style="margin:0 0 10px;">${escapeHtml(it)}</li>`).join("")}</ol>`;
     if (b.type === "quote") return `<blockquote style="margin:24px 0;padding:4px 0 4px 18px;border-left:3px solid #1556C0;color:#111;font-style:italic;font-size:19px;">${escapeHtml(b.text)}</blockquote>`;
     if (b.type === "example") return `<aside style="margin:22px 0;padding:18px 20px;border:1px solid #e6e4dd;border-left:3px solid #1556C0;border-radius:10px;background:#fafafa;"><p style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#1556C0;margin:0 0 6px;font-weight:600;">Exemplo</p><p style="font-weight:600;color:#111;margin:0 0 10px;">${escapeHtml(b.title)}</p>${b.body.map((t) => `<p style="color:#333;margin:0 0 10px;">${escapeHtml(t)}</p>`).join("")}</aside>`;
+    if (b.type === "mensagem") return `<figure style="margin:22px 0;padding:14px 16px;border-radius:12px;background:#efeae2;"><figcaption style="font-size:13px;color:#555;margin:0 0 8px;font-weight:600;">${escapeHtml(b.label || "Mensagem pronta")}</figcaption><p style="margin:0;padding:10px 12px;border-radius:10px;background:#d9fdd3;color:#111;white-space:pre-line;">${escapeHtml(b.text)}</p></figure>`;
+    if (b.type === "prompt") return `<figure style="margin:22px 0;padding:16px;border-radius:12px;background:#0f1730;color:#fff;"><figcaption style="font-size:13px;color:#ffc933;margin:0 0 8px;font-weight:600;">${escapeHtml(b.label || "Prompt")}</figcaption><pre style="margin:0;white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:14px;line-height:1.6;">${escapeHtml(b.text)}</pre></figure>`;
+    if (b.type === "lume") return `<aside style="margin:22px 0;padding:16px 18px;border-radius:12px;background:#e8effb;"><p style="font-weight:700;color:#111;margin:0 0 6px;">${escapeHtml(b.title)}</p><p style="color:#333;margin:0;">${escapeHtml(b.text)}</p></aside>`;
+    if (b.type === "modelos") return `<ul style="padding-left:20px;color:#222;margin:0 0 16px;">${b.items.map((m) => `<li style="margin:0 0 12px;"><strong>${escapeHtml(m.titulo)}</strong>: ${escapeHtml(m.descricao)} ${m.arquivos.map((a) => `<a href="${escapeAttr(a.href)}" style="color:#1556C0;">Baixar em ${escapeHtml(a.label)}</a>`).join(" · ")}</li>`).join("")}</ul>`;
     return `<p style="color:#222;margin:0 0 16px;">${escapeHtml(b.text)}</p>`;
 }
 
@@ -357,14 +361,14 @@ function renderBlogPostNoscript(post, todos = []) {
     <div style="max-width:720px;margin:0 auto;padding:32px 20px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.7;color:#111;">
       <p style="margin:0 0 16px;font-size:13px;"><a href="/blog" style="color:#1556C0;">← Blog da Vyzon</a></p>
       <article>
-        <p style="font-size:13px;color:#555;margin:0 0 8px;">${escapeHtml(post.category)} · ${escapeHtml(formatBlogDate(post.date))}</p>
+        <p style="font-size:13px;color:#555;margin:0 0 8px;">${escapeHtml(post.category)} · ${post.updated ? `Atualizado em ${escapeHtml(formatBlogDate(post.updated))}` : escapeHtml(formatBlogDate(post.date))}</p>
         <h1 style="font-size:32px;line-height:1.15;margin:0 0 14px;">${escapeHtml(post.title)}</h1>
         <p style="font-size:18px;color:#333;margin:0 0 24px;">${escapeHtml(post.excerpt)}</p>
-          ${(post.downloads || []).length ? `<p style="margin:0 0 20px;padding:14px 16px;border:1px solid #e6e4dd;border-radius:10px;"><strong>Baixe o modelo grátis, sem cadastro:</strong> ${post.downloads.map((d) => `<a href="${escapeAttr(d.href)}" style="color:#1556C0;">${escapeHtml(d.label)}</a>`).join(" · ")}</p>` : ""}
+          ${(post.downloads || []).length ? `<p style="margin:0 0 20px;padding:14px 16px;border:1px solid #e6e4dd;border-radius:10px;"><strong>Baixe grátis, sem cadastro:</strong> ${post.downloads.map((d) => `<a href="${escapeAttr(d.href)}" style="color:#1556C0;">${escapeHtml(d.label)}</a>`).join(" · ")}</p>` : ""}
           ${paras}${faqHtml}
         <p style="margin:28px 0 0;">
-          <a href="/criar-conta?segmento=energia_solar" style="display:inline-block;padding:10px 18px;background:#111;color:#fff;text-decoration:none;border-radius:999px;margin:0 6px 6px 0;"><strong>Fazer meu Raio-X grátis</strong></a>
-          <span style="display:block;font-size:13px;color:#555;margin-top:6px;">Grátis · 3 minutos · nada é enviado aos seus clientes</span>
+          <a href="/criar-conta?segmento=energia_solar" style="display:inline-block;padding:10px 18px;background:#111;color:#fff;text-decoration:none;border-radius:999px;margin:0 6px 6px 0;"><strong>Ver minhas propostas paradas</strong></a>
+          <span style="display:block;font-size:13px;color:#555;margin-top:6px;">Grátis e sem cartão. Você cria a conta, conecta o WhatsApp e em uns 3 minutos vê as propostas paradas dos últimos 90 dias.</span>
         </p>${todos.filter((p) => p.slug !== post.slug).length ? `
         <h2 style="font-size:17px;margin:32px 0 8px;">Leia também</h2>
         <ul style="padding-left:20px;margin:0;">${todos.filter((p) => p.slug !== post.slug).map((p) => `<li style="margin:0 0 8px;"><a href="/blog/${escapeAttr(p.slug)}" style="color:#1556C0;">${escapeHtml(p.title)}</a></li>`).join("")}</ul>` : ""}
@@ -385,7 +389,7 @@ function renderBlogPostJsonLd(post) {
             description: post.excerpt,
             image: `${ORIGIN}/blog-covers/${post.slug}.jpg`,
             datePublished: post.date,
-            dateModified: post.date,
+            dateModified: post.updated || post.date,
             articleSection: post.category,
             inLanguage: "pt-BR",
             url,
@@ -472,7 +476,7 @@ async function buildBlogIndex(posts) {
         slug: "blog",
         seo: {
             title: "Blog · Vyzon",
-            description: "Para quem vende energia solar pelo WhatsApp: como acompanhar cada proposta, retomar o cliente que parou de responder e não deixar orçamento esfriar.",
+            description: "Para quem vende energia solar pelo WhatsApp: modelos de proposta grátis em Word e PDF, mensagens prontas para retomar o cliente que sumiu e o que dá para deixar com a IA.",
         },
     };
     let html = rewriteHead(template, config);
@@ -483,8 +487,8 @@ async function buildBlogIndex(posts) {
     const noscript = `
   <noscript>
     <div style="max-width:760px;margin:0 auto;padding:32px 20px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.6;color:#111;">
-      <h1 style="font-size:34px;line-height:1.15;margin:0 0 8px;">Blog da Vyzon</h1>
-      <p style="font-size:17px;color:#333;margin:0 0 24px;">Para quem vende energia solar pelo WhatsApp: como acompanhar cada proposta, retomar o cliente que parou de responder e não deixar orçamento esfriar.</p>
+      <h1 style="font-size:34px;line-height:1.15;margin:0 0 8px;">Para quem vende energia solar pelo WhatsApp</h1>
+      <p style="font-size:17px;color:#333;margin:0 0 24px;">Modelos de proposta para baixar, mensagens prontas para chamar de volta o cliente que sumiu e o que dá para deixar com a IA sem perder o jeito da sua empresa.</p>
       <ul style="padding-left:20px;">
           ${list}
       </ul>

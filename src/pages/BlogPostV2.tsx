@@ -1,125 +1,37 @@
-import { useEffect, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { NavV2 } from "@/components/landing-v2/NavV2";
-import { FooterV2 } from "@/components/landing-v2/FooterV2";
-import { BlogCover } from "@/components/landing-v2/BlogCover";
-import { ButtonV2 } from "@/components/landing-v2/ButtonV2";
-import { Rise } from "@/components/landing/animation/Rise";
-import { BLOG_POSTS, getBlogPost, formatBlogDate, readMinutes, type BlogBlock } from "@/data/landing/blogPosts";
+import { useEffect } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Download } from "lucide-react";
+import { BlogHeader, BlogFooter, BlogCtaCard, ReadingBar } from "@/components/blog/BlogChrome";
+import { BlogCover } from "@/components/blog/BlogCover";
+import { Block, Toc } from "@/components/blog/BlogBlocks";
+import { getBlogPost, formatBlogDate, headingId, readMinutes, relatedPosts } from "@/data/landing/blogPosts";
 import { logLandingEvent, useContentFunnel } from "@/lib/landingFunnel";
+import "@/components/blog/blog.css";
 
-// Post individual do blog (rota /blog/:slug). Conteúdo em blocos (h2/p/ul/quote),
-// barra de progresso de leitura, reveal-on-scroll por bloco (transform-only, com
-// fallback de reduced-motion via Rise). Crawlers recebem o HTML prerenderizado
-// (scripts/prerender-seo.mjs); aqui setamos title/meta no client pra navegação SPA.
-
-// Barra fina no topo que acompanha o progresso da leitura. scaleX (compositado),
-// atualizado num rAF pra não custar no scroll.
-function ReadingProgress({ accent }: { accent: string }) {
-    const barRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        let raf = 0;
-        const update = () => {
-            const el = document.documentElement;
-            const max = el.scrollHeight - el.clientHeight;
-            const pct = max > 0 ? Math.min(1, Math.max(0, el.scrollTop / max)) : 0;
-            if (barRef.current) barRef.current.style.transform = `scaleX(${pct})`;
-        };
-        const onScroll = () => {
-            cancelAnimationFrame(raf);
-            raf = requestAnimationFrame(update);
-        };
-        window.addEventListener("scroll", onScroll, { passive: true });
-        update();
-        return () => {
-            window.removeEventListener("scroll", onScroll);
-            cancelAnimationFrame(raf);
-        };
-    }, []);
-    return (
-        <div className="vz-readbar" aria-hidden="true">
-            <div ref={barRef} className="vz-readbar__fill" style={{ background: accent }} />
-        </div>
-    );
-}
-
-function Block({ block, accent }: { block: BlogBlock; accent: string }) {
-    const markerStyle = { "--vz-marker": accent } as React.CSSProperties;
-    switch (block.type) {
-        case "h2":
-            return (
-                <h2 className="lp-display" style={{ fontSize: "clamp(1.4rem, 2.7vw, 1.85rem)", letterSpacing: "-0.02em", lineHeight: 1.18, color: "var(--lp-ink)", marginTop: "0.6rem" }}>
-                    {block.text}
-                </h2>
-            );
-        case "h3":
-            return (
-                <h3 className="vz-post-h3" style={{ color: "var(--lp-ink)" }}>
-                    {block.text}
-                </h3>
-            );
-        case "ul":
-            return (
-                <ul className="vz-post-ul">
-                    {block.items.map((it, i) => (
-                        <li key={i} style={markerStyle}>{it}</li>
-                    ))}
-                </ul>
-            );
-        case "ol":
-            return (
-                <ol className="vz-post-ol" style={markerStyle}>
-                    {block.items.map((it, i) => (
-                        <li key={i}>{it}</li>
-                    ))}
-                </ol>
-            );
-        case "quote":
-            return (
-                <blockquote className="lp-serif vz-post-quote" style={{ borderColor: accent, color: "var(--lp-ink)" }}>
-                    {block.text}
-                </blockquote>
-            );
-        case "example":
-            return (
-                <aside className="vz-post-example" style={markerStyle}>
-                    <p className="vz-post-example__label">Exemplo</p>
-                    <p className="vz-post-example__title">{block.title}</p>
-                    {block.body.map((t, i) => (
-                        <p key={i} className="vz-post-example__p">{t}</p>
-                    ))}
-                </aside>
-            );
-        default:
-            return (
-                <p className="text-[17px]" style={{ color: "rgba(5,5,5,0.82)", lineHeight: 1.75 }}>
-                    {block.text}
-                </p>
-            );
-    }
-}
-
+// Post do blog (rota /blog/:slug). Coluna de leitura de 680px, sumário fixo ao
+// lado no desktop com o trecho atual marcado, barra de leitura em sol, capa que
+// toca uma vez ao aparecer. Crawlers recebem o HTML do prerender
+// (scripts/prerender-seo.mjs); aqui o title/meta valem para a navegação SPA.
 const BlogPostV2 = () => {
     const navigate = useNavigate();
     const { slug } = useParams<{ slug: string }>();
     const post = slug ? getBlogPost(slug) : undefined;
-    // Funil do blog no mesmo relatório da home (landing_events, page='blog').
     useContentFunnel("blog", post?.slug);
-    const irParaRaioX = (placement: string) => {
-        if (post) logLandingEvent("blog", post.slug, "cta_click", { placement });
-        navigate("/criar-conta?segmento=energia_solar");
+
+    const evento = (placement: string, extra: Record<string, string> = {}) => {
+        if (post) logLandingEvent("blog", post.slug, "cta_click", { placement, ...extra });
     };
 
     useEffect(() => {
         const html = document.documentElement;
         const wasDark = html.classList.contains("dark");
         html.classList.remove("dark");
-        window.scrollTo(0, 0);
-        return () => { if (wasDark) html.classList.add("dark"); };
+        if (!window.location.hash) window.scrollTo(0, 0);
+        return () => {
+            if (wasDark) html.classList.add("dark");
+        };
     }, [slug]);
 
-    // title/meta no client (faltava) — UX de navegação SPA. Crawlers já recebem
-    // do prerender. Restaura ao sair pra não vazar pra outra rota.
     useEffect(() => {
         if (!post) return;
         const prevTitle = document.title;
@@ -139,127 +51,127 @@ const BlogPostV2 = () => {
 
     if (!post) return null;
 
+    const secoes = post.content.filter((b) => b.type === "h2").map((b) => (b as { text: string }).text);
+    const leia = relatedPosts(post);
+
     return (
-        <div className="lp-v2 min-h-screen w-full" style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}>
-            <ReadingProgress accent={post.accent} />
-            <NavV2
-                onCTAClick={() => irParaRaioX("nav")}
-                onLoginClick={() => navigate("/auth")}
-                onBlogClick={() => navigate("/blog")}
-            />
+        <div className="lp-v2 lp-solar vb min-h-screen w-full">
+            <BlogHeader onCta={() => evento("nav")} />
+            <ReadingBar />
 
-            <article className="mx-auto max-w-[720px] px-5 pb-20 pt-16 sm:pt-24">
-                <button type="button" onClick={() => navigate("/blog")} className="vz-backlink text-[13.5px]" style={{ color: "var(--lp-ink-55)" }}>
-                    <span className="vz-backlink__arrow">←</span> Voltar para o blog
-                </button>
-
-                <Rise>
-                    <div className="mt-7 flex items-center gap-2 text-[13px]" style={{ color: "var(--lp-ink-55)" }}>
-                        <span style={{ color: post.accent, fontWeight: 600 }}>{post.category}</span>
-                        <span>·</span>
-                        <span>{formatBlogDate(post.date)}</span>
-                        <span>·</span>
+            <article>
+                <header className="vb-wrap vb-post-topo">
+                    <Link to="/blog" className="vb-voltar">
+                        <ArrowLeft aria-hidden="true" /> Blog
+                    </Link>
+                    <p className="vb-meta mt-6 landing-fade-in-up-lg">
+                        <span className="vb-meta__cat">{post.category}</span>
+                        <span aria-hidden="true">·</span>
+                        {post.updated ? (
+                            <span>
+                                Atualizado em <time dateTime={post.updated}>{formatBlogDate(post.updated)}</time>
+                            </span>
+                        ) : (
+                            <time dateTime={post.date}>{formatBlogDate(post.date)}</time>
+                        )}
+                        <span aria-hidden="true">·</span>
                         <span>{readMinutes(post)} min de leitura</span>
-                    </div>
-                    <h1 className="lp-display mt-3" style={{ fontSize: "clamp(2rem, 4.5vw, 3.1rem)", letterSpacing: "-0.03em", lineHeight: 1.05, color: "var(--lp-ink)" }}>
-                        {post.title}
-                    </h1>
-                    <p className="mt-5 text-[17px]" style={{ color: "rgba(5,5,5,0.66)", lineHeight: 1.55 }}>
-                        {post.excerpt}
                     </p>
-                </Rise>
+                    <h1 className="vs-display vb-post-h1 landing-fade-in-up-lg landing-delay-100">{post.title}</h1>
+                    <p className="vb-post-resumo landing-fade-in-up-lg landing-delay-200">{post.excerpt}</p>
 
-                {/* Download logo abaixo do resumo: quem chega buscando "modelo pdf/word" acha sem rolar */}
-                {post.downloads?.length ? (
-                    <div className="mt-8 rounded-2xl px-6 py-5" style={{ background: "#fff", border: "1px solid var(--lp-line)" }}>
-                        <p className="text-[15px] font-semibold" style={{ color: "var(--lp-ink)" }}>Baixe o modelo grátis, sem cadastro</p>
-                        <div className="mt-3 flex flex-wrap gap-2.5">
-                            {post.downloads.map((d) => (
-                                <a key={d.href} href={d.href} download
-                                    onClick={() => logLandingEvent("blog", post.slug, "cta_click", { placement: "download", arquivo: d.label })}
-                                    className="inline-flex min-h-[44px] items-center rounded-full px-5 text-[14px] font-semibold transition-colors"
-                                    style={{ background: "var(--lp-ink)", color: "#fff" }}>
-                                    {d.label}
-                                </a>
-                            ))}
-                        </div>
-                    </div>
-                ) : null}
-
-                <Rise delay={0.05}>
-                    <div className="mt-9 vz-post-cover">
-                        <BlogCover post={post} large />
-                    </div>
-                </Rise>
-
-                <div className="mt-10 flex flex-col gap-5">
-                    {post.content.map((block, i) => (
-                        <Rise key={i}>
-                            <Block block={block} accent={post.accent} />
-                        </Rise>
-                    ))}
-                </div>
-
-                {/* FAQ do post (perguntas frequentes) — UX + GEO (FAQPage no prerender) */}
-                {post.faq && post.faq.length > 0 && (
-                    <Rise>
-                        <section className="vz-faq mt-14">
-                            <h2 className="lp-display" style={{ fontSize: "clamp(1.4rem, 2.7vw, 1.85rem)", letterSpacing: "-0.02em", lineHeight: 1.18, color: "var(--lp-ink)" }}>
-                                Perguntas frequentes
-                            </h2>
-                            <div className="mt-6">
-                                {post.faq.map((f) => (
-                                    <details key={f.q} className="border-t py-5" style={{ borderColor: "rgba(0,0,0,0.10)" }}>
-                                        <summary className="flex items-center justify-between gap-6">
-                                            <span className="lp-display" style={{ fontSize: "clamp(1.05rem, 1.8vw, 1.25rem)", lineHeight: 1.25, letterSpacing: "-0.02em", color: "var(--lp-ink)" }}>
-                                                {f.q}
-                                            </span>
-                                            <span className="vz-faq-plus shrink-0 text-[22px] leading-none" style={{ color: "rgba(5,5,5,0.4)", fontWeight: 300 }} aria-hidden="true">+</span>
-                                        </summary>
-                                        <p className="mt-3" style={{ fontSize: "1rem", lineHeight: 1.6, color: "rgba(5,5,5,0.66)" }}>
-                                            {f.a}
-                                        </p>
-                                    </details>
+                    {/* Download logo abaixo do resumo: quem chega buscando "modelo pdf/word" acha sem rolar */}
+                    {post.downloads?.length ? (
+                        <div className="vb-baixar landing-fade-in-up-lg landing-delay-200">
+                            <p className="vb-baixar__titulo">Baixe grátis, sem cadastro</p>
+                            <div className="vb-baixar__lista">
+                                {post.downloads.map((d) => (
+                                    <a key={d.href} href={d.href} download className="vb-file" onClick={() => evento("download", { arquivo: d.label })}>
+                                        <Download aria-hidden="true" />
+                                        {d.label}
+                                    </a>
                                 ))}
                             </div>
-                        </section>
-                    </Rise>
-                )}
+                        </div>
+                    ) : null}
+                </header>
 
-                {/* convite para o Raio-X */}
-                <Rise>
-                    <div className="mt-14 vz-post-cta rounded-2xl px-7 py-9 text-center" style={{ background: "#fff", border: "1px solid var(--lp-line)" }}>
-                        <h2 className="lp-display" style={{ fontSize: "clamp(1.4rem, 2.6vw, 1.9rem)", letterSpacing: "-0.025em", color: "var(--lp-ink)" }}>
-                            Quantas propostas estão paradas no seu WhatsApp?
-                        </h2>
-                        <p className="mx-auto mt-2.5 max-w-md text-[14.5px]" style={{ color: "rgba(5,5,5,0.6)", lineHeight: 1.55 }}>
-                            O Raio-X grátis lê o seu WhatsApp e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva 3 minutos, e nada é enviado aos seus clientes.
-                        </p>
-                        <div className="mt-6 flex justify-center">
-                            <ButtonV2 variant="primary" showArrow onClick={() => irParaRaioX("final")}>
-                                Fazer meu Raio-X grátis
-                            </ButtonV2>
+                <div className="vb-wrap vb-post-capa">
+                    <BlogCover cover={post.cover} animate />
+                </div>
+
+                <div className="vb-wrap vb-post-grade">
+                    <aside className="vb-post-lado">
+                        <Toc items={secoes} />
+                    </aside>
+                    <div className="vb-post-corpo">
+                        {secoes.length >= 3 && (
+                            <details className="vb-toc-mobile">
+                                <summary>Neste artigo</summary>
+                                <ol>
+                                    {secoes.map((t) => (
+                                        <li key={t}>
+                                            <a href={`#${headingId(t)}`}>{t}</a>
+                                        </li>
+                                    ))}
+                                </ol>
+                            </details>
+                        )}
+
+                        <div className="vb-prosa">
+                            {post.content.map((block, i) => (
+                                <Block key={i} block={block} onEvent={evento} />
+                            ))}
+                        </div>
+
+                        {post.faq && post.faq.length > 0 && (
+                            <section className="vb-faq" aria-labelledby="faq-titulo">
+                                <h2 id="faq-titulo" className="vs-display vb-h2">
+                                    Perguntas frequentes
+                                </h2>
+                                <div className="mt-4">
+                                    {post.faq.map((f) => (
+                                        <details key={f.q}>
+                                            <summary>
+                                                <span>{f.q}</span>
+                                                <span className="vb-faq__mais" aria-hidden="true" />
+                                            </summary>
+                                            <p>{f.a}</p>
+                                        </details>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        <div className="mt-20">
+                            <BlogCtaCard titulo="Quantas propostas estão paradas no seu WhatsApp agora?" onCta={() => evento("final")} />
                         </div>
                     </div>
-                </Rise>
+                </div>
 
-                {/* leia também: liga os posts entre si (ajuda o Google a entender o conjunto) */}
-                <nav aria-label="Leia também" className="mt-12">
-                    <p className="text-[12px] font-semibold uppercase tracking-[0.12em]" style={{ color: "rgba(5,5,5,0.5)" }}>Leia também</p>
-                    <ul className="mt-3 divide-y" style={{ borderTop: "1px solid var(--lp-line)", borderBottom: "1px solid var(--lp-line)" }}>
-                        {BLOG_POSTS.filter((p) => p.slug !== post.slug).slice(0, 3).map((p) => (
-                            <li key={p.slug} style={{ borderColor: "var(--lp-line)" }}>
-                                <a href={`/blog/${p.slug}`} onClick={(e) => { e.preventDefault(); navigate(`/blog/${p.slug}`); }}
-                                    className="block py-3.5 text-[15px] font-medium hover:underline" style={{ color: "var(--lp-ink)" }}>
-                                    {p.title}
-                                </a>
+                <nav aria-label="Leia também" className="vb-wrap pb-8 pt-16">
+                    <p className="vb-kicker">Leia também</p>
+                    <ul className="vb-leia">
+                        {leia.map((p) => (
+                            <li key={p.slug}>
+                                <Link to={`/blog/${p.slug}`} className="vb-card vb-leia__card" onClick={() => evento("leia_tambem", { post: p.slug })}>
+                                    <BlogCover cover={p.cover} />
+                                    <span className="vb-meta mt-4">
+                                        <span className="vb-meta__cat">{p.category}</span>
+                                        <span aria-hidden="true">·</span>
+                                        <span>{readMinutes(p)} min</span>
+                                    </span>
+                                    <span className="vs-display vb-leia__titulo">
+                                        <span className="vb-sublinha">{p.title}</span>
+                                    </span>
+                                </Link>
                             </li>
                         ))}
                     </ul>
                 </nav>
             </article>
 
-            <FooterV2 onLoginClick={() => navigate("/auth")} onBlogClick={() => navigate("/blog")} />
+            <BlogFooter onSuporte={() => post && logLandingEvent("blog", post.slug, "whatsapp_click", { placement: "footer" })} />
         </div>
     );
 };

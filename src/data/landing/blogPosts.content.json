@@ -1,13 +1,408 @@
 [
   {
+    "slug": "ia-whatsapp-integradora-energia-solar",
+    "category": "IA e Lume",
+    "date": "2026-11-04",
+    "featured": true,
+    "title": "IA no WhatsApp da integradora solar: o que deixar com ela e o que continua com você",
+    "excerpt": "A IA ajuda muito no bastidor da venda: lembrar de cada proposta, escrever o primeiro rascunho, organizar o funil. Mandar mensagem sozinha para o cliente é outra história. Veja onde ela tira trabalho e onde ela pode custar uma venda.",
+    "cover": {
+      "kind": "lista",
+      "plate": "creme",
+      "total": "R$ 64.700 parados",
+      "itens": [
+        {
+          "cliente": "Residência Oliveira",
+          "valor": "R$ 24.900",
+          "estado": "espera",
+          "status": "sem resposta"
+        },
+        {
+          "cliente": "Clínica Vida",
+          "valor": "R$ 39.800",
+          "estado": "espera",
+          "status": "sem resposta"
+        },
+        {
+          "cliente": "Sítio Santa Luzia",
+          "valor": "R$ 52.300",
+          "estado": "ok",
+          "status": "chamou de novo"
+        }
+      ]
+    },
+    "content": [
+      {
+        "type": "p",
+        "text": "Toda semana aparece uma ferramenta prometendo que a IA vai vender por você. Para quem vende energia solar pelo WhatsApp, a pergunta útil é mais pé no chão: em que parte do dia ela tira trabalho de verdade, e em que parte ela pode custar uma venda."
+      },
+      {
+        "type": "p",
+        "text": "A IA rende mais no bastidor, onde o erro custa pouco e o trabalho se repete. Na conversa com o cliente ela ajuda a escrever, e quem decide o que sai é você."
+      },
+      {
+        "type": "h2",
+        "text": "Onde a IA ajuda de verdade"
+      },
+      {
+        "type": "p",
+        "text": "São as tarefas que ninguém da equipe gosta de fazer e que, por isso, ficam para depois."
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Lembrar de cada proposta enviada, com o valor e há quantos dias o cliente não responde.",
+          "Escrever o primeiro rascunho da retomada, para você só ajustar o tom.",
+          "Resumir uma conversa longa antes de você ligar para o cliente.",
+          "Organizar o funil: mudar a etapa, anotar o que foi combinado, marcar o próximo contato.",
+          "Transformar a simulação em uma mensagem curta e clara, com você conferindo cada número."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "Onde ela pode custar uma venda"
+      },
+      {
+        "type": "p",
+        "text": "O risco aparece quando a IA fala com o cliente sem ninguém ler antes. Energia solar é compra grande, com financiamento de anos, e um número errado vira promessa."
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Responder o cliente sozinha. Uma parcela calculada errado ou uma economia exagerada viram cobrança depois.",
+          "Negociar preço, desconto ou condição de pagamento.",
+          "Prometer prazo de instalação, de aprovação na distribuidora ou de retorno do investimento.",
+          "Conversa delicada: reclamação, atraso de obra, inversor parado.",
+          "Disparar a mesma mensagem para a lista inteira. O cliente percebe, e o seu número corre risco de bloqueio."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "A IA escreve, você aprova"
+      },
+      {
+        "type": "p",
+        "text": "Separe o trabalho em duas partes. O que fica dentro da empresa (lista, funil, anotações, rascunhos) pode ser automático. O que vai para o cliente passa por você antes de sair, nem que seja com um toque."
+      },
+      {
+        "type": "example",
+        "title": "Como fica na prática",
+        "body": [
+          "Terça, 9h: a proposta do Carlos completou dois dias sem resposta. A IA já escreveu uma retomada curta, oferecendo a simulação com financiamento.",
+          "Você lê no celular entre uma visita e outra, acha que está bom e aprova. A mensagem sai do seu número, com o seu nome, e o Carlos responde para você."
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Assim você ganha o tempo que a IA economiza e não perde o que só você sabe: o que foi conversado na visita, quem decide junto com o cliente, até onde dá para negociar."
+      },
+      {
+        "type": "h2",
+        "text": "Cuidado com os dados do cliente"
+      },
+      {
+        "type": "p",
+        "text": "Conta de luz, CPF, endereço e telefone são dados pessoais, e a responsabilidade por eles continua sendo da sua empresa. Antes de colar uma conversa numa ferramenta de IA aberta, troque nome, telefone e documento por algo genérico, como “cliente” ou “Carlos”. E prefira ferramentas em que você sabe onde os dados ficam."
+      },
+      {
+        "type": "h2",
+        "text": "Por onde começar amanhã"
+      },
+      {
+        "type": "ol",
+        "items": [
+          "Liste as propostas abertas, com o valor e o dia em que cada uma foi enviada.",
+          "Use a IA para escrever os rascunhos de retomada das que passaram de dois dias. Tem prompts prontos para isso no blog.",
+          "Leia cada rascunho, ajuste e mande você mesmo.",
+          "Depois de duas semanas, veja quais mensagens tiveram resposta e guarde as que funcionaram."
+        ]
+      },
+      {
+        "type": "lume",
+        "title": "Onde a Lume entra",
+        "text": "A Lume, assistente do Vyzon, faz o bastidor sozinha: percebe as propostas que saem do seu WhatsApp, organiza o funil e escreve a retomada. O que vai para o cliente chega antes no seu WhatsApp, e só sai do seu número quando você responde 1."
+      },
+      {
+        "type": "p",
+        "text": "Se você quer saber quanto já está parado hoje, o Raio-X grátis do Vyzon lê os últimos 90 dias do seu WhatsApp e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva uns 3 minutos, e nada é enviado aos seus clientes."
+      }
+    ],
+    "faq": [
+      {
+        "q": "Posso deixar a IA respondendo meus clientes no WhatsApp?",
+        "a": "Para venda de energia solar, o mais seguro é a IA escrever e uma pessoa aprovar antes de enviar. Parcela, economia e prazo errados viram promessa, e o cliente cobra depois."
+      },
+      {
+        "q": "O que dá para automatizar sem risco?",
+        "a": "O que fica dentro da empresa: lembrar das propostas enviadas, organizar o funil, anotar o que foi combinado e escrever rascunhos. Se der errado, ninguém de fora vê."
+      },
+      {
+        "q": "Posso colar a conversa do cliente no ChatGPT?",
+        "a": "Pode, tirando antes os dados pessoais: nome completo, telefone, CPF e endereço. Troque por algo genérico. A responsabilidade pelos dados do cliente continua sendo da sua empresa."
+      }
+    ]
+  },
+  {
+    "slug": "lume-assistente-vyzon-propostas-paradas",
+    "category": "IA e Lume",
+    "date": "2026-11-04",
+    "title": "Lume, a assistente do Vyzon: o que ela faz com as propostas paradas no seu WhatsApp",
+    "excerpt": "A Lume acompanha cada proposta que sai do seu WhatsApp e, no 2º dia sem resposta, te manda a retomada pronta. Você responde 1 e ela sai do seu número. Veja o que ela faz sozinha e o que nunca faz sem você.",
+    "cover": {
+      "kind": "aviso",
+      "plate": "sol",
+      "cliente": "o Carlos",
+      "resumo": "Proposta de R$ 24.900 sem resposta há 2 dias",
+      "texto": "Oi, Carlos, conseguiu olhar a proposta? Se ajudar, te mando a simulação com financiamento."
+    },
+    "content": [
+      {
+        "type": "p",
+        "text": "A Lume é a assistente do Vyzon. Ela acompanha cada proposta que sai do seu WhatsApp e avisa quando o cliente para de responder, já com a mensagem de retomada escrita. Quem decide se a mensagem sai é você."
+      },
+      {
+        "type": "h2",
+        "text": "O que a Lume faz sozinha"
+      },
+      {
+        "type": "p",
+        "text": "Tem trabalho que não precisa da sua aprovação, porque não chega no cliente. Esse a Lume faz sem perguntar:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Percebe quando sai uma proposta: um PDF de orçamento ou uma mensagem com o valor junto de palavras como proposta, orçamento ou investimento. A proposta entra na lista com o valor e a data, sem você cadastrar nada.",
+          "Mantém o funil em dia: muda a etapa do card, anota o que aconteceu na conversa e registra quando a venda foi perdida.",
+          "Separa, todo dia útil, os casos parados que pedem atenção."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "O que ela nunca faz sem você"
+      },
+      {
+        "type": "p",
+        "text": "Mandar mensagem para o seu cliente. A Lume só escreve o rascunho. Ele chega no seu WhatsApp, com o resumo da proposta, e fica esperando a sua resposta."
+      },
+      {
+        "type": "example",
+        "title": "Como o aviso chega (exemplo)",
+        "body": [
+          "Lume: mensagem pronta para o Carlos. Proposta de R$ 24.900 sem resposta há 2 dias.",
+          "“Oi, Carlos, conseguiu olhar a proposta? Se ajudar, te mando a simulação com financiamento para comparar com a sua conta de luz.”",
+          "Responda 1 para enviar, 2 para descartar, ou mande o texto do seu jeito."
+        ]
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Respondeu 1: a mensagem sai do seu número, com o seu nome.",
+          "Respondeu 2: o rascunho é descartado e nada sai.",
+          "Quer mudar o texto: responda em cima do aviso com a sua versão, e é ela que sai.",
+          "Não respondeu em 48 horas: o rascunho vence e nunca é enviado."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "Por que no segundo dia"
+      },
+      {
+        "type": "p",
+        "text": "No primeiro dia, o cliente ainda pode estar lendo a proposta ou conversando em casa. Do terceiro em diante, ela desce na lista do WhatsApp dele e outros orçamentos chegam. O segundo dia é o ponto em que um contato leve ainda soa como atenção."
+      },
+      {
+        "type": "h2",
+        "text": "Por que pelo seu WhatsApp"
+      },
+      {
+        "type": "p",
+        "text": "Quando a aprovação ficava dentro do aplicativo, quase tudo ficava parado esperando alguém abrir. No WhatsApp, o aviso chega onde você já está o dia inteiro, e aprovar leva um toque."
+      },
+      {
+        "type": "p",
+        "text": "A mensagem sai do seu número porque o cliente conversa com você, e é com você que ele vai fechar. Para não virar barulho, são no máximo 5 avisos por dia por empresa."
+      },
+      {
+        "type": "h2",
+        "text": "Como ela aprende o jeito da sua empresa"
+      },
+      {
+        "type": "p",
+        "text": "Na configuração, você digita o endereço do site da sua empresa. A Lume lê, mostra um resumo e só guarda depois que você confirma. Toda segunda-feira ela também olha as conversas da semana e sugere o que aprendeu, sempre com o trecho de onde tirou a informação. Você aprova ou descarta cada sugestão."
+      },
+      {
+        "type": "h2",
+        "text": "O que fica de fora"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Buscar dado de cliente fora do seu WhatsApp. Ela trabalha só com as conversas que já são suas.",
+          "Prometer economia, prazo ou desconto que você não deu.",
+          "Tomar o lugar do vendedor. A conversa de venda continua com quem conhece o cliente."
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Para ver como seria com as suas propostas, o Raio-X grátis do Vyzon lê os últimos 90 dias do seu WhatsApp e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva uns 3 minutos, e nada é enviado aos seus clientes."
+      }
+    ],
+    "faq": [
+      {
+        "q": "A Lume manda mensagem sozinha para o meu cliente?",
+        "a": "Não. Ela escreve o rascunho e manda para o seu WhatsApp. Só sai para o cliente se você responder 1 ou mandar o texto corrigido. Sem resposta em 48 horas, o rascunho vence e nada é enviado."
+      },
+      {
+        "q": "De qual número sai a mensagem aprovada?",
+        "a": "Do seu, o mesmo WhatsApp que você conectou ao Vyzon. O cliente vê a mensagem vindo de você, com o seu nome."
+      },
+      {
+        "q": "Preciso cadastrar as propostas?",
+        "a": "Não. A Lume percebe quando sai um PDF de orçamento ou uma mensagem com o valor da proposta e coloca na lista sozinha, com o valor e a data."
+      },
+      {
+        "q": "Quantos avisos eu recebo por dia?",
+        "a": "No máximo 5 por empresa a cada 24 horas, para o WhatsApp não virar uma fila de notificações."
+      }
+    ]
+  },
+  {
+    "slug": "prompts-chatgpt-energia-solar",
+    "category": "IA e Lume",
+    "date": "2026-11-04",
+    "title": "Prompts de ChatGPT para vender energia solar: proposta, follow-up e objeções",
+    "excerpt": "Seis prompts prontos para copiar, feitos para o dia a dia de quem vende energia solar pelo WhatsApp: a mensagem que vai junto com a proposta, a retomada do cliente que sumiu, a resposta para objeção e mais.",
+    "cover": {
+      "kind": "prompt",
+      "plate": "noite",
+      "pergunta": "Escreva uma retomada curta para o Carlos. Ele visualizou a proposta há 2 dias e não respondeu.",
+      "resposta": [
+        "Oi, Carlos, conseguiu olhar a proposta?",
+        "Se ajudar, te mando a simulação com financiamento."
+      ]
+    },
+    "content": [
+      {
+        "type": "p",
+        "text": "ChatGPT, Gemini e outros assistentes escrevem bem quando recebem contexto. Sem contexto, devolvem aquele texto genérico que o cliente reconhece de longe. Os prompts abaixo já trazem o contexto de quem vende energia solar pelo WhatsApp. Copie, troque o que está entre colchetes e cole no assistente que você usa."
+      },
+      {
+        "type": "h2",
+        "text": "Antes de usar: três regras"
+      },
+      {
+        "type": "ol",
+        "items": [
+          "Dê contexto: quem é você, quem é o cliente, o valor da proposta e o que já foi conversado.",
+          "Peça curto: até três linhas, que caibam na notificação do celular.",
+          "Confira todo número. A IA erra conta com confiança. Parcela, economia e retorno saem da sua simulação."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "1. A mensagem que vai junto com a proposta"
+      },
+      {
+        "type": "prompt",
+        "label": "Prompt para o envio da proposta",
+        "text": "Você é vendedor de uma integradora de energia solar em [cidade]. Escreva uma mensagem de WhatsApp de até 3 linhas para acompanhar o PDF da proposta do cliente [nome].\n\nDados: conta de luz hoje R$ [valor] por mês, sistema de [kWp] kWp, parcela do financiamento R$ [valor] em [n] vezes, retorno em cerca de [anos] anos.\n\nFale como gente, sem emoji e sem ponto de exclamação. Termine com uma pergunta fácil de responder, como se ele prefere que eu explique por áudio ou numa ligação rápida."
+      },
+      {
+        "type": "h2",
+        "text": "2. A retomada do cliente que visualizou e não respondeu"
+      },
+      {
+        "type": "prompt",
+        "label": "Prompt para retomar a conversa",
+        "text": "Mandei uma proposta de energia solar para [nome] há [dias] dias. Ele visualizou e não respondeu.\n\nO que eu sei dele: [ex.: ia ver com a esposa / achou a parcela alta / está comparando com outra empresa].\n\nEscreva 3 opções de mensagem de WhatsApp, cada uma com no máximo 2 frases. Cada opção deve trazer algo útil (uma simulação, uma opção menor, uma ligação curta) e terminar com uma pergunta simples. Sem cobrar a decisão e sem pressão falsa, como \"última chance\"."
+      },
+      {
+        "type": "h2",
+        "text": "3. A resposta para uma objeção"
+      },
+      {
+        "type": "prompt",
+        "label": "Prompt para objeção",
+        "text": "Um cliente de energia solar me respondeu pelo WhatsApp: \"[cole a mensagem dele]\".\n\nPrimeiro, me diga qual é a dúvida real por trás dessa objeção. Depois, escreva uma resposta de até 4 linhas, sem discutir com ele e sem prometer economia que não está na proposta.\n\nDados da proposta: valor R$ [valor], parcela R$ [valor], garantia de [anos] anos, instalação em [dias] dias."
+      },
+      {
+        "type": "h2",
+        "text": "4. O resumo da conversa antes de ligar"
+      },
+      {
+        "type": "prompt",
+        "label": "Prompt para resumir a conversa",
+        "text": "Abaixo está uma conversa de WhatsApp com um cliente de energia solar. Resuma em 5 tópicos curtos: o que ele quer, o que já foi enviado, as dúvidas que ficaram abertas, quem decide junto com ele e qual o próximo passo combinado. Use só o que está na conversa.\n\n[cole a conversa, trocando nome e telefone por \"cliente\"]"
+      },
+      {
+        "type": "h2",
+        "text": "5. A revisão da sua proposta"
+      },
+      {
+        "type": "prompt",
+        "label": "Prompt para revisar a proposta",
+        "text": "Vou colar o texto da minha proposta de energia solar. Leia como se fosse um cliente que nunca comprou um sistema.\n\nAponte em tópicos: o que ele não entenderia, que pergunta ficaria sem resposta e o que deveria estar na primeira página. Não reescreva a proposta inteira.\n\n[cole o texto da proposta]"
+      },
+      {
+        "type": "p",
+        "text": "Se a sua proposta ainda não tem um resumo de uma página, os modelos grátis em Word e PDF do blog já vêm com ele pronto."
+      },
+      {
+        "type": "h2",
+        "text": "6. O script do primeiro atendimento"
+      },
+      {
+        "type": "prompt",
+        "label": "Prompt para o primeiro contato",
+        "text": "Sou de uma integradora de energia solar em [cidade]. Um cliente novo chamou no WhatsApp perguntando quanto custa um sistema.\n\nEscreva a minha primeira resposta em até 3 linhas: agradeça o contato, peça a foto da última conta de luz e pergunte se o imóvel é casa, comércio ou rural. Sem passar preço antes de ver a conta."
+      },
+      {
+        "type": "h2",
+        "text": "O que deixar fora do prompt"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Cálculo de geração, economia e retorno. Use a sua ferramenta de dimensionamento e cole o resultado pronto.",
+          "Depoimento ou número de clientes. A IA inventa com facilidade, e o cliente pode pedir para ver.",
+          "Dados pessoais do cliente: CPF, endereço completo e telefone."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "O que o prompt deixa sem resolver"
+      },
+      {
+        "type": "p",
+        "text": "Prompt ajuda a escrever. Ele não avisa quais clientes estão esperando uma retomada hoje, no meio de visita e instalação, e é nessa hora que muita proposta esfria."
+      },
+      {
+        "type": "lume",
+        "title": "A Lume faz essa parte",
+        "text": "A Lume, assistente do Vyzon, acompanha as propostas que saem do seu WhatsApp e, no 2º dia sem resposta, te manda a retomada já escrita. Você responde 1 e ela sai do seu número. Nada vai para o cliente sem você aprovar."
+      }
+    ],
+    "faq": [
+      {
+        "q": "Qual IA usar para escrever mensagens de venda?",
+        "a": "Qualquer assistente de texto conhecido, como ChatGPT ou Gemini, funciona com esses prompts. O que muda o resultado é o contexto que você dá: dados da proposta, o que o cliente disse e o tom da sua empresa."
+      },
+      {
+        "q": "A IA pode calcular a economia do cliente?",
+        "a": "Melhor não. Ela erra conta com facilidade. Calcule geração, economia e retorno na sua ferramenta de dimensionamento e use a IA só para transformar esses números em uma mensagem clara."
+      },
+      {
+        "q": "Posso mandar o texto da IA direto para o cliente?",
+        "a": "Leia antes. Ajuste o tom para o seu jeito de falar e confira cada número. O cliente conversa com você, e é você que responde pelo que foi prometido."
+      }
+    ]
+  },
+  {
     "slug": "cliente-sumiu-depois-do-orcamento-energia-solar",
     "category": "Comercial",
     "date": "2026-10-08",
     "title": "Cliente sumiu depois do orçamento de energia solar? Os 7 motivos mais comuns e o que responder em cada um",
     "excerpt": "Ele pediu a proposta, abriu o PDF e parou de responder. Quase nunca é falta de interesse. Veja o que costuma travar a decisão de quem compra energia solar e a mensagem certa para cada caso.",
-    "coverText": "Ele não sumiu. Ele travou.",
-    "accent": "#1556C0",
-    "featured": true,
     "content": [
       {
         "type": "p",
@@ -163,8 +558,9 @@
         ]
       },
       {
-        "type": "p",
-        "text": "No Vyzon, a Lume faz esse acompanhamento por você. Ela identifica a proposta que saiu do seu WhatsApp e, no segundo dia sem resposta, te avisa no próprio WhatsApp com a mensagem de retomada pronta. Você confere, responde 1 e ela envia do seu número. Se quiser mudar o texto, é só escrever a sua versão. Nada sai sem você aprovar."
+        "type": "lume",
+        "title": "Onde a Lume entra",
+        "text": "A Lume, assistente do Vyzon, faz esse acompanhamento por você. Ela identifica a proposta que saiu do seu WhatsApp e, no segundo dia sem resposta, te avisa no próprio WhatsApp com a mensagem de retomada pronta. Você confere, responde 1 e ela envia do seu número. Se quiser mudar o texto, é só escrever a sua versão. Nada sai sem você aprovar."
       }
     ],
     "faq": [
@@ -180,7 +576,24 @@
         "q": "É chato mandar mensagem para quem não respondeu?",
         "a": "Fica chato quando a mensagem só cobra, como “e aí, viu a proposta?”. Quando ela traz algo útil, como uma simulação de financiamento, um comparativo ou a resposta para uma dúvida comum, o cliente lê como atendimento, não como pressão."
       }
-    ]
+    ],
+    "updated": "2026-11-04",
+    "cover": {
+      "kind": "conversa",
+      "plate": "azul",
+      "contato": "Ricardo",
+      "mensagens": [
+        {
+          "de": "voce",
+          "texto": "Ricardo, segue a proposta do seu sistema de 5,5 kWp."
+        },
+        {
+          "de": "voce",
+          "texto": "Prefere que eu te explique por áudio?"
+        }
+      ],
+      "selo": "Visualizou há 4 dias"
+    }
   },
   {
     "slug": "script-de-vendas-energia-solar",
@@ -188,8 +601,6 @@
     "date": "2026-10-19",
     "title": "Script de vendas de energia solar pelo WhatsApp: o que falar do primeiro oi até a resposta da proposta",
     "excerpt": "Um roteiro simples para cada etapa da venda pelo WhatsApp: primeiro contato, perguntas antes do orçamento, envio da proposta, retorno combinado e as objeções que mais aparecem.",
-    "coverText": "Cada etapa tem a sua frase.",
-    "accent": "#0E3E8A",
     "content": [
       {
         "type": "p",
@@ -197,15 +608,15 @@
       },
       {
         "type": "p",
-        "text": "O problema é que cada vendedor responde de um jeito. Um pede a conta de luz na primeira mensagem. Outro manda o preço antes de entender o caso. Outro envia o PDF e nunca mais volta. O resultado é uma venda que depende do humor do dia."
+        "text": "Só que cada vendedor responde de um jeito. Um pede a conta de luz na primeira mensagem. Outro manda o preço antes de entender o caso. Outro envia o PDF e nunca mais volta. O resultado é uma venda que depende do humor do dia."
       },
       {
         "type": "p",
-        "text": "Um script de vendas de energia solar resolve isso. Não é um texto decorado. É um roteiro com o que dizer em cada etapa, para ninguém pular passo. Abaixo está um modelo completo, do primeiro oi até a resposta da proposta."
+        "text": "Um script de vendas de energia solar resolve isso: um roteiro com o que dizer em cada etapa, para ninguém pular passo, escrito do jeito que a sua empresa fala. Abaixo está um modelo completo, do primeiro oi até a resposta da proposta."
       },
       {
         "type": "h2",
-        "text": "Script não é texto de robô"
+        "text": "Script com o jeito de falar da sua empresa"
       },
       {
         "type": "p",
@@ -310,7 +721,7 @@
       },
       {
         "type": "p",
-        "text": "Objeção não é um não. Quase sempre é uma dúvida que o cliente não sabe como perguntar. O script ajuda a responder sem discutir."
+        "text": "Quase toda objeção esconde uma dúvida que o cliente não sabe como perguntar. O script ajuda a responder sem discutir."
       },
       {
         "type": "h3",
@@ -348,7 +759,7 @@
       },
       {
         "type": "p",
-        "text": "Essa aparece muito, e merece resposta com fato. A Lei 14.300, publicada pelo governo federal em 2022, criou uma cobrança gradual sobre parte da tarifa (o chamado Fio B) para a energia que volta da rede. Para quem instala em 2026, o percentual cobrado é de 60% dessa parte, segundo o artigo 27 da lei. Não é uma taxa sobre toda a energia gerada."
+        "text": "Essa aparece muito, e merece resposta com fato. A Lei 14.300, publicada pelo governo federal em 2022, criou uma cobrança gradual sobre parte da tarifa (o chamado Fio B) para a energia que volta da rede. Para quem instala em 2026, o percentual cobrado é de 60% dessa parte, segundo o artigo 27 da lei. A cobrança vale só para essa parte da tarifa, na energia que volta da rede."
       },
       {
         "type": "example",
@@ -396,7 +807,7 @@
       },
       {
         "type": "p",
-        "text": "Das cinco etapas, a que mais quebra não é a do primeiro contato nem a das objeções. É a quarta. A proposta sai na terça, aparecem duas visitas e uma instalação, e na sexta ninguém lembra que precisava voltar para a Carla."
+        "text": "Das cinco etapas, a que mais quebra é a quarta. A proposta sai na terça, aparecem duas visitas e uma instalação, e na sexta ninguém lembra que precisava voltar para a Carla."
       },
       {
         "type": "p",
@@ -404,7 +815,7 @@
       },
       {
         "type": "p",
-        "text": "Se você quer saber quantas propostas já estão paradas no seu WhatsApp agora, faça o Raio-X grátis do Vyzon. Ele lê o seu WhatsApp e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva 3 minutos, e nada é enviado aos seus clientes."
+        "text": "Se você quer saber quantas propostas já estão paradas no seu WhatsApp agora, faça o Raio-X grátis do Vyzon. Ele lê os últimos 90 dias do seu WhatsApp e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva uns 3 minutos, e nada é enviado aos seus clientes."
       }
     ],
     "faq": [
@@ -422,9 +833,25 @@
       },
       {
         "q": "Quanto tempo esperar para voltar a falar depois de enviar a proposta?",
-        "a": "O melhor é combinar a data no próprio envio, por exemplo dois ou três dias depois. Assim o retorno vira o que foi combinado, e não cobrança. Se o cliente não responder, tente de novo alguns dias depois com uma mensagem curta e diferente."
+        "a": "O melhor é combinar a data no próprio envio, por exemplo dois ou três dias depois. Assim o retorno vira o que foi combinado e perde a cara de cobrança. Se o cliente não responder, tente de novo alguns dias depois com uma mensagem curta e diferente."
       }
-    ]
+    ],
+    "updated": "2026-11-04",
+    "cover": {
+      "kind": "conversa",
+      "plate": "sol",
+      "contato": "Fernanda",
+      "mensagens": [
+        {
+          "de": "cliente",
+          "texto": "Oi! Quanto fica pra colocar energia solar aqui em casa?"
+        },
+        {
+          "de": "voce",
+          "texto": "Oi, Fernanda! Me manda uma foto da sua última conta de luz que eu te passo o valor certo."
+        }
+      ]
+    }
   },
   {
     "slug": "como-prospectar-clientes-energia-solar",
@@ -432,8 +859,6 @@
     "date": "2026-10-12",
     "title": "Como prospectar clientes de energia solar: 6 caminhos e o erro que desperdiça os contatos que você já tem",
     "excerpt": "Indicação, vizinhança da obra, parceiros locais, comércio e campo, Perfil da Empresa no Google e anúncio com oferta clara. E por que olhar as propostas paradas antes de buscar gente nova.",
-    "coverText": "Comece pela rua da obra.",
-    "accent": "#0E3E8A",
     "content": [
       {
         "type": "p",
@@ -441,7 +866,7 @@
       },
       {
         "type": "p",
-        "text": "Prospectar é achar quem tem conta de luz alta e quer resolver isso agora. Não é falar com todo mundo. É falar com as pessoas certas, do jeito certo, e não deixar ninguém esfriar no caminho."
+        "text": "Prospectar é achar quem tem conta de luz alta e quer resolver isso agora. Falar com as pessoas certas, do jeito certo, sem deixar ninguém esfriar no caminho."
       },
       {
         "type": "p",
@@ -600,7 +1025,7 @@
       },
       {
         "type": "p",
-        "text": "O erro mais caro não é prospectar pouco. É conseguir o contato, mandar a proposta e deixar a conversa morrer. O cliente compara orçamentos, conversa com a família, espera o banco. Se ninguém volta a falar com ele, a empresa que lembrar dele primeiro leva a obra."
+        "text": "O erro mais caro acontece depois da prospecção: conseguir o contato, mandar a proposta e deixar a conversa morrer. O cliente compara orçamentos, conversa com a família, espera o banco. Se ninguém volta a falar com ele, a empresa que lembrar dele primeiro leva a obra."
       },
       {
         "type": "p",
@@ -608,7 +1033,7 @@
       },
       {
         "type": "p",
-        "text": "Se quiser saber quanto já está parado antes de buscar gente nova, faça o Raio-X grátis do Vyzon. Ele lê o seu WhatsApp e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva 3 minutos, e nada é enviado aos seus clientes."
+        "text": "Se quiser saber quanto já está parado antes de buscar gente nova, faça o Raio-X grátis do Vyzon. Ele lê os últimos 90 dias do seu WhatsApp e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva uns 3 minutos, e nada é enviado aos seus clientes."
       }
     ],
     "faq": [
@@ -618,7 +1043,7 @@
       },
       {
         "q": "Posso mandar mensagem no WhatsApp para quem não me conhece?",
-        "a": "Não é recomendado. Lista comprada queima o nome da empresa, o número pode ser denunciado e a LGPD pede um motivo legítimo para usar o contato de alguém. Prefira fazer a pessoa chamar você, com indicação, panfleto, Google ou anúncio."
+        "a": "Melhor evitar. Lista comprada queima o nome da empresa, o número pode ser denunciado e a LGPD pede um motivo legítimo para usar o contato de alguém. Prefira fazer a pessoa chamar você, com indicação, panfleto, Google ou anúncio."
       },
       {
         "q": "Como pedir indicação sem parecer chato?",
@@ -628,7 +1053,33 @@
         "q": "Vale a pena fazer anúncio pago para energia solar?",
         "a": "Pode valer, desde que o anúncio peça uma coisa só, como a foto da conta de luz, e fique restrito à região que você atende. Comece com pouco e anote quantas conversas viram proposta e venda antes de aumentar o valor."
       }
-    ]
+    ],
+    "updated": "2026-11-04",
+    "cover": {
+      "kind": "lista",
+      "plate": "creme",
+      "total": "R$ 70.200 parados",
+      "itens": [
+        {
+          "cliente": "Padaria Bom Dia",
+          "valor": "R$ 38.400",
+          "estado": "espera",
+          "status": "sem resposta"
+        },
+        {
+          "cliente": "Marcos Lima",
+          "valor": "R$ 21.900",
+          "estado": "neutro",
+          "status": "aguardando"
+        },
+        {
+          "cliente": "Casa Fernandes",
+          "valor": "R$ 9.900",
+          "estado": "espera",
+          "status": "sem resposta"
+        }
+      ]
+    }
   },
   {
     "slug": "como-fechar-venda-energia-solar",
@@ -636,12 +1087,10 @@
     "date": "2026-10-09",
     "title": "Como fechar uma venda de energia solar: 7 passos da primeira conversa até o contrato",
     "excerpt": "O que a integradora que fecha faz diferente: qualificar antes da visita, apresentar a proposta em vez de só enviar, tratar o financiamento cedo e não deixar a proposta esfriar depois do envio.",
-    "coverText": "Fechar é acompanhar.",
-    "accent": "#0E3E8A",
     "content": [
       {
         "type": "p",
-        "text": "Venda de energia solar não fecha na visita. Fecha nos dias seguintes, quando o cliente compara orçamentos, conversa com a família e decide se vai financiar. A integradora que fecha mais não é a que tem o menor preço. É a que conduz a decisão do começo ao fim, sem deixar o cliente sozinho com o PDF."
+        "text": "Venda de energia solar não fecha na visita. Fecha nos dias seguintes, quando o cliente compara orçamentos, conversa com a família e decide se vai financiar. Quem fecha mais costuma ser a integradora que conduz a decisão do começo ao fim, sem deixar o cliente sozinho com o PDF, mesmo sem ter o menor preço."
       },
       {
         "type": "p",
@@ -673,7 +1122,7 @@
       },
       {
         "type": "h2",
-        "text": "4. Apresente a proposta, não só envie"
+        "text": "4. Apresente a proposta além de enviar"
       },
       {
         "type": "p",
@@ -713,7 +1162,7 @@
       },
       {
         "type": "p",
-        "text": "Se você quer saber quantas propostas já estão paradas no seu WhatsApp agora, o Raio-X grátis do Vyzon mostra cada uma, com o valor e há quantos dias o cliente não responde. Leva 3 minutos, e nada é enviado aos seus clientes."
+        "text": "Se você quer saber quantas propostas já estão paradas no seu WhatsApp agora, o Raio-X grátis do Vyzon lê os últimos 90 dias do seu WhatsApp e mostra cada uma, com o valor e há quantos dias o cliente não responde. Leva uns 3 minutos, e nada é enviado aos seus clientes."
       }
     ],
     "faq": [
@@ -723,7 +1172,7 @@
       },
       {
         "q": "Devo mandar a proposta de energia solar pelo WhatsApp?",
-        "a": "Pode, mas não só o arquivo. Junto com o PDF, mande uma mensagem curta com os números principais e, se possível, explique a proposta numa ligação ou chamada de vídeo."
+        "a": "Pode, de preferência com mais do que o arquivo. Junto com o PDF, mande uma mensagem curta com os números principais e, se possível, explique a proposta numa ligação ou chamada de vídeo."
       },
       {
         "q": "Quando falar de financiamento com o cliente?",
@@ -733,24 +1182,112 @@
         "q": "Quanto tempo leva para fechar uma venda de energia solar?",
         "a": "Depende do cliente e do financiamento. Não encontramos um número confiável publicado. O que dá para controlar é não deixar a proposta parada: primeiro contato no segundo dia sem resposta e acompanhamento até o décimo."
       }
-    ]
+    ],
+    "updated": "2026-11-04",
+    "cover": {
+      "kind": "proposta",
+      "plate": "azul",
+      "titulo": "Resumo da proposta",
+      "linhas": [
+        [
+          "Conta de luz hoje",
+          "R$ 680"
+        ],
+        [
+          "Sistema",
+          "8 kWp"
+        ],
+        [
+          "Retorno",
+          "4 anos"
+        ]
+      ],
+      "destaque": [
+        "Parcela",
+        "R$ 690/mês"
+      ]
+    }
   },
   {
     "slug": "modelo-proposta-comercial-energia-solar",
-    "category": "Comercial",
+    "category": "Modelos prontos",
     "date": "2026-10-09",
-    "title": "Proposta comercial de energia solar: modelo grátis em Word e PDF",
-    "excerpt": "As 9 partes de uma proposta comercial de energia solar, na ordem em que o cliente lê, com o resumo de uma página e o jeito certo de mandar pelo WhatsApp. Modelo pronto em Word e PDF, sem cadastro.",
-    "coverText": "Uma página que vende.",
-    "accent": "#0E3E8A",
+    "title": "Modelo de proposta de energia solar grátis: 3 modelos em Word e PDF",
+    "excerpt": "Proposta completa, resumo de uma página para mandar no WhatsApp e versão para empresa, prontos para editar no Word ou no Google Docs. E as 9 partes que toda proposta precisa ter, na ordem em que o cliente lê.",
     "content": [
       {
         "type": "p",
-        "text": "Toda integradora tem um modelo de proposta. O problema é que a maioria foi montada para mostrar o trabalho técnico, e não para ajudar o cliente a decidir. Vira um PDF de dez páginas com tabela de geração, ficha do inversor e foto de telhado, e o cliente pula tudo até achar o preço."
+        "text": "Toda integradora tem um modelo de proposta, e a maioria nasceu para mostrar o trabalho técnico. Vira um PDF de dez páginas com tabela de geração, ficha do inversor e foto de telhado, e o cliente pula tudo até achar o preço."
       },
       {
         "type": "p",
-        "text": "Uma boa proposta de energia solar faz o contrário: responde em uma página o que o cliente quer saber e deixa o detalhe técnico para quem quiser conferir. Abaixo está um modelo em 9 partes, na ordem em que o cliente lê, e o que fazer depois de enviar."
+        "text": "Os três modelos abaixo fazem o caminho contrário: respondem na primeira página o que o cliente quer saber e deixam o detalhe técnico para quem quiser conferir. Abra no Word ou no Google Docs, troque o que está marcado em amarelo, apague as dicas e mande em PDF."
+      },
+      {
+        "type": "h2",
+        "text": "Os 3 modelos para baixar"
+      },
+      {
+        "type": "modelos",
+        "items": [
+          {
+            "titulo": "Proposta completa residencial",
+            "descricao": "As 9 partes na ordem em que o cliente lê. O resumo já aparece na capa, com a parcela ao lado da conta de luz de hoje.",
+            "previa": "/modelos/previa/modelo-proposta-energia-solar.webp",
+            "arquivos": [
+              {
+                "label": "Word",
+                "href": "/modelos/modelo-proposta-energia-solar.docx"
+              },
+              {
+                "label": "PDF",
+                "href": "/modelos/modelo-proposta-energia-solar.pdf"
+              }
+            ]
+          },
+          {
+            "titulo": "Resumo de 1 página para o WhatsApp",
+            "descricao": "Uma página no tamanho da tela do celular: conta de hoje, parcela, economia e retorno. Vai junto com a proposta completa, no mesmo envio.",
+            "previa": "/modelos/previa/resumo-proposta-energia-solar-whatsapp.webp",
+            "arquivos": [
+              {
+                "label": "Word",
+                "href": "/modelos/resumo-proposta-energia-solar-whatsapp.docx"
+              },
+              {
+                "label": "PDF",
+                "href": "/modelos/resumo-proposta-energia-solar-whatsapp.pdf"
+              }
+            ]
+          },
+          {
+            "titulo": "Proposta para empresa e comércio",
+            "descricao": "Para quando quem assina é um CNPJ: economia por ano em destaque, financiamento para empresa, documentos para fechar e espaço para quem assina.",
+            "previa": "/modelos/previa/proposta-energia-solar-empresa.webp",
+            "arquivos": [
+              {
+                "label": "Word",
+                "href": "/modelos/proposta-energia-solar-empresa.docx"
+              },
+              {
+                "label": "PDF",
+                "href": "/modelos/proposta-energia-solar-empresa.pdf"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "Qual modelo usar"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Proposta completa: para residência, quando o cliente quer ver tudo antes de decidir.",
+          "Resumo de 1 página: sempre junto com a completa. É o que o cliente lê no celular e repassa para quem decide com ele.",
+          "Empresa e comércio: quando a conta de luz e o contrato estão no nome de um CNPJ. A economia por ano costuma pesar mais que a parcela."
+        ]
       },
       {
         "type": "h2",
@@ -766,23 +1303,23 @@
           "Quanto eu pago de luz hoje e quanto vou pagar depois.",
           "Quanto custa, e se cabe no meu bolso (à vista, parcelado ou financiado).",
           "Em quanto tempo o dinheiro volta.",
-          "Por que fechar com você, e não com a empresa que mandou o orçamento mais barato."
+          "Por que fechar com você, se outra empresa mandou um orçamento mais barato."
         ]
       },
       {
         "type": "h2",
-        "text": "Modelo de proposta comercial de energia solar em 9 partes"
+        "text": "As 9 partes de uma proposta de energia solar"
       },
       {
         "type": "ol",
         "items": [
           "Capa: nome do cliente, endereço da instalação, data e validade da proposta. Validade curta, de 7 a 15 dias, porque preço de equipamento muda.",
           "Resumo em uma página: conta de luz de hoje, sistema proposto (kWp e quantidade de módulos), investimento, economia por mês e tempo de retorno. É a página mais importante da proposta.",
-          "Consumo e dimensionamento: média de consumo em kWh dos últimos 12 meses, potência do sistema e geração estimada por mês. Mostre a conta, não só o resultado.",
+          "Consumo e dimensionamento: média de consumo em kWh dos últimos 12 meses, potência do sistema e geração estimada por mês. Mostre a conta junto com o resultado.",
           "Equipamentos: marca e modelo dos módulos e do inversor, tipo de estrutura e garantia de cada um.",
           "Investimento e formas de pagamento: valor à vista, parcelado no cartão e financiado. No financiamento, coloque a parcela ao lado da conta de luz de hoje.",
           "Retorno: economia por mês e por ano, tempo de retorno e o que acontece com a conta depois que o sistema se paga.",
-          "Prazos: projeto, aprovação na distribuidora e instalação. O cliente quer saber quando a conta vai baixar, não só quando o técnico chega.",
+          "Prazos: projeto, aprovação na distribuidora e instalação. O cliente quer saber quando a conta vai baixar, além de quando o técnico chega.",
           "Garantias e pós-venda: quem resolve se o inversor parar, em quanto tempo, e se tem monitoramento.",
           "Próximo passo: o que o cliente faz para aprovar (responder, assinar, pagar a entrada) e até quando vale a proposta."
         ]
@@ -814,7 +1351,7 @@
       },
       {
         "type": "p",
-        "text": "Aqui está o ponto em que a maioria das propostas se perde. Num evento do Canal Solar, o CEO da Bluesun, Roberto Caurim, disse que o PDF solto no WhatsApp fica no meio de outras propostas e o cliente acaba olhando só o preço da última linha. O PDF não é o problema. O problema é mandar só o PDF."
+        "text": "Aqui está o ponto em que a maioria das propostas se perde. Num evento do Canal Solar, o CEO da Bluesun, Roberto Caurim, disse que o PDF solto no WhatsApp fica no meio de outras propostas e o cliente acaba olhando só o preço da última linha. O que falta é o que vai junto com o arquivo."
       },
       {
         "type": "ul",
@@ -826,6 +1363,11 @@
         ]
       },
       {
+        "type": "mensagem",
+        "label": "Mensagem para mandar junto com o PDF (valores de exemplo)",
+        "text": "Carlos, segue a proposta do seu sistema de 6,2 kWp. O resumo: hoje você paga R$ 480 de luz, e a parcela do financiamento fica perto disso. Prefere que eu te explique por áudio ou numa ligação rápida?"
+      },
+      {
         "type": "h2",
         "text": "Depois de enviar: o que fazer nos próximos dias"
       },
@@ -835,11 +1377,16 @@
       },
       {
         "type": "p",
-        "text": "O difícil não é saber o que mandar. É lembrar de cada proposta no meio de visita, instalação e cliente ligando. Por isso vale ter uma lista simples com cliente, valor, data de envio e último contato, e olhar essa lista todo dia."
+        "text": "Saber o que mandar é a parte fácil. O trabalho está em lembrar de cada proposta no meio de visita, instalação e cliente ligando. Por isso vale ter uma lista simples com cliente, valor, data de envio e último contato, e olhar essa lista todo dia."
+      },
+      {
+        "type": "lume",
+        "title": "A Lume monta essa lista sozinha",
+        "text": "A Lume, assistente do Vyzon, percebe quando uma proposta sai do seu WhatsApp e coloca na lista com o valor e a data, sem você cadastrar nada. No 2º dia sem resposta, ela te manda no WhatsApp a retomada já escrita. Você responde 1 e ela sai do seu número."
       },
       {
         "type": "p",
-        "text": "Se você quer saber quanto já está parado hoje, o Raio-X grátis do Vyzon lê o seu WhatsApp e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva 3 minutos, e nada é enviado aos seus clientes."
+        "text": "Se você quer saber quanto já está parado hoje, o Raio-X grátis do Vyzon lê os últimos 90 dias do seu WhatsApp e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva uns 3 minutos, e nada é enviado aos seus clientes."
       }
     ],
     "faq": [
@@ -858,18 +1405,46 @@
       {
         "q": "Quanto tempo esperar para cobrar resposta da proposta?",
         "a": "Dois dias depois de o cliente visualizar sem responder é um bom momento para o primeiro contato. Depois, no quinto e no décimo dia, com um motivo novo em cada mensagem."
+      },
+      {
+        "q": "Os modelos de proposta são grátis mesmo?",
+        "a": "Sim. Os três modelos estão em Word e PDF e podem ser baixados sem cadastro. Troque o que está em amarelo pelos dados do seu cliente, coloque o seu logo e apague as caixas de dica antes de enviar."
       }
     ],
     "downloads": [
       {
-        "label": "Baixar em Word (.docx)",
+        "label": "Proposta completa em Word",
         "href": "/modelos/modelo-proposta-energia-solar.docx"
       },
       {
-        "label": "Baixar em PDF",
+        "label": "Proposta completa em PDF",
         "href": "/modelos/modelo-proposta-energia-solar.pdf"
       }
-    ]
+    ],
+    "updated": "2026-11-04",
+    "cover": {
+      "kind": "proposta",
+      "plate": "sol",
+      "titulo": "Resumo da proposta",
+      "linhas": [
+        [
+          "Conta de luz hoje",
+          "R$ 480"
+        ],
+        [
+          "Sistema",
+          "6,2 kWp"
+        ],
+        [
+          "À vista",
+          "R$ 24.900"
+        ]
+      ],
+      "destaque": [
+        "Retorno",
+        "4 anos"
+      ]
+    }
   },
   {
     "slug": "proposta-energia-solar-pdf-whatsapp",
@@ -877,8 +1452,6 @@
     "date": "2026-10-09",
     "title": "Proposta de energia solar em PDF pelo WhatsApp: por que ela se perde e como evitar",
     "excerpt": "O cliente visualiza o PDF, não responde, e a proposta afunda na conversa. Os motivos mais comuns e o que fazer para cada orçamento enviado ter resposta.",
-    "coverText": "Ela afunda na conversa.",
-    "accent": "#0E3E8A",
     "content": [
       {
         "type": "p",
@@ -934,7 +1507,7 @@
       },
       {
         "type": "h2",
-        "text": "O problema não é o PDF. É o que acontece depois"
+        "text": "O que acontece depois que o PDF sai"
       },
       {
         "type": "p",
@@ -942,7 +1515,7 @@
       },
       {
         "type": "p",
-        "text": "Se você quer ver quanto já está parado no seu WhatsApp hoje, o Raio-X grátis do Vyzon lê as suas conversas e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva 3 minutos, e nada é enviado aos seus clientes."
+        "text": "Se você quer ver quanto já está parado no seu WhatsApp hoje, o Raio-X grátis do Vyzon lê os últimos 90 dias do seu WhatsApp e mostra cada proposta sem resposta, com o valor e há quantos dias. Leva uns 3 minutos, e nada é enviado aos seus clientes."
       }
     ],
     "faq": [
@@ -958,7 +1531,24 @@
         "q": "Como saber quantas propostas estão sem resposta?",
         "a": "Anote cada proposta enviada com data e valor e marque quando o cliente responder. Se preferir não fazer à mão, o Raio-X grátis do Vyzon lista as propostas sem resposta direto do seu WhatsApp."
       }
-    ]
+    ],
+    "updated": "2026-11-04",
+    "cover": {
+      "kind": "conversa",
+      "plate": "noite",
+      "contato": "Juliana",
+      "mensagens": [
+        {
+          "de": "voce",
+          "texto": "Juliana, segue a proposta. O resumo: sua conta de R$ 520 cai para perto da taxa mínima."
+        },
+        {
+          "de": "cliente",
+          "texto": "Vou ver com calma em casa."
+        }
+      ],
+      "selo": "Sem resposta há 3 dias"
+    }
   },
   {
     "slug": "follow-up-proposta-energia-solar",
@@ -966,8 +1556,6 @@
     "date": "2026-10-08",
     "title": "Follow-up de proposta de energia solar: exemplos do que mandar no dia 2, no dia 5 e no dia 10",
     "excerpt": "Uma cadência simples para acompanhar cada proposta enviada pelo WhatsApp sem parecer insistente, com a mensagem pronta para cada contato e a hora certa de parar.",
-    "coverText": "O 2º dia decide.",
-    "accent": "#0E3E8A",
     "content": [
       {
         "type": "p",
@@ -975,11 +1563,11 @@
       },
       {
         "type": "p",
-        "text": "Follow-up não é insistência. É dar ao cliente o empurrão de que ele precisa para tomar uma decisão grande. A diferença entre as duas coisas está no que você manda e em quando manda."
+        "text": "Um bom follow-up dá ao cliente o empurrão de que ele precisa para tomar uma decisão grande. O que separa isso de insistência é o que você manda e quando manda."
       },
       {
         "type": "h2",
-        "text": "Por que ter uma cadência, e não “chamar quando lembrar”"
+        "text": "Por que ter uma cadência em vez de “chamar quando lembrar”"
       },
       {
         "type": "p",
@@ -1006,12 +1594,13 @@
         "text": "A cadência começa no envio. Não mande o PDF solto. Mande junto duas frases: o resumo do que importa para o cliente e uma pergunta fácil de responder."
       },
       {
-        "type": "example",
-        "title": "Mensagem de envio",
-        "body": [
-          "“Carlos, segue a proposta do seu sistema de 8 kWp. O resumo: sua conta de R$ 680 cai para perto da taxa mínima. Prefere que eu te explique por áudio ou numa ligação rápida?”",
-          "A pergunta do final é de propósito. É mais fácil responder “áudio” do que “aprovado”, e qualquer resposta já mantém a conversa viva."
-        ]
+        "type": "mensagem",
+        "label": "Mensagem de envio",
+        "text": "Carlos, segue a proposta do seu sistema de 8 kWp. O resumo: sua conta de R$ 680 cai para perto da taxa mínima. Prefere que eu te explique por áudio ou numa ligação rápida?"
+      },
+      {
+        "type": "p",
+        "text": "A pergunta do final é de propósito. É mais fácil responder “áudio” do que “aprovado”, e qualquer resposta já mantém a conversa viva."
       },
       {
         "type": "h3",
@@ -1022,11 +1611,9 @@
         "text": "Se ele visualizou e não respondeu, é hora do primeiro contato. Não cobre a decisão. Ofereça um atalho."
       },
       {
-        "type": "example",
-        "title": "Mensagem do dia 2",
-        "body": [
-          "“Oi Carlos, tudo bem? Conseguiu olhar a proposta? Se ajudar, te mando a simulação com financiamento para comparar com a sua conta de luz de hoje.”"
-        ]
+        "type": "mensagem",
+        "label": "Mensagem do dia 2",
+        "text": "Oi Carlos, tudo bem? Conseguiu olhar a proposta? Se ajudar, te mando a simulação com financiamento para comparar com a sua conta de luz de hoje."
       },
       {
         "type": "p",
@@ -1049,11 +1636,9 @@
         ]
       },
       {
-        "type": "example",
-        "title": "Mensagem do dia 5",
-        "body": [
-          "“Carlos, uma dúvida que aparece muito nessa fase é se dá para começar com um sistema menor e ampliar depois. Dá, sim. Quer que eu simule uma versão menor para você comparar?”"
-        ]
+        "type": "mensagem",
+        "label": "Mensagem do dia 5",
+        "text": "Carlos, uma dúvida que aparece muito nessa fase é se dá para começar com um sistema menor e ampliar depois. Dá, sim. Quer que eu simule uma versão menor para você comparar?"
       },
       {
         "type": "h3",
@@ -1064,11 +1649,9 @@
         "text": "O último contato devolve o controle para o cliente. Muitas vezes é essa mensagem que gera resposta, justamente porque tira a pressão."
       },
       {
-        "type": "example",
-        "title": "Mensagem do dia 10",
-        "body": [
-          "“Carlos, não quero ficar te chamando à toa. Vou deixar sua proposta guardada aqui. Se quiser retomar mais para frente, é só me mandar um oi que eu atualizo os valores.”"
-        ]
+        "type": "mensagem",
+        "label": "Mensagem do dia 10",
+        "text": "Carlos, não quero ficar te chamando à toa. Vou deixar sua proposta guardada aqui. Se quiser retomar mais para frente, é só me mandar um oi que eu atualizo os valores."
       },
       {
         "type": "p",
@@ -1095,8 +1678,9 @@
         "text": "Com três propostas abertas, dá para lembrar de cabeça. Com vinte, não dá. A cadência só funciona se alguém souber, todo dia, quais propostas estão no dia 2, no dia 5 e no dia 10. Planilha e lembrete na agenda resolvem enquanto alguém mantiver tudo atualizado."
       },
       {
-        "type": "p",
-        "text": "No Vyzon, a Lume cuida dessa parte. Ela acompanha as propostas que saem do seu WhatsApp e, quando uma completa dois dias sem resposta, te manda no WhatsApp o aviso com a retomada já escrita. Você responde 1 e ela sai do seu número. Se você não aprovar em 48 horas, o rascunho vence e nada é enviado."
+        "type": "lume",
+        "title": "Onde a Lume entra",
+        "text": "A Lume, assistente do Vyzon, cuida dessa parte. Ela acompanha as propostas que saem do seu WhatsApp e, quando uma completa dois dias sem resposta, te manda no WhatsApp o aviso com a retomada já escrita. Você responde 1 e ela sai do seu número. Se você não aprovar em 48 horas, o rascunho vence e nada é enviado."
       }
     ],
     "faq": [
@@ -1112,7 +1696,24 @@
         "q": "O que fazer quando o cliente responde que vai pensar?",
         "a": "Combine uma data. “Vou pensar” sem data vira silêncio. Pergunte com leveza se pode chamar na sexta ou na semana que vem, e ofereça resolver a dúvida que ainda falta."
       }
-    ]
+    ],
+    "updated": "2026-11-04",
+    "cover": {
+      "kind": "conversa",
+      "plate": "sol",
+      "contato": "Carlos",
+      "mensagens": [
+        {
+          "de": "voce",
+          "texto": "Oi, Carlos, conseguiu olhar a proposta? Se ajudar, te mando a simulação com financiamento."
+        },
+        {
+          "de": "cliente",
+          "texto": "Manda sim. Queria ver a parcela."
+        }
+      ],
+      "selo": "Dia 2"
+    }
   },
   {
     "slug": "quanto-dinheiro-esta-parado-nas-suas-propostas",
@@ -1120,8 +1721,6 @@
     "date": "2026-10-08",
     "title": "Quanto dinheiro está parado nas suas propostas de energia solar? Faça a conta em 15 minutos",
     "excerpt": "Toda integradora tem proposta visualizada e sem resposta esquecida no WhatsApp. Um passo a passo para levantar quais são, quanto somam e por onde começar a retomar.",
-    "coverText": "Proposta parada não aparece no extrato.",
-    "accent": "#1556C0",
     "content": [
       {
         "type": "p",
@@ -1201,7 +1800,7 @@
       },
       {
         "type": "p",
-        "text": "O Raio-X grátis do Vyzon é esse levantamento, feito junto com você numa conversa de 20 minutos. Você sai com a lista das propostas paradas, quanto elas somam, a ordem para retomar e a mensagem de retomada pronta para as maiores."
+        "text": "O Raio-X grátis do Vyzon faz esse levantamento sozinho. Você cria a conta, conecta o WhatsApp e em uns 3 minutos vê as propostas sem resposta dos últimos 90 dias, com o valor de cada uma, há quantos dias estão paradas e quanto somam. Nada é enviado aos seus clientes."
       },
       {
         "type": "p",
@@ -1219,18 +1818,42 @@
       },
       {
         "q": "O que é o Raio-X grátis do Vyzon?",
-        "a": "É uma conversa de 20 minutos em que a gente levanta com você as propostas do último mês que ficaram sem resposta, quanto elas somam e por onde começar a retomar. Você sai com a mensagem de retomada pronta para as maiores. Não tem custo."
+        "a": "É um levantamento automático: você cria a conta, conecta o WhatsApp e em uns 3 minutos vê as propostas sem resposta dos últimos 90 dias, com o valor e há quantos dias cada uma está parada. É grátis, não pede cartão e nada é enviado aos seus clientes."
       }
-    ]
+    ],
+    "updated": "2026-11-04",
+    "cover": {
+      "kind": "lista",
+      "plate": "sol",
+      "total": "R$ 87.100 parados",
+      "itens": [
+        {
+          "cliente": "Sítio Santa Luzia",
+          "valor": "R$ 52.300",
+          "estado": "espera",
+          "status": "sem resposta"
+        },
+        {
+          "cliente": "Residência Oliveira",
+          "valor": "R$ 24.900",
+          "estado": "espera",
+          "status": "sem resposta"
+        },
+        {
+          "cliente": "Ana Prado",
+          "valor": "R$ 9.900",
+          "estado": "neutro",
+          "status": "aguardando"
+        }
+      ]
+    }
   },
   {
     "slug": "mensagens-para-retomar-cliente-energia-solar",
-    "category": "Comercial",
+    "category": "Modelos prontos",
     "date": "2026-10-08",
     "title": "10 mensagens para retomar o cliente de energia solar que parou de responder",
     "excerpt": "Modelos prontos para copiar e adaptar, um para cada situação: visualizou e sumiu, disse que ia pensar, achou caro, está comparando orçamentos, travou no financiamento e mais.",
-    "coverText": "Retomar não é cobrar.",
-    "accent": "#0E3E8A",
     "content": [
       {
         "type": "p",
@@ -1254,86 +1877,66 @@
         "text": "Quando ele visualizou e não respondeu"
       },
       {
-        "type": "example",
-        "title": "1. Dois dias depois do envio",
-        "body": [
-          "“Oi Carlos, tudo bem? Conseguiu olhar a proposta do sistema? Se ajudar, te mando a simulação com financiamento para comparar com a sua conta de luz de hoje.”"
-        ]
+        "type": "mensagem",
+        "label": "1. Dois dias depois do envio",
+        "text": "Oi Carlos, tudo bem? Conseguiu olhar a proposta do sistema? Se ajudar, te mando a simulação com financiamento para comparar com a sua conta de luz de hoje."
       },
       {
-        "type": "example",
-        "title": "2. Uma semana depois",
-        "body": [
-          "“Carlos, passando para saber se ficou alguma dúvida na proposta. Se preferir, te explico num áudio de um minuto o que muda na sua conta de luz.”"
-        ]
+        "type": "mensagem",
+        "label": "2. Uma semana depois",
+        "text": "Carlos, passando para saber se ficou alguma dúvida na proposta. Se preferir, te explico num áudio de um minuto o que muda na sua conta de luz."
       },
       {
         "type": "h2",
         "text": "Quando ele disse que ia pensar"
       },
       {
-        "type": "example",
-        "title": "3. Combinando uma data",
-        "body": [
-          "“Fica à vontade, Carlos. Para eu não te chamar fora de hora: posso te dar um alô na sexta? Se surgir alguma dúvida antes, me manda aqui.”"
-        ]
+        "type": "mensagem",
+        "label": "3. Combinando uma data",
+        "text": "Fica à vontade, Carlos. Para eu não te chamar fora de hora: posso te dar um alô na sexta? Se surgir alguma dúvida antes, me manda aqui."
       },
       {
-        "type": "example",
-        "title": "4. Decisão em família",
-        "body": [
-          "“Carlos, se for decidir junto com alguém da casa, posso fazer uma ligação rápida com vocês dois. Em 10 minutos dá para tirar a dúvida de todo mundo.”"
-        ]
+        "type": "mensagem",
+        "label": "4. Decisão em família",
+        "text": "Carlos, se for decidir junto com alguém da casa, posso fazer uma ligação rápida com vocês dois. Em 10 minutos dá para tirar a dúvida de todo mundo."
       },
       {
         "type": "h2",
         "text": "Quando o problema é dinheiro"
       },
       {
-        "type": "example",
-        "title": "5. Achou caro, mas não disse",
-        "body": [
-          "“Carlos, uma opção que pouca gente conhece: dá para começar com um sistema menor, que já corta boa parte da conta, e ampliar depois. Quer que eu simule?”"
-        ]
+        "type": "mensagem",
+        "label": "5. Achou caro, mas não disse",
+        "text": "Carlos, uma opção que pouca gente conhece: dá para começar com um sistema menor, que já corta boa parte da conta, e ampliar depois. Quer que eu simule?"
       },
       {
-        "type": "example",
-        "title": "6. Financiamento travado",
-        "body": [
-          "“Carlos, conseguiu ver a parte do financiamento? Se a aprovação travou, posso simular em outra linha de crédito. As condições mudam bastante de um banco para outro.”"
-        ]
+        "type": "mensagem",
+        "label": "6. Financiamento travado",
+        "text": "Carlos, conseguiu ver a parte do financiamento? Se a aprovação travou, posso simular em outra linha de crédito. As condições mudam bastante de um banco para outro."
       },
       {
-        "type": "example",
-        "title": "7. Está comparando orçamentos",
-        "body": [
-          "“Carlos, se estiver comparando propostas, te mando um checklist do que olhar além do preço: marca do inversor e dos painéis, garantia e quem faz a homologação com a distribuidora. Assim você compara igual com igual.”"
-        ]
+        "type": "mensagem",
+        "label": "7. Está comparando orçamentos",
+        "text": "Carlos, se estiver comparando propostas, te mando um checklist do que olhar além do preço: marca do inversor e dos painéis, garantia e quem faz a homologação com a distribuidora. Assim você compara igual com igual."
       },
       {
         "type": "h2",
         "text": "Quando a conversa esfriou"
       },
       {
-        "type": "example",
-        "title": "8. Mais de duas semanas depois",
-        "body": [
-          "“Oi Carlos, tudo bem? Faz um tempo que te mandei a proposta e sei que a rotina aperta. Se ainda fizer sentido, atualizo os valores para você. Se não for o momento, sem problema, é só me dizer.”"
-        ]
+        "type": "mensagem",
+        "label": "8. Mais de duas semanas depois",
+        "text": "Oi Carlos, tudo bem? Faz um tempo que te mandei a proposta e sei que a rotina aperta. Se ainda fizer sentido, atualizo os valores para você. Se não for o momento, sem problema, é só me dizer."
       },
       {
-        "type": "example",
-        "title": "9. A mensagem de saída",
-        "body": [
-          "“Carlos, não quero ficar te chamando à toa. Vou deixar sua proposta guardada. Quando quiser retomar, me manda um oi que eu atualizo tudo.”"
-        ]
+        "type": "mensagem",
+        "label": "9. A mensagem de saída",
+        "text": "Carlos, não quero ficar te chamando à toa. Vou deixar sua proposta guardada. Quando quiser retomar, me manda um oi que eu atualizo tudo."
       },
       {
-        "type": "example",
-        "title": "10. Meses depois, com um motivo novo",
-        "body": [
-          "“Oi Carlos! Lembrei de você porque a conta de luz pesa mais nos meses de bandeira vermelha. Quer que eu refaça a simulação com a sua conta mais recente?”"
-        ]
+        "type": "mensagem",
+        "label": "10. Meses depois, com um motivo novo",
+        "text": "Oi Carlos! Lembrei de você porque a conta de luz pesa mais nos meses de bandeira vermelha. Quer que eu refaça a simulação com a sua conta mais recente?"
       },
       {
         "type": "h2",
@@ -1343,22 +1946,23 @@
         "type": "ul",
         "items": [
           "“E aí, vai fechar?” Cobra a decisão e não ajuda em nada.",
-          "“Última chance, o preço sobe amanhã”, quando não é verdade. O cliente percebe, e a confiança não volta.",
+          "“Última chance, o preço sobe amanhã”, quando o preço vai continuar igual. O cliente percebe, e a confiança não volta.",
           "Textão. Se não cabe na notificação, ele deixa para depois, e o depois não chega.",
           "A mesma mensagem copiada três vezes."
         ]
       },
       {
         "type": "h2",
-        "text": "O difícil não é escrever, é lembrar"
+        "text": "A parte difícil: lembrar"
       },
       {
         "type": "p",
         "text": "Com os modelos na mão, escrever fica fácil. O que continua difícil é saber, no meio da correria, quais clientes estão esperando retomada hoje."
       },
       {
-        "type": "p",
-        "text": "No Vyzon, a Lume faz esse acompanhamento por você. Ela identifica a proposta que saiu do seu WhatsApp e, no segundo dia sem resposta, te avisa no próprio WhatsApp com a mensagem de retomada pronta. Você confere, responde 1 e ela envia do seu número. Se quiser mudar o texto, é só escrever a sua versão. Nada sai sem você aprovar."
+        "type": "lume",
+        "title": "Onde a Lume entra",
+        "text": "A Lume, assistente do Vyzon, faz esse acompanhamento por você. Ela identifica a proposta que saiu do seu WhatsApp e, no segundo dia sem resposta, te avisa no próprio WhatsApp com a mensagem de retomada pronta. Você confere, responde 1 e ela envia do seu número. Se quiser mudar o texto, é só escrever a sua versão. Nada sai sem você aprovar."
       }
     ],
     "faq": [
@@ -1370,6 +1974,22 @@
         "q": "Como retomar um cliente que sumiu há meses?",
         "a": "Com um motivo novo e real: a proposta atualizada, uma condição diferente de financiamento ou a conta de luz mais alta na bandeira vermelha. Retomar só por retomar, depois de muito tempo, costuma ser ignorado."
       }
-    ]
+    ],
+    "updated": "2026-11-04",
+    "cover": {
+      "kind": "conversa",
+      "plate": "creme",
+      "contato": "Carlos",
+      "mensagens": [
+        {
+          "de": "voce",
+          "texto": "Carlos, passando para saber se ficou alguma dúvida na proposta."
+        },
+        {
+          "de": "cliente",
+          "texto": "Ficou sim, sobre a garantia do inversor."
+        }
+      ]
+    }
   }
 ]
