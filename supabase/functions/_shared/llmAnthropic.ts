@@ -35,6 +35,23 @@ function textOf(content: unknown): string {
     return content == null ? "" : String(content);
 }
 
+type ImagePart = { type: "image_url"; image_url: { url: string } };
+
+function isImagePart(p: unknown): p is ImagePart {
+    return !!p && typeof p === "object" && (p as { type?: unknown }).type === "image_url";
+}
+
+// Imagem do formato chat completions (data URL em base64) vira bloco de
+// imagem da Messages API. URL remota não é aceita: as mídias saem do Storage.
+function toAnthropicPart(p: unknown): unknown {
+    if (isImagePart(p)) {
+        const m = /^data:([^;]+);base64,(.+)$/s.exec(p.image_url?.url ?? "");
+        return m ? { type: "image", source: { type: "base64", media_type: m[1], data: m[2] } } : null;
+    }
+    const text = p && typeof p === "object" && "text" in p ? String((p as { text: unknown }).text ?? "") : "";
+    return text ? { type: "text", text } : null;
+}
+
 function parseArgs(raw: string | undefined): Record<string, unknown> {
     try {
         const v = JSON.parse(raw || "{}");
@@ -74,6 +91,8 @@ export function toAnthropicBody(body: ChatBody, model: string, effort: string): 
             push("assistant", blocks);
         } else if (raw.role === "tool") {
             push("user", [{ type: "tool_result", tool_use_id: raw.tool_call_id, content: textOf(raw.content) }]);
+        } else if (Array.isArray(raw.content) && raw.content.some(isImagePart)) {
+            push("user", raw.content.map(toAnthropicPart).filter(Boolean) as unknown[]);
         } else {
             const text = textOf(raw.content);
             if (text) push("user", [{ type: "text", text }]);

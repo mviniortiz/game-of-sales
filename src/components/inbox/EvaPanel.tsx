@@ -71,6 +71,7 @@ import type {
 } from "@/lib/eva/qualificationSchema";
 import { proximaAcaoLabel } from "@/lib/eva/qualificationSchema";
 import { EvaBot } from "@/components/eva/EvaBot";
+import { ContaLuzCard } from "@/components/inbox/ContaLuzCard";
 
 // ─── Movimento (disciplinado, com fallback de reduced-motion) ───────────────
 // LP-INBOX.2 2026-06-21: as seções entram com fade+rise em stagger curto, o
@@ -777,6 +778,8 @@ function PanelContent({
             />
 
             {quote && <QuoteStatusCard quote={quote} />}
+
+            {conversationId && <ContaLuzCard conversationId={conversationId} />}
 
             {/* Micro-interações: pulso do "desatualizada" + hover dos cards/botões.
                 Curva custom do projeto; tudo desliga sob prefers-reduced-motion. */}

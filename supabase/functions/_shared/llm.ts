@@ -25,7 +25,12 @@ export interface LlmOptions {
     timeoutMs?: number;
     /** Provedor a tentar primeiro (ex.: o que já respondeu neste loop de agente). */
     prefer?: LlmProvider;
+    /** Só estes provedores (ex.: pedido com imagem, que a DeepSeek não lê). */
+    only?: LlmProvider[];
 }
+
+/** Provedores que leem imagem no formato image_url com data URL. */
+export const IMAGE_PROVIDERS: LlmProvider[] = ["anthropic", "gemini", "openai"];
 
 export interface LlmResponse {
     ok: boolean;
@@ -185,7 +190,7 @@ function makeResponse(
 export async function llmChat(body: Body, opts: LlmOptions = {}): Promise<LlmResponse> {
     const label = opts.label ?? "llm";
     const timeoutMs = opts.timeoutMs ?? 60_000;
-    const order = providerOrder(opts.prefer);
+    const order = providerOrder(opts.prefer).filter((p) => !opts.only || opts.only.includes(p));
     const attempts: string[] = [];
     let lastStatus = 503;
     let lastText = JSON.stringify({ error: "nenhum provedor de IA configurado" });

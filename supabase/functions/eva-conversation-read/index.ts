@@ -10,6 +10,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resumoConta } from "../_shared/contaLuz.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -81,6 +82,17 @@ async function readOne(c: Claimed, owners: Map<string, string | null>): Promise<
         .map((m) => ({ text: String(m.body), sender: m.direction === "outbound" ? "me" : "them" }));
     if (!messages.some((m) => m.sender === "them")) return "sem-mensagem-do-cliente";
 
+    // CONTA.1: a conta de luz que a Lume leu entra como dado já sabido do cliente.
+    const { data: conta } = await supabase
+        .from("conta_luz_leituras")
+        .select("consumo_kwh, valor_reais, distribuidora, cidade, uf, classe")
+        .eq("conversation_id", c.conversation_id)
+        .neq("status", "descartada")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+    const knownFacts = conta ? `Conta de luz que o cliente mandou: ${resumoConta(conta)}.` : undefined;
+
     const phone = String(contact.phone_e164);
     const res = await fetch(`${SUPABASE_URL}/functions/v1/whatsapp-copilot`, {
         method: "POST",
@@ -96,6 +108,7 @@ async function readOne(c: Claimed, owners: Map<string, string | null>): Promise<
             contactPhone: phone.startsWith("+") ? phone : `+${phone}`,
             contactName: contact.name || null,
             messages,
+            knownFacts,
         }),
     });
     if (!res.ok) {

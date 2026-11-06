@@ -593,7 +593,7 @@ serve(async (req) => {
 
         // ─── Body parse ──────────────────────────────────────────────────────
         const body = await req.json();
-        const { messages, contactName, contactPhone, force, objective, autoQualify } = body as {
+        const { messages, contactName, contactPhone, force, objective, autoQualify, knownFacts } = body as {
             messages: Array<{ text: string; sender: string }>;
             contactName?: string;
             contactPhone?: string;
@@ -606,6 +606,9 @@ serve(async (req) => {
             /** EVA.AUTO.1 — auto-qualificação interna (modo serviço). Só vale se a
              *  chamada usar a service_role key. company_id + ownerUserId no payload. */
             autoQualify?: boolean;
+            /** CONTA.1 — dados já sabidos do cliente (ex.: conta de luz lida
+             *  pela Lume). Só vale no modo serviço. */
+            knownFacts?: string;
         };
 
         // EVA.AUTO.1 — modo serviço: chamada interna autenticada com a
@@ -717,7 +720,11 @@ serve(async (req) => {
         // F4E.4.2: cache válido apenas se messages_hash igual, analyzed_at < 60min
         // E cached_analysis.context_version_used === eva_business_context.version.
         // F4E.4.5: se `force=true`, pula esse bloco e vai direto pra OpenAI.
-        const messagesHash = await hashMessages(messages);
+        // CONTA.1: o dado já sabido entra no hash, senão a conta lida depois
+        // (foto sem texto) cairia no cache da análise anterior.
+        const messagesHash = await hashMessages(
+            serviceMode && knownFacts ? [...messages, { text: knownFacts, sender: "facts" }] : messages,
+        );
         if (force) {
             console.log(`[whatsapp-copilot] cache bypass (force=true) user=${user.id}`);
         }
@@ -847,10 +854,15 @@ serve(async (req) => {
             ? `\n\nOBJETIVO DESTA CONVERSA: ${objective.trim()}\nDirecione a resposta_sugerida e a proxima_acao para esse objetivo, sem ser invasivo. Resolva objeção antes de avançar quando houver. Nunca prometa preço/condição fora do contexto da empresa.`
             : "";
 
+        // CONTA.1 — dado lido pela própria Lume (conta de luz), nunca do corpo de um usuário.
+        const factsBlock = serviceMode && typeof knownFacts === "string" && knownFacts.trim()
+            ? `\n\nJÁ SABIDO DO CLIENTE (não peça de novo; conte em info_coletada):\n${knownFacts.trim().slice(0, 400)}`
+            : "";
+
         const userPrompt = `Contato: ${contactName || "Desconhecido"}${contactPhone ? ` (${contactPhone})` : ""}
 
 Conversa recente:
-${conversationText}${objectiveBlock}
+${conversationText}${factsBlock}${objectiveBlock}
 
 Analise a conversa e retorne o JSON estrito com sua análise e o objeto qualification.${
             contextEmpty
