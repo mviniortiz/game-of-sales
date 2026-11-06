@@ -6,6 +6,7 @@
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { EvaBot } from "@/components/eva/EvaBot";
 import { useQuoteBoard } from "@/hooks/useQuoteBoard";
+import { periodFromParam } from "@/lib/quotePeriod";
 import { plural } from "@/lib/quoteText";
 import { WhatsAppConnectModal } from "@/components/inbox/WhatsAppConnectModal";
 
@@ -30,12 +31,10 @@ export function ConectarSemPlano() {
     );
 }
 
-// Mesma janela do placar (?dias=), para a contagem bater com o título dele.
-const diasDoPlacar = (v: string | null) => ([7, 30, 90].includes(Number(v)) ? Number(v) : 30);
-
 export function FaixaPlanoGratis() {
     const [params] = useSearchParams();
-    const parados = useQuoteBoard(diasDoPlacar(params.get("dias"))).query.data?.totals.parked_count ?? 0;
+    // Mesma janela do placar, para a contagem bater com o título dele.
+    const parados = useQuoteBoard(periodFromParam(params.get("dias"))).query.data?.totals.parked_count ?? 0;
     return (
         <div className="flex items-center gap-3 border-b border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-3 py-2 sm:px-4">
             <p className="min-w-0 flex-1 text-[13px] leading-snug text-[var(--vyz-text-muted)]">

@@ -32,14 +32,7 @@ import { PrimeirosPassos } from "@/components/quotes/PrimeirosPassos";
 import { usePlano } from "@/hooks/usePlano";
 import { useVagaFundadora } from "@/hooks/useVagaFundadora";
 import { fraseFundadora } from "@/lib/fundadora";
-
-const PERIODS = [7, 30, 90] as const;
-type Period = (typeof PERIODS)[number];
-// ?dias=90 vem do Raio-X e do relatório: a mesma janela que a Lume leu.
-const periodFromParam = (v: string | null): Period => {
-  const n = Number(v);
-  return (PERIODS as readonly number[]).includes(n) ? (n as Period) : 30;
-};
+import { PERIODS, periodFromParam, type Period } from "@/lib/quotePeriod";
 
 type Tab = "parked" | "your_turn" | "talking" | "closed";
 // A aba fica no endereço (?aba=) para o Início e os avisos levarem direto a ela.
@@ -80,7 +73,6 @@ export default function Orcamentos() {
   const [searchParams, setSearchParams] = useSearchParams();
   const preview = import.meta.env.DEV ? searchParams.get("preview") : null;
   const [days, setDaysState] = useState<Period>(() => periodFromParam(searchParams.get("dias")));
-  // O período fica no endereço para a faixa da conta grátis contar a mesma janela.
   const setDays = (d: Period) => {
     setDaysState(d);
     setSearchParams((prev) => {

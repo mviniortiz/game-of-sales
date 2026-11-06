@@ -1,7 +1,8 @@
 // Primeiros passos no topo de Orçamentos, até a pessoa fechar o ciclo uma vez:
 // a Lume conhece a empresa, o WhatsApp está conectado, a primeira retomada foi
 // aprovada e o primeiro orçamento foi marcado. Cada item mostra o que fazer, no
-// lugar onde se faz. Some sozinha quando todos estão feitos. "Conta criada" já entra feito para a barra começar andando.
+// lugar onde se faz. Some sozinha quando todos estão feitos.
+// "Conta criada" já entra feito, para a barra não começar vazia.
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +10,8 @@ import { EVA_SETUP_PATH } from "@/hooks/useEvaSetup";
 
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 
-type Item = { feito: boolean; titulo: string; como: string; acao?: { label: string; to: string } };
+// Item feito não mostra o "como": só o passo da vez aparece por inteiro.
+type Item = { feito: boolean; titulo: string; como?: string; acao?: { label: string; to: string } };
 
 export function PrimeirosPassos({ companyId, configured, connected }: { companyId: string; configured: boolean; connected: boolean }) {
     const q = useQuery({
@@ -38,8 +40,7 @@ export function PrimeirosPassos({ companyId, configured, connected }: { companyI
     if (!q.data) return null;
 
     const itens: Item[] = [
-        // Já feito: a barra começa andando.
-        { feito: true, titulo: "Conta criada", como: "" },
+        { feito: true, titulo: "Conta criada" },
         {
             feito: configured,
             titulo: "A Lume conhece sua empresa",
@@ -83,7 +84,7 @@ export function PrimeirosPassos({ companyId, configured, connected }: { companyI
                             Primeiros passos · {feitos} de {itens.length} feitos
                         </p>
                         <p className="text-[14px] font-semibold text-[var(--vyz-text-strong)]">{atual.titulo}</p>
-                        <p className="mt-0.5 text-[13px] leading-snug text-[var(--vyz-text-muted)]">{atual.como}</p>
+                        {atual.como && <p className="mt-0.5 text-[13px] leading-snug text-[var(--vyz-text-muted)]">{atual.como}</p>}
                         {depois.length > 0 && (
                             <p className="mt-1 text-[12px] text-[var(--vyz-text-soft)]">Depois: {depois.map((d) => d.titulo).join(" · ")}</p>
                         )}
