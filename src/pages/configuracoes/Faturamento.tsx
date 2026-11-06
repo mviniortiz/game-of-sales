@@ -87,8 +87,10 @@ export default function Faturamento() {
       if (data?.subscription_status === "active") {
         window.clearInterval(timer);
         toast.success("Pagamento aprovado. Sua conta está liberada.");
-        // Recarrega para o menu e as travas lerem a assinatura nova.
-        window.location.replace("/configuracoes/faturamento");
+        // Recarrega para o menu e as travas lerem a assinatura nova. Vai para o
+        // placar: conta paga sem a Lume configurada segue sozinha para a
+        // conversa de configuração, e quem já configurou vê os primeiros passos.
+        window.location.replace("/orcamentos");
       } else if (tentativas >= 20) {
         window.clearInterval(timer);
         setConfirmando(false);

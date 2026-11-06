@@ -78,12 +78,12 @@ export const PLANS: Record<PlanId, Plan> = {
         // (whatsapp-copilot, eva-agent-loop) são proteção de uso, não degrau
         // de plano.
         features: [
-            "Até 10 usuários",
-            "1 WhatsApp da empresa conectado",
+            "Lume escreve a retomada e você aprova pelo WhatsApp",
             "Placar de propostas: quanto está parado e há quantos dias",
             "Valor da proposta lido direto do PDF",
-            "Lume escreve a retomada e você aprova pelo WhatsApp",
+            "1 WhatsApp da empresa conectado",
             "Pipeline, Inbox e relatórios da equipe",
+            "Até 10 usuários",
         ],
         limits: {
             users: 10,
