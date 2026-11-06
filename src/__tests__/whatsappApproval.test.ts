@@ -13,6 +13,7 @@ import {
     templateParam,
     buildDraftMessage,
     buildAmbiguousReply,
+    handleOwnerCommand,
 } from "../../supabase/functions/_shared/whatsappApproval";
 
 describe("texto do aviso ao dono", () => {
@@ -20,7 +21,7 @@ describe("texto do aviso ao dono", () => {
 
     it("pede só 1 ou 2, sem o código", () => {
         const texto = buildDraftMessage(rascunho);
-        expect(texto).toContain("Responda 1 para enviar, 2 para descartar, ou escreva o texto corrigido.");
+        expect(texto).toContain("Responda 1 para enviar, 2 para descartar, ou responda esta mensagem com o texto corrigido.");
         expect(texto).not.toContain("A2 1");
     });
 
@@ -83,6 +84,19 @@ describe("parseOwnerCommand", () => {
         expect(parseOwnerCommand("EVA Enviado para João Silva.").intent).toBe("none");
         expect(parseOwnerCommand("EVA [A2] rascunho pronto\n\nLead: João").intent).toBe("none");
     });
+
+    it("ignora aviso automático de outra ferramenta no mesmo chat", () => {
+        const aviso = "📤 Prospecção: enviei a mensagem para corrego-grande-odontologia às 09:12. Se responder, a apresentação (vídeo + link) vai por você.";
+        expect(parseOwnerCommand(aviso)).toEqual({ code: null, intent: "none" });
+        expect(parseOwnerCommand("🔔 odonto-art respondeu: \"Oi, quem fala?\"").intent).toBe("none");
+        expect(parseOwnerCommand("⚠️ Prospecção: não consegui enviar para lux-clinic").intent).toBe("none");
+        expect(parseOwnerCommand("✅ red respondeu: \"pode\"").intent).toBe("none");
+    });
+
+    it("texto corrigido sem emoji na frente continua valendo", () => {
+        expect(parseOwnerCommand("Oi João, tudo bem? Segue a proposta atualizada.").intent).toBe("replace");
+        expect(parseOwnerCommand("A2 Oi João, segue a proposta 😊").intent).toBe("replace");
+    });
 });
 
 describe("normalizeNumber", () => {
@@ -137,5 +151,21 @@ describe("número oficial da EVA", () => {
         expect(parseOwnerCommand("A2 1")).toEqual({ code: "A2", intent: "send" });
         expect(parseOwnerCommand("Enviar")).toEqual({ code: null, intent: "send" });
         expect(parseOwnerCommand("Descartar")).toEqual({ code: null, intent: "reject" });
+    });
+});
+
+describe("handleOwnerCommand: texto solto no chat do dono", () => {
+    // Qualquer consulta ao banco quebra o teste: texto solto tem que parar antes.
+    const admin = { from: () => { throw new Error("não devia consultar o banco"); } };
+    const base = { instanceName: "x", companyId: "c1", ownerNumber: "5548999999999", replyVia: async () => {} };
+
+    it("aviso do Workana sem emoji e sem código não vira texto corrigido", async () => {
+        const aviso = "Workana: 1 projeto precisa do seu pode\nAuditoria de site Empis (GA4 + SEO) · R$ 2.700 a 5.000";
+        await expect(handleOwnerCommand(admin, { ...base, text: aviso })).resolves.toEqual({ handled: false });
+    });
+
+    it("aviso com emoji na frente também não", async () => {
+        const aviso = "🎯 Workana: 1 projeto precisa do seu pode\nProposta pronta em Documentos/Freela/workana-propostas-2026-11-02.md";
+        await expect(handleOwnerCommand(admin, { ...base, text: aviso })).resolves.toEqual({ handled: false });
     });
 });
