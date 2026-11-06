@@ -211,7 +211,7 @@ export const GoldenHoursHeatmap = ({ dateRange }: GoldenHoursHeatmapProps) => {
                                                     <div
                                                         className={`
                                                             w-7 h-7 sm:w-9 sm:h-8 rounded-lg flex items-center justify-center
-                                                            transition-all duration-300 cursor-default
+                                                            transition-all duration-200 cursor-default
                                                             hover:scale-110 hover:z-10 hover:ring-2 hover:ring-white/20
                                                             ${bg} ${glow}
                                                         `}

@@ -685,7 +685,7 @@ const Ranking = () => {
                         </div>
                         <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "#EAF0F6" }}>
                             <div
-                                className="h-full rounded-full transition-all duration-700"
+                                className="h-full rounded-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
                                 style={{
                                     width: `${metaPercent}%`,
                                     background: "linear-gradient(90deg, #1556C0 0%, #4A8CE8 100%)",

@@ -26,15 +26,15 @@ const IslandContext = createContext<IslandContextValue | null>(null);
 // slots are never scale-distorted.
 const SHELL_SPRING = {
   type: "spring",
-  duration: 0.8,
+  duration: 0.55,
   bounce: 0.2,
 } as const;
 
 // Content gets a touch more life than the shell.
 const CONTENT_SPRING = {
   type: "spring",
-  duration: 0.8,
-  bounce: 0.35,
+  duration: 0.55,
+  bounce: 0.3,
 } as const;
 
 // Constant radius — never animated. The browser clamps it to half the shell

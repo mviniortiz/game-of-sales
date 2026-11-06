@@ -49,7 +49,7 @@ export function AssistantBubble({ content, animate, onTick }: { content: string;
                     className="inline-block"
                     style={{ marginLeft: 1, color: "#1D4ED8" }}
                     animate={{ opacity: [1, 0, 1] }}
-                    transition={{ repeat: Infinity, duration: 0.9, ease: "linear" }}
+                    transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
                 >
                     ▍
                 </motion.span>

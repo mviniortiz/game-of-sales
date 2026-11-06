@@ -318,7 +318,7 @@ function EmptyState({ onSuggestion }: { onSuggestion: (text: string) => void }) 
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
+        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         className="mb-6"
       >
         <EvaAvatar size={56} />

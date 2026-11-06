@@ -359,7 +359,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
                 <motion.div
                   className={`h-full ${probColor.bar} rounded-full`}
                   animate={{ width: `${probability}%` }}
-                  transition={{ duration: 0.4, ease: EASE }}
+                  transition={{ duration: 0.3, ease: EASE }}
                 />
               </div>
             </motion.div>

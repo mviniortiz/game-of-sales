@@ -25,7 +25,7 @@ export const StatCard = ({
   const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
   
   return (
-    <Card className="border-border bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-300 group">
+    <Card className="border-border bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-200 group">
       <CardContent className="p-4">
         <div className="flex items-center gap-4">
           {/* Icon with glow */}

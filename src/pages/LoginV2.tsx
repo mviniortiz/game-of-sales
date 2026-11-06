@@ -18,7 +18,7 @@ import { APP_HOME } from "@/config/routes";
 // Validação inline, toggle de senha, aviso de caps lock e email viajando pra
 // recuperação/cadastro continuam do AUTH.1.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const SAIDA_MS = 320;
+const SAIDA_MS = 260;
 const ULTIMO_KEY = "vyz_ultimo_login";
 
 const lerUltimo = (): "google" | "email" | null => {

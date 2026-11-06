@@ -700,7 +700,7 @@ export const AdminVendasView = ({
                         <span className="text-[11px] font-semibold tabular-nums text-foreground ml-2 shrink-0">{formatCurrencyCompact(seller.total)}</span>
                       </div>
                       <div className="w-full bg-muted rounded-full h-1">
-                        <div className="h-1 bg-emerald-500/50 rounded-full transition-all duration-700"
+                        <div className="h-1 bg-emerald-500/50 rounded-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
                           style={{ width: `${(seller.total / maxVal) * 100}%` }} />
                       </div>
                     </div>

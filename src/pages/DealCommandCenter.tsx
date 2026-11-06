@@ -1404,7 +1404,7 @@ function EvaReadingCard({
                                 initial={{ scaleX: 0 }}
                                 animate={{ scaleX: chance / 100 }}
                                 style={{ transformOrigin: "left" }}
-                                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                             />
                         </div>
                         {trend && <p className="mt-2 text-[12px] text-[var(--vyz-text-muted)]">Tendência {trend}</p>}

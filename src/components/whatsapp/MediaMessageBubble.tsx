@@ -118,7 +118,7 @@ export function MediaMessageBubble({
                             src={mediaSrc}
                             alt={caption || ""}
                             loading="lazy"
-                            className={`w-full h-full object-cover ${isSticker ? '' : 'rounded-xl'} group-hover:scale-[1.03] transition-transform duration-300`}
+                            className={`w-full h-full object-cover ${isSticker ? '' : 'rounded-xl'} group-hover:scale-[1.03] transition-transform duration-200`}
                         />
                     )}
                 </div>
