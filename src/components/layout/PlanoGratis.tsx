@@ -3,8 +3,10 @@
 // primeiro minuto ela só atrapalha); o bloqueio cobre as telas em que a Lume
 // age (Inbox, funil, Lume Studio...), sempre com o caminho para assinar.
 // Fundadora conta como paga: nada disto aparece para ela.
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { EvaBot } from "@/components/eva/EvaBot";
+import { useQuoteBoard } from "@/hooks/useQuoteBoard";
+import { plural } from "@/lib/quoteText";
 import { WhatsAppConnectModal } from "@/components/inbox/WhatsAppConnectModal";
 
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
@@ -28,11 +30,18 @@ export function ConectarSemPlano() {
     );
 }
 
+// Mesma janela do placar (?dias=), para a contagem bater com o título dele.
+const diasDoPlacar = (v: string | null) => ([7, 30, 90].includes(Number(v)) ? Number(v) : 30);
+
 export function FaixaPlanoGratis() {
+    const [params] = useSearchParams();
+    const parados = useQuoteBoard(diasDoPlacar(params.get("dias"))).query.data?.totals.parked_count ?? 0;
     return (
         <div className="flex items-center gap-3 border-b border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-3 py-2 sm:px-4">
             <p className="min-w-0 flex-1 text-[13px] leading-snug text-[var(--vyz-text-muted)]">
-                A Lume ainda não está acompanhando suas propostas.
+                {parados > 0
+                    ? `${plural(parados, "orçamento parado", "orçamentos parados")} sem a Lume acompanhando.`
+                    : "A Lume ainda não está acompanhando suas propostas."}
                 <span className="hidden sm:inline"> Ligada, ela avisa no 2º dia sem resposta e escreve a retomada.</span>
             </p>
             <Link

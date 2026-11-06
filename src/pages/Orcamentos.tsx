@@ -79,7 +79,16 @@ const SURFACE_SHADOW = "0 1px 2px rgba(15,23,42,0.04)";
 export default function Orcamentos() {
   const [searchParams, setSearchParams] = useSearchParams();
   const preview = import.meta.env.DEV ? searchParams.get("preview") : null;
-  const [days, setDays] = useState<Period>(() => periodFromParam(searchParams.get("dias")));
+  const [days, setDaysState] = useState<Period>(() => periodFromParam(searchParams.get("dias")));
+  // O período fica no endereço para a faixa da conta grátis contar a mesma janela.
+  const setDays = (d: Period) => {
+    setDaysState(d);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("dias", String(d));
+      return next;
+    }, { replace: true });
+  };
   const tab = tabFromParam(searchParams.get("aba"));
   const setTab = (t: Tab) =>
     setSearchParams((prev) => {

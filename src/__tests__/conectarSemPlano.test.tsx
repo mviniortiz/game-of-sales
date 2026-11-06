@@ -8,6 +8,8 @@ import { conectandoWhatsapp, rotaGratis } from "@/hooks/usePlano";
 
 vi.mock("@/contexts/TenantContext", () => ({ useTenant: () => ({ companies: [], loading: false }) }));
 vi.mock("@/components/eva/EvaBot", () => ({ EvaBot: () => null }));
+// A faixa da conta grátis lê o placar; aqui ele não importa.
+vi.mock("@/hooks/useQuoteBoard", () => ({ useQuoteBoard: () => ({ query: { data: undefined } }) }));
 vi.mock("@/components/inbox/WhatsAppConnectModal", () => ({
     WhatsAppConnectModal: ({ open, onClose, onConnected }: { open: boolean; onClose: () => void; onConnected: () => void }) =>
         open ? (

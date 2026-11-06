@@ -1,7 +1,7 @@
 // Primeiros passos no topo de Orçamentos, até a pessoa fechar o ciclo uma vez:
 // a Lume conhece a empresa, o WhatsApp está conectado, a primeira retomada foi
 // aprovada e o primeiro orçamento foi marcado. Cada item mostra o que fazer, no
-// lugar onde se faz. Some sozinha quando os quatro estão feitos.
+// lugar onde se faz. Some sozinha quando todos estão feitos. "Conta criada" já entra feito para a barra começar andando.
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +38,8 @@ export function PrimeirosPassos({ companyId, configured, connected }: { companyI
     if (!q.data) return null;
 
     const itens: Item[] = [
+        // Já feito: a barra começa andando.
+        { feito: true, titulo: "Conta criada", como: "" },
         {
             feito: configured,
             titulo: "A Lume conhece sua empresa",
