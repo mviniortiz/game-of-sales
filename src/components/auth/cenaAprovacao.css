@@ -418,7 +418,7 @@
 }
 
 .vz-cena .vz-cena__banner {
-  transition: opacity 220ms ease, transform 320ms cubic-bezier(0.4, 0, 1, 1);
+  transition: opacity 220ms ease, transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Chega coisa nova: o banner sobe e some antes da próxima volta. */

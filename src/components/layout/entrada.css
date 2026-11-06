@@ -145,7 +145,7 @@
 .vz-login__caixa {
   width: 100%;
   max-width: 380px;
-  animation: vzLoginChega 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: vzLoginChega 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes vzLoginChega {
   from { opacity: 0; transform: translateY(8px); }
@@ -160,7 +160,7 @@
     justify-content: space-between;
     padding: 48px 56px 40px;
     /* Encolhe até a largura da AppSidebar ao entrar (ver --saindo). */
-    transition: width 320ms cubic-bezier(0.32, 0.72, 0, 1), padding 320ms cubic-bezier(0.32, 0.72, 0, 1);
+    transition: width 260ms cubic-bezier(0.32, 0.72, 0, 1), padding 260ms cubic-bezier(0.32, 0.72, 0, 1);
   }
   /* Sem padding embaixo: a cena encosta na borda da tela. */
   .vz-login__painel { padding-bottom: 0; }

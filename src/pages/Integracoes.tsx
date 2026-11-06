@@ -433,7 +433,7 @@ const gridVariants: Variants = {
 
 const cardVariants: Variants = {
   hidden: { opacity: 0, y: 10 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: CARD_EASE } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: CARD_EASE } },
 };
 
 // ── Integration Card ──────────────────────────────────────────────

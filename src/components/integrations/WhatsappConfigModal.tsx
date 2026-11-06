@@ -121,7 +121,7 @@ export const WhatsappConfigModal = ({ open, onClose }: WhatsappConfigModalProps)
                     )}
 
                     {connectionState === "connected" && (
-                        <div className="flex flex-col items-center gap-4 text-emerald-400 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex flex-col items-center gap-4 text-emerald-400 animate-in fade-in slide-in-from-bottom-4 duration-300">
                             <div className="h-20 w-20 bg-emerald-500/10 rounded-full flex items-center justify-center border-4 border-emerald-500/20">
                                 <CheckCircle2 className="w-10 h-10 text-emerald-500" />
                             </div>

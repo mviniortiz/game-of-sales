@@ -848,7 +848,7 @@
     background: var(--vyz-noite);
     color: #fff;
     font-style: normal;
-    transition: width 420ms var(--vp-ease);
+    transition: width 280ms var(--vp-ease);
 }
 .vp-barra-etapa:last-child i {
     background: var(--vyz-sol);

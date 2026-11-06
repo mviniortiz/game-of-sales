@@ -24,12 +24,12 @@
 .vbc-doc,
 .vbc-lista,
 .vbc-janela {
-  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .vbc-selo,
 .vbc-arquivo,
 .vbc-eva {
-  transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 @media (hover: hover) and (pointer: fine) {
   .vb-card:hover .vbc-chat,

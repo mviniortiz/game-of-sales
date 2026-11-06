@@ -420,7 +420,7 @@ function StepCard({
     <Tag
       type={onSelect ? "button" : undefined}
       onClick={onSelect}
-      className="w-full text-left rounded-2xl p-5 sm:p-6 transition-all duration-300"
+      className="w-full text-left rounded-2xl p-5 sm:p-6 transition-all duration-200"
       style={{
         background: active ? "rgba(37,99,235,0.12)" : "rgba(15,23,42,0.72)",
         border: `1px solid ${active ? "rgba(37,99,235,0.65)" : "rgba(148,163,184,0.20)"}`,

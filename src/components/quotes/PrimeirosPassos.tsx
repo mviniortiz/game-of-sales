@@ -89,7 +89,7 @@ export function PrimeirosPassos({ companyId, configured, connected }: { companyI
                 </div>
                 <div className="flex shrink-0 items-center gap-3 pl-10 sm:pl-0">
                     <div className="h-1.5 w-24 overflow-hidden rounded-full bg-[var(--vyz-surface-2)]" aria-hidden>
-                        <div className={`h-full rounded-full bg-[#1556C0] transition-[width] duration-700 ${EASE} motion-reduce:transition-none`} style={{ width: `${(feitos / itens.length) * 100}%` }} />
+                        <div className={`h-full rounded-full bg-[#1556C0] transition-[width] duration-500 ${EASE} motion-reduce:transition-none`} style={{ width: `${(feitos / itens.length) * 100}%` }} />
                     </div>
                     {atual.acao && (
                         <Link

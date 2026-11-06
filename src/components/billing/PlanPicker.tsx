@@ -39,7 +39,7 @@ export function PlanPicker({ paid = false }: PlanPickerProps) {
         <motion.article
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ delay: 0.05, duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="relative flex w-full max-w-md flex-col rounded-[18px] bg-[var(--vyz-surface-1)] p-6 shadow-[0_0_0_1.5px_var(--vyz-text-primary),0_18px_40px_-22px_rgba(11,18,32,0.35)]"
             aria-label={`Plano ${plan.name}`}
         >

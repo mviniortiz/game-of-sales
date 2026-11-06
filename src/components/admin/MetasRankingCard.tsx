@@ -175,7 +175,7 @@ export const MetasRankingCard = ({
               <div className="space-y-2">
                 <div className="relative h-3.5 bg-muted rounded-full overflow-hidden border border-border">
                   <div
-                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 rounded-full transition-all duration-700"
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 rounded-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
                     style={{ width: `${Math.min(percentualConsolidado, 100)}%` }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-60" />
@@ -229,7 +229,7 @@ export const MetasRankingCard = ({
               return (
                 <Card
                   key={vendedor.nome}
-                  className={`relative overflow-hidden border border-border bg-card shadow-sm transition-all duration-300 hover:scale-[1.01] ${
+                  className={`relative overflow-hidden border border-border bg-card shadow-sm transition-all duration-200 hover:scale-[1.01] ${
                     isWinner 
                       ? "ring-1 ring-emerald-500/50 shadow-lg shadow-emerald-500/10" 
                       : ""
@@ -296,7 +296,7 @@ export const MetasRankingCard = ({
                     {/* Row 2: Progress Bar */}
                     <div className="relative h-2 bg-muted rounded-full overflow-hidden border border-border">
                       <div
-                        className={`h-full ${getProgressBarColor(vendedor.percentual)} rounded-full transition-all duration-700`}
+                        className={`h-full ${getProgressBarColor(vendedor.percentual)} rounded-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]`}
                         style={{ width: `${Math.min(vendedor.percentual, 100)}%` }}
                       />
                     </div>

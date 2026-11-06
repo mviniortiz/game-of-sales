@@ -225,7 +225,7 @@ export const WinCelebration = memo(({
               }
               transition={
                 phase === "fadeout"
-                  ? { duration: 0.35, ease: "easeIn" }
+                  ? { duration: 0.25, ease: [0.22, 1, 0.36, 1] }
                   : { duration: 0.45, ease: [0.34, 1.4, 0.64, 1] }
               }
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"

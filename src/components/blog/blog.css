@@ -113,7 +113,7 @@
   background-repeat: no-repeat;
   background-size: 0% 2px;
   background-position: 0 100%;
-  transition: background-size 380ms var(--vb-ease);
+  transition: background-size 260ms var(--vb-ease);
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
@@ -122,7 +122,7 @@
 }
 
 /* Entrada da grade quando o filtro muda */
-.vb-entra { animation: vb-entra 380ms var(--vb-ease) both; }
+.vb-entra { animation: vb-entra 260ms var(--vb-ease) both; }
 @keyframes vb-entra {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
@@ -167,7 +167,7 @@
   border-radius: 14px;
   background: #fff;
 }
-.vb-mini-modelo__previa img { width: 100%; height: auto; transform-origin: 50% 0; transition: transform 420ms var(--vb-ease); }
+.vb-mini-modelo__previa img { width: 100%; height: auto; transform-origin: 50% 0; transition: transform 280ms var(--vb-ease); }
 @media (hover: hover) and (pointer: fine) {
   .vb-mini-modelo:hover .vb-mini-modelo__previa img { transform: translateY(-3%) scale(1.02); }
 }
@@ -445,7 +445,7 @@
   border-radius: 8px;
   box-shadow: 0 0 0 1px var(--lp-line);
 }
-.vb-modelo__previa img { width: 100%; height: auto; transition: transform 420ms var(--vb-ease); }
+.vb-modelo__previa img { width: 100%; height: auto; transition: transform 280ms var(--vb-ease); }
 @media (hover: hover) and (pointer: fine) {
   .vb-modelo:hover .vb-modelo__previa img { transform: scale(1.04); }
 }

@@ -68,7 +68,7 @@ export const MetaConsolidadaCard = ({
           <div className="h-8 bg-muted rounded-full overflow-hidden shadow-inner border border-border">
             <div
               className="h-full bg-gradient-to-r from-primary via-primary/80 to-primary 
-                         relative overflow-hidden transition-all duration-1000 ease-out"
+                         relative overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
               style={{ width: `${Math.min(percentual, 100)}%` }}
             >
               {/* Shine effect */}

@@ -294,7 +294,7 @@ function TeamMemberRow({
                         )}
                     </div>
                     <div className="relative h-1.5 rounded-full overflow-hidden mt-2" style={{ background: "#EAF0F6" }}>
-                        <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                        <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
                             style={{ width: `${Math.min(v.percentual, 100)}%`, background: barBg }} />
                         {percentualEsperadoHoje > 0 && percentualEsperadoHoje < 100 && (
                             <div className="absolute -top-1 -bottom-1 w-px" aria-hidden
