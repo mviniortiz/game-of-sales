@@ -5,8 +5,8 @@ Falta aplicar a migration, publicar as edges e testar com fotos reais.
 
 ## O que muda pro dono
 
-O cliente manda a foto ou o PDF da conta de luz na conversa. Uns segundos
-depois, o painel da Lume naquela conversa mostra:
+O cliente manda a foto ou o PDF da conta de luz na conversa. Em até meio
+minuto, o painel da Lume naquela conversa mostra:
 
 > Li a conta de luz: 450 kWh/mês, R$ 412, Celesc, Florianópolis, residencial.
 > [Confirmar] [Corrigir]
@@ -92,6 +92,13 @@ no item "Conta de luz". Sem coluna nova nesta versão.
 - **Obra:** documento marcado como recebido.
 - Fica de fora desta versão: dados da conta na tela do card, aviso no
   WhatsApp do dono e cálculo de kWp sugerido.
+
+## Limites desta versão
+
+- Correção do dono vale na hora pro painel, mas a Lume só relê a conversa
+  quando chega mensagem nova.
+- A leitura por IA não foi testada com conta real: só as regras de conferência
+  têm teste.
 
 ## Dúvidas antes de construir
 

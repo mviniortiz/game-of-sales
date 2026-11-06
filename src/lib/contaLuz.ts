@@ -41,6 +41,8 @@ export function resumoConta(l: CamposConta): string {
 export function numeroDigitado(v: string): number | null {
     const t = v.trim();
     if (!t) return null;
-    const n = Number(t.replace(/\./g, "").replace(",", "."));
+    // "1.234,56" e "1.200" são formato brasileiro; "412.37" é decimal com ponto.
+    const br = t.includes(",") || /^\d{1,3}(\.\d{3})+$/.test(t);
+    const n = Number(br ? t.replace(/\./g, "").replace(",", ".") : t);
     return Number.isFinite(n) && n > 0 ? n : null;
 }

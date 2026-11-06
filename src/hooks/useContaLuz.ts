@@ -18,7 +18,9 @@ export function useContaLuz(conversationId: string | null | undefined) {
     const query = useQuery({
         queryKey: key,
         enabled: !!conversationId,
-        staleTime: 30_000,
+        staleTime: 15_000,
+        // A foto chega com o painel aberto: confere de novo a cada 20 s.
+        refetchInterval: 20_000,
         queryFn: async (): Promise<ContaLuz | null> => {
             const { data, error } = await db
                 .from("conta_luz_leituras")

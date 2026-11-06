@@ -27,6 +27,7 @@ describe("conta de luz no painel", () => {
         expect(resumoConta(lida)).toBe("450 kWh/mês, R$ 412, Celesc, Florianópolis/SC, residencial");
         expect(numeroDigitado("1.200")).toBe(1200);
         expect(numeroDigitado("412,37")).toBe(412.37);
+        expect(numeroDigitado("412.37")).toBe(412.37);
         expect(numeroDigitado("")).toBeNull();
     });
 

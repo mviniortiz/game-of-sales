@@ -57,7 +57,8 @@ export function numerosDoTexto(text: string): number[] {
 }
 
 function numero(v: unknown, min: number, max: number): number | null {
-    const n = typeof v === "string" ? Number(v.replace(/\./g, "").replace(",", ".")) : v;
+    // "1.234,56" é formato brasileiro; "412.37" sem vírgula já é decimal com ponto.
+    const n = typeof v === "string" ? Number(v.includes(",") ? v.replace(/\./g, "").replace(",", ".") : v) : v;
     if (typeof n !== "number" || !Number.isFinite(n) || n < min || n > max) return null;
     return Math.round(n * 100) / 100;
 }

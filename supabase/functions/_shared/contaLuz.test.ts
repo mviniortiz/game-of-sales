@@ -21,6 +21,11 @@ Deno.test("não é conta, ou confiança baixa: não grava", () => {
     assertEquals(conferirLeitura("lixo"), null);
 });
 
+Deno.test("número em texto: formato brasileiro e decimal com ponto", () => {
+    assertEquals(conferirLeitura({ ...boa, valor_reais: "412.37" })!.valor_reais, 412.37);
+    assertEquals(conferirLeitura({ ...boa, valor_reais: "1.234,56" })!.valor_reais, 1234.56);
+});
+
 Deno.test("sem consumo nem valor: não grava", () => {
     assertEquals(conferirLeitura({ ...boa, consumo_kwh: null, valor_reais: null }), null);
 });
