@@ -325,6 +325,169 @@
 .vb-exemplo__titulo { margin-top: 6px; font-size: 17px; font-weight: 600; line-height: 1.35; }
 .vb-exemplo__p { margin-top: 10px; font-size: 16.5px; line-height: 1.6; color: var(--lp-ink-muted); }
 
+/* Tabela de comparação: cartão branco. No celular rola de lado com a 1ª coluna
+   presa; a borda que ainda tem conteúdo some num degradê. */
+.vb-tabela { position: relative; margin: 0; }
+.vb-tabela__rolo {
+  overflow-x: auto;
+  border-radius: 22px;
+  background: var(--lp-white, #fff);
+  box-shadow: 0 0 0 1px var(--lp-line-soft), 0 18px 40px -32px rgba(15, 23, 48, 0.35);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.vb-tabela__rolo:focus-visible { outline: 2px solid var(--lp-blue); outline-offset: 3px; }
+.vb-tabela[data-fim] .vb-tabela__rolo { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); }
+.vb-tabela table { width: 100%; min-width: 640px; border-collapse: separate; border-spacing: 0; font-size: 15px; line-height: 1.45; }
+.vb-tabela caption { padding: 18px 20px 8px; text-align: left; font-size: 13px; font-weight: 700; color: var(--lp-ink-muted); }
+.vb-tabela th, .vb-tabela td { padding: 13px 14px; text-align: left; vertical-align: top; border-top: 1px solid var(--lp-line-soft); }
+.vb-tabela thead th { border-top: 0; font-size: 12.5px; font-weight: 700; letter-spacing: 0.01em; color: var(--lp-ink-muted); white-space: nowrap; }
+.vb-tabela tbody th { font-weight: 650; color: var(--lp-ink); white-space: nowrap; }
+.vb-tabela td { min-width: 124px; color: var(--lp-ink-muted); }
+.vb-tabela th:first-child, .vb-tabela td:first-child { padding-left: 20px; }
+.vb-tabela th:last-child, .vb-tabela td:last-child { padding-right: 20px; }
+/* 1ª coluna presa ao rolar; o fundo cobre o que passa por baixo. */
+.vb-tabela tbody th, .vb-tabela thead th:first-child { position: sticky; left: 0; z-index: 1; background: var(--lp-white, #fff); }
+.vb-tabela[data-ini] tbody th, .vb-tabela[data-ini] thead th:first-child { box-shadow: 1px 0 0 var(--lp-line-soft); }
+/* Linha em destaque (a do Vyzon): faixa sol, sem mudar a altura. */
+.vb-tabela tr[data-destaque] > * { background: color-mix(in srgb, var(--lp-sol) 22%, var(--lp-white, #fff)); color: var(--lp-ink); }
+.vb-tabela tr[data-destaque] th::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--lp-ink);
+}
+@media (hover: hover) and (pointer: fine) {
+  .vb-tabela tbody tr:not([data-destaque]) > * { transition: background-color 160ms ease; }
+  .vb-tabela tbody tr:not([data-destaque]):hover > * { background: color-mix(in srgb, var(--lp-paper) 55%, var(--lp-white, #fff)); }
+}
+/* Celular: cada linha vira um cartão (nome em cima, rótulo e valor em duas
+   colunas). Sem rolar de lado; o cabeçalho fica só para leitor de tela. */
+@media (max-width: 639px) {
+  .vb-tabela__rolo { overflow: visible; background: transparent; box-shadow: none; border-radius: 0; }
+  .vb-tabela[data-fim] .vb-tabela__rolo { -webkit-mask-image: none; mask-image: none; }
+  .vb-tabela table { min-width: 0; display: block; }
+  .vb-tabela caption { display: block; padding: 0 0 10px; }
+  .vb-tabela thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .vb-tabela tbody { display: grid; gap: 10px; }
+  .vb-tabela tr { display: block; padding: 14px 16px 6px; border-radius: 18px; background: var(--lp-white, #fff); box-shadow: 0 0 0 1px var(--lp-line-soft); }
+  .vb-tabela tr[data-destaque] { box-shadow: 0 0 0 2px var(--lp-ink), 4px 4px 0 0 var(--lp-sol); }
+  .vb-tabela tr > *, .vb-tabela tr[data-destaque] > * { background: transparent; }
+  .vb-tabela tbody th { position: static; display: block; padding: 0 0 8px; border: 0; font-size: 16px; box-shadow: none; }
+  .vb-tabela tr[data-destaque] th::before { display: none; }
+  .vb-tabela td { display: grid; grid-template-columns: 104px 1fr; gap: 10px; min-width: 0; padding: 9px 0; font-size: 14.5px; }
+  .vb-tabela td::before { content: attr(data-rotulo); font-size: 12.5px; font-weight: 700; color: var(--lp-ink-muted); }
+  .vb-tabela td, .vb-tabela tr[data-destaque] > td { color: var(--lp-ink); }
+  .vb-tabela th:first-child, .vb-tabela td:first-child { padding-left: 0; }
+  .vb-tabela th:last-child, .vb-tabela td:last-child { padding-right: 0; }
+}
+.vb-tabela__nota { margin-top: 10px; font-size: 14px; line-height: 1.5; color: var(--lp-ink-muted); }
+
+/* Qual combina com você: lista de situações com marcador que desliza e a
+   indicação ao lado. As respostas ficam empilhadas na mesma célula. */
+.vb-escolha { padding: 22px; border-radius: 26px; background: var(--lp-ink); color: #fff; }
+.vb-escolha__titulo { margin: 0 0 16px; font-size: 13px; font-weight: 700; color: var(--lp-sol); }
+.vb-escolha__grade { display: grid; gap: 16px; }
+@media (min-width: 720px) { .vb-escolha__grade { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; } }
+.vb-escolha__lista { position: relative; display: grid; gap: 2px; }
+.vb-escolha__marca {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  transition: transform 260ms var(--vb-ease), height 260ms var(--vb-ease);
+}
+.vb-escolha__op {
+  position: relative;
+  z-index: 1;
+  min-height: 48px;
+  padding: 11px 14px;
+  border-radius: 14px;
+  text-align: left;
+  font-size: 15.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.62);
+  transition: color 180ms ease, transform 120ms ease;
+}
+.vb-escolha__op[aria-pressed="true"] { color: #fff; }
+.vb-escolha__op:active { transform: scale(0.98); }
+.vb-escolha__op:focus-visible { outline: 2px solid var(--lp-sol); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { .vb-escolha__op:hover { color: #fff; } }
+.vb-escolha__palco { display: grid; }
+.vb-escolha__resp {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px 22px;
+  border-radius: 20px;
+  background: var(--lp-paper);
+  color: var(--lp-ink);
+  opacity: 0;
+  transform: translateY(4px);
+  filter: blur(2px);
+  visibility: hidden;
+  transition: opacity 160ms ease, transform 160ms ease, filter 160ms ease, visibility 0s linear 160ms;
+}
+.vb-escolha__resp[data-on] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  visibility: visible;
+  transition: opacity 220ms var(--vb-ease) 60ms, transform 220ms var(--vb-ease) 60ms, filter 220ms var(--vb-ease) 60ms, visibility 0s;
+}
+.vb-escolha__rotulo { font-size: 13px; font-weight: 700; color: var(--lp-ink-muted); }
+.vb-escolha__nome { margin-top: 4px; font-size: clamp(1.75rem, 3.4vw, 2.25rem); line-height: 1.05; }
+.vb-escolha__porque { margin-top: 10px; font-size: 16px; line-height: 1.55; color: var(--lp-ink-muted); }
+.vb-escolha__link { margin-top: auto; padding-top: 16px; }
+
+/* Ficha de cada CRM comparado */
+.vb-ficha {
+  display: grid;
+  gap: 18px;
+  padding: 22px 24px;
+  border-radius: 22px;
+  background: var(--lp-white, #fff);
+  box-shadow: 0 0 0 1px var(--lp-line-soft);
+}
+.vb-ficha[data-destaque] { box-shadow: 0 0 0 2px var(--lp-ink), 6px 6px 0 0 var(--lp-sol); }
+.vb-ficha__tipo {
+  justify-self: start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--lp-paper);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--lp-ink);
+}
+.vb-ficha[data-destaque] .vb-ficha__tipo { background: var(--lp-sol); }
+.vb-ficha__fatos { display: grid; gap: 0; margin: 0; }
+.vb-ficha__fatos > div { display: grid; grid-template-columns: 112px 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid var(--lp-line-soft); }
+.vb-ficha__fatos > div:first-child { border-top: 0; padding-top: 0; }
+.vb-ficha__fatos dt { font-size: 14px; font-weight: 600; color: var(--lp-ink-muted); }
+.vb-ficha__fatos dd { margin: 0; font-size: 15.5px; line-height: 1.45; color: var(--lp-ink); }
+.vb-ficha__lados { display: grid; gap: 12px; }
+@media (min-width: 640px) { .vb-ficha__lados { grid-template-columns: 1fr 1fr; } }
+.vb-ficha__lados > div { padding: 14px 16px; border-radius: 16px; background: var(--lp-paper); font-size: 15.5px; line-height: 1.5; color: var(--lp-ink-muted); }
+.vb-ficha__rot { margin-bottom: 4px; font-size: 13px; font-weight: 700; }
+.vb-ficha__rot--ok { color: var(--lp-ok); }
+.vb-ficha__rot--olho { color: var(--lp-wait); }
+.vb-ficha__fonte { justify-self: start; display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 600; color: var(--lp-ink-muted); text-decoration: underline; text-decoration-color: var(--lp-line); text-underline-offset: 3px; transition: color 160ms ease, text-decoration-color 160ms ease; }
+.vb-ficha__fonte svg { width: 15px; height: 15px; transition: transform 200ms var(--vb-ease); }
+@media (hover: hover) and (pointer: fine) {
+  .vb-ficha__fonte:hover { color: var(--lp-ink); text-decoration-color: currentColor; }
+  .vb-ficha__fonte:hover svg { transform: translate(2px, -2px); }
+}
+.vb-ficha__fonte:focus-visible { outline: 2px solid var(--lp-blue); outline-offset: 3px; border-radius: 4px; }
+
 /* Mensagem pronta: bolha de WhatsApp + copiar */
 .vb-msg {
   display: grid;
@@ -497,4 +660,9 @@
   .vb-copy, .vb-copy__ico > *, .vb-copy__txt > * { transition: none; }
   .vb-mini-modelo:hover .vb-mini-modelo__previa img, .vb-modelo:hover .vb-modelo__previa img { transform: none; }
   .vb-readbar { display: none; }
+  .vb-escolha__marca, .vb-escolha__op, .vb-ficha__fonte svg { transition: none; }
+  /* A resposta troca só pela opacidade, sem subir nem desfocar. */
+  .vb-escolha__resp, .vb-escolha__resp[data-on] { transform: none; filter: none; }
+  .vb-escolha__resp { transition: opacity 120ms ease, visibility 0s linear 120ms; }
+  .vb-escolha__resp[data-on] { transition: opacity 120ms ease, visibility 0s; }
 }

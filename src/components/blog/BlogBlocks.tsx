@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import { Check, Copy, Download } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { ArrowDown, ArrowUpRight, Check, Copy, Download } from "lucide-react";
 import { EvaBot } from "@/components/eva/EvaBot";
-import { headingId, type BlogBlock, type BlogModelo } from "@/data/landing/blogPosts";
+import { headingId, type BlogBlock, type BlogModelo, type BlogOpcao } from "@/data/landing/blogPosts";
 
 // Blocos do corpo do post. Cada tipo tem um renderBlogBlock espelhado em
 // scripts/prerender-seo.mjs (o HTML que o Google lê).
@@ -69,6 +69,146 @@ function Modelos({ items, onDownload }: { items: BlogModelo[]; onDownload: (labe
                 </article>
             ))}
         </div>
+    );
+}
+
+// Tabela que rola de lado no celular. A 1ª coluna fica presa e a borda que
+// ainda tem conteúdo ganha um degradê, para mostrar que dá para arrastar.
+function Tabela({ block }: { block: Extract<BlogBlock, { type: "tabela" }> }) {
+    const rolo = useRef<HTMLDivElement>(null);
+    const [borda, setBorda] = useState<{ ini: boolean; fim: boolean }>({ ini: false, fim: false });
+    useEffect(() => {
+        const el = rolo.current;
+        if (!el) return;
+        const medir = () => {
+            const max = el.scrollWidth - el.clientWidth;
+            setBorda({ ini: el.scrollLeft > 2, fim: max - el.scrollLeft > 2 });
+        };
+        medir();
+        const ro = new ResizeObserver(medir);
+        ro.observe(el);
+        el.addEventListener("scroll", medir, { passive: true });
+        return () => {
+            ro.disconnect();
+            el.removeEventListener("scroll", medir);
+        };
+    }, []);
+    return (
+        <figure className="vb-tabela" data-ini={borda.ini || undefined} data-fim={borda.fim || undefined}>
+            <div ref={rolo} className="vb-tabela__rolo" tabIndex={0} role="region" aria-label={block.caption}>
+                <table>
+                    <caption>{block.caption}</caption>
+                    <thead>
+                        <tr>
+                            {block.colunas.map((c) => (
+                                <th key={c} scope="col">{c}</th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {block.linhas.map((l) => (
+                            <tr key={l[0]} data-destaque={l[0] === block.destaque || undefined}>
+                                <th scope="row">{l[0]}</th>
+                                {l.slice(1).map((c, i) => (
+                                    <td key={i} data-rotulo={block.colunas[i + 1]}>
+                                        {c}
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            {block.nota && <figcaption className="vb-tabela__nota">{block.nota}</figcaption>}
+        </figure>
+    );
+}
+
+// "Qual combina com você": a situação escolhida move o marcador e troca a
+// indicação. As respostas ficam montadas, empilhadas na mesma célula, e trocam
+// por transição (interrompível): sai com blur leve, entra subindo 4 px.
+function Escolha({ titulo, opcoes, onEvent }: { titulo: string; opcoes: BlogOpcao[]; onEvent: (placement: string, extra?: Record<string, string>) => void }) {
+    const [ativa, setAtiva] = useState(0);
+    const lista = useRef<HTMLDivElement>(null);
+    const [marca, setMarca] = useState<{ y: number; h: number } | null>(null);
+    useLayoutEffect(() => {
+        const medir = () => {
+            const el = lista.current?.querySelectorAll<HTMLElement>(".vb-escolha__op")[ativa];
+            if (el) setMarca({ y: el.offsetTop, h: el.offsetHeight });
+        };
+        medir();
+        window.addEventListener("resize", medir);
+        return () => window.removeEventListener("resize", medir);
+    }, [ativa]);
+    return (
+        <section className="vb-escolha" aria-label={titulo}>
+            <p className="vb-escolha__titulo">{titulo}</p>
+            <div className="vb-escolha__grade">
+                <div ref={lista} className="vb-escolha__lista">
+                    {marca && <span className="vb-escolha__marca" style={{ transform: `translateY(${marca.y}px)`, height: marca.h }} aria-hidden="true" />}
+                    {opcoes.map((o, i) => (
+                        <button
+                            key={o.situacao}
+                            type="button"
+                            className="vb-escolha__op"
+                            aria-pressed={i === ativa}
+                            onClick={() => {
+                                setAtiva(i);
+                                onEvent("escolha_crm", { situacao: o.situacao });
+                            }}
+                        >
+                            {o.situacao}
+                        </button>
+                    ))}
+                </div>
+                <div className="vb-escolha__palco" aria-live="polite">
+                    {opcoes.map((o, i) => (
+                        <div key={o.situacao} className="vb-escolha__resp" data-on={i === ativa || undefined} aria-hidden={i !== ativa}>
+                            <p className="vb-escolha__rotulo">Comece por</p>
+                            <p className="vs-display vb-escolha__nome">{o.indicacao}</p>
+                            <p className="vb-escolha__porque">{o.porque}</p>
+                            <a className="vb-ler vb-escolha__link" href={`#${headingId(o.ancora)}`} tabIndex={i === ativa ? 0 : -1}>
+                                Ver os detalhes
+                                <ArrowDown aria-hidden="true" />
+                            </a>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+}
+
+// Ficha de um produto comparado. O nome já está no h2 da seção.
+function Ficha({ block, onEvent }: { block: Extract<BlogBlock, { type: "ficha" }>; onEvent: (placement: string, extra?: Record<string, string>) => void }) {
+    return (
+        <article className="vb-ficha" data-destaque={block.destaque || undefined} aria-label={`Ficha: ${block.nome}`}>
+            <span className="vb-ficha__tipo">{block.tipo}</span>
+            <dl className="vb-ficha__fatos">
+                {block.fatos.map(([k, v]) => (
+                    <div key={k}>
+                        <dt>{k}</dt>
+                        <dd>{v}</dd>
+                    </div>
+                ))}
+            </dl>
+            <div className="vb-ficha__lados">
+                <div>
+                    <p className="vb-ficha__rot vb-ficha__rot--ok">Combina com</p>
+                    <p>{block.combina}</p>
+                </div>
+                <div>
+                    <p className="vb-ficha__rot vb-ficha__rot--olho">Fique de olho</p>
+                    <p>{block.atencao}</p>
+                </div>
+            </div>
+            {block.fonte && (
+                <a className="vb-ficha__fonte" href={block.fonte.href} target="_blank" rel="noopener nofollow" onClick={() => onEvent("ficha_fonte", { nome: block.nome })}>
+                    {block.fonte.label}
+                    <ArrowUpRight aria-hidden="true" />
+                </a>
+            )}
+        </article>
     );
 }
 
@@ -140,6 +280,12 @@ export function Block({ block, onEvent }: { block: BlogBlock; onEvent: (placemen
                     </div>
                 </aside>
             );
+        case "tabela":
+            return <Tabela block={block} />;
+        case "escolha":
+            return <Escolha titulo={block.titulo} opcoes={block.opcoes} onEvent={onEvent} />;
+        case "ficha":
+            return <Ficha block={block} onEvent={onEvent} />;
         case "modelos":
             return <Modelos items={block.items} onDownload={(label) => onEvent("download", { arquivo: label })} />;
         default:

@@ -24,7 +24,20 @@ export type BlogBlock =
     // Quadro da Lume: onde o produto entra no assunto do post, sem botão.
     | { type: "lume"; title: string; text: string }
     // Galeria dos modelos para baixar (prévia + arquivos).
-    | { type: "modelos"; items: BlogModelo[] };
+    | { type: "modelos"; items: BlogModelo[] }
+    // Tabela de comparação. A 1ª coluna é o nome da linha (th de linha).
+    | { type: "tabela"; caption: string; colunas: string[]; linhas: string[][]; nota?: string; destaque?: string }
+    // Seletor "qual combina com você": a situação escolhida mostra a indicação.
+    | { type: "escolha"; titulo: string; opcoes: BlogOpcao[] }
+    // Ficha de um produto comparado: fatos conferidos, onde combina, onde olhar.
+    | { type: "ficha"; nome: string; tipo: string; fatos: [string, string][]; combina: string; atencao: string; fonte?: { label: string; href: string }; destaque?: boolean };
+
+export interface BlogOpcao {
+    situacao: string;
+    indicacao: string;
+    porque: string;
+    ancora: string; // texto do h2 da seção, vira #âncora
+}
 
 export interface BlogModelo {
     titulo: string;
@@ -41,7 +54,8 @@ export type BlogCover =
     | { kind: "aviso"; plate: BlogPlate; cliente: string; resumo: string; texto: string }
     | { kind: "proposta"; plate: BlogPlate; titulo: string; linhas: [string, string][]; destaque: [string, string] }
     | { kind: "lista"; plate: BlogPlate; total: string; itens: { cliente: string; valor: string; estado: "espera" | "ok" | "neutro"; status: string }[] }
-    | { kind: "prompt"; plate: BlogPlate; pergunta: string; resposta: string[] };
+    | { kind: "prompt"; plate: BlogPlate; pergunta: string; resposta: string[] }
+    | { kind: "comparativo"; plate: BlogPlate; titulo: string; linhas: { nome?: string; status: string; estado: "neutro" | "ok" }[] };
 
 export interface BlogPost {
     slug: string;
@@ -103,6 +117,12 @@ export function readMinutes(post: BlogPost): number {
                 return n + count(b.title + " " + b.text);
             case "modelos":
                 return n + count(b.items.map((m) => m.titulo + " " + m.descricao).join(" "));
+            case "tabela":
+                return n + count([b.caption, ...b.colunas, ...b.linhas.flat(), b.nota ?? ""].join(" "));
+            case "escolha":
+                return n + count([b.titulo, ...b.opcoes.map((o) => `${o.situacao} ${o.indicacao} ${o.porque}`)].join(" "));
+            case "ficha":
+                return n + count([b.nome, b.tipo, ...b.fatos.flat(), b.combina, b.atencao].join(" "));
             default:
                 return n + count(b.text);
         }
