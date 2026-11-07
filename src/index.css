@@ -210,6 +210,9 @@ All colors MUST be HSL.
     --ring: 217 80% 42%;
 
     --radius: 0.75rem;
+    /* Caixa dentro de caixa: no pai, --canto (canto dele), --folga (espaço até o filho) e
+       --borda se tiver; ali mesmo --canto-dentro: max(4px, calc(var(--canto) - var(--folga) - var(--borda, 0px))).
+       O filho usa border-radius: var(--canto-dentro). Pílula: canto = altura / 2. */
 
     --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(224 76% 46%));
     --gradient-accent: linear-gradient(135deg, hsl(221 83% 53%), hsl(222 47% 11%));
