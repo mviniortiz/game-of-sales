@@ -151,6 +151,7 @@ function renderRichNoscript(config) {
         <p style="margin:0 0 6px;"><strong>Vyzon</strong> — CRM de performance comercial com metas, ranking ao vivo, pipeline visual e automações.</p>
         <p style="margin:0;">
           <a href="/" style="color:#555;margin-right:12px;">Página inicial</a>
+          <a href="/blog" style="color:#555;margin-right:12px;">Blog</a>
           <a href="/politica-privacidade" style="color:#555;margin-right:12px;">Política de Privacidade</a>
           <a href="/termos-de-servico" style="color:#555;margin-right:12px;">Termos de Serviço</a>
         </p>

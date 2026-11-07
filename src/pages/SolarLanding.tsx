@@ -169,7 +169,10 @@ const Header = ({ onCta }: { onCta: () => void }) => (
                 <ThemeLogo className="h-[22px] w-auto" />
             </Link>
             <div className="flex items-center gap-4">
-                <Link to="/auth" className="text-sm font-medium" style={{ color: "var(--lp-ink-muted)" }}>
+                <Link to="/blog" className="vs-topo__link text-sm font-medium">
+                    Blog
+                </Link>
+                <Link to="/auth" className="vs-topo__link text-sm font-medium">
                     Entrar
                 </Link>
                 <Link to={RAIO_X_AUTO} className="vs-btn !hidden sm:!inline-flex" style={{ minHeight: 40, padding: "0 16px", fontSize: 14 }} onClick={onCta}>
@@ -569,6 +572,7 @@ const Footer = ({ onSuporte }: { onSuporte: () => void }) => (
             <a href={whatsappUrl(CONTACT.defaultMessage)} target="_blank" rel="noopener noreferrer" onClick={onSuporte}>
                 Suporte no WhatsApp
             </a>
+            <Link to="/blog">Blog</Link>
             <Link to="/politica-privacidade">Privacidade</Link>
             <Link to="/termos-de-servico">Termos</Link>
         </nav>
