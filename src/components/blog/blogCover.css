@@ -212,6 +212,17 @@
 .vbc-carimbo--ok { color: var(--lp-ok); }
 .vbc-carimbo--neutro { color: var(--lp-ink-muted); }
 
+/* Comparativo: formas de follow-up; a linha do Vyzon entra por último, em sol. */
+.vbc-compara li[data-on] { opacity: 1; transform: none; }
+.vbc-compara li {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 240ms cubic-bezier(0.22, 1, 0.36, 1), transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vbc-compara .vbc-compara__vyzon { background: color-mix(in srgb, var(--lp-sol) 30%, var(--vbc-paper)); }
+.vbc-compara .vbc-compara__vyzon b { font-weight: 700; }
+.vbc-compara .vbc-carimbo svg { width: 12px; height: 12px; margin-right: 3px; stroke-width: 3; }
+
 /* Janela de assistente de IA: pergunta enviada e a resposta começando. */
 .vbc .vbc-janela { box-shadow: 0 0 0 1px rgba(15, 23, 48, 0.08), 0 24px 48px -24px rgba(0, 0, 0, 0.6); }
 .vbc .vbc-thread--chat { --ss-me: #eef0f4; --ss-me-text: var(--lp-ink); --ss-thread-size: 14.5px; padding: 14px 18px 40px; height: 100%; }
@@ -220,6 +231,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .vbc-chat, .vbc-doc, .vbc-lista, .vbc-janela, .vbc-selo, .vbc-arquivo, .vbc-eva { transition: none; }
+  .vbc-compara li { transform: none; transition: opacity 160ms ease; }
   .vb-card:hover .vbc-chat, .vb-card:hover .vbc-doc, .vb-card:hover .vbc-lista, .vb-card:hover .vbc-janela,
   .vb-card:hover .vbc-selo, .vb-card:hover .vbc-arquivo, .vb-card:hover .vbc-eva { transform: none; }
 }

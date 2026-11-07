@@ -7,7 +7,7 @@ import { BLOG_CATEGORIES, BLOG_POSTS, headingId, readMinutes } from "@/data/land
 // em silêncio: capa sem tipo, arquivo de download que não existe, h2 repetido
 // (o sumário usa o texto como âncora) e o estilo da casa (sem travessão).
 const PUBLIC = path.resolve(__dirname, "../../public");
-const KINDS = ["conversa", "aviso", "proposta", "lista", "prompt"];
+const KINDS = ["conversa", "aviso", "proposta", "lista", "prompt", "comparativo"];
 const PLATES = ["sol", "noite", "creme", "azul"];
 
 describe("posts do blog", () => {

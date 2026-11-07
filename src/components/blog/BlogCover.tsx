@@ -1,4 +1,4 @@
-import { Clock, FileText } from "lucide-react";
+import { Check, Clock, FileText } from "lucide-react";
 import { Stage } from "@/vendor/stageshow/stage";
 import { Bubble, Thread } from "@/vendor/stageshow/messages";
 import { Bar, Window } from "@/vendor/stageshow/window";
@@ -35,8 +35,25 @@ async function roteiroAviso(a: Act<Cena>) {
     await a.set({ passo: 9, eva: "happy" });
 }
 
+// Comparativo: as duas primeiras formas de follow-up já estão na tela; a do
+// Vyzon entra por último e a Lume reage.
+async function roteiroComparativo(a: Act<Cena>) {
+    await a.wait(600);
+    await a.set({ eva: "thinking" });
+    await a.wait(900);
+    await a.set({ passo: 9, eva: "happy" });
+}
+
 export function BlogCover({ cover, animate = false }: { cover: Cover; animate?: boolean }) {
-    const script = !animate ? undefined : cover.kind === "conversa" ? roteiroConversa : cover.kind === "aviso" ? roteiroAviso : undefined;
+    const script = !animate
+        ? undefined
+        : cover.kind === "conversa"
+          ? roteiroConversa
+          : cover.kind === "aviso"
+            ? roteiroAviso
+            : cover.kind === "comparativo"
+              ? roteiroComparativo
+              : undefined;
     const inicio: Cena = script ? { passo: cover.kind === "conversa" ? 1 : 0, eva: "idle" } : FINAL;
 
     return (
@@ -174,6 +191,47 @@ function Objeto({ cover, s }: { cover: Cover; s: Cena }) {
                     </span>
                 </>
             );
+        case "comparativo": {
+            const ultima = cover.linhas.length - 1;
+            return (
+                <>
+                    <div className="vbc-lista vbc-compara" style={{ left: 108, top: 92, width: 360 }}>
+                        <div className="vbc-lista__topo">
+                            <b>{cover.titulo}</b>
+                            <Bar w={56} h={6} tone={2} />
+                        </div>
+                        <ul>
+                            {cover.linhas.map((l, i) => (
+                                <li
+                                    key={i}
+                                    className={l.estado === "ok" ? "vbc-compara__vyzon" : undefined}
+                                    data-on={i < ultima || s.passo >= 9 || undefined}
+                                >
+                                    <span className="vbc-lista__cliente">
+                                        {l.nome ? <b>{l.nome}</b> : <Bar w={96} h={8} tone={3} />}
+                                        <Bar w={l.nome ? 120 : 72} h={5} tone={2} />
+                                    </span>
+                                    <span className={`vbc-carimbo vbc-carimbo--${l.estado}`}>
+                                        {l.estado === "ok" && <Check aria-hidden="true" />}
+                                        {l.status}
+                                    </span>
+                                </li>
+                            ))}
+                            <li aria-hidden="true" data-on>
+                                <span className="vbc-lista__cliente">
+                                    <Bar w={110} h={8} tone={3} />
+                                    <Bar w={72} h={5} tone={2} />
+                                </span>
+                                <Bar w={70} h={14} tone={2} r={6} />
+                            </li>
+                        </ul>
+                    </div>
+                    <span className="vbc-eva" style={{ left: 468 - 106, top: 92 - 76 }}>
+                        <EvaBot size={84} state={s.eva} label="Lume" />
+                    </span>
+                </>
+            );
+        }
         case "prompt":
             return (
                 <Window title="Assistente" className="vbc-janela" style={{ position: "absolute", left: 96, top: 40, width: 384, height: 330 }}>
