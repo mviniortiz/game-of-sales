@@ -3804,6 +3804,9 @@ All colors MUST be HSL.
 .lp-solar .vs-btn:active { transform: none; box-shadow: none; }
 .lp-solar .vs-btn:focus-visible { outline: 3px solid var(--lp-blue); outline-offset: 3px; }
 .lp-solar .vs-btn:disabled { opacity: 0.5; cursor: default; transform: none; box-shadow: none; }
+.lp-solar .vs-topo__link { color: var(--lp-ink-muted); transition: color 160ms ease; }
+@media (hover: hover) and (pointer: fine) { .lp-solar .vs-topo__link:hover { color: var(--lp-ink); } }
+.lp-solar .vs-topo__link:focus-visible { outline: 2px solid var(--lp-blue); outline-offset: 3px; border-radius: 4px; }
 .lp-solar .vs-btn--sol { background: var(--lp-sol); color: var(--lp-ink); border-color: var(--lp-sol); }
 .lp-solar .vs-btn--sol:hover { box-shadow: 4px 4px 0 0 #fff; }
 .lp-solar .vs-btn--sol:focus-visible { outline-color: #fff; }
