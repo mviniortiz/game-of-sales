@@ -67,3 +67,19 @@ Deno.test("resposta volta no formato chat completions", () => {
 Deno.test("limpa cerca de código quando o pedido exige JSON", () => {
     assertEquals(extractJson("Claro:\n```json\n{\"a\":1}\n```"), "{\"a\":1}");
 });
+
+Deno.test("CONTA.1: imagem em data URL vira bloco de imagem", () => {
+    const out = toAnthropicBody({
+        messages: [{
+            role: "user",
+            content: [
+                { type: "text", text: "Leia esta conta de luz." },
+                { type: "image_url", image_url: { url: "data:image/jpeg;base64,QUJD" } },
+            ],
+        }],
+    }, "claude-haiku-5-5", "low") as { messages: { content: unknown[] }[] };
+    assertEquals(out.messages[0].content, [
+        { type: "text", text: "Leia esta conta de luz." },
+        { type: "image", source: { type: "base64", media_type: "image/jpeg", data: "QUJD" } },
+    ]);
+});

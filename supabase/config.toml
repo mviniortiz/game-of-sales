@@ -53,6 +53,10 @@ verify_jwt = false
 [functions.quote-pdf-amount]
 verify_jwt = false
 
+# CONTA.1: chamada pelo webhook com Bearer service_role, conferido no código.
+[functions.conta-luz-ler]
+verify_jwt = false
+
 [functions.evolution-backfill-webhooks]
 verify_jwt = false
 

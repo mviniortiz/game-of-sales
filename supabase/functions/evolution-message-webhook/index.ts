@@ -335,6 +335,25 @@ async function dualWriteChannel(
     try { (globalThis as any).EdgeRuntime?.waitUntil?.(task); } catch { /* noop */ }
   }
 
+  // CONTA.1 — foto ou PDF que o cliente mandou pode ser a conta de luz. A
+  // conta-luz-ler decide se vale ler (empresa paga, conversa no escopo) e lê
+  // depois que o arquivo chega no Storage. Nada sai para o cliente.
+  if (
+    mediaTask && n.direction === "inbound" && !n.isGroup && !n.isOwnerChat &&
+    (n.internalType === "image" || n.internalType === "document")
+  ) {
+    const messageId = result.messageId;
+    const task = mediaTask.then(() => fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/conta-luz-ler`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ message_id: messageId }),
+      signal: AbortSignal.timeout(60_000),
+    })).then(async (res) => {
+      console.log(`[conta-luz] msg=${messageId} ${res.status} ${(await res.text()).slice(0, 160)}`);
+    }).catch((e) => console.warn(`[conta-luz] msg=${messageId} chamada falhou:`, (e as Error).message));
+    try { (globalThis as any).EdgeRuntime?.waitUntil?.(task); } catch { /* noop */ }
+  }
+
   // QUOTE.1 — orçamento enviado pela empresa: garante o card e abre o rastreio.
   if (
     result.isNewMessage && n.direction === "outbound" && n.companyId &&
