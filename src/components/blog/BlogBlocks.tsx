@@ -140,6 +140,35 @@ export function Block({ block, onEvent }: { block: BlogBlock; onEvent: (placemen
                     </div>
                 </aside>
             );
+        case "tabela":
+            return (
+                <figure className="vb-tabela">
+                    {/* Rola de lado no celular; o foco por teclado também rola. */}
+                    <div className="vb-tabela__rolo" tabIndex={0} role="region" aria-label={block.caption}>
+                        <table>
+                            <caption>{block.caption}</caption>
+                            <thead>
+                                <tr>
+                                    {block.colunas.map((c) => (
+                                        <th key={c} scope="col">{c}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {block.linhas.map((l) => (
+                                    <tr key={l[0]}>
+                                        <th scope="row">{l[0]}</th>
+                                        {l.slice(1).map((c, i) => (
+                                            <td key={i}>{c}</td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    {block.nota && <figcaption className="vb-tabela__nota">{block.nota}</figcaption>}
+                </figure>
+            );
         case "modelos":
             return <Modelos items={block.items} onDownload={(label) => onEvent("download", { arquivo: label })} />;
         default:

@@ -24,7 +24,9 @@ export type BlogBlock =
     // Quadro da Lume: onde o produto entra no assunto do post, sem botão.
     | { type: "lume"; title: string; text: string }
     // Galeria dos modelos para baixar (prévia + arquivos).
-    | { type: "modelos"; items: BlogModelo[] };
+    | { type: "modelos"; items: BlogModelo[] }
+    // Tabela de comparação. A 1ª coluna é o nome da linha (th de linha).
+    | { type: "tabela"; caption: string; colunas: string[]; linhas: string[][]; nota?: string };
 
 export interface BlogModelo {
     titulo: string;
@@ -103,6 +105,8 @@ export function readMinutes(post: BlogPost): number {
                 return n + count(b.title + " " + b.text);
             case "modelos":
                 return n + count(b.items.map((m) => m.titulo + " " + m.descricao).join(" "));
+            case "tabela":
+                return n + count([b.caption, ...b.colunas, ...b.linhas.flat(), b.nota ?? ""].join(" "));
             default:
                 return n + count(b.text);
         }

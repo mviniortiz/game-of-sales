@@ -1991,5 +1991,244 @@
         }
       ]
     }
+  },
+  {
+    "slug": "melhor-crm-para-energia-solar",
+    "category": "Comercial",
+    "date": "2026-11-07",
+    "title": "Melhor CRM para energia solar: 6 opções comparadas para a integradora que vende pelo WhatsApp",
+    "excerpt": "SolarMarket, SolarZ, PipeRun, Kommo, RD Vendas e Vyzon lado a lado: preço publicado, teste grátis, como cada um conecta o WhatsApp e o que acontece com a proposta que o cliente parou de responder.",
+    "cover": {
+      "kind": "proposta",
+      "plate": "noite",
+      "titulo": "Antes de assinar o CRM",
+      "linhas": [
+        [
+          "WhatsApp",
+          "oficial ou QR?"
+        ],
+        [
+          "Follow-up",
+          "quem aprova?"
+        ],
+        [
+          "Preço",
+          "tudo somado"
+        ]
+      ],
+      "destaque": [
+        "Teste",
+        "com proposta real"
+      ]
+    },
+    "content": [
+      {
+        "type": "p",
+        "text": "Quase toda integradora escolhe CRM do mesmo jeito: assiste a uma demonstração bonita, gosta do funil colorido e assina. Três meses depois, a equipe voltou a anotar os clientes no caderno e as propostas continuam morrendo no WhatsApp."
+      },
+      {
+        "type": "p",
+        "text": "Para não cair nisso, comparamos seis opções que aparecem para quem vende energia solar no Brasil, olhando o que pesa no dia a dia: quanto custa de verdade, como o WhatsApp entra no sistema e quem cuida da proposta que ficou sem resposta."
+      },
+      {
+        "type": "p",
+        "text": "Este blog é do Vyzon, que está na lista. Por isso tudo o que dizemos dos outros sistemas saiu do site oficial de cada um, conferido em novembro de 2026, e a parte do Vyzon também conta o que ele não faz."
+      },
+      {
+        "type": "h2",
+        "text": "Resumo: qual CRM combina com qual integradora"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Quer dimensionamento, proposta e funil num lugar só, feitos para solar: SolarMarket ou SolarZ.",
+          "Tem equipe comercial maior e quer montar o processo do seu jeito: PipeRun.",
+          "Atende muito lead pelo WhatsApp e quer chatbot e envio em massa: Kommo.",
+          "Está começando e quer um CRM grátis para até 4 pessoas: RD Vendas no plano Free.",
+          "Já tem ferramenta de proposta e o problema é a proposta que esfria depois de enviada: Vyzon."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "Comparativo lado a lado"
+      },
+      {
+        "type": "tabela",
+        "caption": "CRMs para integradora solar, conferido nos sites oficiais em novembro de 2026",
+        "colunas": [
+          "CRM",
+          "Preço no site",
+          "Teste grátis",
+          "WhatsApp",
+          "Proposta sem resposta"
+        ],
+        "linhas": [
+          [
+            "SolarMarket",
+            "Sob consulta",
+            "O site não informa",
+            "Números oficiais e não oficiais numa caixa só",
+            "Cadência automática: WhatsApp no dia 1, e-mail no 3, WhatsApp no 7, tarefa no 15"
+          ],
+          [
+            "SolarZ",
+            "O site não informa",
+            "10 dias, sem cartão",
+            "API oficial da Meta",
+            "Follow-ups programados e alerta de lead parado"
+          ],
+          [
+            "PipeRun",
+            "R$ 189,90/mês com 1 usuário, mais módulos e implantação",
+            "14 dias, sem cartão",
+            "API oficial",
+            "Automações de follow-up e cadência"
+          ],
+          [
+            "Kommo",
+            "De US$ 20 a US$ 45 por usuário/mês",
+            "14 dias, sem cartão",
+            "Caixa unificada, chatbot e envio de modelos aprovados",
+            "Acompanhamentos automáticos com IA"
+          ],
+          [
+            "RD Vendas",
+            "Grátis até 4 usuários; pagos a partir de R$ 73 por usuário/mês",
+            "O site não informa",
+            "Extensão para o WhatsApp Web",
+            "Lembrete de tarefa e de follow-up"
+          ],
+          [
+            "Vyzon",
+            "R$ 97/mês, até 10 usuários",
+            "Raio-X grátis das propostas paradas",
+            "Conecta pelo QR Code, 1 número",
+            "Avisa no 2º dia e escreve a retomada; você aprova pelo WhatsApp"
+          ]
+        ],
+        "nota": "Preços e recursos mudam. Confira no site de cada sistema antes de decidir."
+      },
+      {
+        "type": "h2",
+        "text": "O que olhar antes de escolher"
+      },
+      {
+        "type": "ol",
+        "items": [
+          "Como o WhatsApp entra no sistema. Pela API oficial da Meta o número fica mais protegido, mas a conversa passa por modelos aprovados e costuma ter custo por mensagem. Pelo QR Code, como no WhatsApp Web, você continua usando o seu número normal, e mandar mensagem em massa por ele aumenta o risco de bloqueio.",
+          "Quem escreve e quem aprova o follow-up. Alguns sistemas mandam a sequência sozinhos. Funciona para lembrete simples. Para retomar uma proposta de R$ 30 mil, vale ler a mensagem antes de ela sair.",
+          "Se você precisa de dimensionamento e proposta dentro do CRM ou se já tem uma ferramenta que faz isso bem. Trocar tudo de uma vez é o jeito mais rápido de a equipe abandonar o sistema novo.",
+          "O preço somado. Some usuário por usuário, os módulos que você vai precisar, a implantação e, se o preço estiver em dólar, o câmbio.",
+          "Teste com as suas propostas. Uma demonstração com dados de exemplo sempre funciona. Coloque as propostas da última semana e veja se a equipe usa sem ninguém cobrar."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "SolarMarket"
+      },
+      {
+        "type": "p",
+        "text": "Plataforma de gestão para integradores solares. Faz o dimensionamento automático do sistema, gera a proposta e tem funil de vendas. O WhatsApp aceita número oficial e não oficial na mesma caixa, com fila e rodízio entre atendentes. A IA deles, o Alfredo, cria negócio no CRM, agenda tarefa, lê a conta de luz e monta a proposta."
+      },
+      {
+        "type": "p",
+        "text": "Faz sentido para quem quer trocar planilha, programa de dimensionamento e CRM por um sistema só. O preço só sai depois de uma conversa de diagnóstico. A cadência de follow-up manda as mensagens sozinha e para quando o cliente responde, então leia o que ela vai mandar antes de ligar."
+      },
+      {
+        "type": "h2",
+        "text": "SolarZ"
+      },
+      {
+        "type": "p",
+        "text": "Se apresenta como CRM feito só para energia solar. Tem dimensionamento para Grupo A e Grupo B, cálculo de payback, propostas e funil com mensagens automáticas por etapa. O WhatsApp é pela API oficial da Meta, com caixa para vários atendentes e um SDR com IA que coleta conta de luz e localização e agenda visita técnica. Também cuida de cobrança e manda alerta quando a usina do cliente tem problema."
+      },
+      {
+        "type": "p",
+        "text": "É a opção para quem quer a venda, a usina e a cobrança no mesmo lugar. O site não mostra preço, e o teste de 10 dias é curto para acompanhar uma proposta esfriar e voltar."
+      },
+      {
+        "type": "h2",
+        "text": "PipeRun"
+      },
+      {
+        "type": "p",
+        "text": "CRM brasileiro para pequenas e médias empresas de serviço, sem página própria para energia solar. É um dos poucos com preço aberto: R$ 189,90 por mês com um usuário administrador, e cada módulo à parte, como Automações (R$ 129,90), Canal de Atendimento (R$ 99,90) e Produtos e Propostas (R$ 129,90). A implantação é cobrada separada. Tem WhatsApp pela API oficial e IA que ajuda a escrever e-mail."
+      },
+      {
+        "type": "p",
+        "text": "Serve bem a equipe comercial com gestor, que quer montar etapas, metas e comissão do próprio jeito. Só com esses três módulos a conta vai a R$ 549,60 por mês, antes da implantação, e o dimensionamento solar continua em outra ferramenta."
+      },
+      {
+        "type": "h2",
+        "text": "Kommo"
+      },
+      {
+        "type": "p",
+        "text": "CRM montado em volta das conversas, usado por vários segmentos. Junta WhatsApp, Instagram e outros canais numa caixa só, tem chatbot sem código, envio em massa e uma IA que resume conversa, sugere resposta e cria acompanhamento automático. O preço é por usuário e em dólar: US$ 20 no Básico, US$ 30 no Avançado e US$ 45 no Pro."
+      },
+      {
+        "type": "p",
+        "text": "Ajuda quem recebe muito lead de anúncio e precisa responder rápido. Nada nele é pensado para solar, então funil, campos e proposta ficam por sua conta, e a mensalidade sobe junto com o dólar."
+      },
+      {
+        "type": "h2",
+        "text": "RD Vendas (antigo RD Station CRM)"
+      },
+      {
+        "type": "p",
+        "text": "O CRM da RD Station mudou de nome para RD Vendas. O plano Free serve até 4 usuários e já tem lembrete de follow-up e uma extensão para vender sem sair do WhatsApp Web. Os pagos custam R$ 73 por usuário/mês no Basic e R$ 131 no Pro, que exige no mínimo 4 usuários. A IA sugere a próxima tarefa de cada negociação."
+      },
+      {
+        "type": "p",
+        "text": "Para a integradora pequena que nunca usou CRM, é o jeito de começar sem pagar. Como é um CRM geral, não tem nada de solar, e o follow-up ainda depende de alguém abrir a tarefa e escrever a mensagem."
+      },
+      {
+        "type": "h2",
+        "text": "Vyzon"
+      },
+      {
+        "type": "p",
+        "text": "O Vyzon cuida de uma parte só da venda: a proposta que saiu pelo WhatsApp e ficou sem resposta. Você conecta o WhatsApp da empresa pelo QR Code, e a Lume, a assistente do Vyzon, acompanha cada proposta enviada. No 2º dia sem resposta ela avisa você no WhatsApp, já com a retomada escrita. Você responde 1 e a mensagem sai do seu número, ou corrige o texto antes. Nada vai para o cliente sem você aprovar."
+      },
+      {
+        "type": "p",
+        "text": "Custa R$ 97 por mês, com tudo liberado para até 10 usuários. Combina com a integradora que já tem proposta e funil, mas perde venda porque ninguém lembra de chamar o cliente de novo."
+      },
+      {
+        "type": "p",
+        "text": "Ele não faz dimensionamento nem gera a proposta. Você continua na sua ferramenta e manda o PDF pelo WhatsApp, como já faz, e o Vyzon lê o valor direto do PDF. Conecta 1 número por empresa e não tem chatbot atendendo lead sozinho nem envio em massa."
+      },
+      {
+        "type": "lume",
+        "title": "Quer ver antes de escolher qualquer CRM?",
+        "text": "O Raio-X é grátis e não pede cartão. Você conecta o WhatsApp e em uns 3 minutos vê as propostas paradas dos últimos 90 dias e quanto elas somam. Serve para saber o tamanho do problema, use você o Vyzon ou outro sistema."
+      },
+      {
+        "type": "h2",
+        "text": "E a planilha?"
+      },
+      {
+        "type": "p",
+        "text": "Para quem manda menos de dez propostas por mês e vende sozinho, uma planilha com cliente, valor, data de envio e data do próximo contato resolve. Ela começa a falhar quando entra o segundo vendedor ou quando a data do próximo contato fica em branco, que é justamente quando o cliente esfria."
+      }
+    ],
+    "faq": [
+      {
+        "q": "Qual é o melhor CRM para energia solar?",
+        "a": "Depende do que trava a sua venda. Se você quer dimensionamento, proposta e funil num sistema só, SolarMarket e SolarZ são feitos para solar. Se o seu problema é a proposta que fica sem resposta no WhatsApp, o Vyzon cuida só disso, por R$ 97 por mês. Para começar sem pagar, o RD Vendas tem plano grátis para até 4 usuários."
+      },
+      {
+        "q": "Existe CRM grátis para integradora solar?",
+        "a": "O RD Vendas tem plano Free para até 4 usuários, com lembrete de follow-up e extensão para o WhatsApp Web, mas não tem nada específico de solar. O Vyzon tem o Raio-X grátis, que mostra as propostas paradas dos últimos 90 dias; o uso contínuo é pago."
+      },
+      {
+        "q": "CRM com WhatsApp oficial ou pelo QR Code: qual é melhor?",
+        "a": "A API oficial da Meta protege mais o número e é a escolha para quem manda muita mensagem, mas usa modelos aprovados e costuma cobrar por conversa. Pelo QR Code você segue com o seu número de sempre, no mesmo jeito do WhatsApp Web, e precisa evitar envio em massa para não correr risco de bloqueio."
+      },
+      {
+        "q": "O CRM pode mandar o follow-up sozinho para o cliente?",
+        "a": "Alguns mandam, como as cadências automáticas da SolarMarket e da Kommo. No Vyzon a Lume escreve a retomada e quem decide se ela sai é você, respondendo pelo WhatsApp."
+      }
+    ]
   }
 ]

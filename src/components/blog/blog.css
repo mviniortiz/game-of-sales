@@ -325,6 +325,25 @@
 .vb-exemplo__titulo { margin-top: 6px; font-size: 17px; font-weight: 600; line-height: 1.35; }
 .vb-exemplo__p { margin-top: 10px; font-size: 16.5px; line-height: 1.6; color: var(--lp-ink-muted); }
 
+/* Tabela de comparação: cartão branco, rola de lado no celular */
+.vb-tabela { margin: 0; }
+.vb-tabela__rolo {
+  overflow-x: auto;
+  border-radius: 22px;
+  background: var(--lp-white, #fff);
+  box-shadow: 0 0 0 1px var(--lp-line-soft);
+  -webkit-overflow-scrolling: touch;
+}
+.vb-tabela__rolo:focus-visible { outline: 2px solid var(--lp-ink); outline-offset: 3px; }
+.vb-tabela table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 15px; line-height: 1.45; }
+.vb-tabela caption { padding: 18px 20px 6px; text-align: left; font-size: 13px; font-weight: 700; color: var(--lp-ink-muted); }
+.vb-tabela th, .vb-tabela td { padding: 12px 14px; text-align: left; vertical-align: top; border-top: 1px solid var(--lp-line-soft); }
+.vb-tabela thead th { border-top: 0; font-size: 13px; font-weight: 700; color: var(--lp-ink); white-space: nowrap; }
+.vb-tabela tbody th { font-weight: 600; color: var(--lp-ink); white-space: nowrap; }
+.vb-tabela td { min-width: 124px; color: var(--lp-ink-muted); }
+.vb-tabela th:first-child, .vb-tabela td:first-child { padding-left: 20px; }
+.vb-tabela__nota { margin-top: 10px; font-size: 14px; line-height: 1.5; color: var(--lp-ink-muted); }
+
 /* Mensagem pronta: bolha de WhatsApp + copiar */
 .vb-msg {
   display: grid;
