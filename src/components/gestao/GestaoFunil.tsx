@@ -29,17 +29,17 @@ export function GestaoFunil() {
 
   return (
     <div className="va">
-      <div className="va-topo">
+      <div className="va-barra">
         <p className="va-topo__texto">As etapas que a Lume e a equipe usam para mover as oportunidades.</p>
-        <button type="button" onClick={() => setCreating(true)} className="vp-botao vp-botao--quieto vp-botao--chico">
+        <button type="button" onClick={() => setCreating(true)} className="va-btn ml-auto">
           <Plus size={14} weight="bold" aria-hidden /> Novo funil
         </button>
       </div>
 
-      {isLoading && [0, 1].map((i) => <div key={i} className="h-36 rounded-[18px] bg-[var(--vyz-surface-1)] animate-pulse motion-reduce:animate-none" />)}
+      {isLoading && [0, 1].map((i) => <div key={i} className="h-36 rounded-[10px] bg-[#f5f5f5] animate-pulse motion-reduce:animate-none" />)}
 
       {!isLoading && visible.length === 0 && (
-        <div className="va-lista">
+        <div className="va-tabela">
           <div className="va-vazio">
             <b>Nenhum funil ainda</b>
             Crie o primeiro com as etapas padrão e ajuste depois.
@@ -76,9 +76,9 @@ function PipelineCard({ pipeline, indice, onEdit }: { pipeline: Pipeline; indice
 
   return (
     <article className="va-funil va-entra-linha" style={{ "--i": indice } as React.CSSProperties}>
-      <header className="va-funil__cab">
+      <header className="va-secao__cab">
         <div className="min-w-0">
-          <h3 className="va-funil__nome">
+          <h3 className="va-secao__titulo">
             {pipeline.name}
             {pipeline.is_default && (
               <span className="va-chip" data-tom="azul">
@@ -86,11 +86,11 @@ function PipelineCard({ pipeline, indice, onEdit }: { pipeline: Pipeline; indice
               </span>
             )}
           </h3>
-          <p className="va-funil__sub">
+          <p className="va-secao__sub">
             {stages.length} etapas · {total} {total === 1 ? "oportunidade" : "oportunidades"}
           </p>
         </div>
-        <button type="button" onClick={onEdit} className="vp-botao vp-botao--quieto vp-botao--chico">
+        <button type="button" onClick={onEdit} className="va-btn va-btn--leve">
           Editar etapas
         </button>
       </header>

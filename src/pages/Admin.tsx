@@ -51,23 +51,21 @@ const Admin = () => {
 
   return (
     <div className="vp-tela">
-      <header className="vp-cabeca">
-        <div>
-          <h1 className="vp-titulo">Resultados</h1>
-          <p className="vp-sub">Sua equipe, seu funil e o dinheiro que está parado.</p>
-        </div>
-        <div role="tablist" aria-label="Seções de Resultados" className="vp-segmento">
+      <div className="va-folha">
+        <h1 className="va-pagina__titulo">Resultados</h1>
+        <p className="va-pagina__sub">Sua equipe, seu funil e o dinheiro que está parado.</p>
+        <div role="tablist" aria-label="Seções de Resultados" className="va-abas">
           {tabs.map((t) => (
             <button key={t.id} type="button" role="tab" aria-selected={t.id === active.id} onClick={() => select(t.id)}>
               {t.label}
             </button>
           ))}
         </div>
-      </header>
 
-      {/* key: cada troca de aba entra de novo com a subida curta de admin.css */}
-      <div role="tabpanel" aria-label={active.label} key={active.id} className="va-entra">
-        {active.render()}
+        {/* key: cada troca de aba entra de novo com a subida curta de admin.css */}
+        <div role="tabpanel" aria-label={active.label} key={active.id} className="va-entra">
+          {active.render()}
+        </div>
       </div>
     </div>
   );

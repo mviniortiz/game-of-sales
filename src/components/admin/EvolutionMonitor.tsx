@@ -100,7 +100,7 @@ export const EvolutionMonitor = () => {
 
     return (
         <div className="va">
-            <div className="va-topo">
+            <div className="va-barra">
                 <p className="va-topo__texto" role="status">
                     {isLoading ? (
                         "Verificando o servidor…"
@@ -111,7 +111,7 @@ export const EvolutionMonitor = () => {
                         </>
                     )}
                 </p>
-                <button type="button" className="vp-botao vp-botao--quieto vp-botao--chico" onClick={() => void refetch()} disabled={isFetching}>
+                <button type="button" className="va-btn va-btn--leve ml-auto" onClick={() => void refetch()} disabled={isFetching}>
                     <ArrowsClockwise size={15} aria-hidden className={isFetching ? "animate-spin motion-reduce:animate-none" : ""} />
                     Atualizar
                 </button>
@@ -144,56 +144,65 @@ export const EvolutionMonitor = () => {
                 </div>
             )}
 
-            {isLoading && <div className="va-lista"><div className="va-vazio">Carregando os números…</div></div>}
+            {isLoading && <div className="va-tabela"><div className="va-vazio">Carregando os números…</div></div>}
 
             {data && (
-                <section className="va-lista" aria-label="Números de WhatsApp">
+                <section
+                    className="va-tabela"
+                    aria-label="Números de WhatsApp"
+                    style={{ "--va-cols": "minmax(0,1.3fr) minmax(0,1fr) 130px 32px", "--va-cols-cel": "minmax(0,1fr) auto 32px" } as React.CSSProperties}
+                >
+                    <div className="va-tabela__cab" aria-hidden>
+                        <span>Número</span>
+                        <span>Empresa</span>
+                        <span>Estado</span>
+                        <span />
+                    </div>
                     {numeros.length === 0 ? (
                         <div className="va-vazio">
                             <b>Nenhum número conectado ainda</b>
                             Eles aparecem aqui quando uma empresa lê o QR Code.
                         </div>
                     ) : (
-                        <>
-                            <p className="va-lista__cab">
-                                Números <span>{numeros.length}</span>
-                            </p>
-                            {numeros.map((i, k) => {
-                                const tom = i.connected ? "bom" : i.userName ? "ruim" : undefined;
-                                return (
-                                    <div key={i.instanceName} className="va-linha va-entra-linha" style={{ "--i": k } as React.CSSProperties}>
-                                        <span className="va-ponto" data-tom={tom} aria-hidden />
+                        numeros.map((i, k) => {
+                            const tom = i.connected ? "bom" : i.userName ? "ruim" : undefined;
+                            return (
+                                <div key={i.instanceName} className="va-linha va-entra-linha" style={{ "--i": k } as React.CSSProperties}>
+                                    <span className="va-celula">
                                         <span className="va-avatar" data-redondo aria-hidden>
                                             {i.avatarUrl ? <img src={i.avatarUrl} alt="" /> : i.userName ? iniciais(i.userName) : "?"}
                                         </span>
                                         <span className="va-meio">
                                             <b>{i.userName || "Sem dono"}</b>
-                                            <span>
-                                                {i.companyName || "Sem empresa"} · {i.instanceName}
-                                            </span>
+                                            <span>{i.instanceName}</span>
                                         </span>
+                                    </span>
+                                    <span className="va-texto va-texto--cinza" data-some-no-cel>
+                                        {i.companyName || "Sem empresa"}
+                                    </span>
+                                    <span>
                                         <span className="va-chip" data-tom={tom}>
                                             {i.userName ? ESTADO[i.state] ?? i.state : "Sobrando"}
                                         </span>
-                                        <button
-                                            type="button"
-                                            className="vp-icone vp-icone--chico vp-icone--perigo"
-                                            aria-label={`Apagar a conexão ${i.instanceName}`}
-                                            title="Apagar conexão"
-                                            onClick={() => setApagando(i)}
-                                        >
-                                            <Trash size={16} aria-hidden />
-                                        </button>
-                                    </div>
-                                );
-                            })}
-                        </>
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className="va-icone va-icone--perigo"
+                                        aria-label={`Apagar a conexão ${i.instanceName}`}
+                                        title="Apagar conexão"
+                                        onClick={() => setApagando(i)}
+                                    >
+                                        <Trash size={16} aria-hidden />
+                                    </button>
+                                </div>
+                            );
+                        })
                     )}
                 </section>
             )}
 
             <AlertDialog open={!!apagando} onOpenChange={(o) => !o && setApagando(null)}>
-                <AlertDialogContent>
+                <AlertDialogContent className="va-vars">
                     <AlertDialogHeader>
                         <AlertDialogTitle>Apagar a conexão de {apagando?.userName || apagando?.instanceName}?</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -208,7 +217,7 @@ export const EvolutionMonitor = () => {
                                 void apagar();
                             }}
                             disabled={ocupado}
-                            className="bg-[var(--vyz-danger)] hover:bg-[var(--vyz-danger)] hover:opacity-90"
+                            className="va-btn va-btn--perigo"
                         >
                             {ocupado ? "Apagando…" : "Apagar"}
                         </AlertDialogAction>

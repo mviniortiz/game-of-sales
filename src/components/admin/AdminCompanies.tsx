@@ -176,28 +176,58 @@ export function AdminCompanies() {
         { id: "paradas", rotulo: "Sem entrar há 7 dias" },
     ];
 
+    const filtrando = !!busca.trim() || filtro !== "todas";
+    // Empresa | Situação | Pessoas | Último acesso | ações
+    const colunas = { "--va-cols": "minmax(0,1.6fr) 150px 80px minmax(0,1fr) auto", "--va-cols-cel": "minmax(0,1fr) auto" } as React.CSSProperties;
+
     return (
         <div className="va">
-            <div className="va-topo">
+            <div className="va-barra">
                 <label className="va-busca">
-                    <MagnifyingGlass size={16} aria-hidden />
-                    <input type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar empresa" aria-label="Buscar empresa" />
+                    <MagnifyingGlass size={15} aria-hidden />
+                    <input type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Nome da empresa" aria-label="Buscar empresa" />
                 </label>
-                <button type="button" className="vp-botao vp-botao--quieto vp-botao--chico" onClick={() => setCriando(true)}>
-                    <Plus size={14} weight="bold" aria-hidden /> Nova empresa
-                </button>
-            </div>
-
-            <div role="radiogroup" aria-label="Filtrar empresas" className="vp-segmento self-start">
-                {FILTROS.map((f) => (
-                    <button key={f.id} type="button" role="radio" aria-checked={filtro === f.id} onClick={() => setFiltro(f.id)}>
-                        {f.rotulo}
-                        <em>{contagem[f.id]}</em>
+                <div role="radiogroup" aria-label="Filtrar empresas" className="contents">
+                    {FILTROS.map((f) => (
+                        <button key={f.id} type="button" role="radio" aria-checked={filtro === f.id} className="va-filtro" onClick={() => setFiltro(f.id)}>
+                            {f.rotulo}
+                            <em>{contagem[f.id]}</em>
+                        </button>
+                    ))}
+                </div>
+                <div className="va-barra__fim">
+                    <span>
+                        {lista.length} {lista.length === 1 ? "resultado" : "resultados"}
+                        {filtrando && (
+                            <>
+                                {" · "}
+                                <button
+                                    type="button"
+                                    className="underline-offset-2 hover:underline"
+                                    onClick={() => {
+                                        setBusca("");
+                                        setFiltro("todas");
+                                    }}
+                                >
+                                    Limpar
+                                </button>
+                            </>
+                        )}
+                    </span>
+                    <button type="button" className="va-btn" onClick={() => setCriando(true)}>
+                        <Plus size={14} weight="bold" aria-hidden /> Nova empresa
                     </button>
-                ))}
+                </div>
             </div>
 
-            <section className="va-lista" aria-label="Empresas">
+            <section className="va-tabela" aria-label="Empresas" style={colunas}>
+                <div className="va-tabela__cab" aria-hidden>
+                    <span>Empresa</span>
+                    <span>Situação</span>
+                    <span>Pessoas</span>
+                    <span>Último acesso</span>
+                    <span className="w-[118px]" />
+                </div>
                 {isLoading && <div className="va-vazio">Carregando empresas…</div>}
                 {!isLoading && lista.length === 0 && (
                     <div className="va-vazio">
@@ -205,84 +235,90 @@ export function AdminCompanies() {
                         {busca ? "Tente outro nome." : "Mude o filtro para ver as outras."}
                     </div>
                 )}
-                {lista.map((e, i) => (
-                    <div
-                        key={e.id}
-                        role="link"
-                        tabIndex={0}
-                        data-clicavel
-                        className="va-linha va-entra-linha"
-                        style={{ "--i": i } as React.CSSProperties}
-                        onClick={() => navigate(`/admin/companies/${e.id}`)}
-                        onKeyDown={(ev) => ev.key === "Enter" && navigate(`/admin/companies/${e.id}`)}
-                        aria-label={`Abrir a ficha de ${e.name}`}
-                    >
-                        <span className="va-avatar" aria-hidden>
-                            {e.logo_url ? <img src={e.logo_url} alt="" /> : (e.name || "?").slice(0, 2).toUpperCase()}
-                        </span>
-                        <span className="va-meio">
-                            <b>{e.name || "Sem nome"}</b>
-                            <span>
-                                <span className="sm:hidden">{e.fundadora ? `Fundadora nº ${e.fundadora}` : paga(e) ? "Pago" : "Sem plano"} · </span>
-                                {e.user_count} {e.user_count === 1 ? "pessoa" : "pessoas"} · criada em {new Date(e.created_at).toLocaleDateString("pt-BR")}
+                {lista.map((e, i) => {
+                    const situacao = e.fundadora ? (
+                        <span className="va-chip" data-tom="sol">Fundadora nº {e.fundadora}</span>
+                    ) : paga(e) ? (
+                        <span className="va-chip" data-tom="bom">Pago</span>
+                    ) : (
+                        <span className="va-chip">Sem plano</span>
+                    );
+                    return (
+                        <div
+                            key={e.id}
+                            role="link"
+                            tabIndex={0}
+                            data-clicavel
+                            className="va-linha va-entra-linha"
+                            style={{ "--i": i } as React.CSSProperties}
+                            onClick={() => navigate(`/admin/companies/${e.id}`)}
+                            onKeyDown={(ev) => ev.key === "Enter" && navigate(`/admin/companies/${e.id}`)}
+                            aria-label={`Abrir a ficha de ${e.name}`}
+                        >
+                            <span className="va-celula">
+                                <span className="va-avatar" aria-hidden>
+                                    {e.logo_url ? <img src={e.logo_url} alt="" /> : (e.name || "?").slice(0, 2).toUpperCase()}
+                                </span>
+                                <span className="va-meio">
+                                    <b>{e.name || "Sem nome"}</b>
+                                    <span>
+                                        <span className="md:hidden">{e.fundadora ? `Fundadora nº ${e.fundadora}` : paga(e) ? "Pago" : "Sem plano"} · </span>
+                                        Criada em {new Date(e.created_at).toLocaleDateString("pt-BR")}
+                                    </span>
+                                </span>
                             </span>
-                        </span>
-                        <span
-                            className="va-lado"
-                            data-some-no-cel
-                            title={e.last_sign_in_at ? new Date(e.last_sign_in_at).toLocaleString("pt-BR") : "Ninguém entrou ainda"}
-                        >
-                            {e.last_sign_in_at ? `entrou ${formatDistanceToNow(new Date(e.last_sign_in_at), { addSuffix: true, locale: ptBR })}` : "nunca entrou"}
-                        </span>
-                        <span className="max-sm:hidden">
-                            {e.fundadora ? (
-                                <span className="va-chip" data-tom="sol">Fundadora nº {e.fundadora}</span>
-                            ) : paga(e) ? (
-                                <span className="va-chip" data-tom="bom">Pago</span>
-                            ) : (
-                                <span className="va-chip">Sem plano</span>
-                            )}
-                        </span>
-                        <button
-                            type="button"
-                            className="vp-botao vp-botao--quieto vp-botao--chico"
-                            onClick={(ev) => {
-                                ev.stopPropagation();
-                                entrar(e);
-                            }}
-                        >
-                            <SignIn size={14} aria-hidden /> <span className="max-sm:hidden">Entrar</span>
-                        </button>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                            <span data-some-no-cel>{situacao}</span>
+                            <span className="va-texto" data-some-no-cel>{e.user_count}</span>
+                            <span
+                                className="va-texto va-texto--cinza"
+                                data-some-no-cel
+                                title={e.last_sign_in_at ? new Date(e.last_sign_in_at).toLocaleString("pt-BR") : "Ninguém entrou ainda"}
+                            >
+                                {e.last_sign_in_at ? formatDistanceToNow(new Date(e.last_sign_in_at), { addSuffix: true, locale: ptBR }) : "Nunca"}
+                            </span>
+                            <span className="flex items-center gap-1">
                                 <button
                                     type="button"
-                                    className="vp-icone vp-icone--chico"
-                                    aria-label={`Mais ações para ${e.name}`}
-                                    onClick={(ev) => ev.stopPropagation()}
-                                    onKeyDown={(ev) => ev.stopPropagation()}
+                                    className="va-btn va-btn--leve"
+                                    onClick={(ev) => {
+                                        ev.stopPropagation();
+                                        entrar(e);
+                                    }}
                                 >
-                                    <DotsThree size={20} weight="bold" aria-hidden />
+                                    <SignIn size={14} aria-hidden /> <span className="max-sm:hidden">Entrar</span>
                                 </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" onClick={(ev) => ev.stopPropagation()}>
-                                <DropdownMenuItem onSelect={() => void raioX(e)}>
-                                    <FileMagnifyingGlass size={16} className="mr-2" aria-hidden />
-                                    Gerar Raio-X
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onSelect={() => setExcluindo(e)} className="text-[var(--vyz-danger)] focus:text-[var(--vyz-danger)]">
-                                    <Trash size={16} className="mr-2" aria-hidden />
-                                    Excluir empresa
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                ))}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <button
+                                            type="button"
+                                            className="va-icone"
+                                            aria-label={`Mais ações para ${e.name}`}
+                                            onClick={(ev) => ev.stopPropagation()}
+                                            onKeyDown={(ev) => ev.stopPropagation()}
+                                        >
+                                            <DotsThree size={20} weight="bold" aria-hidden />
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" onClick={(ev) => ev.stopPropagation()}>
+                                        <DropdownMenuItem onSelect={() => void raioX(e)}>
+                                            <FileMagnifyingGlass size={16} className="mr-2" aria-hidden />
+                                            Gerar Raio-X
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onSelect={() => setExcluindo(e)} className="text-[var(--vyz-danger)] focus:text-[var(--vyz-danger)]">
+                                            <Trash size={16} className="mr-2" aria-hidden />
+                                            Excluir empresa
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </span>
+                        </div>
+                    );
+                })}
             </section>
 
             <Dialog open={criando} onOpenChange={setCriando}>
-                <DialogContent className="sm:max-w-[420px]">
+                <DialogContent className="va-vars sm:max-w-[420px]">
                     <DialogHeader>
                         <DialogTitle>Nova empresa</DialogTitle>
                         <DialogDescription>Ela entra sem plano. Para liberar, abra a ficha e marque Pago.</DialogDescription>
@@ -293,15 +329,17 @@ export function AdminCompanies() {
                             if (nome.trim()) criar.mutate();
                         }}
                     >
-                        <label className="vp-campo">
-                            <span className="vp-rotulo">Nome</span>
-                            <input value={nome} onChange={(ev) => setNome(ev.target.value)} placeholder="Ex.: Solar Sul Energia" autoFocus />
-                        </label>
-                        <label className="vp-campo">
-                            <span className="vp-rotulo">Logo (opcional)</span>
-                            <input type="file" accept="image/*" onChange={(ev) => setLogo(ev.target.files?.[0] ?? null)} className="pt-2 text-[14px]" />
-                        </label>
-                        <button type="submit" className="vp-botao mt-1 w-full disabled:opacity-50" disabled={!nome.trim() || criar.isPending}>
+                        <div className="grid gap-3">
+                            <label className="va-campo">
+                                <span>Nome</span>
+                                <input value={nome} onChange={(ev) => setNome(ev.target.value)} placeholder="Ex.: Solar Sul Energia" autoFocus />
+                            </label>
+                            <label className="va-campo">
+                                <span>Logo (opcional)</span>
+                                <input type="file" accept="image/*" onChange={(ev) => setLogo(ev.target.files?.[0] ?? null)} className="!h-auto !border-0 !p-0 pt-1 text-[14px]" />
+                            </label>
+                        </div>
+                        <button type="submit" className="va-btn va-btn--grande mt-4 w-full" disabled={!nome.trim() || criar.isPending}>
                             {criar.isPending ? "Criando…" : "Criar empresa"}
                         </button>
                     </form>
@@ -309,7 +347,7 @@ export function AdminCompanies() {
             </Dialog>
 
             <AlertDialog open={!!excluindo} onOpenChange={(o) => !o && setExcluindo(null)}>
-                <AlertDialogContent>
+                <AlertDialogContent className="va-vars">
                     <AlertDialogHeader>
                         <AlertDialogTitle>Excluir {excluindo?.name}?</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -324,7 +362,7 @@ export function AdminCompanies() {
                                 if (excluindo) excluir.mutate(excluindo.id);
                             }}
                             disabled={excluir.isPending}
-                            className="bg-[var(--vyz-danger)] hover:bg-[var(--vyz-danger)] hover:opacity-90"
+                            className="va-btn va-btn--perigo"
                         >
                             {excluir.isPending ? "Excluindo…" : "Excluir"}
                         </AlertDialogAction>
