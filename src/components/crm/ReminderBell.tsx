@@ -1,173 +1,172 @@
-import { useMemo } from "react";
-import { Bell, ExternalLink } from "lucide-react";
+// Lembretes: o sino da lateral. Agrupa em Atrasados, Hoje e Próximos, mostra
+// o cliente primeiro (é o que a pessoa procura) e o horário em português.
+// Concluir some da lista na hora, com Desfazer; Adiar joga pra amanhã às 9h.
+import { useMemo, useState } from "react";
+import { Bell, Check, Clock } from "@phosphor-icons/react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
-import { useReminders, useReminderMutations } from "@/hooks/useReminders";
+import { useReminders, useReminderMutations, type Reminder } from "@/hooks/useReminders";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { amanhaNove, grupoDo, quandoTexto, type GrupoLembrete } from "@/lib/lembretes";
+import "./lembretes.css";
 
-function relativeTime(dateStr: string): { label: string; overdue: boolean } {
-  const now = Date.now();
-  const target = new Date(dateStr).getTime();
-  const diffMs = target - now;
-  const absDiff = Math.abs(diffMs);
-  const overdue = diffMs < 0;
-
-  const minutes = Math.floor(absDiff / 60_000);
-  const hours = Math.floor(absDiff / 3_600_000);
-  const days = Math.floor(absDiff / 86_400_000);
-
-  let label: string;
-  if (days >= 1) {
-    label = overdue ? `atrasado ${days}d` : `em ${days}d`;
-  } else if (hours >= 1) {
-    label = overdue ? `atrasado ${hours}h` : `em ${hours}h`;
-  } else {
-    label = overdue ? `atrasado ${Math.max(1, minutes)}min` : `em ${Math.max(1, minutes)}min`;
-  }
-
-  return { label, overdue };
-}
+const GRUPOS: { id: GrupoLembrete; titulo: string }[] = [
+    { id: "atrasado", titulo: "Atrasados" },
+    { id: "hoje", titulo: "Hoje" },
+    { id: "proximo", titulo: "Próximos" },
+];
 
 export function ReminderBell() {
-  const { user, companyId, isSuperAdmin } = useAuth();
-  const { activeCompanyId } = useTenant();
-  const effectiveCompanyId = isSuperAdmin ? activeCompanyId : companyId;
-  const navigate = useNavigate();
+    const { user, companyId } = useAuth();
+    const { activeCompanyId } = useTenant();
+    const empresa = activeCompanyId || companyId;
+    const navigate = useNavigate();
+    const [aberto, setAberto] = useState(false);
+    // Some da lista assim que a pessoa marca, sem esperar o banco.
+    const [escondidos, setEscondidos] = useState<Set<string>>(new Set());
 
-  const { data: reminders = [] } = useReminders(user?.id, effectiveCompanyId);
-  const { completeReminder } = useReminderMutations(user?.id, effectiveCompanyId);
+    const { data: lembretes = [] } = useReminders(user?.id, empresa);
+    const { completeReminder, snoozeReminder, reopenReminder } = useReminderMutations(user?.id, empresa);
 
-  const { dueCount, overdueCount } = useMemo(() => {
-    const now = Date.now();
-    let due = 0;
-    let overdue = 0;
-    for (const r of reminders) {
-      const t = new Date(r.remind_at).getTime();
-      if (t <= now) {
-        overdue++;
-        due++;
-      } else if (t <= now + 24 * 60 * 60 * 1000) {
-        due++;
-      }
-    }
-    return { dueCount: due, overdueCount: overdue };
-  }, [reminders]);
+    const agora = new Date();
+    const visiveis = lembretes.filter((r) => !escondidos.has(r.id));
+    const porGrupo = useMemo(() => {
+        const g: Record<GrupoLembrete, Reminder[]> = { atrasado: [], hoje: [], proximo: [] };
+        for (const r of visiveis) g[grupoDo(r.remind_at)].push(r);
+        return g;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [lembretes, escondidos]);
 
-  const displayCount = dueCount;
-  const hasOverdue = overdueCount > 0;
+    const atrasados = porGrupo.atrasado.length;
+    const pendentes = atrasados + porGrupo.hoje.length;
 
-  return (
-    <Popover>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-9 w-9 shrink-0"
-            >
-              <Bell
-                className={`h-5 w-5 transition-colors ${
-                  hasOverdue
-                    ? "text-rose-400 animate-pulse"
-                    : displayCount > 0
-                    ? "text-amber-400"
-                    : "text-muted-foreground"
-                }`}
-              />
-              {displayCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold leading-none shadow-sm shadow-rose-500/40">
-                  {displayCount > 99 ? "99+" : displayCount}
-                </span>
-              )}
-            </Button>
-          </PopoverTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="right" className="font-medium">
-          {displayCount > 0
-            ? `${displayCount} lembrete${displayCount > 1 ? "s" : ""} pendente${displayCount > 1 ? "s" : ""}`
-            : "Sem lembretes"}
-        </TooltipContent>
-      </Tooltip>
+    const esconder = (id: string, sim: boolean) =>
+        setEscondidos((s) => {
+            const n = new Set(s);
+            if (sim) n.add(id);
+            else n.delete(id);
+            return n;
+        });
 
-      <PopoverContent
-        align="start"
-        side="right"
-        className="w-80 p-0"
-      >
-        <div className="px-4 py-3 border-b border-border">
-          <h4 className="text-sm font-semibold">Lembretes</h4>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {displayCount > 0
-              ? `${displayCount} pendente${displayCount > 1 ? "s" : ""}`
-              : "Nenhum lembrete pendente"}
-          </p>
-        </div>
+    const concluir = (r: Reminder) => {
+        esconder(r.id, true);
+        completeReminder.mutate(r.id, {
+            onError: () => {
+                esconder(r.id, false);
+                toast.error("Não deu para concluir. Tente de novo.");
+            },
+        });
+        toast.success("Lembrete concluído", {
+            action: {
+                label: "Desfazer",
+                onClick: () => {
+                    esconder(r.id, false);
+                    reopenReminder.mutate(r.id);
+                },
+            },
+        });
+    };
 
-        <ScrollArea className="max-h-80">
-          {reminders.length === 0 ? (
-            <div className="p-6 text-center text-xs text-muted-foreground">
-              <Bell className="h-8 w-8 mx-auto mb-2 opacity-30" />
-              Nenhum lembrete agendado
-            </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {reminders.map((reminder) => {
-                const { label, overdue } = relativeTime(reminder.remind_at);
-                return (
-                  <div
-                    key={reminder.id}
-                    className={`flex items-start gap-3 px-4 py-3 transition-colors hover:bg-muted/50 ${
-                      overdue ? "bg-rose-500/5" : ""
-                    }`}
-                  >
-                    <Checkbox
-                      className="mt-0.5 shrink-0"
-                      onCheckedChange={() => completeReminder.mutate(reminder.id)}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <button
-                        className="text-left w-full group"
-                        onClick={() => navigate(`/deals/${reminder.deal_id}`)}
-                      >
-                        <p className="text-xs font-medium truncate group-hover:text-primary transition-colors">
-                          {reminder.title}
-                        </p>
-                        {reminder.deal_title && (
-                          <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1">
-                            <ExternalLink className="h-2.5 w-2.5 shrink-0" />
-                            {reminder.deal_title}
-                          </p>
-                        )}
-                      </button>
+    const adiar = (r: Reminder) => {
+        esconder(r.id, true);
+        snoozeReminder.mutate(
+            { id: r.id, remindAt: amanhaNove().toISOString() },
+            {
+                onSettled: () => esconder(r.id, false),
+                onError: () => toast.error("Não deu para adiar. Tente de novo."),
+            },
+        );
+        toast.success("Adiado para amanhã às 9h");
+    };
+
+    const resumo =
+        visiveis.length === 0
+            ? "Nada pendente"
+            : [
+                  atrasados && `${atrasados} ${atrasados === 1 ? "atrasado" : "atrasados"}`,
+                  porGrupo.hoje.length && `${porGrupo.hoje.length} hoje`,
+                  porGrupo.proximo.length && `${porGrupo.proximo.length} ${porGrupo.proximo.length === 1 ? "próximo" : "próximos"}`,
+              ]
+                  .filter(Boolean)
+                  .join(" · ");
+
+    return (
+        <Popover open={aberto} onOpenChange={setAberto}>
+            <PopoverTrigger asChild>
+                <button
+                    type="button"
+                    className="vz-lateral__icone vz-lemb-gatilho"
+                    aria-label={pendentes ? `Lembretes: ${pendentes} para agora` : "Lembretes"}
+                    title="Lembretes"
+                >
+                    <Bell size={18} weight={pendentes ? "fill" : "regular"} aria-hidden />
+                    {pendentes > 0 && (
+                        <span className="vz-lemb-conta" data-atrasado={atrasados > 0 || undefined} aria-hidden>
+                            {pendentes > 9 ? "9+" : pendentes}
+                        </span>
+                    )}
+                </button>
+            </PopoverTrigger>
+
+            <PopoverContent align="start" side="right" sideOffset={10} className="vz-lemb w-[340px] p-0">
+                <div className="vz-lemb__cab">
+                    <p className="vz-lemb__titulo">Lembretes</p>
+                    <p className="vz-lemb__resumo">{resumo}</p>
+                </div>
+
+                {visiveis.length === 0 ? (
+                    <div className="vz-lemb__vazio">
+                        <Check size={20} weight="bold" aria-hidden />
+                        <p>Nada para lembrar agora.</p>
+                        <span>Crie lembretes na ficha do cliente.</span>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className={`text-[9px] shrink-0 whitespace-nowrap ${
-                        overdue
-                          ? "border-rose-500/30 text-rose-400 bg-rose-500/10"
-                          : "border-amber-500/30 text-amber-400 bg-amber-500/10"
-                      }`}
-                    >
-                      {label}
-                    </Badge>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </ScrollArea>
-      </PopoverContent>
-    </Popover>
-  );
+                ) : (
+                    <div className="vz-lemb__lista">
+                        {GRUPOS.filter((g) => porGrupo[g.id].length > 0).map((g) => (
+                            <section key={g.id} className="vz-lemb__grupo" data-grupo={g.id}>
+                                <p className="vz-lemb__grupo-titulo">{g.titulo}</p>
+                                <ul>
+                                    {porGrupo[g.id].map((r) => (
+                                        <li key={r.id} className="vz-lemb__item">
+                                            <button
+                                                type="button"
+                                                className="vz-lemb__check"
+                                                aria-label={`Concluir: ${r.title}`}
+                                                onClick={() => concluir(r)}
+                                            >
+                                                <Check size={11} weight="bold" aria-hidden />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="vz-lemb__corpo"
+                                                onClick={() => {
+                                                    setAberto(false);
+                                                    navigate(`/deals/${r.deal_id}`);
+                                                }}
+                                            >
+                                                <span className="vz-lemb__cliente">{r.deal_title || r.title}</span>
+                                                {r.deal_title && <span className="vz-lemb__oque">{r.title}</span>}
+                                            </button>
+                                            <span className="vz-lemb__quando">{quandoTexto(r.remind_at, agora)}</span>
+                                            <button
+                                                type="button"
+                                                className="vz-lemb__adiar"
+                                                aria-label={`Adiar para amanhã às 9h: ${r.title}`}
+                                                title="Adiar para amanhã às 9h"
+                                                onClick={() => adiar(r)}
+                                            >
+                                                <Clock size={15} aria-hidden />
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </section>
+                        ))}
+                    </div>
+                )}
+            </PopoverContent>
+        </Popover>
+    );
 }

@@ -1,0 +1,70 @@
+/* Busca de cliente (⌘K). Papel branco do app, item ativo em areia, trecho
+   achado em amarelo. Sem animação na troca de item: é uso de teclado. */
+
+.vz-buscac {
+  border-radius: 18px !important;
+  border: 1px solid var(--vyz-border-subtle) !important;
+  background: var(--vyz-surface-1) !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 48, 0.06), 0 24px 60px -20px rgba(15, 23, 48, 0.32) !important;
+}
+.vz-buscac [cmdk-input] { font-size: 15px; color: var(--vyz-text-primary); }
+.vz-buscac [cmdk-input]::placeholder { color: var(--vyz-text-dim); }
+
+.vz-buscac__lista { max-height: min(420px, 60vh); padding-bottom: 6px; }
+.vz-buscac [cmdk-group-heading] { font-size: 12px !important; font-weight: 600 !important; color: var(--vyz-text-muted) !important; padding-top: 10px !important; }
+
+.vz-buscac__item {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  border-radius: 10px !important;
+  padding: 8px 10px !important;
+  cursor: pointer;
+}
+.vz-buscac__item[data-selected="true"] { background: var(--vyz-bg) !important; color: inherit !important; }
+
+.vz-buscac__inicial {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--vyz-accent-soft-8);
+  color: var(--vyz-accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+.vz-buscac__meio { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.vz-buscac__nome,
+.vz-buscac__detalhe { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.vz-buscac__nome { font-size: 14px; font-weight: 600; color: var(--vyz-text-primary); }
+.vz-buscac__nome mark { background: var(--vyz-sol-soft); color: inherit; border-radius: 3px; box-shadow: 0 0 0 1px var(--vyz-sol-soft); }
+.vz-buscac__detalhe { font-size: 12.5px; color: var(--vyz-text-muted); font-variant-numeric: tabular-nums; }
+.vz-buscac__valor { flex: none; font-size: 13px; font-weight: 600; color: var(--vyz-text-strong); font-variant-numeric: tabular-nums; }
+
+.vz-buscac__aviso { padding: 22px 16px; text-align: center; font-size: 13px; color: var(--vyz-text-muted); }
+
+.vz-buscac__rodape {
+  display: flex;
+  gap: 14px;
+  padding: 9px 14px;
+  border-top: 1px solid var(--vyz-border-subtle);
+  font-size: 12px;
+  color: var(--vyz-text-dim);
+}
+.vz-buscac__rodape kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  margin-right: 3px;
+  padding: 0 4px;
+  border-radius: 5px;
+  background: var(--vyz-bg);
+  box-shadow: inset 0 0 0 1px var(--vyz-border-subtle);
+  font: inherit;
+  font-size: 11px;
+  color: var(--vyz-text-muted);
+}
+@media (max-width: 640px) { .vz-buscac__rodape { display: none; } }

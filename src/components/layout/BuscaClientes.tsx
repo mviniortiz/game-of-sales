@@ -1,6 +1,7 @@
-// Buscar cliente: o ⌘K do app. Procura nos negócios da empresa pelo nome do cliente
-// ou do negócio e abre a ficha.
-import { useEffect, useState } from "react";
+// Buscar cliente: o ⌘K do app. A lista de negócios da empresa vem uma vez ao abrir
+// (são dezenas, no máximo centenas) e cada tecla filtra na memória, sem esperar o
+// banco. Acha por nome do cliente, nome do negócio ou telefone, sem ligar pra acento.
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,11 +9,21 @@ import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { brl } from "@/lib/quoteText";
+import { formatPhone } from "@/lib/formatPhone";
+import { buscarClientes, nomeDo, trechoAchado, type ClienteBusca } from "@/lib/buscaClientes";
+import "./buscaClientes.css";
 
-type Resultado = { id: string; title: string | null; customer_name: string | null; value: number | null };
-
-// Vírgula e parênteses têm sentido no filtro `or` do PostgREST.
-const limpar = (termo: string) => termo.replace(/[%,()]/g, " ").trim();
+function Nome({ texto, consulta }: { texto: string; consulta: string }) {
+    const t = trechoAchado(texto, consulta);
+    if (!t) return <>{texto}</>;
+    return (
+        <>
+            {texto.slice(0, t[0])}
+            <mark>{texto.slice(t[0], t[1])}</mark>
+            {texto.slice(t[1])}
+        </>
+    );
+}
 
 export function BuscaClientes({ aberta, aoMudar }: { aberta: boolean; aoMudar: (aberta: boolean) => void }) {
     const navigate = useNavigate();
@@ -20,7 +31,6 @@ export function BuscaClientes({ aberta, aoMudar }: { aberta: boolean; aoMudar: (
     const { activeCompanyId } = useTenant();
     const empresa = activeCompanyId || companyId;
     const [termo, setTermo] = useState("");
-    const busca = limpar(termo);
 
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
@@ -37,22 +47,24 @@ export function BuscaClientes({ aberta, aoMudar }: { aberta: boolean; aoMudar: (
         if (!aberta) setTermo("");
     }, [aberta]);
 
-    const { data, isFetching } = useQuery({
-        queryKey: ["busca-clientes", empresa, busca],
-        enabled: aberta && !!empresa && busca.length >= 2,
-        staleTime: 30_000,
+    const { data: lista, isLoading } = useQuery({
+        queryKey: ["busca-clientes-indice", empresa],
+        enabled: aberta && !!empresa,
+        staleTime: 60_000,
         queryFn: async () => {
-            const { data: linhas, error } = await supabase
+            const { data, error } = await supabase
                 .from("deals")
-                .select("id, title, customer_name, value")
+                .select("id, title, customer_name, customer_phone, value, updated_at")
                 .eq("company_id", empresa!)
-                .or(`customer_name.ilike.%${busca}%,title.ilike.%${busca}%`)
                 .order("updated_at", { ascending: false })
-                .limit(8);
+                .limit(2000);
             if (error) throw error;
-            return (linhas ?? []) as Resultado[];
+            return (data ?? []) as ClienteBusca[];
         },
     });
+
+    const achados = useMemo(() => buscarClientes(lista ?? [], termo), [lista, termo]);
+    const vazio = !!termo.trim() && !isLoading && achados.length === 0;
 
     const abrir = (id: string) => {
         aoMudar(false);
@@ -60,21 +72,52 @@ export function BuscaClientes({ aberta, aoMudar }: { aberta: boolean; aoMudar: (
     };
 
     return (
-        <CommandDialog open={aberta} onOpenChange={aoMudar}>
-            <CommandInput placeholder="Buscar cliente" value={termo} onValueChange={setTermo} />
-            <CommandList>
-                {busca.length >= 2 && !isFetching && (data ?? []).length === 0 && <CommandEmpty>Nenhum cliente com esse nome.</CommandEmpty>}
-                {(data ?? []).length > 0 && (
-                    <CommandGroup heading="Clientes">
-                        {data!.map((r) => (
-                            <CommandItem key={r.id} value={r.id} onSelect={() => abrir(r.id)} className="flex items-center justify-between gap-3">
-                                <span className="truncate font-medium">{r.customer_name || r.title || "Sem nome"}</span>
-                                {r.value ? <span className="shrink-0 tabular-nums text-muted-foreground">{brl(r.value)}</span> : null}
-                            </CommandItem>
-                        ))}
+        <CommandDialog
+            open={aberta}
+            onOpenChange={aoMudar}
+            commandProps={{ shouldFilter: false, loop: true }}
+            contentClassName="vz-buscac max-w-[560px]"
+        >
+            <CommandInput placeholder="Nome, negócio ou telefone" value={termo} onValueChange={setTermo} />
+            <CommandList className="vz-buscac__lista">
+                {isLoading && <p className="vz-buscac__aviso">Carregando clientes…</p>}
+                {vazio && <CommandEmpty>Nenhum cliente com “{termo.trim()}”.</CommandEmpty>}
+                {!isLoading && (lista ?? []).length === 0 && !termo.trim() && (
+                    <p className="vz-buscac__aviso">Nenhum cliente ainda. Eles aparecem aqui quando entram no funil.</p>
+                )}
+                {achados.length > 0 && (
+                    <CommandGroup heading={termo.trim() ? "Clientes" : "Recentes"}>
+                        {achados.map((r) => {
+                            const nome = nomeDo(r);
+                            const detalhe = [
+                                r.title && r.title !== nome ? r.title : null,
+                                r.customer_phone ? formatPhone(r.customer_phone) : null,
+                            ]
+                                .filter(Boolean)
+                                .join(" · ");
+                            return (
+                                <CommandItem key={r.id} value={r.id} onSelect={() => abrir(r.id)} className="vz-buscac__item">
+                                    <span className="vz-buscac__inicial" aria-hidden>
+                                        {nome.charAt(0).toUpperCase()}
+                                    </span>
+                                    <span className="vz-buscac__meio">
+                                        <span className="vz-buscac__nome">
+                                            <Nome texto={nome} consulta={termo} />
+                                        </span>
+                                        {detalhe && <span className="vz-buscac__detalhe">{detalhe}</span>}
+                                    </span>
+                                    {r.value ? <span className="vz-buscac__valor">{brl(r.value)}</span> : null}
+                                </CommandItem>
+                            );
+                        })}
                     </CommandGroup>
                 )}
             </CommandList>
+            <div className="vz-buscac__rodape" aria-hidden>
+                <span><kbd>↑</kbd><kbd>↓</kbd> navegar</span>
+                <span><kbd>Enter</kbd> abrir</span>
+                <span><kbd>Esc</kbd> fechar</span>
+            </div>
         </CommandDialog>
     );
 }

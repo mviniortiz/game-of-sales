@@ -1,0 +1,135 @@
+/* Lembretes (ReminderBell). Gatilho na lateral escura; a lista é papel branco
+   do app. Vermelho só para atrasado, amarelo para o que é de hoje. */
+
+.vz-lemb-gatilho { position: relative; }
+.vz-lemb-conta {
+  position: absolute;
+  top: -3px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--vyz-sol);
+  color: var(--vyz-noite);
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  box-shadow: 0 0 0 2px var(--vyz-noite);
+}
+.vz-lemb-conta[data-atrasado] { background: #e5484d; color: #fff; }
+
+.vz-lemb {
+  --lemb-ease: var(--vyz-ease, cubic-bezier(0.22, 1, 0.36, 1));
+  overflow: hidden;
+  border-radius: 16px !important;
+  border: 1px solid var(--vyz-border-subtle) !important;
+  background: var(--vyz-surface-1) !important;
+  color: var(--vyz-text-primary);
+  box-shadow: 0 1px 2px rgba(15, 23, 48, 0.06), 0 16px 40px -12px rgba(15, 23, 48, 0.22) !important;
+}
+.vz-lemb__cab { padding: 14px 16px 10px; }
+.vz-lemb__titulo { font-size: 14px; font-weight: 600; }
+.vz-lemb__resumo { margin-top: 2px; font-size: 12.5px; color: var(--vyz-text-muted); }
+
+.vz-lemb__lista { max-height: 380px; overflow-y: auto; padding: 0 6px 8px; overscroll-behavior: contain; }
+.vz-lemb__grupo + .vz-lemb__grupo { margin-top: 6px; }
+.vz-lemb__grupo ul { margin: 0; padding: 0; list-style: none; }
+.vz-lemb__grupo-titulo {
+  padding: 6px 10px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vyz-text-muted);
+}
+.vz-lemb__grupo[data-grupo="atrasado"] .vz-lemb__grupo-titulo { color: #b42318; }
+
+.vz-lemb__item {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 6px 7px 10px;
+  border-radius: 10px;
+  transition: background-color 150ms var(--lemb-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .vz-lemb__item:hover { background: var(--vyz-bg); }
+}
+
+/* Concluir: círculo que vira azul com o check. */
+.vz-lemb__check {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.5px var(--vyz-border-strong);
+  color: transparent;
+  transition: background-color 150ms var(--lemb-ease), box-shadow 150ms var(--lemb-ease), color 150ms var(--lemb-ease), transform 120ms var(--lemb-ease);
+}
+.vz-lemb__check:hover { box-shadow: inset 0 0 0 1.5px var(--vyz-accent); color: var(--vyz-accent); }
+.vz-lemb__check:active { transform: scale(0.9); background: var(--vyz-accent); color: #fff; box-shadow: none; }
+
+.vz-lemb__corpo { display: flex; flex-direction: column; min-width: 0; text-align: left; }
+.vz-lemb__cliente,
+.vz-lemb__oque { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.vz-lemb__cliente { font-size: 13.5px; font-weight: 600; line-height: 1.3; }
+.vz-lemb__oque { font-size: 12.5px; color: var(--vyz-text-muted); line-height: 1.35; }
+
+.vz-lemb__quando {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--vyz-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.vz-lemb__grupo[data-grupo="atrasado"] .vz-lemb__quando { color: #b42318; }
+.vz-lemb__grupo[data-grupo="hoje"] .vz-lemb__quando {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--vyz-sol-soft);
+  color: var(--vyz-noite);
+}
+
+.vz-lemb__adiar {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--vyz-text-dim);
+  transition: background-color 150ms var(--lemb-ease), color 150ms var(--lemb-ease), opacity 150ms var(--lemb-ease);
+}
+.vz-lemb__adiar:hover { background: var(--vyz-surface-2); color: var(--vyz-text-primary); }
+/* No mouse, o adiar só aparece na linha em foco; no toque fica sempre à vista. */
+@media (hover: hover) and (pointer: fine) {
+  .vz-lemb__adiar { opacity: 0; }
+  .vz-lemb__item:hover .vz-lemb__adiar,
+  .vz-lemb__adiar:focus-visible { opacity: 1; }
+}
+
+.vz-lemb__check:focus-visible,
+.vz-lemb__corpo:focus-visible,
+.vz-lemb__adiar:focus-visible { outline: 2px solid var(--vyz-accent); outline-offset: 2px; border-radius: 8px; }
+.vz-lemb__check:focus-visible { border-radius: 999px; }
+
+.vz-lemb__vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 22px 16px 26px;
+  text-align: center;
+  color: var(--vyz-text-muted);
+  font-size: 12.5px;
+}
+.vz-lemb__vazio svg { color: var(--vyz-accent); margin-bottom: 4px; }
+.vz-lemb__vazio p { font-size: 13.5px; font-weight: 600; color: var(--vyz-text-primary); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vz-lemb__item, .vz-lemb__check, .vz-lemb__adiar { transition: none; }
+}
