@@ -495,8 +495,11 @@
   align-items: start;
   gap: 10px 12px;
   margin: 0;
-  padding: 16px;
-  border-radius: 22px;
+  --canto: 22px;
+  --folga: 16px;
+  padding: var(--folga);
+  --canto-dentro: max(4px, calc(var(--canto) - var(--folga) - var(--borda, 0px)));
+  border-radius: var(--canto);
   background: var(--lp-chat-bg, #efeae2);
 }
 .vb-msg__label { grid-column: 1 / -1; font-size: 13px; font-weight: 700; color: var(--lp-ink-subtle); }
@@ -506,7 +509,7 @@
   display: inline-block;
   max-width: 100%;
   padding: 10px 14px;
-  border-radius: 14px 14px 4px 14px;
+  border-radius: 14px 14px 4px var(--canto-dentro);
   background: var(--lp-chat-out, #d9fdd3);
   font-size: 16.5px;
   line-height: 1.5;
@@ -597,15 +600,18 @@
   grid-template-columns: 112px 1fr;
   gap: 18px;
   align-items: start;
-  padding: 16px;
-  border-radius: 22px;
+  --canto: 22px;
+  --folga: 16px;
+  padding: var(--folga);
+  --canto-dentro: max(4px, calc(var(--canto) - var(--folga) - var(--borda, 0px)));
+  border-radius: var(--canto);
   background: var(--lp-white, #fff);
 }
-@media (min-width: 560px) { .vb-modelo { grid-template-columns: 148px 1fr; padding: 18px; } }
+@media (min-width: 560px) { .vb-modelo { grid-template-columns: 148px 1fr; --folga: 18px; } }
 .vb-modelo__previa {
   overflow: hidden;
   aspect-ratio: 210 / 297;
-  border-radius: 8px;
+  border-radius: var(--canto-dentro);
   box-shadow: 0 0 0 1px var(--lp-line);
 }
 .vb-modelo__previa img { width: 100%; height: auto; transition: transform 280ms var(--vb-ease); }
