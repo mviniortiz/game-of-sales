@@ -12,6 +12,8 @@ import {
     Paperclip,
     RefreshCw,
     X,
+    UserRound,
+    WifiOff,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { isDemoSession } from "@/lib/analytics";
@@ -26,6 +28,7 @@ import { useProfilePic } from "@/hooks/useProfilePic";
 import { cn } from "@/lib/utils";
 import { EvaBot } from "@/components/eva/EvaBot";
 import { formatPhone } from "@/lib/formatPhone";
+import { iniciais, semNome, tituloContato } from "@/lib/contato";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // InboxConversation (F4C.2, 2026-05-19)
@@ -42,12 +45,6 @@ import { formatPhone } from "@/lib/formatPhone";
 // Nada se executa automaticamente — todas as ações dependem de clique do usuário.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function getInitials(name: string) {
-    if (!name) return "?";
-    const parts = name.trim().split(" ");
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
 
 function formatTime(ts: string | undefined): string {
     if (!ts) return "";
@@ -485,33 +482,6 @@ function ConversationView({
                 onChange={handleFilePick}
             />
 
-            {/* Aviso: WhatsApp desconectado — o envio vai falhar até reconectar.
-                Só aparece depois do 1º check de status (evita flash no load).
-                Nunca na demo embutida: lá a desconexão é o estado permanente. */}
-            {statusChecked && connected === false && !isDemoSession() && (
-                <div
-                    className="flex items-center gap-2 px-4 py-2 text-[12.5px]"
-                    style={{ borderTop: "1px solid #FCD9B6", background: "#FFF7ED", color: "#9A3412" }}
-                >
-                    <span
-                        style={{ width: 7, height: 7, borderRadius: 999, background: "#EA580C", flexShrink: 0 }}
-                    />
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                        WhatsApp desconectado. As mensagens não serão entregues até reconectar o número.
-                    </span>
-                    {onReconnect && (
-                        <button
-                            type="button"
-                            onClick={onReconnect}
-                            className="font-semibold rounded-full px-3 py-1 shrink-0"
-                            style={{ background: "#080808", color: "#fff" }}
-                        >
-                            Reconectar
-                        </button>
-                    )}
-                </div>
-            )}
-
             {/* Sugestão da Lume inline (balão no fim da conversa): só no celular, onde
                 o painel da Lume fica numa gaveta (onOpenEva). No desktop o painel ao
                 lado já mostra a mesma resposta com o mesmo botão. */}
@@ -572,6 +542,8 @@ function ConversationView({
                     canSendAudio={!!onSendAudio}
                     contactName={chat.name}
                     contactPhone={chat.phone}
+                    offline={statusChecked && connected === false && !isDemoSession()}
+                    onReconnect={onReconnect}
                 />
             )}
         </>
@@ -771,7 +743,7 @@ function ConversationHeader({
                     className="text-[12px] font-semibold text-white"
                     style={{ background: "linear-gradient(135deg, #1556C0, #4A8CE8)" }}
                 >
-                    {getInitials(chat.name)}
+                    {iniciais(chat.name) ?? <UserRound className="h-4 w-4" aria-hidden />}
                 </AvatarFallback>
             </Avatar>
 
@@ -781,9 +753,9 @@ function ConversationHeader({
                         className="text-[14px] font-semibold truncate"
                         style={{ color: "#0F1730" }}
                     >
-                        {chat.name || chat.phone || "Sem nome"}
+                        {tituloContato(chat.name, chat.phone)}
                     </span>
-                    {chat.phone && (
+                    {chat.phone && !semNome(chat.name) && (
                         <span
                             className="hidden md:inline text-[11px] tabular-nums"
                             style={{ color: "#94A3B8" }}
@@ -1346,6 +1318,9 @@ interface ComposerProps {
     inputRef: React.RefObject<HTMLTextAreaElement>;
     contactName?: string;
     contactPhone?: string;
+    /** WhatsApp caído: o envio não chega. O campo diz isso e o botão vira Reconectar. */
+    offline?: boolean;
+    onReconnect?: () => void;
 }
 
 function Composer({
@@ -1360,6 +1335,8 @@ function Composer({
     inputRef,
     contactName,
     contactPhone,
+    offline = false,
+    onReconnect,
 }: ComposerProps) {
     const { user, companyId } = useAuth();
     const [showTemplates, setShowTemplates] = useState(false);
@@ -1442,7 +1419,7 @@ function Composer({
                     onKeyDown={onKeyDown}
                     onFocus={() => setFocused(true)}
                     onBlur={() => setFocused(false)}
-                    placeholder="Mensagem"
+                    placeholder={offline ? "WhatsApp desconectado. Reconecte para enviar" : "Mensagem"}
                     rows={1}
                     className="flex-1 bg-transparent outline-none text-base md:text-[13.5px] py-2 md:py-1.5 px-1 resize-none max-h-32"
                     style={{ color: "#0F1730", lineHeight: 1.45 }}
@@ -1461,7 +1438,18 @@ function Composer({
                     </button>
                 )}
 
-                {/* Enviar = seta-pra-cima circular (brand Vyzon, estilo Claude) */}
+                {/* Sem conexão o envio não chega: o lugar do Enviar vira Reconectar. */}
+                {offline && onReconnect ? (
+                    <button
+                        type="button"
+                        onClick={onReconnect}
+                        className="h-10 md:h-9 shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 text-[13px] md:text-[12px] font-semibold text-[var(--vyz-btn-on)] bg-[var(--vyz-btn-solid)] transition-[transform,opacity] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:opacity-90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 motion-reduce:transition-none"
+                    >
+                        <WifiOff className="h-3.5 w-3.5" aria-hidden />
+                        Reconectar
+                    </button>
+                ) : (
+                /* Enviar = seta-pra-cima circular (brand Vyzon, estilo Claude) */
                 <button
                     type="button"
                     onClick={onSend}
@@ -1480,6 +1468,7 @@ function Composer({
                         <ArrowUp className="h-4 w-4" strokeWidth={2.6} />
                     )}
                 </button>
+                )}
             </div>
             <p
                 className="text-[10px] mt-1.5 px-2 transition-opacity duration-200"

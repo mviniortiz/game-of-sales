@@ -215,9 +215,6 @@ export function ConnectionStatusCard({
                             )}
                         </div>
                     )}
-                    {adminScopeLabel && (
-                        <p className="mt-1.5 text-[10px] text-[var(--vyz-text-soft)]">{adminScopeLabel}</p>
-                    )}
                 </div>
             </div>
         </div>
