@@ -31,7 +31,6 @@ const Metas = lazy(() => import("./pages/Metas"));
 const Obras = lazy(() => import("./pages/Obras"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Automacoes = lazy(() => import("./pages/Automacoes"));
-const AdminCompaniesPage = lazy(() => import("./pages/AdminCompaniesPage"));
 const AdminCompanyDetail = lazy(() => import("./pages/AdminCompanyDetail"));
 const ConfiguracoesLayout = lazy(() => import("./components/configuracoes/ConfiguracoesLayout"));
 const ConfPerfil = lazy(() => import("./pages/configuracoes/Perfil"));
@@ -294,18 +293,8 @@ const AppShell = () => (
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/admin/companies"
-                element={
-                  <ProtectedRoute>
-                    <AdminRoute>
-                      <AppLayout>
-                        <AdminCompaniesPage />
-                      </AppLayout>
-                    </AdminRoute>
-                  </ProtectedRoute>
-                }
-              />
+              {/* A lista de empresas mora na aba Empresas de Resultados; a ficha segue aqui. */}
+              <Route path="/admin/companies" element={<Navigate to="/admin?aba=empresas" replace />} />
               <Route
                 path="/admin/companies/:companyId"
                 element={

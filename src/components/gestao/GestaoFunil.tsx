@@ -13,6 +13,8 @@ import {
   type Pipeline,
 } from "@/hooks/usePipelines";
 import { PipelineConfigModal } from "@/components/crm/PipelineConfigModal";
+import { AVAILABLE_COLORS } from "@/lib/pipelineStyles";
+import "@/components/admin/admin.css";
 
 /** Funis da empresa e suas etapas; a edição usa o mesmo editor do Pipeline. */
 export function GestaoFunil() {
@@ -26,32 +28,27 @@ export function GestaoFunil() {
   const visible = pipelines.filter((p) => !p.is_archived);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[13px] text-[var(--vyz-text-muted)]">
-          As etapas que a Lume e a equipe usam para mover as oportunidades.
-        </p>
-        <button
-          type="button"
-          onClick={() => setCreating(true)}
-          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-[var(--vyz-border-strong)] bg-[var(--vyz-surface-1)] px-4 text-[13px] font-semibold text-[var(--vyz-text-primary)] transition-colors hover:bg-[var(--vyz-surface-2)] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.28)]"
-        >
+    <div className="va">
+      <div className="va-topo">
+        <p className="va-topo__texto">As etapas que a Lume e a equipe usam para mover as oportunidades.</p>
+        <button type="button" onClick={() => setCreating(true)} className="vp-botao vp-botao--quieto vp-botao--chico">
           <Plus size={14} weight="bold" aria-hidden /> Novo funil
         </button>
       </div>
 
-      {isLoading &&
-        [0, 1].map((i) => <div key={i} className="h-28 rounded-[14px] bg-[var(--vyz-surface-2)] animate-pulse motion-reduce:animate-none" />)}
+      {isLoading && [0, 1].map((i) => <div key={i} className="h-36 rounded-[18px] bg-[var(--vyz-surface-1)] animate-pulse motion-reduce:animate-none" />)}
 
       {!isLoading && visible.length === 0 && (
-        <div className="rounded-[14px] border border-dashed border-[var(--vyz-border-strong)] px-6 py-10 text-center">
-          <p className="text-[14px] font-medium text-[var(--vyz-text-primary)]">Nenhum funil ainda</p>
-          <p className="mt-1 text-[13px] text-[var(--vyz-text-muted)]">Crie o primeiro com as etapas padrão e ajuste depois.</p>
+        <div className="va-lista">
+          <div className="va-vazio">
+            <b>Nenhum funil ainda</b>
+            Crie o primeiro com as etapas padrão e ajuste depois.
+          </div>
         </div>
       )}
 
-      {visible.map((p) => (
-        <PipelineCard key={p.id} pipeline={p} onEdit={() => setEditing(p)} />
+      {visible.map((p, i) => (
+        <PipelineCard key={p.id} pipeline={p} indice={i} onEdit={() => setEditing(p)} />
       ))}
 
       {editing && <EditPipeline pipeline={editing} company={company} onClose={() => setEditing(null)} />}
@@ -71,53 +68,50 @@ export function GestaoFunil() {
   );
 }
 
-function PipelineCard({ pipeline, onEdit }: { pipeline: Pipeline; onEdit: () => void }) {
+function PipelineCard({ pipeline, indice, onEdit }: { pipeline: Pipeline; indice: number; onEdit: () => void }) {
   const { data: stages = [] } = usePipelineStages(pipeline.id);
   const { data: counts = {} } = useStageDealCounts(pipeline.id);
   const total = Object.values(counts).reduce((s, n) => s + n, 0);
+  const maior = Math.max(1, ...stages.map((s) => counts[s.id] ?? 0));
 
   return (
-    <article className="rounded-[14px] border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] p-5">
-      <header className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="flex items-center gap-2 text-[15px] font-semibold tracking-[-0.01em] text-[var(--vyz-text-primary)]">
+    <article className="va-funil va-entra-linha" style={{ "--i": indice } as React.CSSProperties}>
+      <header className="va-funil__cab">
+        <div className="min-w-0">
+          <h3 className="va-funil__nome">
             {pipeline.name}
             {pipeline.is_default && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--vyz-accent-soft-10)] px-2 py-0.5 text-[11px] font-medium text-[var(--vyz-accent)]">
-                <Star size={10} weight="fill" aria-hidden /> Padrão
+              <span className="va-chip" data-tom="azul">
+                <Star size={11} weight="fill" aria-hidden /> Padrão
               </span>
             )}
           </h3>
-          <p className="mt-0.5 text-[12px] text-[var(--vyz-text-muted)]">
-            {stages.length} etapas · {total} oportunidades
+          <p className="va-funil__sub">
+            {stages.length} etapas · {total} {total === 1 ? "oportunidade" : "oportunidades"}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onEdit}
-          className="rounded-full px-3 py-1.5 text-[13px] font-medium text-[var(--vyz-accent)] transition-colors hover:bg-[var(--vyz-accent-soft-8)] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.28)]"
-        >
+        <button type="button" onClick={onEdit} className="vp-botao vp-botao--quieto vp-botao--chico">
           Editar etapas
         </button>
       </header>
-      <ol className="mt-4 flex flex-wrap items-center gap-1.5" aria-label={`Etapas do funil ${pipeline.name}`}>
-        {stages.map((s, i) => (
-          <li key={s.id} className="flex items-center gap-1.5">
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12.5px] ${
-                s.kind === "won"
-                  ? "border-[rgba(22,163,74,0.25)] text-[#15803D]"
-                  : s.kind === "lost"
-                    ? "border-[var(--vyz-border)] text-[var(--vyz-text-muted)]"
-                    : "border-[var(--vyz-border)] text-[var(--vyz-text)]"
-              }`}
-            >
-              {s.title}
-              {counts[s.id] ? <span className="tabular-nums text-[var(--vyz-text-muted)]">{counts[s.id]}</span> : null}
-            </span>
-            {i < stages.length - 1 && <span aria-hidden className="text-[var(--vyz-text-dim)]">›</span>}
-          </li>
-        ))}
+      {/* Cada etapa com quantos negócios tem e uma barra do tamanho relativo: dá pra ver onde o funil afina. */}
+      <ol className="va-funil__etapas" aria-label={`Etapas do funil ${pipeline.name}`}>
+        {stages.map((s) => {
+          const n = counts[s.id] ?? 0;
+          const cor = AVAILABLE_COLORS.find((c) => c.id === s.colorId)?.dotColor ?? "bg-slate-500";
+          return (
+            <li key={s.id} className="va-funil__etapa" data-tipo={s.kind}>
+              <span className="va-funil__titulo">
+                <i className={cor} aria-hidden />
+                {s.title}
+              </span>
+              <b>{n}</b>
+              <span className="va-medidor" aria-hidden>
+                <i className={s.kind === "won" ? "va-medidor--bom" : s.kind === "lost" ? "va-medidor--neutro" : undefined} style={{ width: `${(n / maior) * 100}%` }} />
+              </span>
+            </li>
+          );
+        })}
       </ol>
     </article>
   );

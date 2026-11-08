@@ -1,40 +1,22 @@
-import { useState, useEffect } from "react";
-import { Reorder, useDragControls, AnimatePresence, motion } from "framer-motion";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Settings2, GripVertical, Trash2, Plus, Star, Archive } from "lucide-react";
+// Editor de funil (criar ou editar): nome e etapas. Arrasta pela alça para
+// reordenar; o nome da etapa edita direto no campo; cor e ícone ficam num
+// botão só. Etapa com negócio não sai (mostra quantos tem), e o funil precisa
+// de pelo menos 2 etapas.
+import { useEffect, useState } from "react";
+import { AnimatePresence, Reorder, useDragControls, useReducedMotion } from "framer-motion";
+import { Archive, DotsSixVertical, Plus, Star, Trash } from "@phosphor-icons/react";
 import { toast } from "sonner";
-import {
-  AVAILABLE_ICONS,
-  AVAILABLE_COLORS,
-  type StageConfig,
-  type StageKind,
-} from "@/lib/pipelineStyles";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AVAILABLE_COLORS, AVAILABLE_ICONS, type StageConfig, type StageKind } from "@/lib/pipelineStyles";
+import "./funilEditor.css";
 
-const KIND_LABELS: Record<StageKind, string> = {
-  open: "Aberto",
-  won: "Ganho",
-  lost: "Perdido",
-};
+const TIPOS: Record<StageKind, string> = { open: "Em aberto", won: "Ganho", lost: "Perdido" };
+const EASE = [0.22, 1, 0.36, 1] as const;
+// Sparkles e Zap ficam fora da escolha (regra visual do Vyzon). Etapa antiga
+// que já usa um deles continua mostrando o ícone, só não dá para escolher de novo.
+const ICONES_ESCOLHA = AVAILABLE_ICONS.filter((i) => i.id !== "sparkles" && i.id !== "zap");
 
 interface PipelineEditorProps {
   open: boolean;
@@ -44,7 +26,7 @@ interface PipelineEditorProps {
   name?: string;
   stages: StageConfig[];
   onSubmit: (data: { name: string; stages: StageConfig[] }) => void;
-  /** stage_id -> nº de deals; bloqueia exclusão de estágio com negócios. */
+  /** stage_id -> nº de deals; bloqueia exclusão de etapa com negócios. */
   stageDealCounts?: Record<string, number>;
   busy?: boolean;
   isDefault?: boolean;
@@ -53,14 +35,14 @@ interface PipelineEditorProps {
   onArchive?: () => void;
 }
 
-// Linha de um estágio (nome, kind, ícone, cor, remover)
-const StageRow = ({
+const Etapa = ({
   stage,
   index,
   dealCount,
   onUpdate,
   onDelete,
   canDelete,
+  autoFocus,
 }: {
   stage: StageConfig;
   index: number;
@@ -68,154 +50,125 @@ const StageRow = ({
   onUpdate: (field: keyof StageConfig, value: string) => void;
   onDelete: () => void;
   canDelete: boolean;
+  autoFocus: boolean;
 }) => {
-  const dragControls = useDragControls();
-  const [isEditing, setIsEditing] = useState(false);
-  const [iconOpen, setIconOpen] = useState(false);
-  const [colorOpen, setColorOpen] = useState(false);
-
-  const IconComponent = AVAILABLE_ICONS.find((i) => i.id === stage.iconId)?.icon || AVAILABLE_ICONS[0].icon;
-  const colorConfig = AVAILABLE_COLORS.find((c) => c.id === stage.colorId) || AVAILABLE_COLORS[0];
+  const drag = useDragControls();
+  const reduce = useReducedMotion();
+  const [aparencia, setAparencia] = useState(false);
+  const Icone = AVAILABLE_ICONS.find((i) => i.id === stage.iconId)?.icon ?? AVAILABLE_ICONS[0].icon;
+  const cor = AVAILABLE_COLORS.find((c) => c.id === stage.colorId) ?? AVAILABLE_COLORS[0];
+  const motivo = dealCount > 0 ? `Tem ${dealCount} ${dealCount === 1 ? "negócio" : "negócios"} aqui. Mova antes de remover.` : "O funil precisa de pelo menos 2 etapas.";
 
   return (
     <Reorder.Item
       value={stage}
       id={stage.id}
-      dragControls={dragControls}
       dragListener={false}
-      className="relative"
-      initial={{ opacity: 0, y: -10 }}
+      dragControls={drag}
+      className="vf-etapa"
+      data-tipo={stage.kind}
+      initial={reduce ? { opacity: 0 } : { opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
-      whileDrag={{ scale: 1.02, boxShadow: "0 10px 40px rgba(0,0,0,0.15)", zIndex: 50 }}
+      exit={{ opacity: 0, transition: { duration: 0.12 } }}
+      transition={{ duration: 0.2, ease: EASE }}
+      whileDrag={reduce ? undefined : { scale: 1.015, boxShadow: "0 12px 32px -12px rgba(15,23,48,0.28)", zIndex: 5 }}
     >
-      <div className="flex items-center gap-2 px-3 py-3 bg-card border border-border rounded-xl hover:border-emerald-500 transition-colors duration-150 group">
-        {/* Drag Handle */}
-        <button
-          onPointerDown={(e) => dragControls.start(e)}
-          className="p-1 rounded cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        >
-          <GripVertical className="h-5 w-5" />
-        </button>
+      <button
+        type="button"
+        className="vf-alca"
+        aria-label={`Arrastar a etapa ${stage.title || index + 1}`}
+        onPointerDown={(e) => drag.start(e)}
+      >
+        <DotsSixVertical size={18} weight="bold" aria-hidden />
+      </button>
 
-        {/* Number */}
-        <div className="w-6 h-6 rounded-full flex items-center justify-center bg-muted text-foreground text-xs font-bold flex-shrink-0">
-          {index + 1}
-        </div>
-
-        {/* Name */}
-        <div className="flex-1 min-w-0">
-          {isEditing ? (
-            <Input
-              autoFocus
-              value={stage.title}
-              onChange={(e) => onUpdate("title", e.target.value)}
-              onBlur={() => setIsEditing(false)}
-              onKeyDown={(e) => e.key === "Enter" && setIsEditing(false)}
-              className="h-8 bg-transparent border-0 border-b-2 border-emerald-500 rounded-none text-foreground font-medium focus:ring-0 focus:border-emerald-500 px-0"
-            />
-          ) : (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="text-left w-full px-2 py-1 -ml-2 rounded-md text-foreground font-medium hover:bg-muted transition-colors truncate"
-            >
-              {stage.title || "Sem nome"}
-            </button>
-          )}
-        </div>
-
-        {/* Kind (Aberto / Ganho / Perdido) */}
-        <Select value={stage.kind} onValueChange={(v) => onUpdate("kind", v)}>
-          <SelectTrigger className="h-8 w-[92px] text-[12px] flex-shrink-0">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="open">{KIND_LABELS.open}</SelectItem>
-            <SelectItem value="won">{KIND_LABELS.won}</SelectItem>
-            <SelectItem value="lost">{KIND_LABELS.lost}</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Icon */}
-        <Popover open={iconOpen} onOpenChange={setIconOpen}>
-          <PopoverTrigger asChild>
-            <button className="p-2 rounded-lg transition-colors bg-muted hover:bg-secondary flex-shrink-0">
-              <IconComponent className="h-4 w-4 text-muted-foreground" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-2 bg-card border-border" align="center">
-            <div className="grid grid-cols-5 gap-1">
-              {AVAILABLE_ICONS.map((iconOption) => {
-                const Icon = iconOption.icon;
-                return (
-                  <button
-                    key={iconOption.id}
-                    onClick={() => {
-                      onUpdate("iconId", iconOption.id);
-                      setIconOpen(false);
-                    }}
-                    className={`p-2 rounded-lg transition-all ${
-                      stage.iconId === iconOption.id ? "bg-emerald-500/20 ring-2 ring-emerald-500" : "hover:bg-muted"
-                    }`}
-                    title={iconOption.label}
-                  >
-                    <Icon className={`h-4 w-4 ${stage.iconId === iconOption.id ? "text-emerald-500" : "text-muted-foreground"}`} />
-                  </button>
-                );
-              })}
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        {/* Color */}
-        <Popover open={colorOpen} onOpenChange={setColorOpen}>
-          <PopoverTrigger asChild>
-            <button className="p-2 rounded-lg transition-colors bg-muted hover:bg-secondary flex-shrink-0">
-              <div className={`w-4 h-4 rounded-full ${colorConfig.dotColor} ring-2 ring-background`} />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-2 bg-card border-border" align="center">
-            <div className="grid grid-cols-4 gap-2">
-              {AVAILABLE_COLORS.map((colorOption) => (
+      <Popover open={aparencia} onOpenChange={setAparencia}>
+        <PopoverTrigger asChild>
+          <button type="button" className="vf-aparencia" aria-label={`Cor e ícone da etapa ${stage.title || index + 1}`}>
+            <span className={`vf-aparencia__cor ${cor.dotColor}`} aria-hidden />
+            <Icone className="h-4 w-4" aria-hidden />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="vf-pop w-[244px] p-3">
+          <p className="vf-pop__rotulo">Cor</p>
+          <div className="vf-pop__grade">
+            {AVAILABLE_COLORS.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                title={c.label}
+                aria-label={c.label}
+                aria-pressed={stage.colorId === c.id}
+                className="vf-pop__op"
+                onClick={() => onUpdate("colorId", c.id)}
+              >
+                <span className={`h-4 w-4 rounded-full ${c.dotColor}`} />
+              </button>
+            ))}
+          </div>
+          <p className="vf-pop__rotulo mt-3">Ícone</p>
+          <div className="vf-pop__grade">
+            {ICONES_ESCOLHA.map((i) => {
+              const I = i.icon;
+              return (
                 <button
-                  key={colorOption.id}
+                  key={i.id}
+                  type="button"
+                  title={i.label}
+                  aria-label={i.label}
+                  aria-pressed={stage.iconId === i.id}
+                  className="vf-pop__op"
                   onClick={() => {
-                    onUpdate("colorId", colorOption.id);
-                    setColorOpen(false);
+                    onUpdate("iconId", i.id);
+                    setAparencia(false);
                   }}
-                  className={`p-1.5 rounded-lg transition-all ${
-                    stage.colorId === colorOption.id ? "bg-muted ring-2 ring-emerald-500" : "hover:bg-muted"
-                  }`}
-                  title={colorOption.label}
                 >
-                  <div className={`w-5 h-5 rounded-full ${colorOption.dotColor}`} />
+                  <I className="h-4 w-4" />
                 </button>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+              );
+            })}
+          </div>
+        </PopoverContent>
+      </Popover>
 
-        {/* Delete */}
-        <button
-          onClick={onDelete}
-          disabled={!canDelete}
-          className={`p-2 rounded-lg transition-all flex-shrink-0 ${
-            canDelete
-              ? "text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
-              : "text-muted cursor-not-allowed"
-          }`}
-          title={
-            !canDelete && dealCount > 0
-              ? `Mova os ${dealCount} negócios antes de remover`
-              : !canDelete
-                ? "Mínimo de 2 estágios"
-                : "Remover estágio"
-          }
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
+      <input
+        className="vf-nome"
+        value={stage.title}
+        placeholder="Nome da etapa"
+        aria-label={`Nome da etapa ${index + 1}`}
+        autoFocus={autoFocus}
+        onChange={(e) => onUpdate("title", e.target.value)}
+      />
+
+      {dealCount > 0 && (
+        <span className="vf-conta" title={`${dealCount} ${dealCount === 1 ? "negócio" : "negócios"} nesta etapa`}>
+          {dealCount}
+        </span>
+      )}
+
+      <Select value={stage.kind} onValueChange={(v) => onUpdate("kind", v)}>
+        <SelectTrigger className="vf-tipo" aria-label="Tipo da etapa">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {(Object.keys(TIPOS) as StageKind[]).map((k) => (
+            <SelectItem key={k} value={k}>
+              {TIPOS[k]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <button
+        type="button"
+        className="vp-icone vp-icone--chico vp-icone--perigo"
+        onClick={onDelete}
+        disabled={!canDelete}
+        aria-label={`Remover a etapa ${stage.title || index + 1}`}
+        title={canDelete ? "Remover etapa" : motivo}
+      >
+        <Trash size={16} aria-hidden />
+      </button>
     </Reorder.Item>
   );
 };
@@ -236,139 +189,117 @@ export const PipelineEditor = ({
 }: PipelineEditorProps) => {
   const [stages, setStages] = useState<StageConfig[]>(initialStages);
   const [name, setName] = useState(initialName);
+  const [nova, setNova] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       setStages(initialStages);
       setName(initialName);
+      setNova(null);
     }
   }, [open, initialStages, initialName]);
 
-  const handleUpdateStage = (index: number, field: keyof StageConfig, value: string) => {
-    const newStages = [...stages];
-    newStages[index] = { ...newStages[index], [field]: value };
-    setStages(newStages);
-  };
+  const atualizar = (index: number, field: keyof StageConfig, value: string) =>
+    setStages((s) => s.map((st, i) => (i === index ? { ...st, [field]: value } : st)));
 
-  const handleDeleteStage = (index: number) => {
+  const remover = (index: number) => {
     if (stages.length <= 2) {
-      toast.error("O funil precisa de pelo menos 2 estágios");
+      toast.error("O funil precisa de pelo menos 2 etapas.");
       return;
     }
     setStages(stages.filter((_, i) => i !== index));
   };
 
-  const handleAddStage = () => {
-    setStages([
-      ...stages,
-      { id: `stage_${stages.length}_${Math.round(performance.now())}`, title: "", iconId: "target", colorId: "gray", kind: "open" },
-    ]);
+  const adicionar = () => {
+    const id = `stage_${stages.length}_${Math.round(performance.now())}`;
+    // A nova entra antes de Ganho/Perdido, que costumam fechar o funil.
+    const fim = stages.findIndex((s) => s.kind !== "open");
+    const at = fim === -1 ? stages.length : fim;
+    const next = [...stages];
+    next.splice(at, 0, { id, title: "", iconId: "target", colorId: "gray", kind: "open" });
+    setStages(next);
+    setNova(id);
   };
 
-  const handleSubmit = () => {
-    if (!name.trim()) {
-      toast.error("Dê um nome ao funil");
-      return;
-    }
-    if (stages.some((s) => !s.title.trim())) {
-      toast.error("Todos os estágios precisam ter um nome");
-      return;
-    }
+  const salvar = () => {
+    if (!name.trim()) return toast.error("Dê um nome ao funil.");
+    if (stages.some((s) => !s.title.trim())) return toast.error("Toda etapa precisa de um nome.");
     if (!stages.some((s) => s.kind === "won")) {
-      toast.warning("Sem um estágio 'Ganho', as vendas não serão sincronizadas a partir deste funil.");
+      toast.warning("Sem uma etapa do tipo Ganho, as vendas deste funil não entram nos resultados.");
     }
     onSubmit({ name: name.trim(), stages });
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] sm:max-w-[600px] p-0 gap-0 bg-background border-border shadow-2xl max-h-[88vh] overflow-hidden flex flex-col">
-        <DialogHeader className="p-5 pb-4 border-b border-border">
-          <DialogTitle className="flex items-center gap-3 text-foreground">
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
-              <Settings2 className="h-5 w-5 text-emerald-500" />
-            </div>
-            <div className="flex-1">
-              <span className="text-lg font-semibold">{mode === "create" ? "Novo funil" : "Editar funil"}</span>
-              <p className="text-[12px] text-muted-foreground font-normal mt-0.5">
-                Arraste para reordenar; defina o tipo de cada estágio
-              </p>
-            </div>
-          </DialogTitle>
-          <DialogDescription className="sr-only">Configure o nome e os estágios do funil</DialogDescription>
+      <DialogContent className="vf flex max-h-[88vh] max-w-[95vw] flex-col gap-0 overflow-hidden p-0 sm:max-w-[620px]">
+        <DialogHeader className="vf-cab">
+          <DialogTitle className="vf-titulo">{mode === "create" ? "Novo funil" : "Editar funil"}</DialogTitle>
+          <DialogDescription className="vf-sub">Arraste pela alça para mudar a ordem. Cada etapa tem um tipo: em aberto, ganho ou perdido.</DialogDescription>
         </DialogHeader>
 
-        {/* Nome do funil */}
-        <div className="px-5 pt-4">
-          <label className="text-[12px] font-medium text-muted-foreground">Nome do funil</label>
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Ex: Distribuição B2B"
-            className="mt-1 h-9"
-          />
-        </div>
+        <div className="vf-corpo">
+          <label className="vp-campo">
+            <span className="vp-rotulo">Nome do funil</span>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Vendas residenciais" />
+          </label>
 
-        {/* Lista de estágios */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-2 relative">
-          <Reorder.Group axis="y" values={stages} onReorder={setStages} className="space-y-2 relative">
+          <p className="vp-rotulo mb-2">
+            Etapas <span className="font-normal text-[var(--vyz-text-muted)]">{stages.length}</span>
+          </p>
+          <Reorder.Group axis="y" values={stages} onReorder={setStages} className="vf-lista">
             <AnimatePresence initial={false}>
               {stages.map((stage, index) => (
-                <StageRow
+                <Etapa
                   key={stage.id}
                   stage={stage}
                   index={index}
                   dealCount={stageDealCounts[stage.id] ?? 0}
-                  onUpdate={(field, value) => handleUpdateStage(index, field, value)}
-                  onDelete={() => handleDeleteStage(index)}
+                  onUpdate={(field, value) => atualizar(index, field, value)}
+                  onDelete={() => remover(index)}
                   canDelete={stages.length > 2 && (stageDealCounts[stage.id] ?? 0) === 0}
+                  autoFocus={stage.id === nova}
                 />
               ))}
             </AnimatePresence>
           </Reorder.Group>
 
-          <motion.button
-            onClick={handleAddStage}
-            className="w-full mt-3 py-3 px-4 rounded-xl border-2 border-dashed border-border text-muted-foreground hover:border-emerald-500 hover:text-emerald-500 hover:bg-emerald-500/5 transition-all flex items-center justify-center gap-2 font-medium"
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-          >
-            <Plus className="h-4 w-4" />
-            Adicionar Estágio
-          </motion.button>
+          <button type="button" onClick={adicionar} className="vf-nova">
+            <Plus size={15} weight="bold" aria-hidden />
+            Adicionar etapa
+          </button>
         </div>
 
-        {/* Footer */}
-        <div className="p-5 pt-4 border-t border-border flex items-center gap-3 bg-card">
+        <div className="vf-rodape">
           {mode === "edit" && (
-            <div className="flex items-center gap-1.5 mr-auto">
-              {onSetDefault && !isDefault && (
-                <Button type="button" variant="ghost" size="sm" onClick={onSetDefault} className="text-muted-foreground hover:text-foreground">
-                  <Star className="h-4 w-4 mr-1.5" />
-                  Tornar padrão
-                </Button>
-              )}
-              {isDefault && (
-                <span className="inline-flex items-center gap-1.5 text-[12px] text-emerald-600 font-medium">
-                  <Star className="h-3.5 w-3.5 fill-emerald-500 text-emerald-500" />
+            <div className="mr-auto flex items-center gap-1">
+              {isDefault ? (
+                <span className="vf-padrao">
+                  <Star size={13} weight="fill" aria-hidden />
                   Funil padrão
                 </span>
+              ) : (
+                onSetDefault && (
+                  <button type="button" onClick={onSetDefault} className="vp-botao vp-botao--quieto vp-botao--chico">
+                    <Star size={14} aria-hidden />
+                    Tornar padrão
+                  </button>
+                )
               )}
               {onArchive && canArchive && (
-                <Button type="button" variant="ghost" size="sm" onClick={onArchive} className="text-muted-foreground hover:text-rose-500">
-                  <Archive className="h-4 w-4 mr-1.5" />
+                <button type="button" onClick={onArchive} className="vp-botao vp-botao--quieto vp-botao--chico">
+                  <Archive size={14} aria-hidden />
                   Arquivar
-                </Button>
+                </button>
               )}
             </div>
           )}
-          <span className="text-[12px] text-muted-foreground ml-auto mr-2">{stages.length} estágios</span>
-          <Button type="button" variant="outline" onClick={onClose} className="border-border hover:bg-muted text-foreground">
+          <button type="button" onClick={onClose} className="vp-botao vp-botao--quieto ml-auto">
             Cancelar
-          </Button>
-          <Button onClick={handleSubmit} disabled={busy} className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-500/25">
-            {busy ? "Salvando..." : mode === "create" ? "Criar funil" : "Salvar"}
-          </Button>
+          </button>
+          <button type="button" onClick={salvar} disabled={busy} className="vp-botao disabled:opacity-60">
+            {busy ? "Salvando…" : mode === "create" ? "Criar funil" : "Salvar"}
+          </button>
         </div>
       </DialogContent>
     </Dialog>
