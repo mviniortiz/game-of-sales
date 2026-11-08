@@ -913,28 +913,18 @@ function DealLinkBanner({
     onLinkExisting: () => void;
     onOpenDeal: (dealId: string) => void;
 }) {
-    // LP-INBOX.1 2026-06-09: banner → régua fina de status. Um estado por
-    // linha, ações como links compactos. Mesmos handlers e estados.
+    // Faixa do funil: o estado em uma frase e as ações como botões de verdade
+    // (antes eram links soltos em azul e laranja). Mesmos handlers e estados.
 
     // Estado 1 — vínculo OFICIAL (channel_conversations.deal_id)
     if (hasLinkedOpportunity && effectiveDealId) {
         return (
-            <div
-                className="px-4 py-2 shrink-0 flex items-center gap-2"
-                style={{ borderBottom: "1px solid var(--ibx-line-soft)", background: "#FFFFFF" }}
-            >
-                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#10B981" }} />
-                <p className="text-[11.5px] font-semibold flex-1 min-w-0 truncate" style={{ color: "#0F1730" }}>
-                    No pipeline
-                </p>
-                <button
-                    type="button"
-                    onClick={() => onOpenDeal(effectiveDealId)}
-                    className="inline-flex items-center gap-1 -my-2.5 py-2.5 px-1 md:m-0 md:p-0 text-[12.5px] md:text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
-                    style={{ color: "#1D4ED8" }}
-                >
-                    Abrir oportunidade
-                    <ArrowRight className="h-3 w-3" />
+            <div className="ep-faixa" data-tom="ok">
+                <span className="ep-faixa__ponto" aria-hidden />
+                <p className="ep-faixa__texto">No funil</p>
+                <button type="button" onClick={() => onOpenDeal(effectiveDealId)} className="vp-botao vp-botao--chico vp-botao--quieto">
+                    Abrir
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                 </button>
             </div>
         );
@@ -943,37 +933,22 @@ function DealLinkBanner({
     // Estado 2 — POSSÍVEL duplicado por telefone (não vinculado oficialmente)
     if (matchedNotLinked && effectiveDealId) {
         return (
-            <div
-                className="px-4 py-2 shrink-0 flex items-center gap-2 flex-wrap"
-                style={{ borderBottom: "1px solid var(--ibx-line-soft)", background: "rgba(245,158,11,0.05)" }}
-            >
-                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#F59E0B" }} />
+            <div className="ep-faixa" data-tom="atencao">
+                <span className="ep-faixa__ponto" aria-hidden />
                 <p
-                    className="text-[11.5px] font-semibold flex-1 min-w-0 truncate"
-                    style={{ color: "#0F1730" }}
-                    title="Achamos um negócio no pipeline com este telefone, mas ele ainda não está ligado a esta conversa."
+                    className="ep-faixa__texto"
+                    title="Achamos um negócio no funil com este telefone, mas ele ainda não está ligado a esta conversa."
                 >
-                    Já tem um negócio
+                    Número já está no funil
                 </p>
                 {canLinkExisting && (
-                    <button
-                        type="button"
-                        onClick={onLinkExisting}
-                        className="inline-flex items-center gap-1 -my-2.5 py-2.5 px-1 md:m-0 md:p-0 text-[12.5px] md:text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
-                        style={{ color: "#B45309" }}
-                    >
-                        <Link2 className="h-3 w-3" />
+                    <button type="button" onClick={onLinkExisting} className="vp-botao vp-botao--chico">
+                        <Link2 className="h-3.5 w-3.5" aria-hidden />
                         Vincular
                     </button>
                 )}
-                <button
-                    type="button"
-                    onClick={() => onOpenDeal(effectiveDealId)}
-                    className="inline-flex items-center gap-1 -my-2.5 py-2.5 px-1 md:m-0 md:p-0 text-[12.5px] md:text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
-                    style={{ color: "#1D4ED8" }}
-                >
+                <button type="button" onClick={() => onOpenDeal(effectiveDealId)} className="vp-botao vp-botao--chico vp-botao--quieto">
                     Abrir
-                    <ArrowRight className="h-3 w-3" />
                 </button>
             </div>
         );
@@ -981,31 +956,21 @@ function DealLinkBanner({
 
     // Estado 3 — sem oportunidade
     return (
-        <div
-            className="px-4 py-2 shrink-0 flex items-center gap-2 flex-wrap"
-            style={{ borderBottom: "1px solid var(--ibx-line-soft)", background: "#FFFFFF" }}
-        >
-            <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#CBD5E1" }} />
-            <p className="text-[11.5px] font-semibold flex-1 min-w-0 truncate" style={{ color: "#64748B" }}>
-                Fora do funil
-            </p>
-            <button
-                type="button"
-                onClick={onCreate}
-                className="inline-flex items-center gap-1 -my-2.5 py-2.5 px-1 md:m-0 md:p-0 text-[12.5px] md:text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
-                style={{ color: "#1D4ED8" }}
-            >
-                <Plus className="h-3 w-3" />
+        <div className="ep-faixa">
+            <span className="ep-faixa__ponto" aria-hidden />
+            <p className="ep-faixa__texto">Fora do funil</p>
+            <button type="button" onClick={onCreate} className="vp-botao vp-botao--chico">
+                <Plus className="h-3.5 w-3.5" aria-hidden />
                 Pôr no funil
             </button>
             {canLinkExisting && (
                 <button
                     type="button"
                     onClick={onLinkExisting}
-                    className="inline-flex items-center gap-1 -my-2.5 py-2.5 px-1 md:m-0 md:p-0 text-[12.5px] md:text-[11.5px] font-semibold shrink-0 transition-colors hover:underline"
-                    style={{ color: "#64748B" }}
+                    title="Vincular esta conversa a um negócio que já está no funil"
+                    className="vp-botao vp-botao--chico vp-botao--quieto"
                 >
-                    <Link2 className="h-3 w-3" />
+                    <Link2 className="h-3.5 w-3.5" aria-hidden />
                     Vincular
                 </button>
             )}

@@ -216,3 +216,38 @@
 @media (prefers-reduced-motion: reduce) {
   .ep-dossie__cab svg { transition: none; }
 }
+
+/* Faixa do funil, logo abaixo do topo do painel: estado + botões. */
+.ep-faixa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--vyz-surface-2);
+  background: var(--vyz-surface-1);
+}
+.ep-faixa__ponto {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--vyz-border-strong);
+}
+.ep-faixa[data-tom="ok"] .ep-faixa__ponto { background: var(--vyz-success); }
+.ep-faixa[data-tom="atencao"] .ep-faixa__ponto { background: var(--vyz-sol-line); }
+.ep-faixa__texto {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--vyz-text-primary);
+}
+.ep-faixa .vp-botao { gap: 5px; }
+@media (max-width: 767px) {
+  .ep-faixa .vp-botao--chico { min-height: 38px; }
+}
