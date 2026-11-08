@@ -70,7 +70,7 @@ const LoginV2 = () => {
     const [capsOn, setCapsOn] = useState(false);
     const [erros, setErros] = useState<{ email?: string; senha?: string; form?: string }>({});
     const [erroKey, setErroKey] = useState(0);
-    const saidaTimer = useRef<number>();
+    const saidaTimer = useRef<number | undefined>(undefined);
     const [ultimo] = useState(lerUltimo);
     const [quando] = useState(agora);
     const deDia = fracaoDoDia(quando) !== null;

@@ -262,7 +262,7 @@ export const HeroDashboardMockup = () => {
                                                 )}
                                                 <div className="w-full relative h-14 flex items-end cursor-pointer">
                                                     <div
-                                                        ref={el => barsRef.current[i] = el}
+                                                        ref={el => { barsRef.current[i] = el; }}
                                                         className="w-full rounded-t"
                                                         style={{
                                                             height: `${(bar.targetH / 255) * 100}%`,

@@ -10,7 +10,7 @@ import { headingId, type BlogBlock, type BlogModelo, type BlogOpcao } from "@/da
 // rótulo vira "Copiado" por 1,6 s. O aviso para leitor de tela sai num aria-live.
 export function CopyButton({ text, onCopy }: { text: string; onCopy?: () => void }) {
     const [ok, setOk] = useState(false);
-    const timer = useRef<number>();
+    const timer = useRef<number | undefined>(undefined);
     useEffect(() => () => window.clearTimeout(timer.current), []);
     const copy = async () => {
         try {

@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 // ─────────────────────────────────────────────────────────────────────────────
 // EvaPanel (F4E.4.4, 2026-05-20) — Coluna direita da Inbox, AGORA REAL.
 //
