@@ -1,0 +1,218 @@
+/* Painel da Lume depois da análise, montado com as peças de layout/tela.css
+   (vp-palco, vp-cartao, vp-rotulo, vp-chip, vp-balao, vp-botao, vp-icone).
+   Aqui só o que a coluna estreita (~360px) pede: palco mais compacto, linhas
+   do dossiê e listas. Cores só dos tokens --vyz-*. */
+
+.ep-pilha {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Palco amarelo: o que o dono faz agora. */
+.ep-palco.vp-palco {
+  gap: 6px;
+  padding: 16px 16px 18px;
+  border-radius: 20px;
+}
+.ep-palco .vp-palco__rotulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.ep-palco .vp-palco__titulo {
+  font-size: 19px;
+  line-height: 1.2;
+}
+.ep-palco .vp-palco__motivo {
+  font-size: 14px;
+  line-height: 1.45;
+}
+.ep-palco__leitura {
+  font-size: 13px;
+  color: #2a3048;
+}
+.ep-palco__leitura b { font-weight: 600; color: var(--vyz-noite); }
+
+.ep-palco .vp-balao {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+/* Editando: o mesmo balão, agora campo. */
+.ep-palco textarea.vp-balao {
+  width: 100%;
+  min-height: 112px;
+  resize: vertical;
+  border: 0;
+  outline: none;
+  box-shadow: inset 0 0 0 1.5px var(--vyz-noite);
+  font-family: inherit;
+}
+
+.ep-palco__acoes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.ep-palco__acoes .vp-botao { flex: 1; background: var(--vyz-noite); }
+.ep-palco__acoes .vp-botao:hover { background: var(--vyz-noite-2); }
+.ep-palco__acoes .vp-botao:disabled { opacity: 0.6; cursor: not-allowed; }
+.ep-palco__acoes .vp-icone { color: var(--vyz-noite); }
+.ep-palco__acoes .vp-icone:hover { background: rgba(15, 23, 48, 0.08); color: var(--vyz-noite); }
+.ep-palco__acoes .ep-cancelar {
+  width: auto;
+  padding: 0 10px;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+}
+.ep-palco__nota {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: #2a3048;
+}
+
+/* Avisos curtos acima do palco (leu sozinha, formato antigo). */
+.ep-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 0 4px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--vyz-text-muted);
+}
+.ep-aviso svg { flex: none; margin-top: 2px; width: 14px; height: 14px; }
+
+/* Cartões */
+.ep-cartao.vp-cartao { padding: 14px 16px; border-radius: 16px; }
+.ep-texto {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--vyz-text);
+}
+.ep-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.ep-chips .vp-chip { font-size: 13px; white-space: normal; line-height: 1.35; }
+.ep-chips .vp-chip span { color: var(--vyz-text-muted); font-weight: 500; }
+
+/* Cartão que alerta (passar pra vendedor): o mesmo cartão, com o ícone de alerta. */
+.ep-alerta { display: flex; gap: 10px; }
+.ep-alerta > svg { flex: none; width: 16px; height: 16px; margin-top: 1px; color: var(--vyz-warning); }
+.ep-alerta .vp-botao { margin-top: 10px; }
+
+/* Dossiê: cartões que abrem e fecham. */
+.ep-dossie.vp-cartao { padding: 0 16px; border-radius: 16px; }
+.ep-dossie__cab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  text-align: left;
+}
+.ep-dossie__cab .vp-rotulo { flex: 1; font-size: 14px; color: var(--vyz-text-primary); }
+.ep-dossie__cab svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--vyz-text-dim);
+  transition: transform 200ms var(--vyz-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.ep-dossie__cab[aria-expanded="true"] svg { transform: rotate(90deg); color: var(--vyz-text-primary); }
+.ep-dossie__cab:focus-visible { outline: 2px solid var(--vyz-accent); outline-offset: 2px; border-radius: 8px; }
+.ep-dossie__num {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--vyz-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.ep-dossie__corpo { padding-bottom: 16px; }
+
+/* Listas do que já sabe e do que falta. */
+.ep-lista + .ep-lista { margin-top: 14px; }
+.ep-lista .vp-rotulo { display: block; margin-bottom: 6px; }
+.ep-lista ul { display: flex; flex-direction: column; gap: 6px; }
+.ep-lista li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--vyz-text-primary);
+}
+.ep-lista li svg { flex: none; width: 15px; height: 15px; margin-top: 2px; }
+.ep-lista--sabe li svg { color: var(--vyz-success); }
+.ep-lista--falta li svg { color: var(--vyz-text-dim); }
+
+/* O que deixa a Lume mais afiada */
+.ep-lacunas { display: flex; flex-direction: column; }
+.ep-lacunas li { padding: 12px 0; }
+.ep-lacunas li + li { border-top: 1px solid var(--vyz-surface-2); }
+.ep-lacunas li:first-child { padding-top: 10px; }
+.ep-lacunas p { font-size: 14px; line-height: 1.45; color: var(--vyz-text-primary); }
+.ep-lacunas .ep-lacunas__como {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--vyz-text-muted);
+}
+.ep-lacunas__como svg { flex: none; width: 14px; height: 14px; margin-top: 2px; color: var(--vyz-accent); }
+.ep-lacunas .vp-chip { display: inline-block; margin-bottom: 6px; font-size: 12.5px; }
+
+.ep-nota { margin-top: 8px; font-size: 13px; color: var(--vyz-text-muted); }
+
+/* No funil */
+.ep-funil__vazio { font-size: 14px; color: var(--vyz-text); }
+.ep-funil__vazio b { display: block; font-weight: 600; color: var(--vyz-text-primary); }
+.ep-funil__nota { font-size: 13px; font-weight: 600; }
+.ep-funil__nota[data-tom="ok"] { color: var(--vyz-success); }
+.ep-funil__nota[data-tom="atencao"] { color: var(--vyz-warning); }
+.ep-funil__deal {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+.ep-funil__deal b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vyz-text-primary);
+}
+.ep-funil__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.ep-funil__stats dt { font-size: 12.5px; color: var(--vyz-text-muted); }
+.ep-funil__stats dd { font-size: 14px; font-weight: 600; color: var(--vyz-text-primary); font-variant-numeric: tabular-nums; }
+.ep-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vyz-accent);
+}
+.ep-link:hover { color: var(--vyz-accent-dark); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ep-dossie__cab svg { transition: none; }
+}
