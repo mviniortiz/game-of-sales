@@ -24,7 +24,7 @@ import "@/components/admin/admin.css";
 type Member = { id: string; nome: string | null; email: string | null; last_sign_in_at: string | null; isAdmin: boolean };
 
 const lastSeen = (iso: string | null) => {
-  if (!iso) return { texto: "ainda não entrou", agora: false };
+  if (!iso) return { texto: "nunca entrou", agora: false };
   const min = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (min < 30) return { texto: "online agora", agora: true };
   if (min < 60 * 24) return { texto: `entrou há ${Math.max(1, Math.round(min / 60))} h`, agora: false };
@@ -155,29 +155,40 @@ export function GestaoEquipe() {
 
   return (
     <div className="va">
-      <div className="va-topo">
+      <div className="va-barra">
         <div className="grid min-w-[200px] gap-1.5">
           <p className="va-topo__texto">
             <b>{members.length} {members.length === 1 ? "pessoa" : "pessoas"}</b>
             {Number.isFinite(limit) ? ` de ${limit} no plano ${planInfo.label}` : ""}
           </p>
           {Number.isFinite(limit) && (
-            <div className="va-medidor" aria-hidden>
+            <div className="va-medidor w-[200px]" aria-hidden>
               <i style={{ width: `${usado * 100}%` }} />
             </div>
           )}
         </div>
-        <button type="button" onClick={openInvite} className="vp-botao vp-botao--chico">
-          <Plus size={14} weight="bold" aria-hidden /> Convidar
-        </button>
+        <div className="va-barra__fim">
+          <button type="button" onClick={openInvite} className="va-btn">
+            <Plus size={14} weight="bold" aria-hidden /> Convidar
+          </button>
+        </div>
       </div>
 
-      <ul className="va-lista">
+      <ul
+        className="va-tabela"
+        aria-label="Equipe"
+        style={{ "--va-cols": "minmax(0,1.6fr) 150px minmax(0,1fr) 32px", "--va-cols-cel": "minmax(0,1fr) auto 32px" } as React.CSSProperties}
+      >
+        <li className="va-tabela__cab" aria-hidden>
+          <span>Pessoa</span>
+          <span>Papel</span>
+          <span>Último acesso</span>
+          <span />
+        </li>
         {q.isLoading &&
           [0, 1, 2].map((i) => (
             <li key={i} className="va-linha">
-              <span className="va-avatar animate-pulse motion-reduce:animate-none" data-redondo />
-              <span className="h-4 w-1/3 rounded bg-[var(--vyz-surface-2)] animate-pulse motion-reduce:animate-none" />
+              <span className="h-4 w-1/3 rounded bg-[#ededed] animate-pulse motion-reduce:animate-none" />
             </li>
           ))}
         {members.map((m, i) => {
@@ -186,53 +197,58 @@ export function GestaoEquipe() {
           const visto = lastSeen(m.last_sign_in_at);
           return (
             <li key={m.id} className="va-linha va-entra-linha" style={{ "--i": i } as React.CSSProperties}>
-              <span aria-hidden className="va-avatar" data-redondo>{initials}</span>
-              <div className="va-meio">
-                <b>
-                  {m.nome || "Sem nome"} {isMe && <em>(você)</em>}
-                </b>
-                <span className="inline-flex items-center gap-1.5">
-                  {visto.agora && <span className="va-ponto" data-tom="bom" aria-hidden />}
-                  {m.email} · {visto.texto}
+              <span className="va-celula">
+                <span aria-hidden className="va-avatar" data-redondo>{initials}</span>
+                <span className="va-meio">
+                  <b>
+                    {m.nome || "Sem nome"} {isMe && <em>(você)</em>}
+                  </b>
+                  <span>{m.email}</span>
                 </span>
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild disabled={isMe}>
-                  <button
-                    type="button"
-                    className="va-escolha"
-                    disabled={isMe}
-                    aria-label={`Papel de ${m.nome ?? m.email}: ${m.isAdmin ? "Admin" : "Vendedor"}`}
-                    title={isMe ? "Você não pode mudar o próprio papel" : undefined}
-                  >
-                    {m.isAdmin ? "Admin" : "Vendedor"}
-                    {!isMe && <CaretDown size={12} weight="bold" aria-hidden />}
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[260px]">
-                  {PAPEIS.map((p) => (
-                    <DropdownMenuItem key={p.nome} onSelect={() => void setAdmin(m, p.admin)} className="items-start gap-2 py-2">
-                      <Check size={14} weight="bold" aria-hidden className={`mt-0.5 shrink-0 ${m.isAdmin === p.admin ? "" : "invisible"}`} />
-                      <span className="grid gap-0.5">
-                        <span className="text-[13.5px] font-semibold">{p.nome}</span>
-                        <span className="text-[12.5px] text-[var(--vyz-text-muted)]">{p.ajuda}</span>
-                      </span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              </span>
+              <span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild disabled={isMe}>
+                    <button
+                      type="button"
+                      className="va-escolha"
+                      disabled={isMe}
+                      aria-label={`Papel de ${m.nome ?? m.email}: ${m.isAdmin ? "Admin" : "Vendedor"}`}
+                      title={isMe ? "Você não pode mudar o próprio papel" : undefined}
+                    >
+                      {m.isAdmin ? "Admin" : "Vendedor"}
+                      {!isMe && <CaretDown size={12} weight="bold" aria-hidden />}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-[260px]">
+                    {PAPEIS.map((p) => (
+                      <DropdownMenuItem key={p.nome} onSelect={() => void setAdmin(m, p.admin)} className="items-start gap-2 py-2">
+                        <Check size={14} weight="bold" aria-hidden className={`mt-0.5 shrink-0 ${m.isAdmin === p.admin ? "" : "invisible"}`} />
+                        <span className="grid gap-0.5">
+                          <span className="text-[14px] font-medium">{p.nome}</span>
+                          <span className="text-[12px] text-[var(--vyz-text-muted)]">{p.ajuda}</span>
+                        </span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </span>
+              <span className="va-texto va-texto--cinza inline-flex items-center gap-1.5" data-some-no-cel>
+                {visto.agora && <span className="va-ponto" data-tom="bom" aria-hidden />}
+                {visto.texto.charAt(0).toUpperCase() + visto.texto.slice(1)}
+              </span>
               {!isMe && !m.isAdmin ? (
                 <button
                   type="button"
                   onClick={() => setToRemove(m)}
                   aria-label={`Remover ${m.nome ?? m.email}`}
                   title="Remover da equipe"
-                  className="vp-icone vp-icone--chico vp-icone--perigo"
+                  className="va-icone va-icone--perigo"
                 >
                   <Trash size={16} aria-hidden />
                 </button>
               ) : (
-                <span className="w-8 shrink-0" aria-hidden />
+                <span aria-hidden />
               )}
             </li>
           );
@@ -240,7 +256,7 @@ export function GestaoEquipe() {
       </ul>
 
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-        <DialogContent className="sm:max-w-[420px]">
+        <DialogContent className="va-vars sm:max-w-[420px]">
           <DialogHeader>
             <DialogTitle>Convidar para a equipe</DialogTitle>
             <DialogDescription>A pessoa recebe o acesso por e-mail e entra como vendedor.</DialogDescription>
@@ -261,16 +277,16 @@ export function GestaoEquipe() {
               </div>
             </div>
           ) : (
-            <form onSubmit={invite}>
-              <label className="vp-campo">
-                <span className="vp-rotulo">Nome</span>
+            <form onSubmit={invite} className="grid gap-3">
+              <label className="va-campo">
+                <span>Nome</span>
                 <input value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="name" />
               </label>
-              <label className="vp-campo">
-                <span className="vp-rotulo">E-mail</span>
+              <label className="va-campo">
+                <span>E-mail</span>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
               </label>
-              <button type="submit" disabled={sending || !nome.trim() || !email.trim()} className="vp-botao mt-1 w-full disabled:opacity-50">
+              <button type="submit" disabled={sending || !nome.trim() || !email.trim()} className="va-btn va-btn--grande mt-1 w-full">
                 {sending ? "Enviando…" : "Enviar convite"}
               </button>
             </form>
@@ -279,7 +295,7 @@ export function GestaoEquipe() {
       </Dialog>
 
       <AlertDialog open={!!toRemove} onOpenChange={(o) => !o && setToRemove(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="va-vars">
           <AlertDialogHeader>
             <AlertDialogTitle>Remover {toRemove?.nome ?? "esta pessoa"}?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -288,7 +304,7 @@ export function GestaoEquipe() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={removing}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={(e) => { e.preventDefault(); remove(); }} disabled={removing} className="bg-[var(--vyz-danger)] hover:bg-[var(--vyz-danger)] hover:opacity-90">
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); remove(); }} disabled={removing} className="va-btn va-btn--perigo">
               {removing ? "Removendo…" : "Remover"}
             </AlertDialogAction>
           </AlertDialogFooter>
