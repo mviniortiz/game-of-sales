@@ -28,6 +28,7 @@ import { EvaBot } from "@/components/eva/EvaBot";
 import { logLandingEvent } from "@/lib/landingFunnel";
 import { SO_LEIO } from "@/lib/primeiroAcesso";
 import type { Sistema } from "./ConectarDemo";
+import { APP_EVENTS, trackApp } from "@/lib/appAnalytics";
 
 // O celular animado com o caminho dentro do WhatsApp (kit Stageshow) vem num
 // pedaço separado: só quem abre o modal baixa.
@@ -64,9 +65,20 @@ function passosDe(modo: Modo, sistema: Sistema): string[] {
 
 export function WhatsAppConnectModal({ open, onClose, onConnected, funil }: WhatsAppConnectModalProps) {
     // Cada passo vai pro mesmo funil da home e do cadastro (mesma sessão).
+    const inicioConexao = useRef(0);
     const medir = useCallback(
         (evento: "form_start" | "form_submit" | "form_error" | "cta_click", props: Record<string, string | number>) => {
             if (funil) logLandingEvent(funil, "solar", evento, props);
+            // Mesmos passos no analytics do app: QR/código mostrado, conectou, erro.
+            if (evento === "form_submit" && (props.step === "qr" || props.step === "codigo")) {
+                inicioConexao.current = Date.now();
+                trackApp(APP_EVENTS.WHATSAPP_CONNECT_STARTED, { modo: String(props.step) });
+            } else if (evento === "form_submit" && props.step === "conectado") {
+                const segundos = inicioConexao.current ? Math.round((Date.now() - inicioConexao.current) / 1000) : 0;
+                trackApp(APP_EVENTS.WHATSAPP_CONNECTED, { segundos, modo: String(props.modo ?? "") });
+            } else if (evento === "form_error") {
+                trackApp(APP_EVENTS.WHATSAPP_CONNECT_FAILED, { motivo: String(props.reason ?? props.step ?? "erro").slice(0, 60) });
+            }
         },
         [funil],
     );

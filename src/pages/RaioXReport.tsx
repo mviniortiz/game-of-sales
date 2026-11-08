@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { buscarVagaFundadora } from "@/hooks/useVagaFundadora";
 import { fraseFundadora, type VagaFundadora } from "@/lib/fundadora";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { EvaBot } from "@/components/eva/EvaBot";
+import { APP_EVENTS, trackApp } from "@/lib/appAnalytics";
 
 // Relatório do Raio-X (/relatorio/:token), aberto na conversa de 20 minutos e
 // mandado depois pro integrador, que quase sempre lê no celular. Público pelo
@@ -184,6 +185,17 @@ const RaioXReport = () => {
             example: rows.find((r) => r.code) ?? null,
         };
     }, [report, isAdmin]);
+
+    // Raio-X visto: uma vez por relatório aberto.
+    const raioXMedido = useRef<string | null>(null);
+    useEffect(() => {
+        if (!report || raioXMedido.current === report.created_at) return;
+        raioXMedido.current = report.created_at;
+        trackApp(APP_EVENTS.RAIOX_VIEWED, {
+            itens: view.stuck,
+            valor_parado: Math.round(view.recentValue > 0 ? view.recentValue : view.totalValue),
+        });
+    }, [report, view]);
 
     if (state === "loading") {
         return (

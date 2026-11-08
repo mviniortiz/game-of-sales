@@ -35,6 +35,7 @@ import { fraseFundadora } from "@/lib/fundadora";
 import { PERIODS, periodFromParam, type Period } from "@/lib/quotePeriod";
 import { useMostrarMais } from "@/hooks/useMostrarMais";
 import { MostrarMais } from "@/components/ui/MostrarMais";
+import { APP_EVENTS, trackApp } from "@/lib/appAnalytics";
 
 type Tab = "parked" | "your_turn" | "talking" | "closed";
 // A aba fica no endereço (?aba=) para o Início e os avisos levarem direto a ela.
@@ -254,14 +255,20 @@ export default function Orcamentos() {
             items={data.items}
             totals={data.totals}
             tab={activeTab}
-            onTab={setTab}
+            onTab={(t) => {
+              trackApp(APP_EVENTS.FILTER_APPLIED, { filtro: t });
+              setTab(t);
+            }}
             days={days}
             query={query}
             onQuery={setQuery}
             sort={sort}
             onSort={changeSort}
             pendingId={outcome.isPending ? outcome.variables?.id ?? null : null}
-            onOutcome={(id, o) => outcome.mutate({ id, outcome: o })}
+            onOutcome={(id, o) => {
+              trackApp(APP_EVENTS.QUOTE_OUTCOME_SET, { resultado: o });
+              outcome.mutate({ id, outcome: o });
+            }}
           />
         </>
       ) : null}

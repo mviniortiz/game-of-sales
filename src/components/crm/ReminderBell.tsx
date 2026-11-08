@@ -10,6 +10,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { useReminders, useReminderMutations, type Reminder } from "@/hooks/useReminders";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { amanhaNove, grupoDo, quandoTexto, type GrupoLembrete } from "@/lib/lembretes";
+import { APP_EVENTS, trackApp } from "@/lib/appAnalytics";
 import "./lembretes.css";
 
 const GRUPOS: { id: GrupoLembrete; titulo: string }[] = [
@@ -51,6 +52,7 @@ export function ReminderBell() {
         });
 
     const concluir = (r: Reminder) => {
+        trackApp(APP_EVENTS.REMINDER_COMPLETED, { atrasado: grupoDo(r.remind_at) === "atrasado" });
         esconder(r.id, true);
         completeReminder.mutate(r.id, {
             onError: () => {
@@ -70,6 +72,7 @@ export function ReminderBell() {
     };
 
     const adiar = (r: Reminder) => {
+        trackApp(APP_EVENTS.REMINDER_SNOOZED);
         esconder(r.id, true);
         snoozeReminder.mutate(
             { id: r.id, remindAt: amanhaNove().toISOString() },

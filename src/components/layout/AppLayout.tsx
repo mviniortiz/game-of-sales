@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
+import { AppAnalytics } from "./AppAnalytics";
 import { AbasCelular } from "./AbasCelular";
 import "./tela.css";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
@@ -63,6 +64,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider style={{ "--sidebar-width": "15.5rem" } as React.CSSProperties}>
       <div className="min-h-screen flex w-full" style={{ background: "var(--vyz-bg)", color: "var(--vyz-text-primary)" }}>
+        <AppAnalytics />
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {mostraFaixa && <FaixaPlanoGratis />}

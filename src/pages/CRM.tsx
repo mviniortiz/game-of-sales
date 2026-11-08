@@ -97,6 +97,7 @@ import {
 } from "@/hooks/usePipelines";
 import { useMostrarMais } from "@/hooks/useMostrarMais";
 import { MostrarMais } from "@/components/ui/MostrarMais";
+import { APP_EVENTS, trackApp } from "@/lib/appAnalytics";
 
 // ICON_MAP, COLOR_MAP, configToStage, Stage e StageConfig agora vivem em
 // @/lib/pipelineStyles (compartilhados entre CRM, DealDetails, dashboards).
@@ -811,6 +812,7 @@ export default function CRM() {
       return dealIds.length;
     },
     onSuccess: (count, { targetStage }) => {
+      trackApp(APP_EVENTS.DEAL_STAGE_CHANGED, { para_tipo: kindOf(targetStage) ?? "open", origem: "em_massa", quantidade: count });
       const stage = STAGES.find((s) => s.id === targetStage);
       queryClient.invalidateQueries({ queryKey: ["deals", effectiveCompanyId] });
       setSelectedDeals(new Set());
@@ -940,6 +942,9 @@ export default function CRM() {
       if (error) {
         logger.error("[DnD] PATCH deals ERROR", error);
         throw error;
+      }
+      if (deal?.stage_id !== targetStageId) {
+        trackApp(APP_EVENTS.DEAL_STAGE_CHANGED, { para_tipo: targetKind ?? "open", origem: "funil" });
       }
 
       if (targetKind === "won" && deal) {

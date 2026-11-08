@@ -11,6 +11,7 @@ import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, C
 import { brl } from "@/lib/quoteText";
 import { formatPhone } from "@/lib/formatPhone";
 import { buscarClientes, nomeDo, trechoAchado, type ClienteBusca } from "@/lib/buscaClientes";
+import { APP_EVENTS, trackApp } from "@/lib/appAnalytics";
 import "./buscaClientes.css";
 
 function Nome({ texto, consulta }: { texto: string; consulta: string }) {
@@ -66,7 +67,14 @@ export function BuscaClientes({ aberta, aoMudar }: { aberta: boolean; aoMudar: (
     const achados = useMemo(() => buscarClientes(lista ?? [], termo), [lista, termo]);
     const vazio = !!termo.trim() && !isLoading && achados.length === 0;
 
+    // Busca usada: registra ao fechar, se a pessoa digitou algo (abriu um cliente ou desistiu).
+    const medirBusca = (abriu: boolean) => {
+        if (!termo.trim()) return;
+        trackApp(APP_EVENTS.SEARCH_USED, { resultados: achados.length, abriu, por_telefone: /\d{3,}/.test(termo) });
+    };
+
     const abrir = (id: string) => {
+        medirBusca(true);
         aoMudar(false);
         navigate(`/deals/${id}`);
     };
@@ -74,7 +82,10 @@ export function BuscaClientes({ aberta, aoMudar }: { aberta: boolean; aoMudar: (
     return (
         <CommandDialog
             open={aberta}
-            onOpenChange={aoMudar}
+            onOpenChange={(v) => {
+                if (!v) medirBusca(false);
+                aoMudar(v);
+            }}
             commandProps={{ shouldFilter: false, loop: true }}
             contentClassName="vz-buscac max-w-[560px]"
         >

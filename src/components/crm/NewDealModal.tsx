@@ -43,6 +43,7 @@ import {
   Calendar, Flame, CheckCircle2, CalendarIcon
 } from "lucide-react";
 import { type Stage, deriveLegacyStage } from "@/lib/pipelineStyles";
+import { APP_EVENTS, trackApp } from "@/lib/appAnalytics";
 
 const schema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
@@ -192,6 +193,7 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
       setTimeout(() => {
         setSubmitted(false);
         trackEvent(FUNNEL_EVENTS.FIRST_DEAL_CREATED);
+        trackApp(APP_EVENTS.DEAL_CREATED, { origem: "manual" });
         toast.success("Oportunidade criada!");
         form.reset();
         setDisplayValue("");

@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { EvaBot } from "@/components/eva/EvaBot";
 import { formatPhone } from "@/lib/formatPhone";
 import { iniciais, semNome, tituloContato } from "@/lib/contato";
+import { APP_EVENTS, trackApp } from "@/lib/appAnalytics";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // InboxConversation (F4C.2, 2026-05-19)
@@ -260,6 +261,8 @@ function ConversationView({
     typing,
 }: ConversationViewProps) {
     const [composer, setComposer] = useState("");
+    // Texto que veio do "Usar resposta" da Lume, para saber a origem do envio.
+    const textoDaLume = useRef("");
     const [sending, setSending] = useState(false);
     const [showAudio, setShowAudio] = useState(false);
     const [pendingMedia, setPendingMedia] = useState<PendingMedia | null>(null);
@@ -338,6 +341,7 @@ function ConversationView({
     useEffect(() => {
         const t = (injectText || "").trim();
         if (!t) return;
+        textoDaLume.current = t;
         setComposer(t);
         onInjectConsumed?.();
         requestAnimationFrame(() => {
@@ -363,6 +367,10 @@ function ConversationView({
         setComposer("");
         try {
             await onSendText(chat.id, text);
+            // Origem: a resposta da Lume como veio, a resposta da Lume corrigida, ou escrita à mão.
+            const daLume = textoDaLume.current;
+            trackApp(APP_EVENTS.MESSAGE_SENT, { tipo: "texto", origem: !daLume ? "manual" : daLume === text ? "lume" : "lume_editada" });
+            textoDaLume.current = "";
         } catch {
             // Falhou o envio (o erro já foi mostrado lá em cima): devolve o texto
             // pro composer pra o usuário não perder o que escreveu.
@@ -387,6 +395,7 @@ function ConversationView({
         setShowAudio(false);
         try {
             await onSendAudio(chat.id, base64);
+            trackApp(APP_EVENTS.MESSAGE_SENT, { tipo: "audio", origem: "manual" });
         } catch (err) {
             console.error("[InboxConversation] audio send error:", err);
         }
@@ -428,6 +437,7 @@ function ConversationView({
                 caption: mediaCaption.trim() || undefined,
                 fileName: pendingMedia.file.name,
             }, { onProgress: setUploadPct, signal: controller.signal });
+            trackApp(APP_EVENTS.MESSAGE_SENT, { tipo: "midia", origem: "manual" });
             handleMediaCancel();
         } catch (err) {
             if ((err as DOMException)?.name !== "AbortError") {
