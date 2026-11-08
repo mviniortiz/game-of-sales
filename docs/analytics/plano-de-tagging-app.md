@@ -103,6 +103,7 @@ Para cada empresa, a data da primeira vez de:
 
 ## Como validar um evento novo
 
-1. Dispare na tela e confira no GA4 DebugView e no Clarity (o evento aparece na sessão).
-2. Confira a linha em `app_events`, com `empresa`, `pessoa`, `tela` e `props` certos.
-3. Acrescente o evento a este documento e a `APP_EVENTS`.
+1. No localhost (`npm run dev`), logado, o painel "Analytics ao vivo" no canto da tela mostra cada evento na hora, com tela, props e se o lote gravou no banco. Ele não vai pro build de produção.
+2. Dispare na tela e confira no GA4 DebugView e no Clarity (o evento aparece na sessão).
+3. Confira a linha em `app_events`, com `empresa`, `pessoa`, `tela` e `props` certos.
+4. Acrescente o evento a este documento e a `APP_EVENTS`.

@@ -71,6 +71,27 @@ let abaAtual = "";
 let fila: Array<{ event: string; tela: string; aba: string; props: Props; at: string; session_id: string }> = [];
 let timer: ReturnType<typeof setTimeout> | null = null;
 
+// Espiões do painel de eventos (só no localhost). Em produção ninguém assina.
+export type EventoEspiado = { id: number; event: string; tela: string; aba: string; props: Props; at: string; envio: "na_fila" | "gravado" | "falhou" | "demo"; erro?: string };
+type Espiao = (e: EventoEspiado) => void;
+const espioes = new Set<Espiao>();
+let espiaoSeq = 0;
+const espiados = new Map<string, EventoEspiado>();
+/** Assina cada evento e o resultado do envio. Devolve a função de cancelar. */
+export function onTrackApp(cb: Espiao): () => void {
+    espioes.add(cb);
+    return () => espioes.delete(cb);
+}
+function avisar(e: EventoEspiado) {
+    espioes.forEach((cb) => {
+        try {
+            cb({ ...e });
+        } catch {
+            // painel nunca quebra o app
+        }
+    });
+}
+
 function sessionId(): string {
     try {
         const s = sessionStorage.getItem(SID_KEY);
@@ -98,11 +119,22 @@ async function enviar() {
         // Carrega o cliente só na hora de enviar: quem só importa trackApp não abre conexão.
         const { supabase } = await import("@/integrations/supabase/client");
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC nova, fora dos tipos gerados
-        await (supabase as any).rpc("log_app_events", { eventos: lote, empresa: empresaAtual });
-    } catch {
+        const { error } = await (supabase as any).rpc("log_app_events", { eventos: lote, empresa: empresaAtual });
+        if (espioes.size) marcarLote(lote, error ? "falhou" : "gravado", error?.message);
+    } catch (err) {
         // Analytics nunca derruba a tela; o lote perdido não volta.
+        if (espioes.size) marcarLote(lote, "falhou", err instanceof Error ? err.message : "erro");
     }
     if (fila.length) agendar(0);
+}
+
+function marcarLote(lote: typeof fila, envio: EventoEspiado["envio"], erro?: string) {
+    for (const item of lote) {
+        const e = espiados.get(item.at + item.event);
+        if (!e) continue;
+        espiados.delete(item.at + item.event);
+        avisar({ ...e, envio, ...(erro ? { erro } : {}) });
+    }
 }
 
 function agendar(ms = 5000) {
@@ -130,9 +162,16 @@ export function trackApp(event: AppEventName, props: Props = {}) {
         const tela = (props.tela as string) ?? telaAtual;
         const aba = (props.aba as string) ?? abaAtual;
         trackBehavior(event, { ...props, tela, ...(aba ? { aba } : {}) });
-        if (isDemoSession()) return;
         const { tela: _t, aba: _a, ...resto } = props;
-        fila.push({ event, tela, aba, props: resto, at: new Date().toISOString(), session_id: sessionId() });
+        const at = new Date().toISOString();
+        const demo = isDemoSession();
+        if (espioes.size) {
+            const e: EventoEspiado = { id: ++espiaoSeq, event, tela, aba, props: resto, at, envio: demo ? "demo" : "na_fila" };
+            if (!demo) espiados.set(at + event, e);
+            avisar(e);
+        }
+        if (demo) return;
+        fila.push({ event, tela, aba, props: resto, at, session_id: sessionId() });
         agendar();
     } catch {
         // idem
