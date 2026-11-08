@@ -10,6 +10,8 @@ import type { QuoteItem } from "@/hooks/useQuoteBoard";
 import type { Tag } from "@/types/tags";
 // F5P.4e — Phosphor duotone padronizado (consistente com sidebar e header).
 import { Tray as TrayPh, ArrowRight as ArrowRightPh } from "@phosphor-icons/react";
+import { useMostrarMais } from "@/hooks/useMostrarMais";
+import { MostrarMais } from "@/components/ui/MostrarMais";
 
 interface KanbanColumnProps {
   stage: Stage;
@@ -86,7 +88,9 @@ export const KanbanColumn = memo(({
     ? Math.max(0.04, Math.min(1, total.value / maxColumnValue))
     : 0;
 
-  const dealIds = useMemo(() => deals.map(d => d.id), [deals]);
+  // 20 cartões por coluna; o resto aparece no "Mostrar mais" do fim da coluna.
+  const lote = useMostrarMais(deals, 20, stage.id);
+  const dealIds = useMemo(() => lote.visiveis.map(d => d.id), [lote.visiveis]);
 
   const conversionRate = useMemo(() => {
     // Com menos de 5 na etapa anterior a razão é ruído: 1 de 1 virava "100%".
@@ -178,7 +182,7 @@ export const KanbanColumn = memo(({
                     </p>
                   </div>
                 ) : (
-                  deals.map((deal) => (
+                  lote.visiveis.map((deal) => (
                     <DealCard
                       key={deal.id}
                       deal={deal}
@@ -197,6 +201,7 @@ export const KanbanColumn = memo(({
                     />
                   ))
                 )}
+                <MostrarMais restante={lote.restante} passo={lote.passo} total={lote.total} onClick={lote.mostrarMais} />
               </div>
             </SortableContext>
           </ScrollArea>

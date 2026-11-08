@@ -33,6 +33,8 @@ import { usePlano } from "@/hooks/usePlano";
 import { useVagaFundadora } from "@/hooks/useVagaFundadora";
 import { fraseFundadora } from "@/lib/fundadora";
 import { PERIODS, periodFromParam, type Period } from "@/lib/quotePeriod";
+import { useMostrarMais } from "@/hooks/useMostrarMais";
+import { MostrarMais } from "@/components/ui/MostrarMais";
 
 type Tab = "parked" | "your_turn" | "talking" | "closed";
 // A aba fica no endereço (?aba=) para o Início e os avisos levarem direto a ela.
@@ -335,6 +337,8 @@ function QuoteList({
 
   const [abertoId, setAbertoId] = useState<string | null>(null);
   const aberto = visible.find((q) => q.id === abertoId) ?? visible[0] ?? null;
+  // 30 por vez; volta ao começo quando muda aba, busca ou ordem.
+  const lote = useMostrarMais(visible, 30, `${tab}|${needle}|${sort}`);
 
   return (
     <section aria-label="Orçamentos por situação">
@@ -410,7 +414,7 @@ function QuoteList({
                 <span />
               </div>
               <ul>
-                {visible.map((q) => (
+                {lote.visiveis.map((q) => (
                   <QuoteRow
                     key={q.id}
                     q={q}
@@ -421,6 +425,7 @@ function QuoteList({
                   />
                 ))}
               </ul>
+              <MostrarMais restante={lote.restante} passo={lote.passo} total={lote.total} onClick={lote.mostrarMais} />
             </>
           )}
         </div>

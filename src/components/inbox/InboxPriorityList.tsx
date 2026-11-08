@@ -18,6 +18,7 @@ import type { QuoteItem } from "@/hooks/useQuoteBoard";
 import type { Chat } from "@/hooks/useEvolutionAPI";
 import { EvaBot } from "@/components/eva/EvaBot";
 import { ago, brl } from "@/lib/quoteText";
+import { MostrarMais } from "@/components/ui/MostrarMais";
 
 // ─── Tipos do sinal de prioridade (placeholder do cálculo real) ─────────────
 
@@ -231,6 +232,21 @@ export function InboxPriorityList({
     }, [active, order, signals, quoteByChat]);
 
     const primeira = sections.find((sec) => sec.chats.length > 0)?.chats[0]?.id ?? null;
+
+    // 60 conversas por vez, contando todas as seções em ordem; o resto aparece
+    // no "Mostrar mais" do fim. Volta ao começo quando muda filtro, busca ou ordem.
+    const PASSO = 60;
+    const [limite, setLimite] = useState(PASSO);
+    useEffect(() => setLimite(PASSO), [filter, query, order]);
+    const totalLista = sections.reduce((n, sec) => n + sec.chats.length, 0);
+    const secoesVisiveis = useMemo(() => {
+        let resta = limite;
+        return sections.map((sec) => {
+            const parte = sec.chats.slice(0, Math.max(0, resta));
+            resta -= parte.length;
+            return { ...sec, total: sec.chats.length, chats: parte };
+        });
+    }, [sections, limite]);
     useEffect(() => {
         if (autoSelectFirst && !selectedChatId && primeira) onSelect(primeira);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -343,13 +359,13 @@ export function InboxPriorityList({
 
             {/* Lista — overflowX hidden: lista NUNCA rola pro lado */}
             <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", paddingBottom: 8 }}>
-                {sections.map((section) => (
+                {secoesVisiveis.map((section) => (
                     <div key={section.key}>
                         {section.label && section.chats.length > 0 && (
                             <p className="vz-evlist-section">
                                 {section.label}
                                 <span className="vz-evlist-section-count">
-                                    {section.chats.length}
+                                    {section.total}
                                 </span>
                             </p>
                         )}
@@ -367,6 +383,9 @@ export function InboxPriorityList({
                         </ul>
                     </div>
                 ))}
+                <div style={{ padding: "0 12px" }}>
+                    <MostrarMais restante={Math.max(0, totalLista - limite)} passo={PASSO} total={totalLista} onClick={() => setLimite((l) => l + PASSO)} />
+                </div>
 
                 {active.length === 0 && loading && chats.length === 0 && (
                     <ul aria-label="Carregando conversas" className="px-3 pt-2 space-y-2">
