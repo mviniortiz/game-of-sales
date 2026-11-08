@@ -95,6 +95,8 @@ import {
   useStageDealCounts,
   DEFAULT_STAGE_CONFIGS,
 } from "@/hooks/usePipelines";
+import { useMostrarMais } from "@/hooks/useMostrarMais";
+import { MostrarMais } from "@/components/ui/MostrarMais";
 
 // ICON_MAP, COLOR_MAP, configToStage, Stage e StageConfig agora vivem em
 // @/lib/pipelineStyles (compartilhados entre CRM, DealDetails, dashboards).
@@ -1211,6 +1213,8 @@ export default function CRM() {
     }
     return sortDeals(filteredDeals);
   }, [filteredDeals, sortBy, sortDeals]);
+  // Lista: 50 por vez; volta ao começo quando muda busca, filtro ou ordem.
+  const loteLista = useMostrarMais(sortedDealsForList, 50, `${searchQuery}|${sortBy}|${activeFilterCount}`);
 
   // Kanban/Lista: linha de cima no desktop (a barra de ferramentas não cabe em
   // 1440px com ele), barra de ferramentas no celular.
@@ -1908,7 +1912,7 @@ export default function CRM() {
                     <span aria-hidden />
                   </div>
 
-                  {sortedDealsForList.map((deal) => {
+                  {loteLista.visiveis.map((deal) => {
                     const value = Number(deal.value) || 0;
                     const owner = (deal as { profiles?: { nome?: string; avatar_url?: string } }).profiles;
                     const ownerName = owner?.nome || (deal.assignee_outside_company ? "Outro time" : "Sem responsável");
@@ -2011,6 +2015,7 @@ export default function CRM() {
                       </div>
                     );
                   })}
+                  <MostrarMais restante={loteLista.restante} passo={loteLista.passo} total={loteLista.total} onClick={loteLista.mostrarMais} />
                 </div>
               )}
             </div>

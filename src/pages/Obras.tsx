@@ -19,6 +19,8 @@ import {
     type PrazosObra,
 } from "@/hooks/useObras";
 import { Swap } from "@/vendor/stageshow/motion/Swap";
+import { useMostrarMais } from "@/hooks/useMostrarMais";
+import { MostrarMais } from "@/components/ui/MostrarMais";
 
 const kwpTexto = (o: Obra) => (o.system_kwp != null ? `${String(o.system_kwp).replace(".", ",")} kWp` : "kWp não informado");
 const diasTexto = (n: number) => (n === 1 ? "1 dia" : `${n} dias`);
@@ -158,6 +160,7 @@ export default function Obras() {
     const ligadas = todas.filter((o) => o.etapa === "ligada");
     const visiveis = aba === "andamento" ? andamento : ligadas;
     const aberta = visiveis.find((o) => o.id === abertaId) ?? visiveis[0] ?? null;
+    const lote = useMostrarMais(visiveis, 30, aba);
     const travadas = andamento.filter((o) => travada(o, prazos)).length;
     // No celular o painel fica abaixo da lista: leva a pessoa até ele.
     const abrir = (id: string) => {
@@ -212,7 +215,7 @@ export default function Obras() {
                 <div className="vp-orca">
                     <section className="vp-tabela" aria-label="Obras">
                         <div className="vp-obra__cab" aria-hidden="true"><span>Cliente</span><span>Etapa</span><span>O que falta</span></div>
-                        {visiveis.map((o) => {
+                        {lote.visiveis.map((o) => {
                             const parada = travada(o, prazos);
                             const prazo = prazoDa(o.etapa, prazos);
                             return (
@@ -229,6 +232,7 @@ export default function Obras() {
                                 </button>
                             );
                         })}
+                        <MostrarMais restante={lote.restante} passo={lote.passo} total={lote.total} onClick={lote.mostrarMais} />
                     </section>
                     {aberta && <Painel obra={aberta} prazos={prazos} />}
                 </div>
