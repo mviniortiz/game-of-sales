@@ -26,12 +26,11 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { trackBehavior, clarityUpgrade, DEMO_EVENTS } from "@/lib/analytics";
 import {
     AlertCircle,
-    AlertTriangle,
     ArrowRight,
     ArrowUp,
-    BarChart3,
-    CheckCircle2,
+    Check,
     ChevronRight,
+    Circle,
     Clock,
     Copy,
     Edit3,
@@ -43,7 +42,6 @@ import {
     RefreshCw,
     ThermometerSun,
     UserCog,
-    Workflow,
     X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -72,6 +70,8 @@ import type {
 import { proximaAcaoLabel } from "@/lib/eva/qualificationSchema";
 import { EvaBot } from "@/components/eva/EvaBot";
 import { ContaLuzCard } from "@/components/inbox/ContaLuzCard";
+import "@/components/layout/tela.css";
+import "./evaPainel.css";
 
 // ─── Movimento (disciplinado, com fallback de reduced-motion) ───────────────
 // LP-INBOX.2 2026-06-21: as seções entram com fade+rise em stagger curto, o
@@ -786,18 +786,13 @@ function PanelContent({
             <style>{`
                 @keyframes vzEvaStalePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.45;transform:scale(.82)} }
                 .vz-eva-stale-dot { animation: vzEvaStalePulse 2.2s ease-in-out infinite; }
-                .vz-eva-hero { transition: box-shadow .2s cubic-bezier(0.22,1,0.36,1), transform .2s cubic-bezier(0.22,1,0.36,1); }
-                .vz-eva-hero:hover { box-shadow: 0 2px 4px rgba(15,23,42,0.05), 0 18px 40px -18px rgba(21,86,192,0.26); }
                 .vz-eva-cta { transition: transform .18s cubic-bezier(0.22,1,0.36,1), box-shadow .18s cubic-bezier(0.22,1,0.36,1), filter .18s cubic-bezier(0.22,1,0.36,1); }
                 .vz-eva-cta:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.05); }
                 .vz-eva-cta:active:not(:disabled) { transform: translateY(0); }
-                .vz-eva-ghost { transition: background .18s cubic-bezier(0.22,1,0.36,1), border-color .18s cubic-bezier(0.22,1,0.36,1), transform .18s cubic-bezier(0.22,1,0.36,1); }
-                .vz-eva-ghost:hover { background: rgba(21,86,192,0.05); transform: translateY(-1px); }
-                .vz-eva-ghost:active { transform: translateY(0); }
                 @media (prefers-reduced-motion: reduce) {
                     .vz-eva-stale-dot { animation: none !important; }
-                    .vz-eva-hero, .vz-eva-cta, .vz-eva-ghost { transition: none !important; }
-                    .vz-eva-cta:hover:not(:disabled), .vz-eva-ghost:hover { transform: none !important; }
+                    .vz-eva-cta { transition: none !important; }
+                    .vz-eva-cta:hover:not(:disabled) { transform: none !important; }
                 }
             `}</style>
 
@@ -1177,141 +1172,90 @@ function RealContent({
     const hasHero = Boolean(
         nextActionLabel || analysis.nextAction || qualification.resposta_sugerida || analysis.draft,
     );
-    const hasDiagnosis = Boolean(
-        qualification.score_sugerido !== null ||
-        qualification.temperatura ||
-        qualification.fit_sugerido,
-    );
+    const temp = qualification.temperatura ? TEMPERATURA_META[qualification.temperatura].label : null;
+    const score = qualification.score_sugerido;
+    // A nota da IA vira faixa: número exato de 0 a 100 é precisão que ela não tem.
+    const chance = score === null ? null : score >= 70 ? "alta" : score >= 40 ? "média" : "baixa";
+    const leitura = temp || chance ? { temp, chance } : null;
+    const reply = qualification.resposta_sugerida || analysis.draft || "";
+    const acao = nextActionLabel || analysis.nextAction;
 
-    // LP-INBOX.2 2026-06-21: a apresentação vira uma decision stack ENCENADA.
-    // Diagnóstico rápido (1 olhada) → herói (o que fazer agora) → nudge →
-    // handoff → leitura completa → dossiê em seções separadas. As seções
-    // entram em stagger (rise+fade); a LÓGICA e as condições são as mesmas.
+    // Ordem: o que fazer agora (palco amarelo, o único da tela) → alerta de
+    // passar pra vendedor → por que a Lume leu assim → dossiê que abre e fecha.
+    // As seções entram em stagger curto; com movimento reduzido, já paradas.
     const Stack = reduce ? "div" : motion.div;
     const stackProps = reduce
         ? {}
         : ({ variants: staggerGroup, initial: "hidden", animate: "show" } as const);
 
     return (
-        <Stack className="space-y-4" {...(stackProps as object)}>
-            {/* EVA.AUTO.1 — atribuição: a Lume leu sozinha quando o lead chegou */}
+        <Stack className="ep-pilha" {...(stackProps as object)}>
+            {/* EVA.AUTO.1 — atribuição: a Lume leu sozinha quando o cliente chegou */}
             {autoQualified && (
-                <RevealItem
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg"
-                    style={{ background: "rgba(109,40,217,0.06)", border: "1px solid rgba(109,40,217,0.16)" }}
-                >
+                <RevealItem className="ep-aviso">
                     <EvaBot size={16} still />
-                    <p className="text-[11.5px] font-medium" style={{ color: "#6D28D9", lineHeight: 1.4 }}>
-                        A Lume leu esta conversa sozinha quando o lead chegou.
-                    </p>
+                    <p>A Lume leu esta conversa sozinha quando o cliente chegou.</p>
                 </RevealItem>
             )}
-            {/* Avisos finos */}
             {legacy && (
-                <RevealItem
-                    className="px-3 py-2 flex items-start gap-2 rounded-md"
-                    style={{
-                        background: "rgba(245,158,11,0.06)",
-                        borderLeft: "2px solid rgba(245,158,11,0.5)",
-                    }}
-                >
-                    <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" style={{ color: "#B45309" }} />
-                    <p className="text-[11.5px]" style={{ color: "#92400E", lineHeight: 1.4 }}>
-                        Esta conversa ainda usa análise no formato antigo. A próxima
-                        reanálise traz qualificação completa.
-                    </p>
+                <RevealItem className="ep-aviso">
+                    <Info aria-hidden style={{ color: "var(--vyz-warning)" }} />
+                    <p>Esta leitura está no formato antigo. Ler de novo traz a análise completa.</p>
                 </RevealItem>
             )}
 
-            {/* ── DIAGNÓSTICO RÁPIDO: a leitura em 1 olhada ── */}
-            {hasDiagnosis && (
-                <RevealItem>
-                    <QuickDiagnosis qualification={qualification} />
-                </RevealItem>
-            )}
-
-            {/* ── HERÓI: o que fazer agora (próxima ação + resposta sugerida) ── */}
+            {/* ── PALCO: o que fazer agora (próxima ação + resposta sugerida) ── */}
             {hasHero && (
-                <RevealItem
-                    className="rounded-xl overflow-hidden vz-eva-hero"
-                    style={{
-                        background: "#FFFFFF",
-                        border: "1px solid var(--ibx-line)",
-                        // Fio roxo de 2px no topo: no meio de um painel todo
-                        // branco, é o que diz "a decisão é aqui" antes de a
-                        // pessoa ler qualquer palavra. Roxo só como acento,
-                        // igual à Lume logo abaixo.
-                        borderTop: "2px solid #6D28D9",
-                        boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 14px 36px -18px rgba(109,40,217,0.28)",
-                    }}
-                >
-                    <div className="px-4 pt-3 pb-1.5">
-                        <p
-                            className="text-[10.5px] uppercase inline-flex items-center gap-1.5"
-                            style={{ color: "#6D28D9", fontWeight: 700, letterSpacing: "0.08em" }}
-                        >
-                            <EvaBot size={16} still />
+                <RevealItem>
+                    <section className="vp-palco ep-palco" aria-label="O que fazer agora">
+                        <p className="vp-palco__rotulo">
+                            <EvaBot size={20} still />
                             O que fazer agora
                         </p>
-                    </div>
-                    {(nextActionLabel || analysis.nextAction) && (
-                        <div className="px-4 pb-0.5">
-                            <p
-                                className="text-[14px] font-semibold"
-                                style={{ color: "#0F1730", lineHeight: 1.35 }}
-                            >
-                                {nextActionLabel || analysis.nextAction}
-                            </p>
-                            {nextActionLabel && analysis.nextAction && analysis.nextAction !== nextActionLabel && (
-                                <p className="text-[11.5px] mt-1" style={{ color: "#64748B", lineHeight: 1.45 }}>
-                                    {analysis.nextAction}
-                                </p>
-                            )}
-                        </div>
-                    )}
-                    {(qualification.resposta_sugerida || analysis.draft) && (
-                        <SuggestedReply
-                            text={qualification.resposta_sugerida || analysis.draft || ""}
-                            onSend={onSendReply}
-                            onUseReply={onUseReply}
-                            hasAction={Boolean(nextActionLabel || analysis.nextAction)}
-                            onResolveSuggestion={onResolveSuggestion}
-                        />
-                    )}
+                        {acao && <p className="vp-palco__titulo">{acao}</p>}
+                        {nextActionLabel && analysis.nextAction && analysis.nextAction !== nextActionLabel && (
+                            <p className="vp-palco__motivo">{analysis.nextAction}</p>
+                        )}
+                        {leitura && <Leitura {...leitura} />}
+                        {reply && (
+                            <SuggestedReply
+                                text={reply}
+                                onSend={onSendReply}
+                                onUseReply={onUseReply}
+                                onResolveSuggestion={onResolveSuggestion}
+                            />
+                        )}
+                    </section>
                 </RevealItem>
             )}
 
-            {/* Nível 2 do upgrade de confiança: card "novo lead pronto pro pipeline",
+            {/* Nível 2 do upgrade de confiança: card "novo cliente pronto pro funil",
                 montado no PanelContent e passado como slot. */}
             {createNudge && <RevealItem>{createNudge}</RevealItem>}
 
-            {/* Handoff — alerta importante, logo abaixo do herói */}
             {qualification.deve_fazer_handoff && (
                 <RevealItem>
                     <RecommendationCallout
                         icon={UserCog}
-                        tone="amber"
                         title="A Lume sugere passar para um vendedor"
                         body="Esta conversa pede atenção de alguém do time antes da próxima resposta."
                     />
                 </RevealItem>
             )}
 
-            {/* ── LEITURA COMPLETA: justificativa + sinais agrupados ── */}
+            {/* ── POR QUE: justificativa + sinais ── */}
             <RevealItem>
-                <QualificationBlock qualification={qualification} />
+                <QualificationBlock qualification={qualification} leitura={hasHero ? null : leitura} />
             </RevealItem>
 
-            {/* ── DOSSIÊ: seções SEPARADAS com respiro (não 1 caixa monolítica) ── */}
-            <RevealItem className="space-y-2.5">
+            {/* ── DOSSIÊ: um cartão por seção, fechados ── */}
+            <RevealItem className="ep-pilha">
                 <DossierCard>
                     <DossierRow title="Resumo da conversa">
-                        <p className="text-[13px]" style={{ color: "#334155", lineHeight: 1.6 }}>
-                            {summary}
-                        </p>
+                        <p className="ep-texto" style={{ marginTop: 0 }}>{summary}</p>
                         {analysis.stage && (
-                            <p className="text-[11.5px] mt-1.5" style={{ color: "#64748B" }}>
-                                Estágio sugerido: <strong style={{ color: "#0F1730" }}>{analysis.stage}</strong>
+                            <p className="ep-nota">
+                                Etapa sugerida: <b style={{ color: "var(--vyz-text-primary)" }}>{analysis.stage}</b>
                             </p>
                         )}
                     </DossierRow>
@@ -1320,7 +1264,7 @@ function RealContent({
                 {hasInfo && (
                     <DossierCard>
                         <DossierRow
-                            title="Informações do lead"
+                            title="Sobre o cliente"
                             count={qualification.info_coletada.length + qualification.info_faltante.length}
                         >
                             <InfoLists
@@ -1346,7 +1290,7 @@ function RealContent({
                 />
 
                 <DossierCard>
-                    <DossierRow title="Oportunidade no CRM">
+                    <DossierRow title="No funil">
                         <CrmBlock
                             matchedDeal={dealState.matchedDeal}
                             hasLinkedOpportunity={dealState.hasLinkedOpportunity}
@@ -1359,28 +1303,32 @@ function RealContent({
 
             {/* As regras do Lume Studio saíram daqui (2026-08-24): são iguais em
                 toda conversa, então ocupavam o fim do painel repetindo a mesma
-                coisa a cada lead. Continuam visíveis no Lume Studio e no
+                coisa a cada cliente. Continuam visíveis no Lume Studio e no
                 DealCommandCenter, onde a pergunta é sobre a Lume e não sobre
-                este lead. */}
+                este cliente. */}
         </Stack>
+    );
+}
+
+/** "Morno · chance de fechar média": a leitura em uma linha. */
+function Leitura({ temp, chance, className = "ep-palco__leitura" }: { temp: string | null; chance: string | null; className?: string }) {
+    return (
+        <p className={className}>
+            {temp && <b>{temp}</b>}
+            {temp && chance && " · "}
+            {chance && (
+                <>
+                    chance de fechar <b>{chance}</b>
+                </>
+            )}
+        </p>
     );
 }
 
 // ─── Dossiê: cartão por seção (respiro entre, não border monolítico) ────────
 
 function DossierCard({ children }: { children: React.ReactNode }) {
-    return (
-        <div
-            className="rounded-xl px-4 transition-shadow duration-200"
-            style={{
-                background: "#FFFFFF",
-                border: "1px solid var(--ibx-line-soft)",
-                boxShadow: "0 1px 2px rgba(15,23,42,0.03)",
-            }}
-        >
-            {children}
-        </div>
-    );
+    return <div className="vp-cartao ep-dossie">{children}</div>;
 }
 
 // ─── Dossiê: linha expansível (progressive disclosure) ──────────────────────
@@ -1399,47 +1347,15 @@ function DossierRow({
     const [open, setOpen] = useState(defaultOpen);
     const reduce = useReducedMotion();
     return (
-        <div className="border-b last:border-b-0" style={{ borderColor: "var(--ibx-line-soft)" }}>
-            <button
-                type="button"
-                onClick={() => setOpen((o) => !o)}
-                aria-expanded={open}
-                className="w-full flex items-center gap-2 py-3 text-left group"
-            >
-                <ChevronRight
-                    className="h-3.5 w-3.5 shrink-0 transition-transform duration-200"
-                    style={{
-                        color: open ? "#1556C0" : "#94A3B8",
-                        transform: open ? "rotate(90deg)" : "none",
-                        transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
-                    }}
-                />
-                <span
-                    className="text-[10.5px] uppercase flex-1 transition-colors duration-200"
-                    style={{
-                        color: open ? "#0F1730" : "#475569",
-                        fontWeight: 700,
-                        letterSpacing: "0.07em",
-                    }}
-                >
-                    {title}
-                </span>
-                {typeof count === "number" && count > 0 && (
-                    <span
-                        className="text-[11.5px] tabular-nums px-1.5 py-0.5 rounded-full shrink-0"
-                        style={{
-                            background: "rgba(21,86,192,0.08)",
-                            color: "#1D4ED8",
-                            fontWeight: 700,
-                        }}
-                    >
-                        {count}
-                    </span>
-                )}
+        <div>
+            <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="ep-dossie__cab">
+                <span className="vp-rotulo">{title}</span>
+                {typeof count === "number" && count > 0 && <span className="ep-dossie__num">{count}</span>}
+                <ChevronRight aria-hidden />
             </button>
-            {/* LP-INBOX.2 — anima a altura no expand/collapse (com reduced-motion fallback). */}
+            {/* Anima a altura no abrir e fechar (sem movimento em reduced-motion). */}
             {reduce ? (
-                open && <div className="pb-3.5 pl-[22px]">{children}</div>
+                open && <div className="ep-dossie__corpo">{children}</div>
             ) : (
                 <AnimatePresence initial={false}>
                     {open && (
@@ -1451,7 +1367,7 @@ function DossierRow({
                             transition={{ duration: 0.24, ease: EVA_EASE }}
                             style={{ overflow: "hidden" }}
                         >
-                            <div className="pb-3.5 pl-[22px]">{children}</div>
+                            <div className="ep-dossie__corpo">{children}</div>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -1467,192 +1383,53 @@ function DossierRow({
 
 type ToneKey = "blue" | "green" | "amber" | "orange" | "rose" | "purple" | "neutral";
 
-const TONE_STYLES: Record<ToneKey, { bg: string; border: string; text: string }> = {
-    blue: { bg: "rgba(21,86,192,0.10)", border: "rgba(21,86,192,0.30)", text: "#1D4ED8" },
-    green: { bg: "rgba(16,185,129,0.10)", border: "rgba(16,185,129,0.30)", text: "#047857" },
-    amber: { bg: "rgba(245,158,11,0.10)", border: "rgba(245,158,11,0.30)", text: "#B45309" },
-    orange: { bg: "rgba(249,115,22,0.10)", border: "rgba(249,115,22,0.30)", text: "#C2410C" },
-    rose: { bg: "rgba(244,63,94,0.10)", border: "rgba(244,63,94,0.30)", text: "#BE123C" },
-    purple: { bg: "rgba(124,58,237,0.10)", border: "rgba(124,58,237,0.30)", text: "#6D28D9" },
-    neutral: { bg: "rgba(148,163,184,0.10)", border: "rgba(148,163,184,0.30)", text: "#475569" },
-};
+function QualificationBlock({
+    qualification,
+    leitura,
+}: {
+    qualification: Qualification;
+    /** Só quando não há palco (sem próxima ação): a linha "Morno · chance" vem pra cá. */
+    leitura: { temp: string | null; chance: string | null } | null;
+}) {
+    const urg = qualification.urgencia ? URGENCIA_META[qualification.urgencia] : null;
+    // Sinais numa cor só: etiqueta neutra com o nome do sinal e o valor.
+    const signals: { category: string; value: string }[] = [];
+    if (urg) signals.push({ category: "Urgência", value: urg.label });
+    if (qualification.intencao)
+        signals.push({ category: "Quer saber de", value: INTENCAO_LABELS[qualification.intencao] ?? qualification.intencao });
+    if (qualification.servico_interesse) signals.push({ category: "Interesse", value: qualification.servico_interesse });
+    if (qualification.objecao) signals.push({ category: "Objeção", value: qualification.objecao });
 
-// ─── Diagnóstico rápido — a leitura em 1 olhada (faixa compacta) ────────────
+    if (!qualification.score_justificativa && signals.length === 0 && !leitura) return null;
 
-function QuickDiagnosis({ qualification }: { qualification: Qualification }) {
-    const score = qualification.score_sugerido;
-    const temp = qualification.temperatura ? TEMPERATURA_META[qualification.temperatura] : null;
-    const TempIcon = temp?.icon;
-    const tempStyle = temp ? TONE_STYLES[temp.tone] : null;
-    // A nota da IA vira faixa: número exato de 0 a 100 é precisão que ela não tem.
-    const chance = score === null ? null : score >= 70 ? "alta" : score >= 40 ? "média" : "baixa";
-
-    if (!temp && !chance) return null;
     return (
-        <div
-            className="flex items-center gap-3 rounded-xl px-3.5 py-2.5"
-            style={{
-                background: "#FFFFFF",
-                border: "1px solid var(--ibx-line)",
-                boxShadow: "0 1px 2px rgba(15,23,42,0.03)",
-            }}
-        >
-            {temp && tempStyle && (
-                <div
-                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg shrink-0"
-                    style={{ background: tempStyle.bg, border: `1px solid ${tempStyle.border}` }}
-                    title={`Temperatura: ${temp.label}`}
-                >
-                    {TempIcon && <TempIcon className="h-3.5 w-3.5" strokeWidth={2.4} style={{ color: tempStyle.text }} />}
-                    <span className="text-[11.5px]" style={{ color: tempStyle.text, fontWeight: 700 }}>
-                        {temp.label}
-                    </span>
+        <section className="vp-cartao ep-cartao">
+            <p className="vp-rotulo">Por que a Lume leu assim</p>
+            {leitura && <Leitura {...leitura} className="ep-texto" />}
+            {qualification.score_justificativa && <p className="ep-texto">{qualification.score_justificativa}</p>}
+            {signals.length > 0 && (
+                <div className="ep-chips">
+                    {signals.map((sig) => (
+                        <span key={sig.category} className="vp-chip" title={`${sig.category}: ${sig.value}`}>
+                            <span>{sig.category}:</span> {sig.value}
+                        </span>
+                    ))}
                 </div>
             )}
-            {chance && (
-                <p className="text-[12px]" style={{ color: "#475569" }}>
-                    Chance de fechar: <strong style={{ color: "#0F1730" }}>{chance}</strong>
-                </p>
-            )}
-        </div>
+        </section>
     );
 }
 
-function QualificationBlock({ qualification }: { qualification: Qualification }) {
-    const reduce = useReducedMotion();
-    const urg = qualification.urgencia ? URGENCIA_META[qualification.urgencia] : null;
-
-    // LP-INBOX.2: sinais AGRUPADOS por categoria, cada um com micro-label.
-    // O score/fit/temperatura já apareceram no diagnóstico rápido acima; aqui
-    // entra a justificativa + os sinais qualificados, organizados.
-    const signals: { category: string; tone: ToneKey; value: string; icon?: typeof Flame }[] = [];
-    if (urg) signals.push({ category: "Urgência", tone: urg.tone, value: urg.label });
-    if (qualification.intencao)
-        signals.push({
-            category: "Intenção",
-            tone: "purple",
-            value: INTENCAO_LABELS[qualification.intencao] ?? qualification.intencao,
-        });
-    if (qualification.servico_interesse)
-        signals.push({ category: "Interesse", tone: "blue", value: qualification.servico_interesse });
-    if (qualification.objecao)
-        signals.push({ category: "Objeção", tone: "rose", value: qualification.objecao });
-
-    const hasContent = Boolean(qualification.score_justificativa) || signals.length > 0;
-    if (!hasContent) return null;
-
-    const PillsWrap = reduce ? "div" : motion.div;
-    const pillsProps = reduce
-        ? {}
-        : ({ variants: staggerGroup, initial: "hidden", animate: "show" } as const);
-
+function InfoLists({ coletada, faltante }: { coletada: string[]; faltante: string[] }) {
     return (
-        <div className="px-0.5">
-            <p
-                className="text-[10.5px] uppercase mb-2.5"
-                style={{ color: "#64748B", fontWeight: 700, letterSpacing: "0.08em" }}
-            >
-                Por que a Lume leu assim
-            </p>
-            {qualification.score_justificativa && (
-                <p className="text-[11.5px] mb-3" style={{ color: "#475569", lineHeight: 1.55 }}>
-                    {qualification.score_justificativa}
-                </p>
-            )}
-            {signals.length > 0 && (
-                <PillsWrap className="flex flex-wrap gap-1.5" {...(pillsProps as object)}>
-                    {signals.map((sig) => (
-                        <CategoryPill
-                            key={sig.category}
-                            category={sig.category}
-                            value={sig.value}
-                            tone={sig.tone}
-                            icon={sig.icon}
-                        />
-                    ))}
-                </PillsWrap>
-            )}
-        </div>
-    );
-}
-
-/** Pill com micro-label de categoria (esquerda) + valor (direita), agrupados. */
-function CategoryPill({
-    category,
-    value,
-    tone,
-    icon: Icon,
-}: {
-    category: string;
-    value: string;
-    tone: ToneKey;
-    icon?: typeof Flame;
-}) {
-    const reduce = useReducedMotion();
-    const s = TONE_STYLES[tone];
-    const inner = (
-        <span
-            className="inline-flex items-stretch rounded-md overflow-hidden text-[11.5px]"
-            style={{ border: `1px solid ${s.border}` }}
-            title={`${category}: ${value}`}
-        >
-            <span
-                className="inline-flex items-center px-1.5 uppercase"
-                style={{ background: "rgba(15,23,42,0.035)", color: "#64748B", fontWeight: 700, letterSpacing: "0.06em", fontSize: "10.5px" }}
-            >
-                {category}
-            </span>
-            <span
-                className="inline-flex items-center gap-1 px-2 py-0.5"
-                style={{ background: s.bg, color: s.text, fontWeight: 600 }}
-            >
-                {Icon && <Icon className="h-3 w-3" strokeWidth={2.4} />}
-                {value}
-            </span>
-        </span>
-    );
-    if (reduce) return inner;
-    return <motion.div variants={riseItem}>{inner}</motion.div>;
-}
-
-function InfoLists({
-    coletada,
-    faltante,
-}: {
-    coletada: string[];
-    faltante: string[];
-}) {
-    // LP-INBOX.2: dois grupos VISUALMENTE separados — "Já sabemos" (verde) e
-    // "Falta descobrir" (âmbar), cada um com fundo tinto próprio.
-    return (
-        <div className="grid grid-cols-1 gap-2.5">
+        <div>
             {coletada.length > 0 && (
-                <div
-                    className="rounded-lg px-3 py-2.5"
-                    style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.20)" }}
-                >
-                    <p
-                        className="text-[10.5px] uppercase mb-1.5 inline-flex items-center gap-1"
-                        style={{
-                            color: "#047857",
-                            fontWeight: 700,
-                            letterSpacing: "0.08em",
-                        }}
-                    >
-                        <CheckCircle2 className="h-3 w-3" style={{ color: "#10B981" }} />
-                        Já sabemos
-                    </p>
-                    <ul className="space-y-1">
+                <div className="ep-lista ep-lista--sabe">
+                    <span className="vp-rotulo">Já sabemos</span>
+                    <ul>
                         {coletada.map((item, i) => (
-                            <li
-                                key={i}
-                                className="flex items-start gap-1.5 text-[11.5px]"
-                                style={{ color: "#0F1730" }}
-                            >
-                                <CheckCircle2
-                                    className="h-3 w-3 mt-0.5 shrink-0"
-                                    style={{ color: "#10B981" }}
-                                />
+                            <li key={i}>
+                                <Check strokeWidth={2.6} aria-hidden />
                                 <span>{item}</span>
                             </li>
                         ))}
@@ -1660,32 +1437,12 @@ function InfoLists({
                 </div>
             )}
             {faltante.length > 0 && (
-                <div
-                    className="rounded-lg px-3 py-2.5"
-                    style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.20)" }}
-                >
-                    <p
-                        className="text-[10.5px] uppercase mb-1.5 inline-flex items-center gap-1"
-                        style={{
-                            color: "#B45309",
-                            fontWeight: 700,
-                            letterSpacing: "0.08em",
-                        }}
-                    >
-                        <AlertTriangle className="h-3 w-3" style={{ color: "#F59E0B" }} />
-                        Falta descobrir
-                    </p>
-                    <ul className="space-y-1">
+                <div className="ep-lista ep-lista--falta">
+                    <span className="vp-rotulo">Falta descobrir</span>
+                    <ul>
                         {faltante.map((item, i) => (
-                            <li
-                                key={i}
-                                className="flex items-start gap-1.5 text-[11.5px]"
-                                style={{ color: "#0F1730" }}
-                            >
-                                <AlertCircle
-                                    className="h-3 w-3 mt-0.5 shrink-0"
-                                    style={{ color: "#F59E0B" }}
-                                />
+                            <li key={i}>
+                                <Circle aria-hidden />
                                 <span>{item}</span>
                             </li>
                         ))}
@@ -1700,13 +1457,11 @@ function SuggestedReply({
     text,
     onSend,
     onUseReply,
-    hasAction = false,
     onResolveSuggestion,
 }: {
     text: string;
     onSend?: (text: string) => Promise<void>;
     onUseReply?: (text: string) => void;
-    hasAction?: boolean;
     /** Analytics da Lume — registra accepted (copiou/enviou sem editar) ou
      *  adjusted (editou o texto antes). Best-effort, nunca quebra o fluxo. */
     onResolveSuggestion?: (status: "accepted" | "adjusted", finalText: string) => void | Promise<void>;
@@ -1766,89 +1521,33 @@ function SuggestedReply({
         }
     };
 
-    // LP-INBOX.2: a resposta vive DENTRO do cartão-herói como a EXECUÇÃO da
-    // próxima ação — rascunho de mensagem (bolha de chat), não campo de form.
+    // A resposta vive dentro do palco, como a execução da ação acima: balão
+    // branco sobre o amarelo, o mesmo da tela Início.
+    const Principal = onSend ? ArrowUp : onUseReply ? ArrowRight : Copy;
+    const principalTexto = onSend ? (sending ? "Enviando..." : "Enviar resposta") : onUseReply ? "Usar resposta" : "Copiar resposta";
+    const principalAcao = onSend ? handleSend : onUseReply ? handleUse : handleCopy;
     return (
-        <div className="px-4 pb-4 pt-2.5">
-            {/* Conector visual: deixa claro que a resposta executa a ação acima. */}
-            {hasAction && (
-                <p
-                    className="text-[10.5px] uppercase mb-1.5"
-                    style={{ color: "#94A3B8", fontWeight: 700, letterSpacing: "0.08em" }}
-                >
-                    Resposta sugerida
-                </p>
-            )}
+        <>
             {edited === null ? (
-                <div
-                    className="px-3.5 py-3 text-[13px]"
-                    style={{
-                        background: "#F7F5FE",
-                        border: "1px solid rgba(124,58,237,0.16)",
-                        borderRadius: "12px 12px 12px 4px",
-                        color: "#1E1B2E",
-                        lineHeight: 1.55,
-                    }}
-                >
-                    {text}
-                </div>
+                <p className="vp-balao">{text}</p>
             ) : (
                 <textarea
                     value={edited}
                     onChange={(e) => setEdited(e.target.value)}
                     autoFocus
-                    className="w-full text-base md:text-[13px] px-3.5 py-3 outline-none resize-y min-h-[88px]"
-                    style={{
-                        background: "#FFFFFF",
-                        border: "1px solid rgba(124,58,237,0.35)",
-                        borderRadius: "12px 12px 12px 4px",
-                        color: "#1E1B2E",
-                        lineHeight: 1.55,
-                        boxShadow: "0 0 0 3px rgba(124,58,237,0.08)",
-                    }}
+                    aria-label="Editar resposta"
+                    className="vp-balao"
                 />
             )}
-            {/* Hierarquia: ação primária maior e sólida; secundárias compactas. */}
-            <div className="flex items-center gap-2 mt-3">
-                {onSend ? (
-                    <button
-                        type="button"
-                        onClick={handleSend}
-                        disabled={sending}
-                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-full whitespace-nowrap text-[13px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 active:scale-[0.98] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 flex-1 disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                        <ArrowUp className="h-3.5 w-3.5" />
-                        {sending ? "Enviando..." : "Enviar resposta"}
-                    </button>
-                ) : onUseReply ? (
-                    <button
-                        type="button"
-                        onClick={handleUse}
-                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-full whitespace-nowrap text-[13px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 active:scale-[0.98] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 flex-1"
-                    >
-                        <ArrowRight className="h-3.5 w-3.5" />
-                        Usar resposta
-                    </button>
-                ) : (
-                    <button
-                        type="button"
-                        onClick={handleCopy}
-                        className="vz-eva-cta inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-full whitespace-nowrap text-[13px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 active:scale-[0.98] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 flex-1"
-                    >
-                        <Copy className="h-3.5 w-3.5" />
-                        Copiar resposta
-                    </button>
-                )}
-                {/* Com ação primária (Enviar/Usar), Copiar vira secundário compacto. */}
+            <div className="ep-palco__acoes">
+                <button type="button" onClick={principalAcao} disabled={sending} className="vp-botao">
+                    <Principal className="h-4 w-4" aria-hidden />
+                    {principalTexto}
+                </button>
+                {/* Com ação principal (Enviar/Usar), Copiar vira secundário compacto. */}
                 {(onSend || onUseReply) && (
-                    <button
-                        type="button"
-                        onClick={handleCopy}
-                        title="Copiar resposta"
-                        aria-label="Copiar resposta"
-                        className="vz-eva-ghost inline-flex items-center justify-center h-9 rounded-full border border-[var(--vyz-border-strong)] text-[var(--vyz-text-strong)] hover:bg-[var(--vyz-surface-2)] transition-colors duration-150 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] w-9"
-                    >
-                        <Copy className="h-3.5 w-3.5" />
+                    <button type="button" onClick={handleCopy} title="Copiar resposta" aria-label="Copiar resposta" className="vp-icone">
+                        <Copy className="h-4 w-4" aria-hidden />
                     </button>
                 )}
                 <button
@@ -1856,71 +1555,37 @@ function SuggestedReply({
                     onClick={() => setEdited(edited === null ? text : null)}
                     title={edited === null ? "Editar resposta" : "Cancelar edição"}
                     aria-label={edited === null ? "Editar resposta" : "Cancelar edição"}
-                    className={`vz-eva-ghost inline-flex items-center justify-center h-9 rounded-full border border-[var(--vyz-border-strong)] text-[var(--vyz-text-strong)] hover:bg-[var(--vyz-surface-2)] transition-colors duration-150 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${edited === null ? "w-9" : "gap-1.5 px-3 text-[11.5px] font-semibold"}`}
+                    className={`vp-icone ${edited === null ? "" : "ep-cancelar"}`}
                 >
-                    <Edit3 className="h-3.5 w-3.5" />
+                    <Edit3 className="h-4 w-4" aria-hidden />
                     {edited !== null && "Cancelar"}
                 </button>
             </div>
-            {/* Legenda do bloco inteiro: o controle continua humano. */}
-            <p className="text-[11.5px] mt-2" style={{ color: "#94A3B8" }}>
-                Você aprova antes de enviar.
-            </p>
-        </div>
+            <p className="ep-palco__nota">Você aprova antes de enviar.</p>
+        </>
     );
 }
 
 function RecommendationCallout({
     icon: Icon,
-    tone,
     title,
     body,
     cta,
 }: {
     icon: typeof Plus;
-    tone: ToneKey;
     title: string;
     body: string;
     cta?: { label: string; onClick: () => void };
 }) {
-    const s = TONE_STYLES[tone];
     return (
-        <div
-            className="rounded-lg px-3 py-2.5 flex items-start gap-2.5"
-            style={{
-                background: s.bg,
-                border: `1px solid ${s.border}`,
-            }}
-        >
-            <Icon
-                className="h-3.5 w-3.5 mt-0.5 shrink-0"
-                style={{ color: s.text }}
-                strokeWidth={2.2}
-            />
-            <div className="flex-1 min-w-0">
-                <p
-                    className="text-[13px] font-semibold mb-0.5"
-                    style={{ color: s.text }}
-                >
-                    {title}
-                </p>
-                <p
-                    className="text-[11.5px] mb-2"
-                    style={{ color: "#475569", lineHeight: 1.4 }}
-                >
-                    {body}
-                </p>
+        <div className="vp-cartao ep-cartao ep-alerta" role="note">
+            <Icon aria-hidden strokeWidth={2.2} />
+            <div className="min-w-0 flex-1">
+                <p className="vp-rotulo" style={{ color: "var(--vyz-text-primary)", fontSize: 14 }}>{title}</p>
+                <p className="ep-texto" style={{ marginTop: 2 }}>{body}</p>
                 {cta && (
-                    <button
-                        type="button"
-                        onClick={cta.onClick}
-                        className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11.5px] font-semibold transition-all hover:brightness-110"
-                        style={{
-                            background: "linear-gradient(135deg, #1556C0, #4A8CE8)",
-                            color: "#FFFFFF",
-                        }}
-                    >
-                        <Plus className="h-3 w-3" />
+                    <button type="button" onClick={cta.onClick} className="vp-botao vp-botao--chico">
+                        <Plus className="h-3.5 w-3.5" aria-hidden />
                         {cta.label}
                     </button>
                 )}
@@ -1941,40 +1606,16 @@ function KnowledgeGapsList({ gaps }: { gaps: KnowledgeGap[] }) {
     return (
         <div>
             {/* Enquadramento: insumo pra afinar a Lume, não erro. */}
-            <p className="text-[11.5px] mb-2.5" style={{ color: "#64748B", lineHeight: 1.5 }}>
+            <p className="ep-texto" style={{ marginTop: 0 }}>
                 A Lume ainda não sabe isso sobre a sua empresa. Ela aprende com as próximas conversas.
             </p>
-            <ul className="space-y-2">
+            <ul className="ep-lacunas">
                 {gaps.map((g, i) => (
-                    <li
-                        key={i}
-                        className="rounded-lg px-3 py-2.5"
-                        style={{
-                            background: "var(--ibx-sunken)",
-                            border: "1px solid var(--ibx-line)",
-                        }}
-                    >
-                        <div className="flex items-center gap-1.5 mb-1">
-                            <span
-                                className="text-[10.5px] uppercase px-1.5 py-0.5 rounded"
-                                style={{
-                                    background: "rgba(124,58,237,0.10)",
-                                    color: "#6D28D9",
-                                    fontWeight: 700,
-                                    letterSpacing: "0.06em",
-                                }}
-                            >
-                                {TYPE_LABELS[g.type] ?? g.type}
-                            </span>
-                        </div>
-                        <p
-                            className="text-[11.5px] mb-1"
-                            style={{ color: "#0F1730", fontWeight: 500 }}
-                        >
-                            {g.description}
-                        </p>
-                        <p className="text-[11.5px] flex items-start gap-1" style={{ color: "#64748B", lineHeight: 1.4 }}>
-                            <ArrowRight className="h-3 w-3 mt-0.5 shrink-0" style={{ color: "#6D28D9" }} />
+                    <li key={i}>
+                        <span className="vp-chip">{TYPE_LABELS[g.type] ?? g.type}</span>
+                        <p>{g.description}</p>
+                        <p className="ep-lacunas__como">
+                            <ArrowRight aria-hidden />
                             <span>{g.suggested_fix}</span>
                         </p>
                     </li>
@@ -2019,7 +1660,7 @@ function EvaTagsSection({
                         <span
                             key={tag.id}
                             title={tag.description ?? tag.name}
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11.5px] font-medium ring-1 ring-inset ${useHex ? "" : getTagColorClass(tag.color)}`}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[13px] font-medium ring-1 ring-inset ${useHex ? "" : getTagColorClass(tag.color)}`}
                             style={
                                 useHex
                                     ? {
@@ -2035,12 +1676,7 @@ function EvaTagsSection({
                     );
                 })}
             </div>
-            <p
-                className="text-[10.5px] mt-2"
-                style={{ color: "#94A3B8", lineHeight: 1.4 }}
-            >
-                Marcadores aplicados pelo time. A Lume não aplica tags sozinha.
-            </p>
+            <p className="ep-nota">Marcadores aplicados pelo time. A Lume não aplica marcadores sozinha.</p>
         </DossierRow>
         </DossierCard>
     );
@@ -2093,39 +1729,24 @@ function CrmBlock({
     const stageInfo = useStageInfo(stageDeal?.stage_id).data;
 
     if (loading) {
-        return (
-            <div
-                className="rounded-lg px-3 py-4 flex items-center justify-center"
-                style={{ background: "var(--ibx-sunken)", border: "1px solid var(--ibx-line)" }}
-            >
-                <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: "#94A3B8" }} />
-            </div>
-        );
+        return <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" style={{ color: "var(--vyz-text-dim)" }} aria-label="Carregando" />;
     }
 
     // Estado 3 — sem vínculo oficial e sem deal por telefone
     if (!hasLinkedOpportunity && !matchedDeal) {
         return (
-            <div
-                className="rounded-lg px-3 py-4 text-center"
-                style={{ background: "var(--ibx-sunken)", border: "1px solid var(--ibx-line)" }}
-            >
-                <Workflow className="h-5 w-5 mx-auto mb-1.5" style={{ color: "#94A3B8" }} />
-                <p className="text-[13px]" style={{ color: "#0F1730", fontWeight: 600 }}>
-                    Ainda não está no pipeline
-                </p>
-                <p className="text-[11.5px] mt-1" style={{ color: "#64748B" }}>
-                    Use "Pôr no funil" acima para colocar este cliente no funil.
-                </p>
-            </div>
+            <p className="ep-funil__vazio">
+                <b>Ainda não está no funil</b>
+                Use "Pôr no funil" no topo do painel para colocar este cliente no funil.
+            </p>
         );
     }
 
     // Nota coerente com o banner (mesma fonte de verdade)
     const noteText = hasLinkedOpportunity
-        ? "Esta conversa já está no pipeline."
-        : "Este contato já tem um negócio no pipeline, mas ele ainda não está ligado a esta conversa.";
-    const noteColor = hasLinkedOpportunity ? "#047857" : "#B45309";
+        ? "Esta conversa já está no funil."
+        : "Este contato já tem um negócio no funil, mas ele ainda não está ligado a esta conversa.";
+    const noteTom = hasLinkedOpportunity ? "ok" : "atencao";
 
     // Só mostra detalhes do deal certo:
     //  - vinculado: apenas se o deal achado por telefone for o MESMO do vínculo
@@ -2140,26 +1761,20 @@ function CrmBlock({
         : matchedDeal
         ? `/deals/${matchedDeal.id}`
         : null;
+    // Vinculado, a régua do topo do painel já leva ao card.
+    const abrir = href && !hasLinkedOpportunity && (
+        <Link to={href} className="ep-link">
+            Abrir no funil
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+        </Link>
+    );
 
     // Estado 1 vinculado mas sem detalhes (telefone do deal não casou)
     if (!detailDeal) {
         return (
-            <div
-                className="rounded-lg px-3 py-3"
-                style={{ background: "#FFFFFF", border: "1px solid var(--ibx-line)", boxShadow: "0 1px 2px rgba(15,23,42,0.03)" }}
-            >
-                <p className="text-[13px] font-semibold" style={{ color: noteColor }}>
-                    {noteText}
-                </p>
-                {href && !hasLinkedOpportunity && (
-                    <Link
-                        to={href}
-                        className="inline-flex items-center gap-1 text-[11.5px] font-semibold mt-2 text-[var(--vyz-accent)] transition-colors hover:text-[var(--vyz-accent-dark)]"
-                    >
-                        Abrir no pipeline
-                        <ArrowRight className="h-3 w-3" aria-hidden />
-                    </Link>
-                )}
+            <div>
+                <p className="ep-funil__nota" data-tom={noteTom}>{noteText}</p>
+                {abrir}
             </div>
         );
     }
@@ -2184,75 +1799,34 @@ function CrmBlock({
         : null;
 
     return (
-        <div
-            className="rounded-lg px-3 py-3"
-            style={{
-                background: "#FFFFFF",
-                border: "1px solid var(--ibx-line)",
-                boxShadow: "0 1px 2px rgba(15,23,42,0.03)",
-            }}
-        >
-            <p className="text-[11.5px] font-semibold mb-2" style={{ color: noteColor }}>
-                {noteText}
-            </p>
-            <div className="flex items-start justify-between gap-2 mb-2">
-                <p
-                    className="text-[13px] font-semibold flex-1 min-w-0 truncate"
-                    style={{ color: "#0F1730" }}
-                    title={detailDeal.title as string}
-                >
-                    {detailDeal.title}
-                </p>
-                <span className={`inline-flex items-center text-[11.5px] font-semibold px-1.5 py-0.5 rounded shrink-0 ${STAGE_TONE[stageKind]}`}>
+        <div>
+            <p className="ep-funil__nota" data-tom={noteTom}>{noteText}</p>
+            <div className="ep-funil__deal">
+                <b title={detailDeal.title as string}>{detailDeal.title}</b>
+                <span className={`inline-flex items-center text-[12.5px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${STAGE_TONE[stageKind]}`}>
                     {stageLabel}
                 </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-[11.5px]">
-                <Stat icon={BarChart3} label="Valor" value={valueStr} color="#1D4ED8" />
-                {updated && <Stat icon={Clock} label="Atualizado" value={updated} color="#64748B" />}
-                {typeof detailDeal.probability === "number" && (
-                    <Stat
-                        icon={CheckCircle2}
-                        label="Probabilidade"
-                        value={`${detailDeal.probability}%`}
-                        color={detailDeal.probability >= 70 ? "#047857" : "#64748B"}
-                    />
+            <dl className="ep-funil__stats">
+                <div>
+                    <dt>Valor</dt>
+                    <dd>{valueStr}</dd>
+                </div>
+                {updated && (
+                    <div>
+                        <dt>Atualizado</dt>
+                        <dd>{updated}</dd>
+                    </div>
                 )}
-            </div>
-            {/* Vinculado, a régua do topo do painel já leva ao card. */}
-            {href && !hasLinkedOpportunity && (
-                <Link
-                    to={href}
-                    className="inline-flex items-center gap-1 text-[11.5px] font-semibold mt-2.5 text-[var(--vyz-accent)] transition-colors hover:text-[var(--vyz-accent-dark)]"
-                >
-                    Abrir no pipeline
-                    <ArrowRight className="h-3 w-3" aria-hidden />
-                </Link>
-            )}
+                {typeof detailDeal.probability === "number" && (
+                    <div>
+                        <dt>Probabilidade</dt>
+                        <dd>{detailDeal.probability}%</dd>
+                    </div>
+                )}
+            </dl>
+            {abrir}
         </div>
     );
 }
 
-function Stat({
-    icon: Icon,
-    label,
-    value,
-    color,
-}: {
-    icon: typeof BarChart3;
-    label: string;
-    value: string;
-    color: string;
-}) {
-    return (
-        <div>
-            <div className="flex items-center gap-1 mb-0.5">
-                <Icon className="h-3 w-3" style={{ color }} />
-                <span style={{ color: "#94A3B8", fontWeight: 600 }}>{label}</span>
-            </div>
-            <p className="tabular-nums" style={{ color: "#0F1730", fontWeight: 600 }}>
-                {value}
-            </p>
-        </div>
-    );
-}
