@@ -28,10 +28,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { resolveAgentSuggestionForConversation } from "@/hooks/useCreateOpportunityFromConversation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -49,43 +45,21 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import {
-  User,
-  Briefcase,
-  Mail,
-  Phone,
-  DollarSign,
-  CalendarIcon,
-  Tag,
-  Workflow,
-  Loader2,
-  Plus,
-  ShieldCheck,
-} from "lucide-react";
+import { CalendarIcon, ChevronDown, Loader2, Plus } from "lucide-react";
+import "@/components/layout/tela.css";
+import "./funilDialogo.css";
 import { z } from "zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { cn, formatError } from "@/lib/utils";
-import { motion, useReducedMotion } from "framer-motion";
-
-// Entrada das seções: fade + rise em stagger curto. Transform-only.
-const EASE = [0.22, 1, 0.36, 1] as const;
-const sectionsContainer = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.055, delayChildren: 0.04 } },
-};
-const sectionItem = {
-  hidden: { opacity: 0, y: 8 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.28, ease: EASE } },
-};
+import { formatError } from "@/lib/utils";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Schema
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STAGE_OPTIONS = [
-  { value: "lead", label: "Novo lead", description: "Triagem inicial" },
-  { value: "qualification", label: "Qualificação", description: "Já há interesse confirmado" },
+  { value: "lead", label: "Novo lead", description: "Ainda conhecendo o cliente" },
+  { value: "qualification", label: "Qualificação", description: "Já mostrou interesse de verdade" },
 ] as const;
 
 const LEAD_SOURCE_OPTIONS = [
@@ -101,7 +75,7 @@ const oportunidadeSchema = z.object({
   clienteNome: z.string().trim().min(1, "Nome do cliente é obrigatório").max(200),
   clienteEmail: z.string().trim().email("E-mail inválido").max(200).optional().or(z.literal("")),
   clienteTelefone: z.string().trim().max(40).optional().or(z.literal("")),
-  titulo: z.string().trim().min(1, "Título da oportunidade é obrigatório").max(200),
+  titulo: z.string().trim().min(1, "Dê um nome ao negócio").max(200),
   valor: z.number().min(0).max(999999999).nullable(),
   dataEsperada: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
   leadSource: z.string().max(80).optional().or(z.literal("")),
@@ -156,7 +130,6 @@ export const NovaOportunidadeModal = ({
   const { activeCompanyId } = useTenant();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const reduceMotion = useReducedMotion();
 
   const effectiveCompanyId = activeCompanyId || companyId;
 
@@ -174,6 +147,8 @@ export const NovaOportunidadeModal = ({
   const [stage, setStage] = useState<"lead" | "qualification">("lead");
   const [vendedorId, setVendedorId] = useState<string>("");
   const [observacoes, setObservacoes] = useState("");
+  // Campos que quase ninguém preenche na hora ficam em "Mais detalhes".
+  const [maisAberto, setMaisAberto] = useState(false);
 
   // Prefill quando o modal abre
   useEffect(() => {
@@ -342,10 +317,10 @@ export const NovaOportunidadeModal = ({
     },
     onSuccess: (dealId) => {
       queryClient.invalidateQueries({ queryKey: ["deals"] });
-      toast.success("Oportunidade criada no pipeline", {
-        description: titulo,
+      toast.success("Cliente no funil", {
+        description: titulo || clienteNome,
         action: {
-          label: "Ver no pipeline",
+          label: "Ver no funil",
           onClick: () => navigate("/pipeline"),
         },
       });
@@ -354,7 +329,7 @@ export const NovaOportunidadeModal = ({
       onClose();
     },
     onError: (err) => {
-      toast.error(`Erro ao criar oportunidade: ${formatError(err)}`);
+      toast.error(`Não consegui pôr no funil: ${formatError(err)}`);
     },
   });
 
@@ -372,6 +347,7 @@ export const NovaOportunidadeModal = ({
     setStage("lead");
     setVendedorId("");
     setObservacoes("");
+    setMaisAberto(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -431,375 +407,226 @@ export const NovaOportunidadeModal = ({
   // Render
   // ─────────────────────────────────────────────────────────────────────────
 
+  const vindoDaConversa = !!conversationId;
+  const detalhesPreenchidos = [clienteEmail, dataEsperada, leadSource, observacoes].filter(Boolean).length;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[640px] max-h-[92vh] overflow-y-auto bg-card border border-[#D9E2EC] p-0">
-        {/* Header premium azul (não verde — é "criar", não "ganhar") */}
-        <DialogHeader
-          className="px-6 sm:px-7 pt-6 pb-5 relative overflow-hidden"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(21,86,192,0.06) 0%, rgba(74,140,232,0.04) 100%), #FFFFFF",
-            borderBottom: "1px solid #EAF0F6",
-          }}
-        >
-          <div
-            className="absolute top-0 inset-x-0 h-px pointer-events-none"
-            style={{
-              background:
-                "linear-gradient(90deg, transparent, rgba(21,86,192,0.40) 50%, transparent)",
-            }}
-            aria-hidden
-          />
-          <DialogTitle className="flex items-center gap-3.5 text-foreground">
-            <div
-              className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
-              style={{
-                background: "rgba(21,86,192,0.10)",
-                border: "1px solid rgba(21,86,192,0.20)",
-              }}
-            >
-              <Plus className="h-5 w-5" strokeWidth={2.3} style={{ color: "#1556C0" }} />
-            </div>
-            <div className="min-w-0">
-              <span
-                className="text-[18px] font-bold tracking-tight"
-                style={{ color: "#0F1730", letterSpacing: "-0.018em" }}
-              >
-                Criar nova oportunidade
-              </span>
-              <p className="text-[12.5px] text-muted-foreground font-normal mt-0.5 leading-snug">
-                Adicione um lead ao pipeline para acompanhar até o fechamento.
-              </p>
-            </div>
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            Formulário para criar uma nova oportunidade no pipeline.
+      <DialogContent className="vp-dialogo fd-dialogo sm:max-w-[560px]">
+        <DialogHeader className="fd-cab">
+          <DialogTitle className="fd-titulo">{vindoDaConversa ? "Pôr no funil" : "Novo cliente no funil"}</DialogTitle>
+          <DialogDescription className="fd-sub">
+            {vindoDaConversa
+              ? "O cliente entra no funil e esta conversa fica ligada ao negócio."
+              : "Cadastre o negócio para acompanhar até o fechamento."}
           </DialogDescription>
         </DialogHeader>
 
-        <motion.form
-          onSubmit={handleSubmit}
-          className="px-6 sm:px-7 pt-5 pb-6 space-y-6"
-          variants={sectionsContainer}
-          initial={reduceMotion ? false : "hidden"}
-          animate="show"
-        >
-          {/* Seção 1: Cliente */}
-          <Section title="Cliente" icon={<User className="h-3.5 w-3.5" />}>
-            <div className="space-y-3">
-              <Field label="Nome do cliente" required>
-                <Input
+        <form onSubmit={handleSubmit} className="fd-form">
+          <div className="fd-form__corpo">
+            <div className="fd-duplo">
+              <label className="vp-campo">
+                <span className="vp-rotulo">Cliente</span>
+                <input
                   value={clienteNome}
                   onChange={(e) => setClienteNome(e.target.value)}
                   placeholder="Ex: Carla Ribeiro"
-                  className="h-10 text-sm"
                   required
                   maxLength={200}
                   autoFocus
                 />
-              </Field>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="E-mail" icon={<Mail className="h-3 w-3" />}>
-                  <Input
-                    type="email"
-                    value={clienteEmail}
-                    onChange={(e) => setClienteEmail(e.target.value)}
-                    placeholder="cliente@empresa.com"
-                    className="h-10 text-sm"
-                    maxLength={200}
-                  />
-                </Field>
-                <Field label="Telefone" icon={<Phone className="h-3 w-3" />}>
-                  <Input
-                    type="tel"
-                    value={clienteTelefone}
-                    onChange={(e) => setClienteTelefone(e.target.value)}
-                    placeholder="(11) 99999-9999"
-                    className="h-10 text-sm"
-                    maxLength={40}
-                  />
-                </Field>
-              </div>
-            </div>
-          </Section>
-
-          {/* Seção 2: Oportunidade */}
-          <Section title="Oportunidade" icon={<Briefcase className="h-3.5 w-3.5" />}>
-            <div className="space-y-3">
-              <Field label="Título da oportunidade" required>
-                <Input
-                  value={titulo}
-                  onChange={(e) => {
-                    setTitulo(e.target.value);
-                    setTituloEditadoManualmente(true);
-                  }}
-                  placeholder="Ex: Tráfego Meta — Loja da Carla"
-                  className="h-10 text-sm"
-                  required
-                  maxLength={200}
+              </label>
+              <label className="vp-campo">
+                <span className="vp-rotulo">Telefone</span>
+                <input
+                  type="tel"
+                  value={clienteTelefone}
+                  onChange={(e) => setClienteTelefone(e.target.value)}
+                  placeholder="(48) 99999-9999"
+                  maxLength={40}
                 />
-              </Field>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="Produto/serviço (opcional)">
-                  <Select
-                    value={produtoId || "__none__"}
-                    onValueChange={(v) => setProdutoId(v === "__none__" ? "" : v)}
-                  >
-                    <SelectTrigger className="h-10 text-sm">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">
-                        <span className="text-muted-foreground">Sem produto</span>
-                      </SelectItem>
-                      {produtos?.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field label="Valor estimado" icon={<DollarSign className="h-3 w-3" />}>
-                  <Input
-                    type="text"
-                    inputMode="numeric"
-                    value={valorFormatado}
-                    onChange={(e) => formatarMoeda(e.target.value)}
-                    placeholder="R$ 0,00"
-                    className="h-10 text-sm font-medium"
-                  />
-                </Field>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="Data esperada de fechamento" icon={<CalendarIcon className="h-3 w-3" />}>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal h-10 text-sm",
-                          !dataEsperada && "text-muted-foreground",
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                        {dataEsperada
-                          ? format(dataEsperada, "dd 'de' MMM yyyy", { locale: ptBR })
-                          : "Sem previsão"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dataEsperada}
-                        onSelect={setDataEsperada}
-                        initialFocus
-                      />
-                      {dataEsperada && (
-                        <div className="p-2 border-t flex justify-end">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setDataEsperada(undefined)}
-                          >
-                            Limpar
-                          </Button>
-                        </div>
-                      )}
-                    </PopoverContent>
-                  </Popover>
-                </Field>
-                <Field label="Origem do lead" icon={<Tag className="h-3 w-3" />}>
-                  <Select
-                    value={leadSource || "__none__"}
-                    onValueChange={(v) => setLeadSource(v === "__none__" ? "" : v)}
-                  >
-                    <SelectTrigger className="h-10 text-sm">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">
-                        <span className="text-muted-foreground">Não informada</span>
-                      </SelectItem>
-                      {LEAD_SOURCE_OPTIONS.map((s) => (
-                        <SelectItem key={s.value} value={s.value}>
-                          {s.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-              </div>
+              </label>
             </div>
-          </Section>
 
-          {/* Seção 3: Pipeline */}
-          <Section title="Pipeline" icon={<Workflow className="h-3.5 w-3.5" />}>
-            <div className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="Etapa inicial" required>
-                  <Select
-                    value={stage}
-                    onValueChange={(v) => setStage(v as "lead" | "qualification")}
+            <label className="vp-campo">
+              <span className="vp-rotulo">
+                Nome do negócio<em>opcional</em>
+              </span>
+              <input
+                value={titulo}
+                onChange={(e) => {
+                  setTitulo(e.target.value);
+                  setTituloEditadoManualmente(true);
+                }}
+                placeholder={`Ex: Sistema 5 kWp da ${clienteNome.trim().split(" ")[0] || "Carla"}`}
+                maxLength={200}
+              />
+              <span className="vp-campo__ajuda">Em branco, usa o nome do cliente.</span>
+            </label>
+
+            <div className="fd-duplo">
+              <div className="vp-campo">
+                <span className="vp-rotulo" id="fd-produto">Produto ou serviço</span>
+                <Select value={produtoId || "__none__"} onValueChange={(v) => setProdutoId(v === "__none__" ? "" : v)}>
+                  <SelectTrigger aria-labelledby="fd-produto">
+                    <SelectValue placeholder="Escolha" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">
+                      <span className="text-muted-foreground">Nenhum</span>
+                    </SelectItem>
+                    {produtos?.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <label className="vp-campo">
+                <span className="vp-rotulo">Valor estimado</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={valorFormatado}
+                  onChange={(e) => formatarMoeda(e.target.value)}
+                  placeholder="R$ 0,00"
+                  style={{ fontVariantNumeric: "tabular-nums" }}
+                />
+              </label>
+            </div>
+
+            <div className="vp-campo">
+              <span className="vp-rotulo" id="fd-etapa">Etapa</span>
+              <div className="vp-segmento" role="radiogroup" aria-labelledby="fd-etapa" style={{ justifySelf: "start" }}>
+                {STAGE_OPTIONS.map((s) => (
+                  <button
+                    key={s.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={stage === s.value}
+                    onClick={() => setStage(s.value)}
                   >
-                    <SelectTrigger className="h-10 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STAGE_OPTIONS.map((s) => (
-                        <SelectItem key={s.value} value={s.value}>
-                          <div className="flex flex-col">
-                            <span>{s.label}</span>
-                            <span className="text-[10.5px] text-muted-foreground">
-                              {s.description}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-                {isAdmin && (
-                  <Field label="Vendedor responsável" required>
-                    <Select
-                      value={vendedorId}
-                      onValueChange={setVendedorId}
-                      required
-                    >
-                      <SelectTrigger className="h-10 text-sm">
-                        <SelectValue placeholder="Selecione" />
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+              <span className="vp-campo__ajuda">{STAGE_OPTIONS.find((s) => s.value === stage)?.description}</span>
+            </div>
+
+            {isAdmin && (
+              <div className="vp-campo">
+                <span className="vp-rotulo" id="fd-vendedor">Vendedor</span>
+                <Select value={vendedorId} onValueChange={setVendedorId} required>
+                  <SelectTrigger aria-labelledby="fd-vendedor">
+                    <SelectValue placeholder="Quem cuida deste cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vendedores?.map((v) => (
+                      <SelectItem key={v.id} value={v.id}>
+                        {v.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <button
+              type="button"
+              className="fd-mais"
+              aria-expanded={maisAberto}
+              aria-controls="fd-mais-detalhes"
+              onClick={() => setMaisAberto((v) => !v)}
+            >
+              {maisAberto ? "Menos detalhes" : detalhesPreenchidos ? `Mais detalhes (${detalhesPreenchidos})` : "Mais detalhes"}
+              <ChevronDown aria-hidden />
+            </button>
+
+            {maisAberto && (
+              <div id="fd-mais-detalhes">
+                <div className="fd-duplo">
+                  <label className="vp-campo">
+                    <span className="vp-rotulo">E-mail</span>
+                    <input
+                      type="email"
+                      value={clienteEmail}
+                      onChange={(e) => setClienteEmail(e.target.value)}
+                      placeholder="cliente@email.com"
+                      maxLength={200}
+                    />
+                  </label>
+                  <div className="vp-campo">
+                    <span className="vp-rotulo" id="fd-origem">De onde veio</span>
+                    <Select value={leadSource || "__none__"} onValueChange={(v) => setLeadSource(v === "__none__" ? "" : v)}>
+                      <SelectTrigger aria-labelledby="fd-origem">
+                        <SelectValue placeholder="Escolha" />
                       </SelectTrigger>
                       <SelectContent>
-                        {vendedores?.map((v) => (
-                          <SelectItem key={v.id} value={v.id}>
-                            {v.nome}
+                        <SelectItem value="__none__">
+                          <span className="text-muted-foreground">Não sei</span>
+                        </SelectItem>
+                        {LEAD_SOURCE_OPTIONS.map((s) => (
+                          <SelectItem key={s.value} value={s.value}>
+                            {s.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  </Field>
-                )}
+                  </div>
+                </div>
+                <div className="vp-campo">
+                  <span className="vp-rotulo" id="fd-data">Previsão de fechamento</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button type="button" className="fd-data" data-vazio={!dataEsperada || undefined} aria-labelledby="fd-data">
+                        <CalendarIcon aria-hidden />
+                        {dataEsperada ? format(dataEsperada, "dd 'de' MMM yyyy", { locale: ptBR }) : "Sem previsão"}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={dataEsperada} onSelect={setDataEsperada} initialFocus />
+                      {dataEsperada && (
+                        <div className="p-2 border-t flex justify-end">
+                          <button type="button" className="vp-botao vp-botao--chico vp-botao--quieto" onClick={() => setDataEsperada(undefined)}>
+                            Limpar
+                          </button>
+                        </div>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <label className="vp-campo">
+                  <span className="vp-rotulo">Observações</span>
+                  <textarea
+                    value={observacoes}
+                    onChange={(e) => setObservacoes(e.target.value)}
+                    placeholder="O que o cliente pediu, próximo passo combinado..."
+                    rows={3}
+                    style={{ resize: "none" }}
+                    maxLength={2000}
+                  />
+                </label>
               </div>
-              <Field label="Observações (opcional)">
-                <Textarea
-                  value={observacoes}
-                  onChange={(e) => setObservacoes(e.target.value)}
-                  placeholder="Contexto da conversa, próximos passos, dores levantadas..."
-                  rows={3}
-                  className="resize-none text-sm"
-                  maxLength={2000}
-                />
-              </Field>
-            </div>
-          </Section>
+            )}
+          </div>
 
-          {/* Microaviso Lume assistida */}
-          <motion.div
-            variants={sectionItem}
-            className="flex items-start gap-2 rounded-lg px-3 py-2.5"
-            style={{
-              background: "rgba(124,58,237,0.04)",
-              border: "1px solid rgba(124,58,237,0.14)",
-            }}
-          >
-            <ShieldCheck
-              className="h-3.5 w-3.5 shrink-0 mt-0.5"
-              style={{ color: "#7C3AED" }}
-            />
-            <p className="text-[11.5px] leading-relaxed" style={{ color: "#475569" }}>
-              Lume continua assistida: ela sugere próximos passos depois que a oportunidade
-              entra no pipeline. Você aprova antes de qualquer ação automática.
-            </p>
-          </motion.div>
-
-          {/* Actions */}
-          <motion.div
-            variants={sectionItem}
-            className="flex justify-end gap-3 pt-4"
-            style={{ borderTop: "1px solid #EAF0F6" }}
-          >
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={createOportunidade.isPending}
-            >
+          <div className="fd-rodape">
+            <p className="fd-rodape__nota">A Lume acompanha o negócio e sugere o próximo passo. Você aprova antes de qualquer envio.</p>
+            <button type="button" className="vp-botao vp-botao--quieto" onClick={onClose} disabled={createOportunidade.isPending}>
               Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={createOportunidade.isPending}
-            >
+            </button>
+            <button type="submit" className="vp-botao" disabled={createOportunidade.isPending}>
               {createOportunidade.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Criando...
-                </>
+                <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden />
               ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-1.5" />
-                  Criar oportunidade
-                </>
+                <Plus className="h-4 w-4" aria-hidden />
               )}
-            </Button>
-          </motion.div>
-        </motion.form>
+              {createOportunidade.isPending ? "Salvando..." : "Pôr no funil"}
+            </button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
 };
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Subcomponentes inline
-// ─────────────────────────────────────────────────────────────────────────────
-
-function Section({
-  title,
-  icon,
-  children,
-}: {
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <motion.section variants={sectionItem} className="space-y-2.5">
-      <header className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <span
-          className="inline-flex items-center justify-center h-5 w-5 rounded-md"
-          style={{ background: "#F3EFE4", border: "1px solid #E6EDF5" }}
-        >
-          {icon}
-        </span>
-        {title}
-      </header>
-      {children}
-    </motion.section>
-  );
-}
-
-function Field({
-  label,
-  required,
-  icon,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  icon?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label className="text-[11.5px] font-medium text-foreground flex items-center gap-1.5">
-        {icon}
-        {label}
-        {required && <span className="text-rose-500">*</span>}
-      </Label>
-      {children}
-    </div>
-  );
-}

@@ -21,9 +21,10 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Link2, Search, Loader2, ArrowRight } from "lucide-react";
+import { Search, Loader2, ArrowRight } from "lucide-react";
+import "@/components/layout/tela.css";
+import "./funilDialogo.css";
 import { formatError } from "@/lib/utils";
 import { sanitizeDisplayName } from "@/lib/displayName";
 
@@ -37,19 +38,20 @@ interface DealRow {
     updated_at: string;
 }
 
-const STAGE_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-    lead: { label: "Novo lead", color: "#64748B", bg: "rgba(148,163,184,0.14)" },
-    qualification: { label: "Qualificação", color: "#1D4ED8", bg: "rgba(21,86,192,0.10)" },
-    proposal: { label: "Proposta", color: "#6D28D9", bg: "rgba(124,58,237,0.10)" },
-    negotiation: { label: "Negociação", color: "#B45309", bg: "rgba(245,158,11,0.10)" },
+// Etapa do negócio em letra normal e cor neutra (antes: uma cor por etapa).
+const STAGE_LABELS: Record<string, string> = {
+    lead: "Novo lead",
+    qualification: "Qualificação",
+    proposal: "Proposta",
+    negotiation: "Negociação",
 };
 
 function norm(s: string): string {
     return s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
 }
 
-function formatBRL(v: number | null): string {
-    if (!v || v <= 0) return "R$ 0";
+function formatBRL(v: number | null): string | null {
+    if (!v || v <= 0) return null;
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(v);
 }
 
@@ -125,116 +127,82 @@ export const VincularDealModal = ({
         },
         onSuccess: (dealId) => {
             queryClient.invalidateQueries({ queryKey: ["deals"] });
-            toast.success("Conversa vinculada à oportunidade");
+            toast.success("Conversa vinculada ao negócio");
             onLinked(dealId);
             onClose();
         },
         onError: (err) => {
-            toast.error(`Erro ao vincular: ${formatError(err)}`);
+            toast.error(`Não consegui vincular: ${formatError(err)}`);
         },
     });
 
     const linkingId = link.isPending ? (link.variables as string | undefined) : undefined;
+    // Mesmo número da conversa: o negócio provável sobe com um aviso.
+    const telConversa = (prefillSearch || "").replace(/\D/g, "").slice(-8);
+    const mesmoNumero = (d: DealRow) =>
+        telConversa.length === 8 && (d.customer_phone || "").replace(/\D/g, "").endsWith(telConversa);
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="w-[95vw] max-w-[560px] max-h-[88vh] overflow-hidden bg-card border border-[#D9E2EC] p-0 flex flex-col">
-                <DialogHeader
-                    className="px-6 pt-6 pb-5 relative overflow-hidden shrink-0"
-                    style={{
-                        background: "linear-gradient(135deg, rgba(21,86,192,0.06) 0%, rgba(74,140,232,0.04) 100%), #FFFFFF",
-                        borderBottom: "1px solid #EAF0F6",
-                    }}
-                >
-                    <DialogTitle className="flex items-center gap-3.5 text-foreground">
-                        <div
-                            className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
-                            style={{ background: "rgba(21,86,192,0.10)", border: "1px solid rgba(21,86,192,0.20)" }}
-                        >
-                            <Link2 className="h-5 w-5" strokeWidth={2.3} style={{ color: "#1556C0" }} />
-                        </div>
-                        <div className="min-w-0">
-                            <span className="text-[18px] font-bold tracking-tight" style={{ color: "#0F1730", letterSpacing: "-0.018em" }}>
-                                Vincular oportunidade existente
-                            </span>
-                            <p className="text-[12.5px] text-muted-foreground font-normal mt-0.5 leading-snug">
-                                Conecte esta conversa a um deal aberto do pipeline.
-                            </p>
-                        </div>
-                    </DialogTitle>
-                    <DialogDescription className="sr-only">
-                        Selecione uma oportunidade aberta para vincular à conversa.
+            <DialogContent className="vp-dialogo fd-dialogo sm:max-w-[520px]">
+                <DialogHeader className="fd-cab">
+                    <DialogTitle className="fd-titulo">Vincular a um negócio do funil</DialogTitle>
+                    <DialogDescription className="fd-sub">
+                        Escolha o negócio deste cliente. A conversa passa a aparecer nele.
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="px-6 pt-4 pb-2 shrink-0">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none" style={{ color: "#94A3B8" }} />
-                        <Input
+                <div className="fd-busca">
+                    <label className="vp-campo vp-campo--junto">
+                        <span className="sr-only">Buscar negócio</span>
+                        <Search className="fd-busca__icone" aria-hidden />
+                        <input
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Buscar por título, cliente ou telefone"
-                            className="h-10 text-sm pl-9"
+                            placeholder="Nome, negócio ou telefone"
                             autoFocus
                         />
-                    </div>
+                    </label>
                 </div>
 
-                <div className="px-6 pb-6 pt-2 overflow-y-auto flex-1 min-h-[180px]">
+                <div className="fd-corpo">
                     {isLoading ? (
-                        <div className="flex items-center justify-center py-10">
-                            <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#1556C0" }} />
+                        <div className="fd-vazio">
+                            <Loader2 className="h-5 w-5 animate-spin motion-reduce:animate-none" aria-label="Carregando" />
                         </div>
                     ) : error ? (
-                        <p className="text-[12.5px] text-center py-10" style={{ color: "#B91C1C" }}>
-                            Não consegui carregar as oportunidades. Tente novamente.
-                        </p>
+                        <p className="fd-vazio" role="alert">Não consegui carregar os negócios. Tente de novo.</p>
                     ) : filtered.length === 0 ? (
-                        <div className="text-center py-10">
-                            <p className="text-[13px] font-semibold mb-1" style={{ color: "#0F1730" }}>
-                                {(deals?.length ?? 0) === 0 ? "Nenhuma oportunidade aberta" : "Nenhum resultado para a busca"}
-                            </p>
-                            <p className="text-[11.5px]" style={{ color: "#64748B" }}>
-                                {(deals?.length ?? 0) === 0
-                                    ? "Crie uma nova oportunidade a partir da conversa."
-                                    : "Limpe a busca para ver todos os deals abertos."}
-                            </p>
+                        <div className="fd-vazio">
+                            <b>{(deals?.length ?? 0) === 0 ? "Nenhum negócio aberto no funil" : "Nada com essa busca"}</b>
+                            {(deals?.length ?? 0) === 0
+                                ? "Feche e use Pôr no funil para criar um a partir da conversa."
+                                : "Apague a busca para ver todos os negócios abertos."}
                         </div>
                     ) : (
-                        <ul className="flex flex-col gap-2">
+                        <ul className="fd-lista">
                             {filtered.map((d) => {
-                                const stage = STAGE_LABELS[d.stage] || STAGE_LABELS.lead;
                                 const safeCustomer = sanitizeDisplayName(d.customer_name);
                                 const isLinkingThis = linkingId === d.id;
+                                const valor = formatBRL(d.value);
                                 return (
                                     <li key={d.id}>
                                         <button
                                             type="button"
                                             disabled={link.isPending}
                                             onClick={() => link.mutate(d.id)}
-                                            className="w-full text-left rounded-xl px-4 py-3 flex items-center gap-3 transition-colors hover:bg-[#F4F7FB] disabled:opacity-60 disabled:cursor-not-allowed"
-                                            style={{ border: "1px solid #E2E8F0", background: "#FFFFFF" }}
+                                            className="fd-item"
                                         >
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                                                    <span className="text-[13.5px] font-semibold truncate" style={{ color: "#0F1730" }}>
-                                                        {d.title || safeCustomer || "Oportunidade"}
-                                                    </span>
-                                                    <span
-                                                        className="text-[10px] px-1.5 py-0.5 rounded shrink-0"
-                                                        style={{ background: stage.bg, color: stage.color, fontWeight: 700, letterSpacing: "0.04em" }}
-                                                    >
-                                                        {stage.label}
-                                                    </span>
-                                                </div>
-                                                <p className="text-[11.5px] truncate" style={{ color: "#64748B" }}>
-                                                    {[safeCustomer, formatBRL(d.value)].filter(Boolean).join(" · ")}
-                                                </p>
-                                            </div>
+                                            <span className="fd-item__meio">
+                                                <b>{d.title || safeCustomer || "Negócio"}</b>
+                                                <span>{[safeCustomer, valor].filter(Boolean).join(" · ")}</span>
+                                            </span>
+                                            {mesmoNumero(d) && <span className="vp-chip fd-item__par">Mesmo número</span>}
+                                            <span className="vp-chip">{STAGE_LABELS[d.stage] ?? "Aberto"}</span>
                                             {isLinkingThis ? (
-                                                <Loader2 className="h-4 w-4 animate-spin shrink-0" style={{ color: "#1556C0" }} />
+                                                <Loader2 className="fd-item__seta animate-spin motion-reduce:animate-none" aria-label="Vinculando" />
                                             ) : (
-                                                <ArrowRight className="h-4 w-4 shrink-0" style={{ color: "#1556C0" }} />
+                                                <ArrowRight className="fd-item__seta" aria-hidden />
                                             )}
                                         </button>
                                     </li>
