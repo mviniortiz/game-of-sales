@@ -12,7 +12,8 @@
 // CONTROLE DO HUMANO: "Por horário" volta pro cronológico, como no WhatsApp.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { ChevronDown, ChevronRight, Clock3, ListOrdered, Search, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Clock3, ListOrdered, Search, UserRound, X } from "lucide-react";
+import { iniciais, tituloContato } from "@/lib/contato";
 import type { QuoteItem } from "@/hooks/useQuoteBoard";
 import type { Chat } from "@/hooks/useEvolutionAPI";
 import { EvaBot } from "@/components/eva/EvaBot";
@@ -90,13 +91,6 @@ const PRIORITY_LABEL: Record<LeadPriority, string> = {
 const PRIORITY_RANK: Record<LeadPriority, number> = { quente: 0, esfriando: 1, frio: 2 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
-
-function getInitials(name: string) {
-    if (!name) return "?";
-    const parts = name.trim().split(" ");
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
 
 function formatTimeAgo(timeStr?: string): string {
     if (!timeStr) return "";
@@ -248,34 +242,27 @@ export function InboxPriorityList({
             <div className="vz-evlist-header">
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <EvaBot state="idle" size={26} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                        <p className="vz-evlist-title">Conversas</p>
-                        <p className="vz-evlist-subtitle">
-                            {order === "time" ? "Mais recentes primeiro" : "Quem espera primeiro"}
-                        </p>
+                    <p className="vz-evlist-title" style={{ flex: 1, minWidth: 0 }}>Conversas</p>
+                    {/* Ordem: as duas opções à vista, a ativa marcada. Antes o botão
+                        mostrava o modo que NÃO estava ativo e confundia. */}
+                    <div role="group" aria-label="Ordem da lista" className="vz-evlist-ordem">
+                        {([
+                            { id: "time", label: "Recentes", icon: Clock3, title: "Mais recentes primeiro" },
+                            { id: "eva", label: "Lume", icon: ListOrdered, title: "Ordem da Lume: quem espera resposta primeiro" },
+                        ] as const).map((o) => (
+                            <button
+                                key={o.id}
+                                type="button"
+                                aria-pressed={order === o.id}
+                                title={o.title}
+                                onClick={() => setOrder(o.id)}
+                                className="vz-evlist-ordem__op"
+                            >
+                                <o.icon aria-hidden style={{ width: 12, height: 12 }} />
+                                {o.label}
+                            </button>
+                        ))}
                     </div>
-                    <button
-                        type="button"
-                        className="vz-evlist-toggle"
-                        onClick={() => setOrder(order === "eva" ? "time" : "eva")}
-                        title={
-                            order === "eva"
-                                ? "Voltar pra ordem cronológica"
-                                : "Voltar pra ordem da Lume"
-                        }
-                    >
-                        {order === "eva" ? (
-                            <>
-                                <Clock3 style={{ width: 11, height: 11 }} />
-                                Por horário
-                            </>
-                        ) : (
-                            <>
-                                <ListOrdered style={{ width: 11, height: 11 }} />
-                                Ordem da Lume
-                            </>
-                        )}
-                    </button>
                 </div>
 
                 {/* Busca */}
@@ -327,7 +314,7 @@ export function InboxPriorityList({
             </div>
 
             {chats.length > 0 && (
-                <div role="group" aria-label="Filtrar conversas" className="flex gap-1.5 overflow-x-auto px-3 pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div role="group" aria-label="Filtrar conversas" className="flex gap-1.5 overflow-x-auto px-3 pt-2 pr-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,#000_calc(100%-28px),transparent)]">
                     {([
                         { id: "all", label: "Todas" },
                         { id: "yourTurn", label: `Sua vez${yourTurnCount ? ` (${yourTurnCount})` : ""}` },
@@ -452,7 +439,7 @@ export function InboxPriorityList({
                                                     background: "#CBD5E1",
                                                 }}
                                             >
-                                                {getInitials(chat.name)}
+                                                {iniciais(chat.name) ?? <UserRound className="h-4 w-4" aria-hidden />}
                                             </span>
                                             <span
                                                 style={{
@@ -514,7 +501,7 @@ export function InboxPriorityList({
                                                     background: "#CBD5E1",
                                                 }}
                                             >
-                                                {getInitials(chat.name)}
+                                                {iniciais(chat.name) ?? <UserRound className="h-4 w-4" aria-hidden />}
                                             </span>
                                             <span
                                                 style={{
@@ -523,7 +510,7 @@ export function InboxPriorityList({
                                                     whiteSpace: "nowrap",
                                                 }}
                                             >
-                                                {chat.name || chat.phone || "Sem nome"}
+                                                {tituloContato(chat.name, chat.phone)}
                                             </span>
                                         </button>
                                     </li>
@@ -573,14 +560,14 @@ function LeadRow({
                 {priority && <span className={`vz-evlist-bar vz-evlist-bar--${priority}`} />}
 
                 <span className={`vz-evlist-avatar ${priority ? `vz-evlist-avatar--${priority}` : ""}`}>
-                    {getInitials(chat.name)}
+                    {iniciais(chat.name) ?? <UserRound className="h-4 w-4" aria-hidden />}
                 </span>
 
                 <span style={{ flex: 1, minWidth: 0, display: "block" }}>
                     {/* Linha 1: nome + horário */}
                     <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span className="vz-evlist-name" style={{ flex: 1 }}>
-                            {chat.name || chat.phone || "Sem nome"}
+                            {tituloContato(chat.name, chat.phone)}
                         </span>
                         <span className="vz-evlist-time">
                             {formatTimeAgo(chat.lastMessage?.time)}

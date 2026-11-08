@@ -832,7 +832,7 @@ function PanelContent({
                 )}
 
                 {/* Analisando (mutation rodando) — animação por etapas da leitura */}
-                {insight.analyzing && <EvaAnalyzingState />}
+                {insight.analyzing && <EvaAnalyzingState messages={messages} />}
 
                 {/* Análise renderizada — sempre que tem data, mesmo se stale */}
                 {insight.data && !insight.analyzing && !insight.error && (
@@ -992,7 +992,7 @@ function DealLinkBanner({
         >
             <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#CBD5E1" }} />
             <p className="text-[11.5px] font-semibold flex-1 min-w-0 truncate" style={{ color: "#64748B" }}>
-                Fora do pipeline
+                Fora do funil
             </p>
             <button
                 type="button"
@@ -1001,7 +1001,7 @@ function DealLinkBanner({
                 style={{ color: "#1D4ED8" }}
             >
                 <Plus className="h-3 w-3" />
-                Criar oportunidade
+                Pôr no funil
             </button>
             {canLinkExisting && (
                 <button
@@ -2115,7 +2115,7 @@ function CrmBlock({
                     Ainda não está no pipeline
                 </p>
                 <p className="text-[11.5px] mt-1" style={{ color: "#64748B" }}>
-                    Use "Criar oportunidade" acima para colocar este cliente no funil.
+                    Use "Pôr no funil" acima para colocar este cliente no funil.
                 </p>
             </div>
         );

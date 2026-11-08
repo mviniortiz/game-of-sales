@@ -1350,32 +1350,43 @@ All colors MUST be HSL.
   color: #0b1220;
   line-height: 1.2;
 }
-.vz-evlist-subtitle {
-  font-size: 10.5px;
-  color: #64748b;
-  margin-top: 1px;
+/* Ordem da lista: duas opções lado a lado, a ativa em branco sobre o trilho.
+   A Lume propõe a ordem, o humano escolhe. */
+.vz-evlist-ordem {
+  --canto: 9px;
+  --folga: 2px;
+  --canto-dentro: max(4px, calc(var(--canto) - var(--folga)));
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: var(--folga);
+  border-radius: var(--canto);
+  background: var(--ibx-sunken, #f1ede7);
 }
-/* Toggle de ordem — a Lume propõe, o humano pode revogar */
-.vz-evlist-toggle {
+.vz-evlist-ordem__op {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  height: 26px;
-  padding: 0 9px;
-  border-radius: 7px;
-  border: 1px solid var(--evlist-border);
-  background: #ffffff;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #475569;
-  cursor: pointer;
+  gap: 4px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: var(--canto-dentro);
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
   white-space: nowrap;
-  transition: background 0.15s var(--vyz-ease);
-  flex-shrink: 0;
+  transition: background-color 150ms var(--vyz-ease), color 150ms var(--vyz-ease), box-shadow 150ms var(--vyz-ease);
 }
-.vz-evlist-toggle:hover { background: #f1ede7; }
+.vz-evlist-ordem__op:hover { color: #0b1220; }
+.vz-evlist-ordem__op[aria-pressed="true"] {
+  background: #ffffff;
+  color: #0b1220;
+  box-shadow: 0 1px 2px rgba(15, 23, 48, 0.1);
+}
+.vz-evlist-ordem__op:focus-visible { outline: 2px solid var(--vyz-accent); outline-offset: 1px; }
 @media (max-width: 767px) {
-  .vz-evlist-toggle { height: 36px; padding: 0 12px; border-radius: 999px; font-size: 12px; }
+  .vz-evlist-ordem__op { height: 32px; padding: 0 11px; font-size: 12.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vz-evlist-ordem__op { transition: none; }
 }
 
 /* Ponte pro Lume Studio (estado B) — convite com presença, não erro.

@@ -1,0 +1,145 @@
+/* Lume lendo a conversa (EvaAnalyzingState). A leitura é linear como olho
+   correndo a linha; o resto entra com a curva ease-out do app, em menos de
+   300ms. Sem movimento em prefers-reduced-motion: o texto já aparece lido. */
+
+.lume-leitura {
+  --ll-tinta: #0f1730;
+  --ll-apagado: #a3acbd;
+  --ll-azul: #1556c0;
+  --ll-marca: rgba(255, 201, 51, 0.42);
+  --ll-ease: var(--vyz-ease, cubic-bezier(0.22, 1, 0.36, 1));
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 4px;
+}
+
+.lume-leitura__topo { display: flex; align-items: center; gap: 10px; }
+.lume-leitura__titulo { display: flex; align-items: baseline; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ll-tinta); }
+.lume-leitura__sub { font-size: 11.5px; font-weight: 500; color: #94a3b8; font-variant-numeric: tabular-nums; }
+
+/* Miniatura da conversa */
+.lume-leitura__conversa {
+  --canto: 16px;
+  --folga: 10px;
+  --canto-dentro: max(4px, calc(var(--canto) - var(--folga)));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--folga);
+  border-radius: var(--canto);
+  background: var(--ibx-card, #fff);
+  border: 1px solid var(--ibx-line, #e7e1d5);
+}
+.lume-leitura__linha { display: flex; min-width: 0; }
+.lume-leitura__linha--eu { justify-content: flex-end; }
+
+.lume-leitura__bolha {
+  position: relative;
+  max-width: 88%;
+  overflow: hidden;
+  padding: 6px 10px;
+  border-radius: var(--canto-dentro);
+  background: #f3f1ec;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.lume-leitura__linha--eu .lume-leitura__bolha { background: #ecf2fa; } /* azul 8% sobre branco, sólido: a cópia lida herda o fundo */
+
+.lume-leitura__base,
+.lume-leitura__lido {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* A cópia lida pode sair uma fração de pixel mais larga (as marcas quebram o
+   texto em pedaços); a folga de 2px na original evita reticências trocadas, e
+   o fundo da cópia cobre a original onde já foi lido. */
+.lume-leitura__base { color: var(--ll-apagado); padding-right: 2px; }
+
+/* A cópia em tinta por cima, revelada da esquerda pra direita. */
+.lume-leitura__lido {
+  position: absolute;
+  inset: 0;
+  padding: inherit;
+  color: var(--ll-tinta);
+  background: inherit;
+  clip-path: inset(0 100% 0 0);
+  animation-name: lumeLer;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes lumeLer { to { clip-path: inset(0 0 0 0); } }
+
+.lume-leitura__termo {
+  /* Folga só no desenho (sombra): padding mudaria a largura e a cópia lida
+     cortaria em lugar diferente da original. */
+  border-radius: 2px;
+  background: var(--ll-marca);
+  box-shadow: 0 0 0 2px var(--ll-marca);
+  color: inherit;
+}
+
+/* Etapas */
+.lume-leitura__etapas { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0 2px; list-style: none; }
+
+.lume-leitura__etapa {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: #94a3b8;
+  transition: opacity 240ms var(--ll-ease), transform 240ms var(--ll-ease), color 200ms ease;
+}
+.lume-leitura__etapa[data-visivel="false"] { opacity: 0; transform: translateY(4px); }
+.lume-leitura__etapa[data-estado="ativa"] { color: var(--ll-tinta); font-weight: 600; }
+.lume-leitura__etapa[data-estado="feita"] { color: #475569; }
+
+.lume-leitura__marca {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1.5px solid #d6d1c6;
+  transition: background-color 200ms ease, border-color 200ms ease;
+}
+.lume-leitura__marca svg { width: 11px; height: 11px; color: #fff; animation: lumeCheck 220ms var(--ll-ease); }
+@keyframes lumeCheck { from { opacity: 0; transform: scale(0.6); } }
+.lume-leitura__etapa[data-estado="feita"] .lume-leitura__marca { background: var(--ll-azul); border-color: var(--ll-azul); }
+.lume-leitura__etapa[data-estado="ativa"] .lume-leitura__marca { border-color: var(--ll-azul); }
+
+.lume-leitura__ponto { width: 6px; height: 6px; border-radius: 999px; background: transparent; }
+.lume-leitura__etapa[data-estado="ativa"] .lume-leitura__ponto { background: var(--ll-azul); animation: lumePulso 1.1s ease-in-out infinite; }
+@keyframes lumePulso { 50% { opacity: 0.35; transform: scale(0.7); } }
+
+.lume-leitura__rotulo { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+.lume-leitura__achados { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.lume-leitura__achado {
+  padding: 0 6px;
+  border-radius: 5px;
+  background: var(--ll-marca);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ll-tinta);
+  animation: lumeAchado 220ms var(--ll-ease) both;
+}
+.lume-leitura__achado:nth-child(2) { animation-delay: 50ms; }
+.lume-leitura__achado:nth-child(3) { animation-delay: 100ms; }
+@keyframes lumeAchado { from { opacity: 0; transform: translateY(3px); } }
+
+/* Movimento reduzido: tudo já lido, sem varredura nem pulso. */
+.lume-leitura--parada .lume-leitura__lido { animation: none; clip-path: none; }
+.lume-leitura--parada .lume-leitura__etapa,
+.lume-leitura--parada .lume-leitura__marca svg,
+.lume-leitura--parada .lume-leitura__achado { transition: opacity 200ms ease; animation: none; transform: none; }
+.lume-leitura--parada .lume-leitura__ponto { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .lume-leitura__lido { animation: none; clip-path: none; }
+  .lume-leitura__ponto, .lume-leitura__marca svg, .lume-leitura__achado { animation: none; }
+  .lume-leitura__etapa { transition: opacity 200ms ease; transform: none !important; }
+}
