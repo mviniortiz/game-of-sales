@@ -561,7 +561,7 @@ interface StripeGradientProps {
 const StripeGradient = ({ className = '' }: StripeGradientProps) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const gradientRef = useRef<any>(null);
-    const animationRef = useRef<number>();
+    const animationRef = useRef<number | undefined>(undefined);
     const isPlayingRef = useRef(true);
 
     useEffect(() => {

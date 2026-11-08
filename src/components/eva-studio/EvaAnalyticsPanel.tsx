@@ -115,7 +115,7 @@ function usePrefersReducedMotion(): boolean {
 function useCountUp(target: number, active: boolean, decimals = 0): number {
     const reduced = usePrefersReducedMotion();
     const [value, setValue] = useState(active && !reduced ? 0 : target);
-    const rafRef = useRef<number>();
+    const rafRef = useRef<number | undefined>(undefined);
     useEffect(() => {
         if (!active || reduced) {
             setValue(target);
