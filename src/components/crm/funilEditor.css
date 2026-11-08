@@ -1,0 +1,169 @@
+/* Editor de funil (PipelineConfigModal). Papel do app, azul só no foco e no
+   salvar. Movimento curto: etapa nova sobe 6px, arrastar levanta um pouco. */
+
+.vf {
+  --vf-ease: var(--vyz-ease, cubic-bezier(0.22, 1, 0.36, 1));
+  border-radius: 20px !important;
+  border: 0 !important;
+  background: var(--vyz-bg) !important;
+  color: var(--vyz-text-primary);
+}
+.vf-cab { padding: 20px 22px 4px; text-align: left; }
+.vf-titulo { font-size: 19px !important; font-weight: 600; letter-spacing: -0.015em; }
+.vf-sub { margin-top: 4px; font-size: 13.5px !important; color: var(--vyz-text-muted) !important; }
+
+.vf-corpo { flex: 1; overflow-y: auto; padding: 14px 22px 18px; overscroll-behavior: contain; }
+.vf-corpo .vp-campo input:focus { outline: none; border-color: var(--vyz-accent); box-shadow: 0 0 0 3px var(--vyz-accent-soft-8); }
+
+.vf-lista { display: grid; gap: 6px; }
+
+.vf-etapa {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 6px 6px 4px;
+  border-radius: 14px;
+  background: var(--vyz-surface-1);
+  list-style: none;
+}
+.vf-etapa[data-tipo="won"] { box-shadow: inset 3px 0 0 var(--vyz-success); }
+.vf-etapa[data-tipo="lost"] { box-shadow: inset 3px 0 0 var(--vyz-border-strong); }
+
+.vf-alca {
+  flex: none;
+  width: 26px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--vyz-text-dim);
+  cursor: grab;
+  touch-action: none;
+  transition: color 150ms var(--vf-ease), background-color 150ms var(--vf-ease);
+}
+.vf-alca:hover { color: var(--vyz-text-primary); background: var(--vyz-bg); }
+.vf-alca:active { cursor: grabbing; }
+
+.vf-aparencia {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 9px;
+  border-radius: 10px;
+  background: var(--vyz-bg);
+  color: var(--vyz-text-muted);
+  transition: background-color 150ms var(--vf-ease), transform 120ms var(--vf-ease);
+}
+.vf-aparencia:hover { background: var(--vyz-surface-2); color: var(--vyz-text-primary); }
+.vf-aparencia:active { transform: scale(0.96); }
+.vf-aparencia__cor { width: 10px; height: 10px; border-radius: 999px; }
+
+.vf-nome {
+  /* Base 0: o input tem largura própria e, com flex 1 comum, empurrava a linha pra fora no celular. */
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--vyz-text-primary);
+  transition: border-color 150ms var(--vf-ease), background-color 150ms var(--vf-ease), box-shadow 150ms var(--vf-ease);
+}
+.vf-nome:hover { background: var(--vyz-bg); }
+.vf-nome:focus { outline: none; background: var(--vyz-surface-1); border-color: var(--vyz-accent); box-shadow: 0 0 0 3px var(--vyz-accent-soft-8); }
+.vf-nome::placeholder { color: var(--vyz-text-dim); font-weight: 400; }
+
+.vf-conta {
+  flex: none;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 7px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--vyz-bg);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vyz-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.vf-tipo {
+  flex: none;
+  width: 112px !important;
+  height: 34px !important;
+  border-radius: 10px !important;
+  border: 0 !important;
+  background: var(--vyz-bg) !important;
+  font-size: 13px !important;
+  color: var(--vyz-text) !important;
+}
+.vf-tipo:focus { box-shadow: 0 0 0 2px var(--vyz-accent) !important; }
+
+@media (max-width: 520px) {
+  .vf-cab, .vf-corpo, .vf-rodape { padding-left: 16px; padding-right: 16px; }
+  .vf-etapa { gap: 4px; }
+  .vf-tipo { width: 92px !important; padding-left: 8px !important; padding-right: 6px !important; }
+  .vf-aparencia { padding: 0 8px; }
+  .vf-aparencia svg { display: none; }
+}
+
+.vf-nova {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 44px;
+  margin-top: 8px;
+  border-radius: 14px;
+  border: 1.5px dashed var(--vyz-border-strong);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vyz-text-muted);
+  transition: border-color 150ms var(--vf-ease), color 150ms var(--vf-ease), background-color 150ms var(--vf-ease), transform 120ms var(--vf-ease);
+}
+.vf-nova:hover { border-color: var(--vyz-accent); color: var(--vyz-accent); background: var(--vyz-accent-soft-4); }
+.vf-nova:active { transform: scale(0.99); }
+
+.vf-rodape {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--vyz-border-subtle);
+  background: var(--vyz-surface-1);
+}
+.vf-padrao { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; color: var(--vyz-accent); }
+
+/* Escolher cor e ícone */
+.vf-pop { border-radius: 14px !important; border: 1px solid var(--vyz-border-subtle) !important; background: var(--vyz-surface-1) !important; }
+.vf-pop__rotulo { margin-bottom: 6px; font-size: 12px; font-weight: 600; color: var(--vyz-text-muted); }
+.vf-pop__grade { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.vf-pop__op {
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--vyz-text-muted);
+  transition: background-color 150ms var(--vf-ease);
+}
+.vf-pop__op:hover { background: var(--vyz-bg); color: var(--vyz-text-primary); }
+.vf-pop__op[aria-pressed="true"] { background: var(--vyz-accent-soft-8); color: var(--vyz-accent); box-shadow: inset 0 0 0 1.5px var(--vyz-accent); }
+
+.vf-alca:focus-visible,
+.vf-aparencia:focus-visible,
+.vf-nova:focus-visible,
+.vf-pop__op:focus-visible { outline: 2px solid var(--vyz-accent); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vf-alca, .vf-aparencia, .vf-nome, .vf-nova, .vf-pop__op { transition: none; }
+}

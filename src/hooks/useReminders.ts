@@ -142,5 +142,28 @@ export function useReminderMutations(userId: string | undefined, companyId: stri
     onSuccess: invalidateAll,
   });
 
-  return { createReminder, completeReminder, deleteReminder };
+  // Adiar: muda só o horário do lembrete.
+  const snoozeReminder = useMutation({
+    mutationFn: async ({ id, remindAt }: { id: string; remindAt: string }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tabela fora dos tipos gerados, como o resto do arquivo
+      const { error } = await (supabase as any).from(TABLE).update({ remind_at: remindAt }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateAll,
+  });
+
+  // Desfazer o "feito".
+  const reopenReminder = useMutation({
+    mutationFn: async (id: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tabela fora dos tipos gerados, como o resto do arquivo
+      const { error } = await (supabase as any)
+        .from(TABLE)
+        .update({ completed: false, completed_at: null })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateAll,
+  });
+
+  return { createReminder, completeReminder, deleteReminder, snoozeReminder, reopenReminder };
 }

@@ -1,610 +1,336 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useTenant } from "@/contexts/TenantContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Building2,
-  Plus,
-  Users,
-  Package,
-  MoreHorizontal,
-  Pencil,
-  LogIn,
-  Trash2,
-  Crown,
-  Rocket,
-  CheckCircle,
-  XCircle,
-  Search,
-  Filter,
-  FileSearch,
-} from "lucide-react";
-import { toast } from "sonner";
+// Empresas (só super admin): quem paga, quem é fundadora, quem sumiu. Clicar na
+// linha abre a ficha (plano, situação, logo, equipe); "Entrar" troca para a
+// empresa; o menu tem Raio-X e excluir.
+// A situação vem de subscription_status (Pago = 'active'), igual ao resto do
+// produto. A coluna antiga lia um campo "status" que não existe, e marcava
+// todas como "Ativo"; "Produtos" saiu junto com a aba de produtos.
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { DotsThree, FileMagnifyingGlass, MagnifyingGlass, Plus, SignIn, Trash } from "@phosphor-icons/react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/contexts/TenantContext";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import "./admin.css";
 
-interface CompanyWithCounts {
-  id: string;
-  name: string;
-  plan: string;
-  logo_url: string | null;
-  status?: string;
-  created_at: string;
-  user_count: number;
-  product_count: number;
-  last_sign_in_at: string | null;
+interface Empresa {
+    id: string;
+    name: string;
+    plan: string | null;
+    logo_url: string | null;
+    subscription_status: string | null;
+    created_at: string;
+    user_count: number;
+    last_sign_in_at: string | null;
+    fundadora: number | null;
 }
 
-// Plan badge styles (plus/starter legados aparecem como o plano equivalente)
-const getPlanBadge = (plan: string) => {
-  switch (plan?.toLowerCase()) {
-    case "escala":
-    case "enterprise":
-      return (
-        <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-sm">
-          <Crown className="h-3 w-3 mr-1" />
-          Escala
-        </Badge>
-      );
-    case "pro":
-    case "plus":
-      return (
-        <Badge className="bg-blue-500 text-white border-0">
-          <Rocket className="h-3 w-3 mr-1" />
-          Pro
-        </Badge>
-      );
-    default:
-      return (
-        <Badge variant="secondary" className="bg-muted text-muted-foreground">
-          Free
-        </Badge>
-      );
-  }
-};
-
-// Status badge
-const getStatusBadge = (status: string = "active") => {
-  if (status === "active" || !status) {
-    return (
-      <Badge className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-0">
-        <CheckCircle className="h-3 w-3 mr-1" />
-        Ativo
-      </Badge>
-    );
-  }
-  return (
-    <Badge className="bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-0">
-      <XCircle className="h-3 w-3 mr-1" />
-      Inadimplente
-    </Badge>
-  );
-};
+type Filtro = "todas" | "pagas" | "sem" | "paradas";
+const SEMANA = 7 * 86_400_000;
+const parada = (e: Empresa) => !e.last_sign_in_at || Date.now() - new Date(e.last_sign_in_at).getTime() > SEMANA;
+const paga = (e: Empresa) => e.subscription_status === "active";
+const sem = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 export function AdminCompanies() {
-  const { isSuperAdmin, switchCompany } = useTenant();
-  const { isAdmin, profile } = useAuth();
-  const queryClient = useQueryClient();
-  const logoBucket = (import.meta as any).env?.VITE_SUPABASE_LOGO_BUCKET || "logos";
+    const { isSuperAdmin, switchCompany } = useTenant();
+    const navigate = useNavigate();
+    const qc = useQueryClient();
+    const logoBucket = (import.meta.env?.VITE_SUPABASE_LOGO_BUCKET as string | undefined) || "logos";
 
-  // Modal states
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingCompany, setEditingCompany] = useState<CompanyWithCounts | null>(null);
+    const [busca, setBusca] = useState("");
+    const [filtro, setFiltro] = useState<Filtro>("todas");
+    const [criando, setCriando] = useState(false);
+    const [nome, setNome] = useState("");
+    const [logo, setLogo] = useState<File | null>(null);
+    const [excluindo, setExcluindo] = useState<Empresa | null>(null);
 
-  // Form states
-  const [companyName, setCompanyName] = useState("");
-  const [plan, setPlan] = useState("free");
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+    const { data: empresas = [], isLoading } = useQuery({
+        queryKey: ["admin-companies-with-counts"],
+        enabled: isSuperAdmin,
+        queryFn: async (): Promise<Empresa[]> => {
+            const [{ data: cs, error }, { data: ps }, { data: fs }] = await Promise.all([
+                supabase.from("companies").select("id, name, plan, logo_url, subscription_status, created_at").order("name"),
+                supabase.from("profiles").select("company_id, last_sign_in_at"),
+                // Tabela fora dos tipos gerados.
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (supabase as any).from("fundadoras").select("company_id, numero, revogada_em"),
+            ]);
+            if (error) throw error;
+            const pessoas = new Map<string, number>();
+            const ultimo = new Map<string, string>();
+            for (const p of ps ?? []) {
+                if (!p.company_id) continue;
+                pessoas.set(p.company_id, (pessoas.get(p.company_id) ?? 0) + 1);
+                const prev = ultimo.get(p.company_id);
+                if (p.last_sign_in_at && (!prev || p.last_sign_in_at > prev)) ultimo.set(p.company_id, p.last_sign_in_at);
+            }
+            const fundadoras = new Map<string, number>();
+            for (const f of (fs ?? []) as { company_id: string; numero: number; revogada_em: string | null }[]) {
+                if (!f.revogada_em) fundadoras.set(f.company_id, f.numero);
+            }
+            return (cs ?? []).map((c) => ({
+                ...c,
+                user_count: pessoas.get(c.id) ?? 0,
+                last_sign_in_at: ultimo.get(c.id) ?? null,
+                fundadora: fundadoras.get(c.id) ?? null,
+            }));
+        },
+    });
 
-  // Fetch companies with counts
-  const { data: companies = [], isLoading } = useQuery({
-    queryKey: ["admin-companies-with-counts"],
-    queryFn: async () => {
-      // Fetch companies
-      const { data: companiesData, error: companiesError } = await supabase
-        .from("companies")
-        .select("*")
-        .order("name");
-
-      if (companiesError) throw companiesError;
-
-      // Fetch user counts per company
-      const { data: userCounts, error: userError } = await supabase
-        .from("profiles")
-        .select("company_id, last_sign_in_at");
-
-      if (userError) throw userError;
-
-      // Fetch product counts per company
-      const { data: productCounts, error: productError } = await supabase
-        .from("produtos")
-        .select("company_id");
-
-      if (productError) throw productError;
-
-      // Aggregate counts
-      const userCountMap = new Map<string, number>();
-      const productCountMap = new Map<string, number>();
-      const lastLoginMap = new Map<string, string>();
-
-      userCounts?.forEach((u: any) => {
-        if (u.company_id) {
-          userCountMap.set(u.company_id, (userCountMap.get(u.company_id) || 0) + 1);
-          const prev = lastLoginMap.get(u.company_id);
-          if (u.last_sign_in_at && (!prev || u.last_sign_in_at > prev)) {
-            lastLoginMap.set(u.company_id, u.last_sign_in_at);
-          }
-        }
-      });
-
-      productCounts?.forEach((p: any) => {
-        if (p.company_id) {
-          productCountMap.set(p.company_id, (productCountMap.get(p.company_id) || 0) + 1);
-        }
-      });
-
-      return (companiesData || []).map((c: any) => ({
-        ...c,
-        user_count: userCountMap.get(c.id) || 0,
-        product_count: productCountMap.get(c.id) || 0,
-        last_sign_in_at: lastLoginMap.get(c.id) || null,
-      })) as CompanyWithCounts[];
-    },
-    enabled: isSuperAdmin,
-  });
-
-  // Create company mutation
-  const createCompany = useMutation({
-    mutationFn: async () => {
-      let logo_url: string | null = null;
-      if (logoFile) {
-        const ext = logoFile.name.split(".").pop();
-        const path = `company-logos/${crypto.randomUUID()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from(logoBucket)
-          .upload(path, logoFile, { upsert: true });
-        if (uploadError) throw uploadError;
-        const { data } = supabase.storage.from(logoBucket).getPublicUrl(path);
-        logo_url = data.publicUrl;
-      }
-
-      const { error } = await supabase.from("companies").insert({
-        name: companyName,
-        plan,
-        logo_url,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Empresa criada com sucesso!");
-      setCompanyName("");
-      setPlan("free");
-      setLogoFile(null);
-      setShowCreateModal(false);
-      queryClient.invalidateQueries({ queryKey: ["admin-companies-with-counts"] });
-    },
-    onError: (err: any) => toast.error(err?.message || "Erro ao criar empresa"),
-  });
-
-  // Update company mutation
-  const updateCompany = useMutation({
-    mutationFn: async ({ companyId, updates }: { companyId: string; updates: any }) => {
-      const { error } = await supabase
-        .from("companies")
-        .update(updates)
-        .eq("id", companyId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Empresa atualizada!");
-      setShowEditModal(false);
-      setEditingCompany(null);
-      queryClient.invalidateQueries({ queryKey: ["admin-companies-with-counts"] });
-    },
-    onError: (err: any) => toast.error(err?.message || "Erro ao atualizar empresa"),
-  });
-
-  // Delete company mutation (uses RPC to handle FK cascade correctly)
-  const deleteCompany = useMutation({
-    mutationFn: async (companyId: string) => {
-      const { data, error } = await supabase.rpc("delete_company_cascade", {
-        target_company_id: companyId,
-      });
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      toast.success("Empresa excluída com sucesso");
-      queryClient.invalidateQueries({ queryKey: ["admin-companies-with-counts"] });
-    },
-    onError: (err: any) => toast.error(err?.message || "Erro ao excluir empresa"),
-  });
-
-  // Filter companies by search
-  const filteredCompanies = companies.filter((c) =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Handle "Gerenciar" (switch to that company)
-  const handleManage = (company: CompanyWithCounts) => {
-    switchCompany(company.id);
-    toast.success(`Alternado para: ${company.name}`);
-  };
-
-  // Handle edit
-  // Raio-X da conversa de 20 minutos: lê o WhatsApp conectado da empresa e
-  // abre o relatório numa aba nova, pronto pra mostrar na tela.
-  const handleRaioX = async (company: CompanyWithCounts) => {
-    const tab = window.open("about:blank", "_blank");
-    const toastId = toast.loading(`Lendo as conversas de ${company.name}...`);
-    const { data, error } = await supabase.functions.invoke("raio-x-build", { body: { company_id: company.id } });
-    if (error || !data?.token) {
-      tab?.close();
-      toast.error("Não deu pra gerar o Raio-X", { id: toastId, description: data?.error ?? error?.message });
-      return;
-    }
-    toast.success("Raio-X pronto", { id: toastId });
-    const url = `/relatorio/${data.token}`;
-    if (tab) tab.location.href = url;
-    else window.location.href = url;
-  };
-
-  const handleEdit = (company: CompanyWithCounts) => {
-    setEditingCompany(company);
-    setShowEditModal(true);
-  };
-
-  // Handle delete
-  const handleDelete = (company: CompanyWithCounts) => {
-    const sure = window.confirm(
-      `Tem certeza que deseja excluir a empresa "${company.name}"? Esta ação não pode ser desfeita.`
+    const contagem = useMemo(
+        () => ({
+            todas: empresas.length,
+            pagas: empresas.filter(paga).length,
+            sem: empresas.filter((e) => !paga(e)).length,
+            paradas: empresas.filter(parada).length,
+        }),
+        [empresas],
     );
-    if (sure) deleteCompany.mutate(company.id);
-  };
 
-  if (!isSuperAdmin && !isAdmin) {
+    const lista = useMemo(() => {
+        const t = sem(busca.trim());
+        return empresas.filter(
+            (e) =>
+                (!t || sem(e.name || "").includes(t)) &&
+                (filtro === "todas" || (filtro === "pagas" && paga(e)) || (filtro === "sem" && !paga(e)) || (filtro === "paradas" && parada(e))),
+        );
+    }, [empresas, busca, filtro]);
+
+    const criar = useMutation({
+        mutationFn: async () => {
+            let logo_url: string | null = null;
+            if (logo) {
+                const path = `company-logos/${crypto.randomUUID()}.${logo.name.split(".").pop()}`;
+                const { error: up } = await supabase.storage.from(logoBucket).upload(path, logo, { upsert: true });
+                if (up) throw up;
+                logo_url = supabase.storage.from(logoBucket).getPublicUrl(path).data.publicUrl;
+            }
+            const { error } = await supabase.from("companies").insert({ name: nome.trim(), plan: "free", logo_url });
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            toast.success("Empresa criada.");
+            setNome("");
+            setLogo(null);
+            setCriando(false);
+            qc.invalidateQueries({ queryKey: ["admin-companies-with-counts"] });
+        },
+        onError: (e: Error) => toast.error(e.message || "Não deu para criar a empresa."),
+    });
+
+    const excluir = useMutation({
+        mutationFn: async (id: string) => {
+            const { error } = await supabase.rpc("delete_company_cascade", { target_company_id: id });
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            toast.success("Empresa excluída.");
+            setExcluindo(null);
+            qc.invalidateQueries({ queryKey: ["admin-companies-with-counts"] });
+        },
+        onError: (e: Error) => toast.error(e.message || "Não deu para excluir."),
+    });
+
+    const entrar = (e: Empresa) => {
+        switchCompany(e.id);
+        toast.success(`Agora você está em ${e.name}.`);
+    };
+
+    // Raio-X da conversa de 20 minutos: lê o WhatsApp conectado da empresa e
+    // abre o relatório numa aba nova, pronto pra mostrar na tela.
+    const raioX = async (e: Empresa) => {
+        const tab = window.open("about:blank", "_blank");
+        const id = toast.loading(`Lendo as conversas de ${e.name}…`);
+        const { data, error } = await supabase.functions.invoke("raio-x-build", { body: { company_id: e.id } });
+        if (error || !data?.token) {
+            tab?.close();
+            toast.error("Não deu para gerar o Raio-X", { id, description: data?.error ?? error?.message });
+            return;
+        }
+        toast.success("Raio-X pronto", { id });
+        const url = `/relatorio/${data.token}`;
+        if (tab) tab.location.href = url;
+        else window.location.href = url;
+    };
+
+    if (!isSuperAdmin) return <div className="vp-vazio">Só o time do Vyzon vê as empresas.</div>;
+
+    const FILTROS: { id: Filtro; rotulo: string }[] = [
+        { id: "todas", rotulo: "Todas" },
+        { id: "pagas", rotulo: "Pagas" },
+        { id: "sem", rotulo: "Sem plano" },
+        { id: "paradas", rotulo: "Sem entrar há 7 dias" },
+    ];
+
     return (
-      <Card>
-        <CardContent className="py-8 text-center text-muted-foreground">
-          Acesso restrito. Contate o administrador para gerenciar empresas.
-        </CardContent>
-      </Card>
+        <div className="va">
+            <div className="va-topo">
+                <label className="va-busca">
+                    <MagnifyingGlass size={16} aria-hidden />
+                    <input type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar empresa" aria-label="Buscar empresa" />
+                </label>
+                <button type="button" className="vp-botao vp-botao--quieto vp-botao--chico" onClick={() => setCriando(true)}>
+                    <Plus size={14} weight="bold" aria-hidden /> Nova empresa
+                </button>
+            </div>
+
+            <div role="radiogroup" aria-label="Filtrar empresas" className="vp-segmento self-start">
+                {FILTROS.map((f) => (
+                    <button key={f.id} type="button" role="radio" aria-checked={filtro === f.id} onClick={() => setFiltro(f.id)}>
+                        {f.rotulo}
+                        <em>{contagem[f.id]}</em>
+                    </button>
+                ))}
+            </div>
+
+            <section className="va-lista" aria-label="Empresas">
+                {isLoading && <div className="va-vazio">Carregando empresas…</div>}
+                {!isLoading && lista.length === 0 && (
+                    <div className="va-vazio">
+                        <b>Nenhuma empresa aqui</b>
+                        {busca ? "Tente outro nome." : "Mude o filtro para ver as outras."}
+                    </div>
+                )}
+                {lista.map((e, i) => (
+                    <div
+                        key={e.id}
+                        role="link"
+                        tabIndex={0}
+                        data-clicavel
+                        className="va-linha va-entra-linha"
+                        style={{ "--i": i } as React.CSSProperties}
+                        onClick={() => navigate(`/admin/companies/${e.id}`)}
+                        onKeyDown={(ev) => ev.key === "Enter" && navigate(`/admin/companies/${e.id}`)}
+                        aria-label={`Abrir a ficha de ${e.name}`}
+                    >
+                        <span className="va-avatar" aria-hidden>
+                            {e.logo_url ? <img src={e.logo_url} alt="" /> : (e.name || "?").slice(0, 2).toUpperCase()}
+                        </span>
+                        <span className="va-meio">
+                            <b>{e.name || "Sem nome"}</b>
+                            <span>
+                                <span className="sm:hidden">{e.fundadora ? `Fundadora nº ${e.fundadora}` : paga(e) ? "Pago" : "Sem plano"} · </span>
+                                {e.user_count} {e.user_count === 1 ? "pessoa" : "pessoas"} · criada em {new Date(e.created_at).toLocaleDateString("pt-BR")}
+                            </span>
+                        </span>
+                        <span
+                            className="va-lado"
+                            data-some-no-cel
+                            title={e.last_sign_in_at ? new Date(e.last_sign_in_at).toLocaleString("pt-BR") : "Ninguém entrou ainda"}
+                        >
+                            {e.last_sign_in_at ? `entrou ${formatDistanceToNow(new Date(e.last_sign_in_at), { addSuffix: true, locale: ptBR })}` : "nunca entrou"}
+                        </span>
+                        <span className="max-sm:hidden">
+                            {e.fundadora ? (
+                                <span className="va-chip" data-tom="sol">Fundadora nº {e.fundadora}</span>
+                            ) : paga(e) ? (
+                                <span className="va-chip" data-tom="bom">Pago</span>
+                            ) : (
+                                <span className="va-chip">Sem plano</span>
+                            )}
+                        </span>
+                        <button
+                            type="button"
+                            className="vp-botao vp-botao--quieto vp-botao--chico"
+                            onClick={(ev) => {
+                                ev.stopPropagation();
+                                entrar(e);
+                            }}
+                        >
+                            <SignIn size={14} aria-hidden /> <span className="max-sm:hidden">Entrar</span>
+                        </button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    type="button"
+                                    className="vp-icone vp-icone--chico"
+                                    aria-label={`Mais ações para ${e.name}`}
+                                    onClick={(ev) => ev.stopPropagation()}
+                                    onKeyDown={(ev) => ev.stopPropagation()}
+                                >
+                                    <DotsThree size={20} weight="bold" aria-hidden />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" onClick={(ev) => ev.stopPropagation()}>
+                                <DropdownMenuItem onSelect={() => void raioX(e)}>
+                                    <FileMagnifyingGlass size={16} className="mr-2" aria-hidden />
+                                    Gerar Raio-X
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onSelect={() => setExcluindo(e)} className="text-[var(--vyz-danger)] focus:text-[var(--vyz-danger)]">
+                                    <Trash size={16} className="mr-2" aria-hidden />
+                                    Excluir empresa
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                ))}
+            </section>
+
+            <Dialog open={criando} onOpenChange={setCriando}>
+                <DialogContent className="sm:max-w-[420px]">
+                    <DialogHeader>
+                        <DialogTitle>Nova empresa</DialogTitle>
+                        <DialogDescription>Ela entra sem plano. Para liberar, abra a ficha e marque Pago.</DialogDescription>
+                    </DialogHeader>
+                    <form
+                        onSubmit={(ev) => {
+                            ev.preventDefault();
+                            if (nome.trim()) criar.mutate();
+                        }}
+                    >
+                        <label className="vp-campo">
+                            <span className="vp-rotulo">Nome</span>
+                            <input value={nome} onChange={(ev) => setNome(ev.target.value)} placeholder="Ex.: Solar Sul Energia" autoFocus />
+                        </label>
+                        <label className="vp-campo">
+                            <span className="vp-rotulo">Logo (opcional)</span>
+                            <input type="file" accept="image/*" onChange={(ev) => setLogo(ev.target.files?.[0] ?? null)} className="pt-2 text-[14px]" />
+                        </label>
+                        <button type="submit" className="vp-botao mt-1 w-full disabled:opacity-50" disabled={!nome.trim() || criar.isPending}>
+                            {criar.isPending ? "Criando…" : "Criar empresa"}
+                        </button>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            <AlertDialog open={!!excluindo} onOpenChange={(o) => !o && setExcluindo(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Excluir {excluindo?.name}?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Apaga a empresa e os dados dela no Vyzon. Não tem como desfazer.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={excluir.isPending}>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={(ev) => {
+                                ev.preventDefault();
+                                if (excluindo) excluir.mutate(excluindo.id);
+                            }}
+                            disabled={excluir.isPending}
+                            className="bg-[var(--vyz-danger)] hover:bg-[var(--vyz-danger)] hover:opacity-90"
+                        >
+                            {excluir.isPending ? "Excluindo…" : "Excluir"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
     );
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Building2 className="h-6 w-6 text-emerald-600" />
-            Empresas Clientes
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Gerencie todas as empresas (tenants) do sistema
-          </p>
-        </div>
-
-        <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-          <DialogTrigger asChild>
-            <Button className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/25">
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Empresa Manual
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-card border-border">
-            <DialogHeader>
-              <DialogTitle className="text-foreground">Criar Nova Empresa</DialogTitle>
-              <DialogDescription className="text-muted-foreground">
-                Adicione uma nova empresa manualmente ao sistema.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Nome da Empresa *</Label>
-                <Input
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Ex: Rota de Negócios"
-                  className="bg-card border-border"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Plano</Label>
-                <Select value={plan} onValueChange={setPlan}>
-                  <SelectTrigger className="bg-card border-border">
-                    <SelectValue placeholder="Selecione um plano" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="free">Free</SelectItem>
-                    <SelectItem value="pro">Pro</SelectItem>
-                    <SelectItem value="escala">Escala</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Logo (opcional)</Label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
-                  className="bg-card border-border"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowCreateModal(false)}>
-                Cancelar
-              </Button>
-              <Button
-                onClick={() => createCompany.mutate()}
-                disabled={!companyName || createCompany.isPending}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white"
-              >
-                {createCompany.isPending ? "Criando..." : "Criar Empresa"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Search Bar */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar empresa..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-card border-border"
-          />
-        </div>
-        <Badge variant="outline" className="text-muted-foreground border-border">
-          {filteredCompanies.length} empresas
-        </Badge>
-      </div>
-
-      {/* Data Table */}
-      <Card className="border border-border bg-card shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50 border-b border-border">
-              <TableHead className="text-muted-foreground font-semibold">Empresa</TableHead>
-              <TableHead className="text-muted-foreground font-semibold">Plano</TableHead>
-              <TableHead className="text-muted-foreground font-semibold text-center">Vendedores</TableHead>
-              <TableHead className="text-muted-foreground font-semibold">Último acesso</TableHead>
-              <TableHead className="text-muted-foreground font-semibold text-center">Produtos</TableHead>
-              <TableHead className="text-muted-foreground font-semibold">Data de Criação</TableHead>
-              <TableHead className="text-muted-foreground font-semibold">Status</TableHead>
-              <TableHead className="text-muted-foreground font-semibold text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
-                  Carregando empresas...
-                </TableCell>
-              </TableRow>
-            ) : filteredCompanies.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-12">
-                  <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                  <p className="text-muted-foreground">Nenhuma empresa encontrada</p>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredCompanies.map((company) => (
-                <TableRow
-                  key={company.id}
-                  className="border-b border-border hover:bg-muted/50 transition-colors group"
-                >
-                  {/* Empresa */}
-                  <TableCell className="py-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 border border-border">
-                        {company.logo_url ? (
-                          <AvatarImage src={company.logo_url} alt={company.name || "Empresa"} />
-                        ) : null}
-                        <AvatarFallback className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold">
-                          {(company.name || "??").substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold text-foreground">
-                          {company.name || <span className="text-muted-foreground italic">Sem nome</span>}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          @{(company.name || "empresa").toLowerCase().replace(/\s+/g, "")}.com
-                        </p>
-                      </div>
-                    </div>
-                  </TableCell>
-
-                  {/* Plano */}
-                  <TableCell>
-                    {getPlanBadge(company.plan)}
-                  </TableCell>
-
-                  {/* Usuários */}
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1.5 text-muted-foreground">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{company.user_count}</span>
-                      <span className="text-xs text-muted-foreground">users</span>
-                    </div>
-                  </TableCell>
-
-                  {/* Último acesso */}
-                  <TableCell
-                    title={company.last_sign_in_at ? new Date(company.last_sign_in_at).toLocaleString("pt-BR") : "Nenhum login registrado"}
-                  >
-                    <span className={`text-sm ${company.last_sign_in_at ? "text-foreground" : "text-muted-foreground"}`}>
-                      {company.last_sign_in_at
-                        ? formatDistanceToNow(new Date(company.last_sign_in_at), { addSuffix: true, locale: ptBR })
-                        : "nunca"}
-                    </span>
-                  </TableCell>
-
-                  {/* Produtos */}
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1.5 text-muted-foreground">
-                      <Package className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{company.product_count}</span>
-                    </div>
-                  </TableCell>
-
-                  {/* Data de Criação */}
-                  <TableCell>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(company.created_at).toLocaleDateString('pt-BR')}
-                    </span>
-                  </TableCell>
-
-                  {/* Status */}
-                  <TableCell>
-                    {getStatusBadge(company.status)}
-                  </TableCell>
-
-                  {/* Ações */}
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleManage(company)}
-                        className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
-                      >
-                        <LogIn className="h-4 w-4 mr-1" />
-                        Gerenciar
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-card border-border">
-                          <DropdownMenuItem onClick={() => void handleRaioX(company)} className="cursor-pointer">
-                            <FileSearch className="h-4 w-4 mr-2" />
-                            Gerar Raio-X
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEdit(company)} className="cursor-pointer">
-                            <Pencil className="h-4 w-4 mr-2" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(company)}
-                            className="text-rose-600 cursor-pointer focus:text-rose-600"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Card>
-
-      {/* Edit Modal */}
-      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">Editar Empresa</DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              Atualize as informações da empresa.
-            </DialogDescription>
-          </DialogHeader>
-          {editingCompany && (
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Nome da Empresa</Label>
-                <Input
-                  defaultValue={editingCompany.name}
-                  onChange={(e) => setEditingCompany({ ...editingCompany, name: e.target.value })}
-                  className="bg-card border-border"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Plano</Label>
-                <Select
-                  defaultValue={editingCompany.plan || "free"}
-                  onValueChange={(value) => setEditingCompany({ ...editingCompany, plan: value })}
-                >
-                  <SelectTrigger className="bg-card border-border">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="free">Free</SelectItem>
-                    <SelectItem value="pro">Pro</SelectItem>
-                    <SelectItem value="escala">Escala</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditModal(false)}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={() => {
-                if (editingCompany) {
-                  updateCompany.mutate({
-                    companyId: editingCompany.id,
-                    updates: { name: editingCompany.name, plan: editingCompany.plan },
-                  });
-                }
-              }}
-              disabled={updateCompany.isPending}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white"
-            >
-              {updateCompany.isPending ? "Salvando..." : "Salvar Alterações"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
 }
