@@ -9,6 +9,7 @@ import { GestaoMeta } from "@/components/gestao/GestaoMeta";
 import { AdminCompanies } from "@/components/admin/AdminCompanies";
 import { EvolutionMonitor } from "@/components/admin/EvolutionMonitor";
 import { AdminProspeccao } from "@/components/admin/AdminProspeccao";
+import "@/components/admin/admin.css";
 
 type Tab = { id: string; label: string; render: () => JSX.Element; superAdminOnly?: boolean };
 
@@ -63,7 +64,8 @@ const Admin = () => {
         </div>
       </header>
 
-      <div role="tabpanel" aria-label={active.label}>
+      {/* key: cada troca de aba entra de novo com a subida curta de admin.css */}
+      <div role="tabpanel" aria-label={active.label} key={active.id} className="va-entra">
         {active.render()}
       </div>
     </div>
