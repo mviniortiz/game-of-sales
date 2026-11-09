@@ -29,6 +29,16 @@ Toda a instrumentação passa por `src/lib/analytics.ts`. **Nunca** chame
 | `trackConversion` / `trackDemoConversion` / `trackPurchaseConversion` | Conversões do Google Ads (com `send_to`). |
 | `isDemoSession()` | True se a sessão é demo (flag `sessionStorage.vyzon_demo` ou app em iframe). |
 
+## App logado: `trackApp` (desde 08/11/2026)
+Dentro do app (telas com `AppLayout`), use `trackApp(APP_EVENTS.X, props)` de
+`@/lib/appAnalytics`. Ele chama o `trackBehavior` (GA4 + Clarity) **e** grava em
+`app_events` no banco, em lote, com empresa e pessoa (RPC `log_app_events`), que é
+o que responde "o que esta integradora fez". Tela e aba entram sozinhas
+(`AppAnalytics` no layout registra `app_session_started` e `screen_viewed`).
+Plano completo e dicionário: `docs/analytics/plano-de-tagging-app.md`. Evento novo:
+acrescente em `APP_EVENTS` e no dicionário. Uso por empresa: views
+`vw_app_uso_empresa_dia` e `vw_app_ativacao`.
+
 ## Convenções
 1. **Comportamento → `trackBehavior`** (vai pros dois destinos). Conversão de
    negócio → `trackConversion`/`trackDemoConversion`.

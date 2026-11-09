@@ -71,6 +71,7 @@ import type {
 import { proximaAcaoLabel } from "@/lib/eva/qualificationSchema";
 import { EvaBot } from "@/components/eva/EvaBot";
 import { ContaLuzCard } from "@/components/inbox/ContaLuzCard";
+import { APP_EVENTS, trackApp } from "@/lib/appAnalytics";
 import "@/components/layout/tela.css";
 import "./evaPainel.css";
 
@@ -611,6 +612,7 @@ function PanelContent({
             });
             setLocalLinkedDealId(dealId);
             onDealLinked?.(dealId);
+            trackApp(APP_EVENTS.DEAL_CREATED, { origem: "lume" });
             try {
                 await agentLog.record({
                     kind: "qualification",
@@ -723,7 +725,10 @@ function PanelContent({
                     {insight.hasAnalysis && !insight.analyzing && (
                         <button
                             type="button"
-                            onClick={() => insight.reanalyze()}
+                            onClick={() => {
+                                trackApp(APP_EVENTS.LUME_ANALYSIS_REQUESTED, { origem: "reanalisar" });
+                                insight.reanalyze();
+                            }}
                             title={reanalyzeLabel}
                             aria-label={reanalyzeLabel}
                             className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 cursor-pointer transition-[filter] hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1556C0]/40"
@@ -823,7 +828,10 @@ function PanelContent({
                  !insight.error &&
                  !insight.analyzing && (
                     <NoAnalysisState
-                        onAnalyze={() => insight.analyze()}
+                        onAnalyze={() => {
+                            trackApp(APP_EVENTS.LUME_ANALYSIS_REQUESTED, { origem: "manual" });
+                            insight.analyze();
+                        }}
                     />
                 )}
 

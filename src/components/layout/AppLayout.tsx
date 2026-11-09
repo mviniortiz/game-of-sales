@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
+import { AppAnalytics } from "./AppAnalytics";
 import { AbasCelular } from "./AbasCelular";
 import "./tela.css";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
@@ -12,6 +13,9 @@ import { AskEvaPalette } from "@/components/help/AskEvaPalette";
 import { WhatsappStatusPill } from "@/components/whatsapp/WhatsappStatusPill";
 import { conectandoWhatsapp, rotaGratis, usePlano } from "@/hooks/usePlano";
 import { useEvaSetup } from "@/hooks/useEvaSetup";
+
+// Painel de eventos do analytics: só no localhost, fora do build de produção.
+const PainelEventosDev = import.meta.env.DEV ? lazy(() => import("./PainelEventosDev")) : null;
 
 // Page titles alinhados com nova nomenclatura visual da nav (F3 2026-05-19).
 // Rotas novas (/inicio, /inbox, etc) são as principais; antigas redirect silencioso.
@@ -63,6 +67,12 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider style={{ "--sidebar-width": "15.5rem" } as React.CSSProperties}>
       <div className="min-h-screen flex w-full" style={{ background: "var(--vyz-bg)", color: "var(--vyz-text-primary)" }}>
+        <AppAnalytics />
+        {PainelEventosDev && (
+          <Suspense fallback={null}>
+            <PainelEventosDev />
+          </Suspense>
+        )}
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {mostraFaixa && <FaixaPlanoGratis />}

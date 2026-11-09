@@ -33,6 +33,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { APP_EVENTS, trackApp } from "@/lib/appAnalytics";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inbox Comercial — F4W.4 (2026-05-20)
@@ -255,6 +256,17 @@ const Inbox = () => {
     const isLoadingMessages = activeInbox.isLoadingMessages;
 
     const selectedChat = chats.find((c) => c.id === selectedChatId);
+
+    // Uma vez por conversa aberta (não a cada mensagem nova da mesma conversa).
+    const conversaMedida = useRef<string | null>(null);
+    useEffect(() => {
+        if (!selectedChat || conversaMedida.current === selectedChat.id) return;
+        conversaMedida.current = selectedChat.id;
+        trackApp(APP_EVENTS.CONVERSATION_OPENED, {
+            nao_lidas: selectedChat.unreadCount > 0,
+            tem_orcamento: quoteByChat.has(selectedChat.id),
+        });
+    }, [selectedChat, quoteByChat]);
 
     // EVA.INBOX — sinais por conversa: leitura da Lume (conversation_summaries) +
     // tempo que o lead espera resposta SUA (client-side). A etiqueta-motivo vem

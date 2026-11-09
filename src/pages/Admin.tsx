@@ -10,6 +10,7 @@ import { GestaoMeta } from "@/components/gestao/GestaoMeta";
 import { AdminCompanies } from "@/components/admin/AdminCompanies";
 import { EvolutionMonitor } from "@/components/admin/EvolutionMonitor";
 import { AdminProspeccao } from "@/components/admin/AdminProspeccao";
+import { AdminUso } from "@/components/admin/AdminUso";
 import "@/components/admin/admin.css";
 
 type Tab = { id: string; label: string; render: () => JSX.Element; superAdminOnly?: boolean };
@@ -23,6 +24,7 @@ const TABS: Tab[] = [
   { id: "funil", label: "Funil", render: () => <GestaoFunil /> },
   { id: "meta", label: "Meta do mês", render: () => <GestaoMeta /> },
   { id: "empresas", label: "Empresas", render: () => <AdminCompanies />, superAdminOnly: true },
+  { id: "uso", label: "Uso do app", render: () => <AdminUso />, superAdminOnly: true },
   { id: "monitor", label: "Monitor WhatsApp", render: () => <EvolutionMonitor />, superAdminOnly: true },
   { id: "prospeccao", label: "Prospecção", render: () => <AdminProspeccao />, superAdminOnly: true },
 ];

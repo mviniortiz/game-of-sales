@@ -19,6 +19,7 @@ import type { Chat } from "@/hooks/useEvolutionAPI";
 import { EvaBot } from "@/components/eva/EvaBot";
 import { ago, brl } from "@/lib/quoteText";
 import { MostrarMais } from "@/components/ui/MostrarMais";
+import { APP_EVENTS, trackApp } from "@/lib/appAnalytics";
 
 // ─── Tipos do sinal de prioridade (placeholder do cálculo real) ─────────────
 
@@ -271,7 +272,10 @@ export function InboxPriorityList({
                                 type="button"
                                 aria-pressed={order === o.id}
                                 title={o.title}
-                                onClick={() => setOrder(o.id)}
+                                onClick={() => {
+                                    if (order !== o.id) trackApp(APP_EVENTS.FILTER_APPLIED, { filtro: `ordem_${o.id}` });
+                                    setOrder(o.id);
+                                }}
                                 className="vz-evlist-ordem__op"
                             >
                                 <o.icon aria-hidden style={{ width: 12, height: 12 }} />
@@ -341,7 +345,10 @@ export function InboxPriorityList({
                             key={f.id}
                             type="button"
                             aria-pressed={filter === f.id}
-                            onClick={() => setFilter(f.id)}
+                            onClick={() => {
+                                if (filter !== f.id) trackApp(APP_EVENTS.FILTER_APPLIED, { filtro: f.id });
+                                setFilter(f.id);
+                            }}
                             className={`inline-flex h-9 md:h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 md:px-2.5 text-[12.5px] md:text-[11px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
                                 filter === f.id
                                     ? "bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)]"
