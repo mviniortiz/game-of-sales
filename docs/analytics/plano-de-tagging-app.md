@@ -15,7 +15,7 @@ Com poucas integradoras, a pergunta é sempre "o que **esta** integradora fez". 
 
 | Camada | Para quê | Onde ver |
 | --- | --- | --- |
-| `app_events` (banco, nosso) | Uso por empresa e por pessoa, funil de ativação, dias ativos. Fonte de verdade. | SQL e views `vw_app_uso_empresa_dia` e `vw_app_ativacao` |
+| `app_events` (banco, nosso) | Uso por empresa e por pessoa, funil de ativação, dias ativos. Fonte de verdade. | Resultados → aba **Uso do app** (só super admin), ou SQL nas views `vw_app_uso_empresa_dia` e `vw_app_ativacao` |
 | GA4 + Clarity (`trackBehavior`) | Funil agregado e gravação das sessões para ver onde travou | GA4 DebugView e Clarity, filtro por evento ou tag |
 
 Tudo passa por um helper só, `trackApp(evento, props)` em `src/lib/appAnalytics.ts`. Ele grava nas duas camadas e nunca quebra a tela: se o banco ou o GA4 falharem, o app segue.
