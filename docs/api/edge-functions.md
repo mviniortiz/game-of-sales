@@ -103,8 +103,6 @@ Cobrança da própria assinatura do Vyzon (trial 14 dias, checkout transparente)
 
 ## Demo e Leads
 
-- **`create-personalized-demo`** — POST · interno (anti-abuso: só após agendar, 1/lead) · clona o
-  ambiente base e envia credenciais por email. Ver [demo personalizada](../product/).
 - **`sdr-auto-outreach`** — POST · interno (trigger) · SDR "Markus": WhatsApp + email ao lead recém-agendado,
   copy por `gpt-5.4-mini`.
 - **`public-report`** — GET/POST · `token` opaco (`share_token`) · relatório white-label público via RPC `get_public_report`.

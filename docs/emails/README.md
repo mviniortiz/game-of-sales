@@ -41,8 +41,7 @@ Aplicado em 04/11/2026, depois do merge do PR #53:
   campo. Teste de recuperar senha entregue no Gmail com o layout novo e os
   placeholders trocados.
 - Edges no ar: admin-create-seller, sdr-auto-outreach, notify-signup,
-  whatsapp-health, admin-lead-digest, create-personalized-demo e
-  admin-support-inbox.
+  whatsapp-health, admin-lead-digest e admin-support-inbox.
 
 Ao mudar um texto: edite `mensagens.ts`, rode `node scripts/emails/gerar.mjs`, e
 depois do merge cole o template no painel (Authentication, Emails, Templates) ou

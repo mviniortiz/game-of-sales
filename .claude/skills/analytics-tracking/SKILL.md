@@ -27,7 +27,6 @@ Toda a instrumentação passa por `src/lib/analytics.ts`. **Nunca** chame
 | `clarityIdentify(id, friendlyName?)` | Liga a sessão a um id estável (ex.: demo id). |
 | `clarityUpgrade(reason)` | **Prioriza a gravação** desta sessão (momentos de valor: aha da EVA, off-flow, CTA). |
 | `trackConversion` / `trackDemoConversion` / `trackPurchaseConversion` | Conversões do Google Ads (com `send_to`). |
-| `isDemoSession()` | True se a sessão é demo (flag `sessionStorage.vyzon_demo` ou app em iframe). |
 
 ## App logado: `trackApp` (desde 08/11/2026)
 Dentro do app (telas com `AppLayout`), use `trackApp(APP_EVENTS.X, props)` de
@@ -52,7 +51,7 @@ acrescente em `APP_EVENTS` e no dicionário. Uso por empresa: views
    aninhados — GA4 não aceita).
 
 ## Taxonomia da demo/EVA (`DEMO_EVENTS`) — já instrumentada
-- `demo_start` — início da demo (EmbedDemo + tour de voz DemoLiveStage).
+- `demo_start` — início da demo (descontinuada em 10/11/2026, não dispara mais).
 - `eva_step_view` (+ tag `eva_step`) — cada tela que a EVA apresenta no tour
   (`DemoLiveStage.startStep`).
 - `nav_tab_click` (+ tag `last_tab`) — clique em aba da sidebar (`AppSidebar`).

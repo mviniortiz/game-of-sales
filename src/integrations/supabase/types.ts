@@ -4213,6 +4213,10 @@ export type Database = {
         Args: { p_month_start: string }
         Returns: undefined
       }
+      trigger_eva_agent_tick: {
+        Args: { p_max_per_company?: number }
+        Returns: number
+      }
       trigger_eva_approval_notify: { Args: never; Returns: number }
       trigger_eva_learn_context: { Args: never; Returns: number }
       trigger_eva_stale_followup: { Args: never; Returns: number }

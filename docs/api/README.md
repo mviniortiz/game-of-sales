@@ -26,7 +26,7 @@ Os endpoints usam um destes modelos (detalhado por endpoint no catálogo):
 | **Segredo de plataforma** | Env secreta (`EVOLUTION_WEBHOOK_SECRET`, `EVA_CRON_SECRET`) via query/header | Receivers Evolution, crons da EVA, triggers do banco (`_shared/serviceAuth.ts`) |
 | **State HMAC** | Parâmetro `state` assinado (CSRF) | google-oauth-init / callback |
 | **Token-como-segredo** | Um token opaco na URL é a própria credencial | public-report (`share_token`), lead-webhook (`slug`+`secret`) |
-| **Interno (sem header)** | Sem auth de chamador; protegido por ser invocado por trigger/cron e pela lógica de negócio | admin-lead-digest, calendar-book/slots, create-personalized-demo, sdr-auto-outreach, notify-channel, upload-ads-conversion |
+| **Interno (sem header)** | Sem auth de chamador; protegido por ser invocado por trigger/cron e pela lógica de negócio | admin-lead-digest, calendar-book/slots, sdr-auto-outreach, notify-channel, upload-ads-conversion |
 
 Escritas privilegiadas usam sempre a `SERVICE_ROLE_KEY` (bypassa RLS) — nunca exposta ao cliente.
 
