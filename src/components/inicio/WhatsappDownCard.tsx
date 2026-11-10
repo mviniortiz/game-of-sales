@@ -3,7 +3,6 @@
 // conectou e a sessão caiu (aí mostra quando chegou a última conversa, que é o
 // que o banco sabe de verdade; a hora exata da queda ninguém registra).
 import { Link } from "react-router-dom";
-import { isDemoSession } from "@/lib/analytics";
 
 const STEPS: Array<{ when: string; text: string }> = [
     { when: "Assim que conectar", text: "A Lume volta a ler cada conversa que chega no seu WhatsApp." },
@@ -16,10 +15,6 @@ function shortDate(iso: string): string {
 }
 
 export function WhatsappDownCard({ neverConnected, lastInboundAt }: { neverConnected: boolean; lastInboundAt: string | null }) {
-    // Na demo embutida da landing o card quebra a ilusão de operação madura
-    // (a conta demo nunca conecta WhatsApp de verdade).
-    if (isDemoSession()) return null;
-
     return (
         <section
             aria-labelledby="whatsapp-down"

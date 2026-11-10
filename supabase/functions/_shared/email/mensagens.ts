@@ -259,29 +259,3 @@ function rotuloDoLink(url: string): string {
     return "Abrir";
 }
 
-/** Demo personalizada criada (create-personalized-demo, fluxo antigo de agências). */
-export function avisoDemoPersonalizada(o: {
-    empresa: string;
-    quando: string;
-    segmento?: string | null;
-    oferta?: string | null;
-    dor?: string | null;
-    notas?: string | null;
-    contato?: string | null;
-    login: string;
-    senha: string;
-    appUrl: string;
-}): EmailPronto {
-    return renderEmail({
-        assunto: `Demo personalizada: ${o.empresa}`,
-        previa: `Marcada para ${o.quando}. O ambiente já está pronto.`,
-        titulo: `Demo de ${o.empresa} pronta`,
-        blocos: [
-            { tipo: "texto", texto: `Marcada para ${o.quando}. O ambiente leva o nome do lead e dá para mostrar na conversa.` },
-            { tipo: "dados", linhas: [["Segmento", o.segmento], ["O que vende", o.oferta], ["Principal dor", o.dor], ["Notas", o.notas], ["Contato", o.contato]] },
-            { tipo: "dados", linhas: [["Login", o.login], ["Senha", o.senha]], mono: ["Login", "Senha"] },
-        ],
-        botao: { texto: "Abrir o ambiente", url: `${o.appUrl}/auth` },
-        rodape: RODAPE_INTERNO,
-    });
-}

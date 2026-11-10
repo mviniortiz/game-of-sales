@@ -14,7 +14,6 @@ import { startOfMonth, endOfMonth, differenceInDays } from "date-fns";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVisibleSellers } from "@/hooks/useVisibleSellers";
-import { stageLabelFor } from "@/lib/demoPipeline";
 import { recordMetricSnapshot, getMetricTrend, type MetricTrend } from "@/lib/metricHistory";
 import { GoldenHoursHeatmap } from "@/components/dashboard/GoldenHoursHeatmap";
 import { PeriodToggle, DateRangePicker } from "@/components/filters";
@@ -255,8 +254,8 @@ const SalesPerformanceCenter = () => {
 
     const sellerName = (id: string) => sellers.find((s) => s.id === id)?.nome ?? "Sem responsável definido";
     const stageLbl = useCallback(
-        (id: string, fallback: string) => (id === "won" ? "Ganho" : stageLabelFor(activeCompanyId, id, fallback)),
-        [activeCompanyId],
+        (id: string, fallback: string) => (id === "won" ? "Ganho" : fallback),
+        [],
     );
 
     // ─── Leitura da Lume: única voz de insight (absorve a antiga "Atenção do gestor") ──

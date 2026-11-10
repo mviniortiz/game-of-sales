@@ -8,13 +8,11 @@ const ROTULO: Record<EventoEspiado["envio"], string> = {
     na_fila: "na fila",
     gravado: "gravado",
     falhou: "não gravou",
-    demo: "demo, não grava",
 };
 const COR: Record<EventoEspiado["envio"], string> = {
     na_fila: "var(--vyz-text-muted)",
     gravado: "var(--vyz-success)",
     falhou: "var(--vyz-danger)",
-    demo: "var(--vyz-text-muted)",
 };
 
 export default function PainelEventosDev() {

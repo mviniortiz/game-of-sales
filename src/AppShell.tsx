@@ -12,10 +12,8 @@ import { AdminRoute } from "@/components/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageLoader } from "@/components/ui/PageLoader";
 import NotFound from "./pages/NotFound";
-import { EmbedController } from "@/components/embed/EmbedController";
 
 // Detecta se o app está rodando dentro de um iframe (demo embutida da landing).
-const isEmbedded = (() => { try { return window.self !== window.top; } catch { return true; } })();
 
 const LoginV2 = lazy(() => import("./pages/LoginV2"));
 const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
@@ -56,7 +54,6 @@ const Suporte = lazy(() => import("./pages/admin/Suporte"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const TermosServico = lazy(() => import("./pages/TermosServico"));
 const Changelog = lazy(() => import("./pages/Changelog"));
-const EmbedDemo = lazy(() => import("./pages/EmbedDemo"));
 
 const CheckoutRedirect = () => {
   const [params] = useSearchParams();
@@ -179,7 +176,6 @@ const AppShell = () => (
               <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
               <Route path="/termos-de-servico" element={<TermosServico />} />
               <Route path="/changelog" element={<Changelog />} />
-              <Route path="/embed-demo" element={<EmbedDemo />} />
 
               {/* 2026-09-16: Orçamentos é a tela principal (APP_HOME). */}
               <Route path="/orcamentos" element={<OrcamentosRoute />} />
@@ -449,7 +445,6 @@ const AppShell = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-          {isEmbedded && <EmbedController />}
         </TooltipProvider>
       </TenantProvider>
     </AuthProvider>

@@ -156,8 +156,8 @@ está BLOQUEADO por billing; não criar workflows.
 - CTAs: home solar sem conversa com o Markus (01/11/2026): o topo leva à
   calculadora e a oferta ao Raio-X automático
   (`/criar-conta?segmento=energia_solar`, o cadastro dispara o Lead do pixel).
-  WhatsApp só no link de suporte do rodapé. `DemoScheduleSection` e
-  `NativeScheduler` estão órfãos, não usar como referência.
+  WhatsApp só no link de suporte do rodapé. A demo (empresas de demonstração, `/embed-demo`, formulário antigo de
+  agendar demo) foi removida em 10/11/2026.
 - WhatsApp nativo (QR, não oficial): servidor Whatsmiau no Railway, que fala
   as rotas da Evolution, por isso as edges seguem `evolution-whatsapp` e
   `evolution-message-webhook` e os secrets `EVOLUTION_API_*` (desde

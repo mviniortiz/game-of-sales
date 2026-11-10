@@ -3,8 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const rpc = vi.fn().mockResolvedValue({ error: null });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: (...a: unknown[]) => rpc(...a) } }));
 const trackBehavior = vi.fn();
-let demo = false;
-vi.mock("@/lib/analytics", () => ({ trackBehavior: (...a: unknown[]) => trackBehavior(...a), isDemoSession: () => demo }));
+vi.mock("@/lib/analytics", () => ({ trackBehavior: (...a: unknown[]) => trackBehavior(...a) }));
 
 import { APP_EVENTS, _fila, _limparFila, setAppContext, telaDaRota, trackApp } from "./appAnalytics";
 
@@ -25,7 +24,6 @@ describe("trackApp", () => {
         _limparFila();
         rpc.mockClear();
         trackBehavior.mockClear();
-        demo = false;
         setAppContext({ empresa: "emp-1", tela: "conversas", aba: "" });
     });
     afterEach(() => vi.useRealTimers());
@@ -45,13 +43,6 @@ describe("trackApp", () => {
         expect(args.empresa).toBe("emp-1");
         expect(args.eventos.map((e) => e.event)).toEqual(["conversation_opened", "message_sent"]);
         expect(args.eventos[1]).toMatchObject({ tela: "conversas", props: { tipo: "texto", origem: "lume" } });
-        expect(_fila()).toHaveLength(0);
-    });
-
-    it("na demo não grava no banco", () => {
-        demo = true;
-        trackApp(APP_EVENTS.SCREEN_VIEWED, { tela: "funil" });
-        expect(trackBehavior).toHaveBeenCalled();
         expect(_fila()).toHaveLength(0);
     });
 

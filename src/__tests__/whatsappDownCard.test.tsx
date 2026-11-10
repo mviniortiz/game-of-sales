@@ -5,8 +5,6 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { WhatsappDownCard } from "@/components/inicio/WhatsappDownCard";
 
-vi.mock("@/lib/analytics", () => ({ isDemoSession: () => false }));
-
 const renderCard = (props: Parameters<typeof WhatsappDownCard>[0]) =>
     render(
         <MemoryRouter>

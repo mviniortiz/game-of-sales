@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { WifiOff, QrCode, AlertCircle, Loader2, RefreshCw, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { isDemoSession } from "@/lib/analytics";
 import type { InboxConnectionStatus } from "@/hooks/useInboxConnectionStatus";
 
 /** Sem mensagem de cliente há mais que isso, a régua avisa: sessão caída costuma aparecer assim. */
@@ -56,10 +55,6 @@ export function ConnectionStatusCard({
     // Antes de qualquer return: hook depois de return condicional quebra o React
     // quando o status muda na mesma sessão.
     const [expanded, setExpanded] = useState(false);
-
-    // Na demo embutida da landing a conta nunca tem Evolution viva: o card de
-    // conexão viraria "produto quebrado" pro visitante.
-    if (isDemoSession() && status.status !== "connected") return null;
 
     const showSync = status.status === "connected" && status.provider === "evolution" && !!onSyncHistory;
     const hasManageActions = showSync || !!onResyncWebhook || !!onDisconnect;

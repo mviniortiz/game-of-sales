@@ -98,9 +98,6 @@ verify_jwt = true
 [functions.eva-studio-chat]
 verify_jwt = true
 
-[functions.generate-demo-agent]
-verify_jwt = true
-
 [functions.generate-eva-context-suggestions]
 verify_jwt = true
 

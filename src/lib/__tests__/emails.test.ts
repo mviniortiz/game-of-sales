@@ -16,7 +16,6 @@ const todos: Array<[string, EmailPronto]> = [
     ["suporte", m.respostaSuporte({ assunto: "Re: ajuda", texto: "Oi.\n\nResolvido." })],
     ["cadastro", m.avisoNovoCadastro({ empresa: "Solar Sul", nome: "Carla", email: "c@x.com", whatsapp: "5548", origem: "direto", linkWhatsapp: "https://wa.me/5548" })],
     ["interno", m.avisoInterno({ assunto: "A", titulo: "A", linhas: ["Texto.", "Erro: x"] })],
-    ["demo personalizada", m.avisoDemoPersonalizada({ empresa: "Solar Sul", quando: "amanhã", login: "l", senha: "s", appUrl: "https://vyzon.com.br" })],
 ];
 
 describe("e-mails do Vyzon", () => {

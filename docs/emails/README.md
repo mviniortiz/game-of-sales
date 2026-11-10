@@ -29,7 +29,6 @@ As cores são os tokens `--vyz-*` do app.
 | Novo cadastro | Markus | edge `notify-signup` | `avisoNovoCadastro` |
 | Pedido de Raio-X | Markus | edge `admin-lead-digest` | `avisoInterno` |
 | WhatsApp fora do ar | Markus | edge `whatsapp-health` | `avisoInterno` |
-| Demo personalizada | Markus | edge `create-personalized-demo` | `avisoDemoPersonalizada` |
 
 Fica de fora: `outreach-dispatch` (cold email em texto puro, de propósito).
 

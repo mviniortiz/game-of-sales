@@ -340,21 +340,3 @@ export function trackBehavior(
   clarityEvent(eventName);
 }
 
-/**
- * Heurística: a sessão atual é uma DEMO? Verdadeiro se a flag foi setada no
- * EmbedDemo (sessionStorage) ou se o app roda dentro de um iframe (embed).
- * Usada pra distinguir clique manual de aba (off-flow) durante a demo.
- */
-export function isDemoSession(): boolean {
-  try {
-    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("vyzon_demo") === "1") return true;
-  } catch {
-    // storage bloqueado — segue pra checagem de iframe
-  }
-  try {
-    return window.self !== window.top;
-  } catch {
-    // acesso cross-origin a window.top => estamos num iframe
-    return true;
-  }
-}

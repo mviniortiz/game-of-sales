@@ -2,7 +2,7 @@
 // trackApp grava em duas camadas: app_events no nosso banco (por empresa e
 // pessoa, em lote) e GA4 + Clarity pelo trackBehavior. Nunca joga exceção:
 // se algo falhar, a tela segue.
-import { isDemoSession, trackBehavior } from "@/lib/analytics";
+import { trackBehavior } from "@/lib/analytics";
 
 export const APP_EVENTS = {
     // Navegação
@@ -72,7 +72,7 @@ let fila: Array<{ event: string; tela: string; aba: string; props: Props; at: st
 let timer: ReturnType<typeof setTimeout> | null = null;
 
 // Espiões do painel de eventos (só no localhost). Em produção ninguém assina.
-export type EventoEspiado = { id: number; event: string; tela: string; aba: string; props: Props; at: string; envio: "na_fila" | "gravado" | "falhou" | "demo"; erro?: string };
+export type EventoEspiado = { id: number; event: string; tela: string; aba: string; props: Props; at: string; envio: "na_fila" | "gravado" | "falhou"; erro?: string };
 type Espiao = (e: EventoEspiado) => void;
 const espioes = new Set<Espiao>();
 let espiaoSeq = 0;
@@ -164,13 +164,11 @@ export function trackApp(event: AppEventName, props: Props = {}) {
         trackBehavior(event, { ...props, tela, ...(aba ? { aba } : {}) });
         const { tela: _t, aba: _a, ...resto } = props;
         const at = new Date().toISOString();
-        const demo = isDemoSession();
         if (espioes.size) {
-            const e: EventoEspiado = { id: ++espiaoSeq, event, tela, aba, props: resto, at, envio: demo ? "demo" : "na_fila" };
-            if (!demo) espiados.set(at + event, e);
+            const e: EventoEspiado = { id: ++espiaoSeq, event, tela, aba, props: resto, at, envio: "na_fila" };
+            espiados.set(at + event, e);
             avisar(e);
         }
-        if (demo) return;
         fila.push({ event, tela, aba, props: resto, at, session_id: sessionId() });
         agendar();
     } catch {

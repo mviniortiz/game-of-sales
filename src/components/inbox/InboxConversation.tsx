@@ -16,7 +16,6 @@ import {
     WifiOff,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { isDemoSession } from "@/lib/analytics";
 import { TemplatePicker } from "@/components/whatsapp/TemplatePicker";
 import { useEvaInsight } from "@/hooks/useEvaInsight";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -552,7 +551,7 @@ function ConversationView({
                     canSendAudio={!!onSendAudio}
                     contactName={chat.name}
                     contactPhone={chat.phone}
-                    offline={statusChecked && connected === false && !isDemoSession()}
+                    offline={statusChecked && connected === false}
                     onReconnect={onReconnect}
                 />
             )}

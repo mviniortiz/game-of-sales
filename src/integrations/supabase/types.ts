@@ -4072,10 +4072,6 @@ export type Database = {
       }
     }
     Functions: {
-      attach_demo_site_context: {
-        Args: { ctx: Json; p_id: string }
-        Returns: undefined
-      }
       claim_webhook_event: {
         Args: { p_event_key: string; p_metadata?: Json; p_provider: string }
         Returns: boolean
@@ -4086,18 +4082,6 @@ export type Database = {
           p_webhook_receipts_older_than?: string
         }
         Returns: Json
-      }
-      clone_demo_environment: {
-        Args: {
-          p_new_name: string
-          p_segment?: string
-          p_source_company: string
-        }
-        Returns: string
-      }
-      complete_demo_request: {
-        Args: { p_id: string; payload: Json }
-        Returns: string
       }
       consume_rate_limit: {
         Args: { p_bucket: string; p_limit: number; p_window_seconds: number }
@@ -4132,10 +4116,6 @@ export type Database = {
       delete_company_cascade: {
         Args: { target_company_id: string }
         Returns: Json
-      }
-      delete_demo_environment: {
-        Args: { p_company: string }
-        Returns: undefined
       }
       eva_daily_cleanup: { Args: never; Returns: Json }
       eva_smart_insert_memory: {
@@ -4232,13 +4212,6 @@ export type Database = {
       recalculate_consolidated_meta: {
         Args: { p_month_start: string }
         Returns: undefined
-      }
-      refresh_landing_demo: { Args: never; Returns: Json }
-      submit_demo_intake: { Args: { payload: Json }; Returns: string }
-      submit_demo_request: { Args: { payload: Json }; Returns: string }
-      trigger_eva_agent_tick: {
-        Args: { p_max_per_company?: number }
-        Returns: number
       }
       trigger_eva_approval_notify: { Args: never; Returns: number }
       trigger_eva_learn_context: { Args: never; Returns: number }
