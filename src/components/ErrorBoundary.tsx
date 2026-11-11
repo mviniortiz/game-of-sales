@@ -124,14 +124,14 @@ export class ErrorBoundary extends Component<Props, State> {
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <button
                   onClick={this.handleRetry}
-                  className="inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold flex-1 transition-colors hover:brightness-95"
+                  className="inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold sm:flex-1 transition-colors hover:brightness-95"
                   style={{ background: "#F1F5F9", color: "#475569" }}
                 >
                   Tentar novamente
                 </button>
                 <button
                   onClick={this.handleReload}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold text-white flex-1 transition-transform hover:-translate-y-px"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold text-white sm:flex-1 transition-transform hover:-translate-y-px"
                   style={{ background: "linear-gradient(135deg, #1556C0, #1D4ED8)", boxShadow: "0 4px 20px -6px rgba(21,86,192,0.5)" }}
                 >
                   <RefreshCw className="h-3.5 w-3.5" strokeWidth={2.5} />

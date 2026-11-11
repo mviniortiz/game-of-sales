@@ -80,7 +80,7 @@ const RedefinirSenha = () => {
             type="button"
             onClick={() => setShowPassword((s) => !s)}
             aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-            className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+            className="vz-toque flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
             style={{ color: "rgba(255,255,255,0.4)" }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.8)")}
             onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
@@ -127,7 +127,7 @@ const RedefinirSenha = () => {
                             <button
                                 type="button"
                                 onClick={() => navigate("/recuperar-senha")}
-                                className="mt-8 text-[13.5px] underline underline-offset-4"
+                                className="vz-toque mt-8 text-[13.5px] underline underline-offset-4"
                                 style={{ color: "rgba(255,255,255,0.6)" }}
                             >
                                 Link expirou? Solicitar novo

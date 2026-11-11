@@ -19,6 +19,10 @@ type ProfileRow = { id: string; nome: string | null };
 
 const CLOSED = new Set(["closed_won", "closed_lost"]);
 
+// Tabela "Por vendedor" no celular: cada célula vira uma linha "rótulo ... valor".
+const ROTULO_CELULAR =
+  "max-sm:flex max-sm:items-baseline max-sm:gap-1 max-sm:py-1 max-sm:before:mr-auto max-sm:before:text-[12px] max-sm:before:text-[var(--vyz-text-muted)] max-sm:before:content-[attr(data-rotulo)]";
+
 /** Números da empresa no placar de orçamentos (30 dias) e o retrato por vendedor. */
 export function GestaoResultados() {
   const { companyId } = useAuth();
@@ -146,16 +150,17 @@ export function GestaoResultados() {
       </div>
 
       <section aria-labelledby="gestao-por-vendedor">
-        <div className="flex items-baseline justify-between gap-3">
+        <div className="flex items-baseline justify-between gap-3 max-sm:flex-col max-sm:gap-0.5">
           <h2 id="gestao-por-vendedor" className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--vyz-text-primary)]">
             Por vendedor
           </h2>
           <p className="text-[12px] text-[var(--vyz-text-muted)]">Orçamentos dos últimos 30 dias · fechados neste mês</p>
         </div>
 
+        {/* No celular a tabela vira uma ficha por vendedor: nada de rolar de lado. */}
         <div className="mt-3 overflow-x-auto rounded-[18px] bg-[var(--vyz-surface-1)]">
-          <table className="w-full min-w-[560px] text-[13px]">
-            <thead>
+          <table className="w-full text-[13px] max-sm:block sm:min-w-[560px]">
+            <thead className="max-sm:sr-only">
               <tr className="text-left text-[12px] text-[var(--vyz-text-muted)]">
                 <th scope="col" className="px-4 py-3 font-medium">Vendedor</th>
                 <th scope="col" className="px-4 py-3 font-medium text-right">Em aberto</th>
@@ -163,30 +168,30 @@ export function GestaoResultados() {
                 <th scope="col" className="px-4 py-3 font-medium text-right">Fechado no mês</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="max-sm:block">
               {loading &&
                 [0, 1, 2].map((i) => (
-                  <tr key={i} className="border-t border-[var(--vyz-border-subtle)]">
-                    <td colSpan={4} className="px-4 py-3">
+                  <tr key={i} className="border-t border-[var(--vyz-border-subtle)] max-sm:block">
+                    <td colSpan={4} className="px-4 py-3 max-sm:block">
                       <div className="h-4 w-full rounded bg-[var(--vyz-surface-2)] animate-pulse motion-reduce:animate-none" />
                     </td>
                   </tr>
                 ))}
               {!loading && rows.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-[var(--vyz-text-muted)]">
+                <tr className="max-sm:block">
+                  <td colSpan={4} className="px-4 py-8 text-center text-[var(--vyz-text-muted)] max-sm:block">
                     Ninguém na equipe ainda. Convide alguém na aba Equipe.
                   </td>
                 </tr>
               )}
               {!loading &&
                 rows.map((r) => (
-                  <tr key={r.id} className="border-t border-[var(--vyz-border-subtle)]">
-                    <th scope="row" className="px-4 py-3 text-left font-medium text-[var(--vyz-text-primary)]">{r.nome}</th>
-                    <td className="px-4 py-3 text-right tabular-nums text-[var(--vyz-text)]">
+                  <tr key={r.id} className="border-t border-[var(--vyz-border-subtle)] max-sm:block max-sm:py-2 max-sm:first:border-t-0">
+                    <th scope="row" className="px-4 py-3 text-left font-medium text-[var(--vyz-text-primary)] max-sm:block max-sm:py-1 max-sm:text-[14px]">{r.nome}</th>
+                    <td data-rotulo="Em aberto" className={`px-4 py-3 text-right tabular-nums text-[var(--vyz-text)] ${ROTULO_CELULAR}`}>
                       {brl(r.openValue)} <span className="text-[var(--vyz-text-muted)]">· {r.openCount}</span>
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums">
+                    <td data-rotulo="Orçamentos parados" className={`px-4 py-3 text-right tabular-nums ${ROTULO_CELULAR}`}>
                       {r.parked.count > 0 ? (
                         <span className="text-[var(--vyz-warning)]">
                           {r.parked.amount > 0 ? (
@@ -201,7 +206,7 @@ export function GestaoResultados() {
                         <span className="text-[var(--vyz-text-soft)]">nenhum</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-[var(--vyz-text)]">
+                    <td data-rotulo="Fechado no mês" className={`px-4 py-3 text-right tabular-nums text-[var(--vyz-text)] ${ROTULO_CELULAR}`}>
                       {brl(r.wonValue)} <span className="text-[var(--vyz-text-muted)]">· {r.wonCount}</span>
                     </td>
                   </tr>

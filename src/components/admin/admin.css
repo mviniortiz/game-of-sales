@@ -69,6 +69,7 @@
 .va-abas button[aria-selected="true"]::after { transform: scaleX(1); }
 .va-abas em { margin-left: 6px; font-style: normal; font-weight: 500; color: var(--va-suave); font-variant-numeric: tabular-nums; }
 .va-abas button:focus-visible { outline: 2px solid var(--vyz-accent); outline-offset: -2px; }
+@media (max-width: 767px) { .va-abas button { height: 44px; } }
 
 /* Botões */
 .va-btn {
@@ -96,6 +97,7 @@
 .va-btn--perigo { background: var(--vyz-danger); }
 .va-btn--perigo:hover:not(:disabled) { background: var(--vyz-danger); opacity: 0.9; }
 .va-btn--grande { height: 40px; padding: 0 16px; }
+@media (max-width: 767px) { .va-btn { height: 40px; } .va-btn--grande { height: 44px; } }
 .va-btn:focus-visible,
 .va-icone:focus-visible { outline: 2px solid var(--vyz-accent); outline-offset: 2px; }
 
@@ -330,6 +332,8 @@
   color: var(--va-tinta);
   transition: background-color 150ms var(--va-ease), transform 120ms var(--va-ease);
 }
+/* Depois das bases de propósito: regra de celular que vem antes da base não vale. */
+@media (max-width: 767px) { .va-escolha { height: 40px; } .va-icone { width: 40px; height: 40px; } }
 .va-escolha:hover:not(:disabled) { background: #fafafa; }
 .va-escolha:active:not(:disabled) { transform: scale(0.97); }
 .va-escolha:disabled { box-shadow: none; color: var(--va-cinza); cursor: default; padding-left: 0; }

@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -155,7 +155,21 @@ const queryClient = new QueryClient({
   },
 });
 
-const AppShell = () => (
+// Marca o <html> enquanto o app está montado (tudo menos a landing). É o gancho das
+// regras de celular que precisam alcançar os diálogos, que abrem em portal no body.
+const useMarcaDoApp = () => {
+  useEffect(() => {
+    const raiz = document.documentElement;
+    raiz.dataset.vyzApp = "";
+    return () => {
+      delete raiz.dataset.vyzApp;
+    };
+  }, []);
+};
+
+const AppShell = () => {
+  useMarcaDoApp();
+  return (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TenantProvider>
@@ -449,6 +463,7 @@ const AppShell = () => (
       </TenantProvider>
     </AuthProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default AppShell;

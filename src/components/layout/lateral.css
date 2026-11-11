@@ -318,6 +318,36 @@
         display: none;
     }
 }
+/* Menu aberto no celular: cada linha e cada ícone com área de dedo. O atalho de
+   teclado some, que no celular não existe. Em aparelho baixo (iPhone SE) as
+   linhas ficam na altura de sempre, pra o menu caber sem rolar; se ainda assim
+   faltar tela, ele rola em vez de espremer. */
+@media (max-width: 767px) {
+    .vz-lateral {
+        overflow-y: auto;
+    }
+    .vz-lateral > * {
+        flex-shrink: 0;
+    }
+    .vz-busca kbd {
+        display: none;
+    }
+    .vz-lateral__icone {
+        position: relative;
+    }
+    .vz-lateral__icone::after {
+        content: "";
+        position: absolute;
+        inset: -7px;
+    }
+}
+@media (max-width: 767px) and (min-height: 740px) {
+    .vz-nav,
+    .vz-busca {
+        height: 44px;
+        font-size: 15px;
+    }
+}
 @media (prefers-reduced-motion: reduce) {
     .vz-nav,
     .vz-abas a {
