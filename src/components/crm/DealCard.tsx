@@ -518,7 +518,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 onClick={e => e.stopPropagation()}
                 onPointerDown={e => e.stopPropagation()}
                 onMouseDown={e => e.stopPropagation()}
-                className={`-mr-1.5 -mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-[var(--vyz-text-muted)] transition-[opacity,background-color,color] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[var(--vyz-surface-3)] hover:text-[var(--vyz-text-primary)] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] data-[state=open]:bg-[var(--vyz-surface-3)] data-[state=open]:opacity-100 ${isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                className={`relative -mr-1.5 -mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md max-md:after:absolute max-md:after:-inset-2.5 max-md:after:content-[''] text-[var(--vyz-text-muted)] transition-[opacity,background-color,color] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[var(--vyz-surface-3)] hover:text-[var(--vyz-text-primary)] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] data-[state=open]:bg-[var(--vyz-surface-3)] data-[state=open]:opacity-100 ${isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
               >
                 <MoreHorizontal className="h-4 w-4" aria-hidden />
               </DropdownMenuTrigger>
@@ -711,7 +711,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <button
                   type="button"
-                  className="group/openconv inline-flex items-center gap-1.5 self-start px-2 py-1 -ml-0.5 rounded-full text-[10.5px] font-medium text-[var(--vyz-accent)] bg-[var(--vyz-accent-soft-8)] hover:bg-[var(--vyz-accent-soft-12)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                  className="group/openconv inline-flex items-center gap-1.5 self-start px-2 py-1 max-md:px-3 max-md:py-2 -ml-0.5 rounded-full text-[10.5px] max-md:text-[13px] font-medium text-[var(--vyz-accent)] bg-[var(--vyz-accent-soft-8)] hover:bg-[var(--vyz-accent-soft-12)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate(`/inbox?conversationId=${context.conversationId}`);

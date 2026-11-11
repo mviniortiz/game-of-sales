@@ -1383,7 +1383,7 @@ All colors MUST be HSL.
 }
 .vz-evlist-ordem__op:focus-visible { outline: 2px solid var(--vyz-accent); outline-offset: 1px; }
 @media (max-width: 767px) {
-  .vz-evlist-ordem__op { height: 32px; padding: 0 11px; font-size: 12.5px; }
+  .vz-evlist-ordem__op { height: 40px; padding: 0 12px; font-size: 13px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .vz-evlist-ordem__op { transition: none; }
@@ -1564,6 +1564,22 @@ All colors MUST be HSL.
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
+}
+
+/* Celular: aqui a lista é a tela inteira, então ganha tamanho de leitura de
+   celular. No computador ela é uma coluna estreita e fica densa de propósito. */
+@media (max-width: 767px) {
+  .vz-evlist-section { padding-top: 14px; font-size: 11.5px; }
+  .vz-evlist-row { gap: 12px; padding-block: 12px; }
+  .vz-evlist-bar { top: 12px; bottom: 12px; }
+  .vz-evlist-avatar { width: 44px; height: 44px; font-size: 14px; }
+  .vz-evlist-name { font-size: 15px; }
+  .vz-evlist-time { font-size: 12px; }
+  .vz-evlist-preview { font-size: 13.5px; }
+  .vz-evlist-tag { height: 22px; font-size: 12px; }
+  .vz-evlist-wait { font-size: 11.5px; }
+  .vz-evlist-unread { min-width: 20px; height: 20px; font-size: 12px; }
+  .vz-evlist-bridge-sub { font-size: 12px; }
 }
 
 /* Contatos sem conversa ativa — recolhidos no fim, fora do caminho */
@@ -2683,8 +2699,7 @@ All colors MUST be HSL.
   align-items: start;
 }
 @media (max-width: 860px) {
-  .vz-studioshell-body { grid-template-columns: 1fr; }
-  .vz-studioshell-rail { flex-direction: row; overflow-x: auto; }
+  .vz-studioshell-body { grid-template-columns: 1fr; gap: 16px; }
 }
 .vz-studioshell-rail {
   position: sticky;
@@ -2799,6 +2814,20 @@ All colors MUST be HSL.
   border-radius: 8px;
 }
 .vz-studioshell-secondary-link:hover { background: #f8fafc; color: #475569; }
+/* Celular: o trilho "Seu caminho" repete o passo a passo do topo e empurrava o
+   conteúdo uma tela pra baixo. Fica só o que é novo (prontidão e atalhos), em
+   linha e com área de dedo. Esta regra vem depois da base de propósito: a antiga
+   ficava antes e nunca valia. */
+@media (max-width: 860px) {
+  .vz-studioshell-rail { position: static; }
+  .vz-studioshell-rail-head,
+  .vz-studioshell-rail-item { display: none; }
+  .vz-studioshell-readiness { margin-top: 0; }
+  .vz-studioshell-secondary { flex-direction: row; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-top: 10px; }
+  .vz-studioshell-secondary-link { min-height: 40px; padding: 0 12px; font-size: 13px; }
+  .vz-studioshell-stepper-node { min-width: 40px; min-height: 40px; justify-content: center; }
+  .vz-studioshell-stepcount { font-size: 12px; }
+}
 .vz-studioshell-content { min-width: 0; }
 .vz-studioshell-content-step {
   font-size: 11px;

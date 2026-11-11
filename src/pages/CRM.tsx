@@ -164,9 +164,12 @@ const LIST_GRID =
 // soltos sem rótulo). Ali só cabem os quatro que identificam a negociação, em
 // duas colunas; o resto volta a partir de sm.
 const LIST_CELL_MAIN = "col-start-1 row-start-1 sm:col-auto sm:row-auto";
-const LIST_CELL_SUB = "col-start-1 row-start-2 sm:col-auto sm:row-auto";
+// No celular o título divide a 1ª linha só com o valor; cliente e etapa descem
+// para linhas próprias. Antes a etiqueta da etapa alargava a 2ª coluna e cortava
+// o título na metade ("Oficina mecânic...").
+const LIST_CELL_SUB = "col-span-2 col-start-1 row-start-2 sm:col-auto sm:row-auto";
 const LIST_CELL_RIGHT_TOP = "col-start-2 row-start-1 justify-self-end sm:justify-self-auto sm:col-auto sm:row-auto";
-const LIST_CELL_RIGHT_SUB = "col-start-2 row-start-2 justify-self-end sm:justify-self-auto sm:col-auto sm:row-auto";
+const LIST_CELL_RIGHT_SUB = "col-span-2 col-start-1 row-start-3 mt-1 sm:mt-0 sm:col-auto sm:row-auto";
 const LIST_CELL_DESKTOP = "hidden sm:flex";
 const LIST_CELL_DESKTOP_BLOCK = "hidden sm:block";
 const LIST_TH = "text-[10.5px] uppercase font-semibold tracking-[0.07em] text-muted-foreground truncate";
@@ -197,7 +200,7 @@ function loadSavedFilters(): SavedFilters {
 }
 
 const CHIP =
-  "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]";
+  "inline-flex h-10 sm:h-8 items-center gap-1.5 rounded-full px-3.5 sm:px-3 text-[13px] sm:text-[11.5px] font-medium transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]";
 const CHIP_ON = "bg-[var(--vyz-accent-soft-10)] text-[var(--vyz-accent-text)] ring-1 ring-[var(--vyz-accent-border)]";
 const CHIP_OFF =
   "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]";
@@ -1253,7 +1256,7 @@ export default function CRM() {
     const stage = STAGES.find((s) => s.id === stageId);
     if (!stage) return null;
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${stage.bgColor} ${stage.borderColor} ${stage.color.replace("text-", "ring-")} ring-1`}>
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] sm:text-[11px] font-semibold ${stage.bgColor} ${stage.borderColor} ${stage.color.replace("text-", "ring-")} ring-1`}>
         <stage.icon className="h-3 w-3" />
         {stage.title}
       </span>
@@ -1406,7 +1409,7 @@ export default function CRM() {
                     setSearchQuery("");
                   }
                 }}
-                className="w-full pl-9 pr-8 h-9 rounded-full border border-input bg-background text-base md:text-[13px] text-foreground placeholder:text-muted-foreground/70 transition-[border-color,box-shadow] duration-150 hover:border-border focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[var(--vyz-accent)] focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.15)] [&::-webkit-search-cancel-button]:hidden dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15"
+                className="w-full pl-9 pr-8 h-11 sm:h-9 rounded-full border border-input bg-background text-base md:text-[13px] text-foreground placeholder:text-muted-foreground/70 transition-[border-color,box-shadow] duration-150 hover:border-border focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[var(--vyz-accent)] focus-visible:shadow-[0_0_0_3px_rgba(21,86,192,0.15)] [&::-webkit-search-cancel-button]:hidden dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15"
               />
               {searchQuery && (
                 <button
@@ -1700,7 +1703,7 @@ export default function CRM() {
                     <button
                       type="button"
                       onClick={clearAllFilters}
-                      className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
+                      className="inline-flex h-10 sm:h-8 items-center gap-1.5 rounded-full px-3 text-[13px] sm:text-[11.5px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
                     >
                       Limpar tudo
                     </button>
@@ -1724,7 +1727,7 @@ export default function CRM() {
               <button
                 type="button"
                 onClick={clearAllFilters}
-                className="inline-flex h-8 items-center rounded-full border border-border px-3.5 text-[12px] font-medium text-foreground hover:bg-muted transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                className="inline-flex h-10 sm:h-8 items-center rounded-full border border-border px-4 sm:px-3.5 text-[13px] sm:text-[12px] font-medium text-foreground hover:bg-muted transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
               >
                 Limpar filtros
               </button>
@@ -1732,7 +1735,7 @@ export default function CRM() {
               <button
                 type="button"
                 onClick={() => setShowNewDeal(true)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] px-3.5 text-[12px] font-semibold text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                className="inline-flex h-10 sm:h-8 items-center gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] px-4 sm:px-3.5 text-[13px] sm:text-[12px] font-semibold text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
               >
                 <PlusPh size={13} weight="bold" /> Novo cliente
               </button>
@@ -1926,7 +1929,7 @@ export default function CRM() {
                     const quote = quoteByDeal.get(deal.id);
                     const st = quote ? quoteStatus(quote) : null;
                     const quoteLine = st ? (
-                      <span className={`mt-0.5 flex min-w-0 items-center gap-1.5 text-[11.5px] font-medium ${st.tone}`}>
+                      <span className={`mt-0.5 flex min-w-0 items-center gap-1.5 text-[12.5px] sm:text-[11.5px] font-medium ${st.tone}`}>
                         <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${st.dot}`} aria-hidden />
                         <span className="truncate">{st.text}</span>
                       </span>
@@ -1935,7 +1938,7 @@ export default function CRM() {
                       <div
                         key={deal.id}
                         onClick={selectionMode ? () => toggleSelectDeal(deal.id) : () => navigate(`/deals/${deal.id}`)}
-                        className={`${LIST_GRID} group items-center px-4 py-2.5 border-b border-border/60 last:border-b-0 cursor-pointer transition-colors duration-150 ${
+                        className={`${LIST_GRID} group items-center px-4 py-3 sm:py-2.5 border-b border-border/60 last:border-b-0 cursor-pointer transition-colors duration-150 ${
                           isSel ? "bg-[var(--vyz-accent-soft-6)]" : "hover:bg-muted/50"
                         }`}
                       >
@@ -1954,7 +1957,7 @@ export default function CRM() {
                               )}
                             </div>
                           )}
-                          <span className="text-[13.5px] font-semibold text-foreground truncate" style={{ letterSpacing: "-0.01em" }}>
+                          <span className="text-[15px] sm:text-[13.5px] font-semibold text-foreground truncate" style={{ letterSpacing: "-0.01em" }}>
                             {deal.title || "Sem título"}
                           </span>
                         </div>
@@ -1962,14 +1965,14 @@ export default function CRM() {
                         {/* Cliente e, embaixo, em que pé está o orçamento: no celular a lista
                             é a visão padrão e sem isso o integrador não via quem sumiu. Lá a
                             situação ganha linha própria, senão a etiqueta da etapa a corta. */}
-                        <span className={`${LIST_CELL_SUB} min-w-0 text-[12.5px] text-muted-foreground`}>
+                        <span className={`${LIST_CELL_SUB} min-w-0 text-[13.5px] sm:text-[12.5px] text-muted-foreground`}>
                           <span className="block truncate">{deal.customer_name || "—"}</span>
                           {quoteLine && <span className="hidden sm:flex">{quoteLine}</span>}
                         </span>
-                        {quoteLine && <span className="col-span-2 col-start-1 row-start-3 sm:hidden">{quoteLine}</span>}
+                        {quoteLine && <span className="col-span-2 col-start-1 row-start-4 sm:hidden">{quoteLine}</span>}
 
                         {/* Valor */}
-                        <span className={`${LIST_CELL_RIGHT_TOP} text-[13.5px] font-bold tabular-nums text-foreground text-right`}>
+                        <span className={`${LIST_CELL_RIGHT_TOP} text-[15px] sm:text-[13.5px] font-bold tabular-nums text-foreground text-right`}>
                           {value ? formatCurrency(value) : <span className="text-[12px] font-medium text-muted-foreground/70">Sem valor</span>}
                         </span>
 

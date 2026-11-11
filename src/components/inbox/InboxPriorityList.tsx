@@ -349,7 +349,7 @@ export function InboxPriorityList({
                                 if (filter !== f.id) trackApp(APP_EVENTS.FILTER_APPLIED, { filtro: f.id });
                                 setFilter(f.id);
                             }}
-                            className={`inline-flex h-9 md:h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 md:px-2.5 text-[12.5px] md:text-[11px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
+                            className={`inline-flex h-10 md:h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3.5 md:px-2.5 text-[13px] md:text-[11px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
                                 filter === f.id
                                     ? "bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)]"
                                     : "border border-[var(--ibx-line)] text-[var(--vyz-text-strong)] hover:bg-[var(--ibx-sunken)]"
@@ -623,7 +623,7 @@ function LeadRow({
                         }}
                     >
                         {quote && q ? (
-                            <span className="inline-flex min-w-0 items-center gap-1.5 truncate text-[10.5px]">
+                            <span className="inline-flex min-w-0 items-center gap-1.5 truncate text-[11.5px] max-md:shrink-0 md:text-[10.5px]">
                                 <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: QUOTE_TONE[q.tone] }} aria-hidden />
                                 <span className="font-semibold tabular-nums text-[var(--vyz-text-primary)]">
                                     {quote.amount > 0 ? brl(quote.amount) : "Proposta"}
@@ -639,7 +639,7 @@ function LeadRow({
                                 </span>
                             </span>
                         ) : waitLeft ? (
-                            <span className="inline-flex min-w-0 items-center gap-1.5 truncate text-[10.5px] font-medium" style={{ color: QUOTE_TONE.turn }}>
+                            <span className="inline-flex min-w-0 items-center gap-1.5 truncate text-[11.5px] md:text-[10.5px] font-medium" style={{ color: QUOTE_TONE.turn }}>
                                 <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: QUOTE_TONE.turn }} aria-hidden />
                                 {wait}
                             </span>

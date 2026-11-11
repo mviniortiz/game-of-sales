@@ -169,7 +169,7 @@ export function EvaHelpDock() {
                                         onClick={resetChat}
                                         aria-label="Nova conversa"
                                         title="Nova conversa"
-                                        className="inline-flex items-center justify-center h-7 w-7 rounded-lg transition-colors hover:bg-[#F1F5F9]"
+                                        className="vz-toque inline-flex items-center justify-center h-7 w-7 rounded-lg transition-colors hover:bg-[#F1F5F9]"
                                         style={{ color: "#64748B" }}
                                     >
                                         <NotePencil size={15} weight="duotone" />
@@ -179,7 +179,7 @@ export function EvaHelpDock() {
                                     type="button"
                                     onClick={() => setOpen(false)}
                                     aria-label="Fechar"
-                                    className="inline-flex items-center justify-center h-7 w-7 rounded-lg transition-colors hover:bg-[#F1F5F9]"
+                                    className="vz-toque inline-flex items-center justify-center h-7 w-7 rounded-lg transition-colors hover:bg-[#F1F5F9]"
                                     style={{ color: "#64748B" }}
                                 >
                                     <X size={15} weight="bold" />
@@ -228,7 +228,7 @@ export function EvaHelpDock() {
                                             key={s.label}
                                             type="button"
                                             onClick={() => ask(s.q)}
-                                            className="text-[12px] px-3 py-1.5 rounded-full transition-colors hover:bg-[#F1F5F9]"
+                                            className="text-[13px] sm:text-[12px] px-3.5 sm:px-3 py-2.5 sm:py-1.5 rounded-full transition-colors hover:bg-[#F1F5F9]"
                                             style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#334155", fontWeight: 500 }}
                                         >
                                             {s.label}

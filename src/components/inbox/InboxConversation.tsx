@@ -678,17 +678,17 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                     <div className="flex items-start gap-2">
                         <EvaBot size={20} className="mt-0.5 shrink-0" />
                         <div className="flex-1 min-w-0">
-                            <p className="text-[12px] font-semibold mb-0.5" style={{ color: "#0F1730" }}>
+                            <p className="text-[13.5px] font-semibold mb-0.5" style={{ color: "#0F1730" }}>
                                 A análise da Lume fica aqui
                             </p>
-                            <p className="text-[11px]" style={{ color: "#64748B", lineHeight: 1.45 }}>
+                            <p className="text-[12.5px]" style={{ color: "#64748B", lineHeight: 1.45 }}>
                                 Toque para ver a leitura da conversa e a resposta sugerida.
                             </p>
                         </div>
                         <button
                             type="button"
                             onClick={dismissHint}
-                            className="h-9 w-9 -mt-2 -mr-2 rounded-full flex items-center justify-center shrink-0 transition-colors hover:bg-[var(--ibx-sunken)]"
+                            className="h-10 w-10 -mt-2.5 -mr-2.5 rounded-full flex items-center justify-center shrink-0 transition-colors hover:bg-[var(--ibx-sunken)]"
                             style={{ color: "#94A3B8" }}
                             aria-label="Dispensar dica"
                         >
@@ -698,7 +698,7 @@ function EvaHeaderButton({ eva, onOpenEva }: { eva?: EvaHeaderState; onOpenEva: 
                     <button
                         type="button"
                         onClick={handleOpen}
-                        className="mt-2.5 w-full h-10 rounded-full text-[12px] font-semibold inline-flex items-center justify-center gap-1.5 bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                        className="mt-2.5 w-full h-10 rounded-full text-[13px] font-semibold inline-flex items-center justify-center gap-1.5 bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                     >
                         Ver análise da Lume
                         <ArrowUp className="h-3.5 w-3.5" />
@@ -1120,6 +1120,10 @@ const MessageBubble = memo(function MessageBubble({
 // (não só no painel lateral). Visual de mensagem da Lume (roxo, rabinho à esquerda).
 // "Usar resposta" joga no composer; o humano revisa e envia (assistido).
 function EvaInlineSuggestion({ text, onUse, onDismiss }: { text: string; onUse: () => void; onDismiss: () => void }) {
+    // No celular a sugestão inteira tomava metade da tela e escondia a conversa:
+    // mostra três linhas e abre no toque. "Usar resposta" leva o texto todo.
+    const [inteira, setInteira] = useState(false);
+    const longa = text.length > 150;
     return (
         <div className="px-3 sm:px-5 pt-1 pb-1" style={{ background: "var(--ibx-paper)" }}>
             <div className="max-w-[720px] mx-auto">
@@ -1140,26 +1144,38 @@ function EvaInlineSuggestion({ text, onUse, onDismiss }: { text: string; onUse: 
                         <button
                             type="button"
                             onClick={onDismiss}
-                            className="ml-auto h-5 w-5 rounded flex items-center justify-center transition-colors hover:bg-white"
+                            className="vz-toque ml-auto h-5 w-5 rounded flex items-center justify-center transition-colors hover:bg-white"
                             style={{ color: "#94A3B8" }}
                             aria-label="Dispensar sugestão"
                         >
-                            <X className="h-3 w-3" />
+                            <X className="h-3.5 w-3.5" />
                         </button>
                     </div>
-                    <p className="px-3.5 pt-1 pb-2 text-[12.5px]" style={{ color: "#1E1B2E", lineHeight: 1.5 }}>
-                        {text}
-                    </p>
+                    <button
+                        type="button"
+                        onClick={() => setInteira((v) => !v)}
+                        disabled={!longa}
+                        aria-expanded={longa ? inteira : undefined}
+                        className="block w-full px-3.5 pt-1 pb-2 text-left text-[14px] disabled:cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--vyz-accent)]"
+                        style={{ color: "#1E1B2E", lineHeight: 1.5 }}
+                    >
+                        <span className={longa && !inteira ? "line-clamp-3" : undefined}>{text}</span>
+                        {longa && (
+                            <span className="mt-1 block text-[12.5px] font-semibold text-[var(--vyz-accent)]">
+                                {inteira ? "Mostrar menos" : "Ler tudo"}
+                            </span>
+                        )}
+                    </button>
                     <div className="px-3.5 pb-3 flex items-center gap-2.5">
                         <button
                             type="button"
                             onClick={onUse}
-                            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full whitespace-nowrap text-[12px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                            className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full whitespace-nowrap text-[13.5px] font-semibold bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                         >
-                            <ArrowRight className="h-3.5 w-3.5" />
+                            <ArrowRight className="h-4 w-4" />
                             Usar resposta
                         </button>
-                        <span className="text-[11px]" style={{ color: "#94A3B8" }}>você revisa antes de enviar</span>
+                        <span className="text-[12px]" style={{ color: "#64748B" }}>você revisa antes de enviar</span>
                     </div>
                 </div>
             </div>
@@ -1480,7 +1496,7 @@ function Composer({
                 )}
             </div>
             <p
-                className="text-[10px] mt-1.5 px-2 transition-opacity duration-200"
+                className="hidden md:block text-[10px] mt-1.5 px-2 transition-opacity duration-200"
                 style={{
                     color: "#94A3B8",
                     opacity: focused ? 1 : 0,

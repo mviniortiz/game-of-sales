@@ -35,7 +35,7 @@ export interface ConnectionStatusCardProps {
 }
 
 const SMALL_BTN =
-    "inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-[11px] font-semibold transition-colors duration-150 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]";
+    "inline-flex items-center gap-1.5 h-10 md:h-7 px-4 md:px-3 rounded-full text-[13px] md:text-[11px] font-semibold transition-colors duration-150 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]";
 const BTN_SOLID = `${SMALL_BTN} bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:opacity-90`;
 const BTN_OUTLINE = `${SMALL_BTN} border border-[var(--vyz-border-strong)] text-[var(--vyz-text-strong)] hover:bg-[var(--vyz-surface-2)]`;
 
@@ -86,12 +86,12 @@ export function ConnectionStatusCard({
                 >
                     <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--vyz-success)]" aria-hidden />
                     <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate text-[12px] font-semibold text-[var(--vyz-text-primary)]">
+                        <span className="truncate text-[14px] md:text-[12px] font-semibold text-[var(--vyz-text-primary)]">
                             {status.connectionLabel}
                         </span>
                         <span
                             className={cn(
-                                "text-[10.5px] leading-snug",
+                                "text-[12px] md:text-[10.5px] leading-snug",
                                 inboundStale ? "font-medium text-[var(--vyz-warning)]" : "text-[var(--vyz-text-muted)]",
                             )}
                         >
@@ -116,7 +116,7 @@ export function ConnectionStatusCard({
                 {expanded && hasManageActions && (
                     <div className="flex flex-wrap items-center gap-1.5 px-3 pb-2.5 pt-0.5">
                         {status.displayPhone && (
-                            <p className="mb-1 w-full text-[10.5px] tabular-nums text-[var(--vyz-text-muted)]">
+                            <p className="mb-1 w-full text-[12px] md:text-[10.5px] tabular-nums text-[var(--vyz-text-muted)]">
                                 Número conectado: {status.displayPhone}
                             </p>
                         )}
@@ -189,8 +189,8 @@ export function ConnectionStatusCard({
                     aria-hidden
                 />
                 <div className="min-w-0 flex-1">
-                    <p className="truncate text-[12px] font-semibold text-[var(--vyz-text-primary)]">{status.connectionLabel}</p>
-                    <p className="mt-0.5 text-[10.5px] leading-snug text-[var(--vyz-text-muted)]">{subtitle}</p>
+                    <p className="truncate text-[14px] md:text-[12px] font-semibold text-[var(--vyz-text-primary)]">{status.connectionLabel}</p>
+                    <p className="mt-0.5 text-[12px] md:text-[10.5px] leading-snug text-[var(--vyz-text-muted)]">{subtitle}</p>
                     {(showCta || (status.status === "unknown" && onRetryCheck)) && (
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                             {status.status === "unknown" && onRetryCheck && (

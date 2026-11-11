@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { useReminders, useReminderMutations, type Reminder } from "@/hooks/useReminders";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { amanhaNove, grupoDo, quandoTexto, type GrupoLembrete } from "@/lib/lembretes";
 import { APP_EVENTS, trackApp } from "@/lib/appAnalytics";
 import "./lembretes.css";
@@ -95,6 +96,8 @@ export function ReminderBell() {
                   .filter(Boolean)
                   .join(" · ");
 
+    const celular = useIsMobile();
+
     return (
         <Popover open={aberto} onOpenChange={setAberto}>
             <PopoverTrigger asChild>
@@ -113,7 +116,9 @@ export function ReminderBell() {
                 </button>
             </PopoverTrigger>
 
-            <PopoverContent align="start" side="right" sideOffset={10} className="vz-lemb w-[340px] p-0">
+            {/* No celular o menu ocupa quase a tela toda: à direita do sino não cabe,
+                então os lembretes abrem embaixo dele. */}
+            <PopoverContent align={celular ? "end" : "start"} side={celular ? "bottom" : "right"} sideOffset={10} className="vz-lemb w-[340px] p-0">
                 <div className="vz-lemb__cab">
                     <p className="vz-lemb__titulo">Lembretes</p>
                     <p className="vz-lemb__resumo">{resumo}</p>

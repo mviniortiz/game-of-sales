@@ -226,7 +226,7 @@ const StageChips = ({ stages, currentId, onStageChange, disabled }: { stages: St
                         aria-current={active ? "step" : undefined}
                         onClick={() => onStageChange(stage)}
                         title={active ? undefined : `Mover para ${stage.title}`}
-                        className="group flex-1 min-w-[92px] pt-1 pb-2 text-left rounded-md disabled:cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ibx-paper)]"
+                        className="group flex-[1_0_auto] min-w-[92px] pt-1 pb-2 text-left rounded-md disabled:cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ibx-paper)]"
                     >
                         <span
                             aria-hidden
@@ -313,7 +313,7 @@ const MessageRunEntry = ({ items, isLast, href, onOpen }: { items: TimelineEvent
                         <p className="text-[12.5px] text-[var(--vyz-text-muted)] leading-relaxed mt-0.5">
                             {items.length > 1 && <>{partes}. </>}
                             {href && (
-                                <button type="button" onClick={() => onOpen(href)} className="font-medium text-[var(--vyz-accent)] hover:underline focus-visible:outline-none focus-visible:underline">
+                                <button type="button" onClick={() => onOpen(href)} className="vz-toque font-medium text-[var(--vyz-accent)] hover:underline focus-visible:outline-none focus-visible:underline">
                                     Ler no Inbox
                                 </button>
                             )}
@@ -472,7 +472,7 @@ const FocusCard = ({ action, status, conversationHref, onOpenConversation, onCom
                     <button
                         type="button"
                         onClick={() => onOpenConversation(conversationHref)}
-                        className="inline-flex items-center gap-0.5 text-[12.5px] font-medium text-[var(--vyz-accent)] hover:underline focus-visible:outline-none focus-visible:underline"
+                        className="vz-toque inline-flex items-center gap-0.5 text-[12.5px] font-medium text-[var(--vyz-accent)] hover:underline focus-visible:outline-none focus-visible:underline"
                     >
                         Abrir conversa <ChevronRight className="h-3.5 w-3.5" aria-hidden />
                     </button>
@@ -882,7 +882,7 @@ export default function DealCommandCenter() {
                         <nav aria-label="Caminho" className="pt-3">
                             <button
                                 onClick={() => navigate("/pipeline")}
-                                className="inline-flex items-center gap-1 -ml-1 px-1 py-1 rounded-md text-[12px] font-medium text-[var(--vyz-text-muted)] hover:text-[var(--vyz-text-primary)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                                className="vz-toque inline-flex items-center gap-1 -ml-1 px-1 py-1 rounded-md text-[12px] font-medium text-[var(--vyz-text-muted)] hover:text-[var(--vyz-text-primary)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                             >
                                 <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
                                 Funil

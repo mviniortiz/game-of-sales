@@ -2014,6 +2014,15 @@ button.vp-agenda-mes__num:hover {
         inset: -6px;
     }
 
+    /* Obras: documento marcado com o dedo, campo com altura de dedo. */
+    .vp-docs button {
+        min-height: 44px;
+    }
+    .vp-campo select,
+    .vp-campo input {
+        height: 44px;
+    }
+
     /* Linha de "Pedem você": o toque é na linha inteira, não no texto azul do fim.
        O rótulo fica só para leitor de tela e o detalhe ganha a segunda linha. */
     .vp-linha__fim::after {
