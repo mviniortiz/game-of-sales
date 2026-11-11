@@ -336,7 +336,7 @@ const SignupV2 = () => {
                     </div>
 
                     <div className="flex flex-1 items-center">
-                        <div className="mx-auto w-full max-w-[400px] py-10 lg:py-12">
+                        <div className="vz-cadastro__miolo mx-auto w-full max-w-[400px] py-10 lg:py-12">
                             <div className="landing-fade-in-up">
                                 <div className="vz-cadastro__passos" aria-hidden>
                                     <span className="vz-cadastro__passo vz-cadastro__passo--agora" />
@@ -346,7 +346,7 @@ const SignupV2 = () => {
                                 <p className="mt-3 text-[13px] font-semibold" style={{ color: "var(--lp-ink-muted)" }}>
                                     {ssoMode ? `${rotuloPasso(0)}: falta só o WhatsApp` : `${rotuloPasso(0)}. Depois: conectar o WhatsApp e ver as propostas paradas.`}
                                 </p>
-                                <h1 className="vs-display mt-5 text-[40px] leading-[1.02] sm:text-[46px]">{ssoMode ? "Quase lá" : "Crie sua conta"}</h1>
+                                <h1 className="vz-cadastro__titulo vs-display mt-5 text-[40px] leading-[1.02] sm:text-[46px]">{ssoMode ? "Quase lá" : "Crie sua conta"}</h1>
                                 <p className="mt-3 text-[16px] leading-relaxed" style={{ color: "var(--lp-ink-muted)" }}>
                                     {ssoMode
                                         ? "Com o seu WhatsApp, a gente já deixa a conexão pronta."
@@ -356,7 +356,7 @@ const SignupV2 = () => {
                                 </p>
                             </div>
 
-                            <form className="mt-8 flex flex-col gap-5 landing-fade-in-up landing-delay-100" onSubmit={onSubmit} noValidate>
+                            <form className="vz-cadastro__form mt-8 flex flex-col gap-5 landing-fade-in-up landing-delay-100" onSubmit={onSubmit} noValidate>
                                 <div className="flex flex-col gap-1.5">
                                     <AuthField
                                         label="Seu WhatsApp"

@@ -5178,6 +5178,13 @@ html.lenis, html.lenis body { height: auto; }
   border: 2px solid var(--lp-ink); font-size: 13px; font-weight: 700;
 }
 .vz-cadastro__num--agora { background: var(--lp-ink); color: var(--lp-sol); }
+/* Celular baixo (iPhone SE e parecidos): o cadastro sobe para o botão de criar
+   conta caber na primeira tela. */
+@media (max-width: 639px) and (max-height: 720px) {
+  .vz-cadastro .vz-cadastro__miolo { padding-block: 18px; }
+  .vz-cadastro .vz-cadastro__titulo { margin-top: 12px; font-size: 34px; }
+  .vz-cadastro .vz-cadastro__form { margin-top: 22px; gap: 14px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .vz-cadastro .vz-input, .vz-cadastro__google { transition: none; }
   .vz-cadastro__google:active { transform: none; }

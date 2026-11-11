@@ -2014,6 +2014,17 @@ button.vp-agenda-mes__num:hover {
         inset: -6px;
     }
 
+    /* Agenda: marcar se aconteceu e escolher vendedor com o dedo. */
+    .vp-agenda-acao {
+        height: 40px;
+    }
+    .vp-agenda-select {
+        height: 44px;
+    }
+    .vp-agenda-mini__dia {
+        height: 42px;
+    }
+
     /* Obras: documento marcado com o dedo, campo com altura de dedo. */
     .vp-docs button {
         min-height: 44px;

@@ -357,9 +357,9 @@ export function EvaCanvas(props: EvaCanvasProps) {
                         )}
 
                         <div className="mt-4 flex items-center justify-center gap-4" style={{ fontSize: 12 }}>
-                            <button type="button" className="underline-offset-4 hover:underline" style={{ color: MUTE }} onClick={() => setModal("memoria")}>Memória</button>
-                            <button type="button" className="underline-offset-4 hover:underline" style={{ color: MUTE }} onClick={() => setModal("insights")}>Insights</button>
-                            <button type="button" className="underline-offset-4 hover:underline" style={{ color: MUTE }} onClick={() => setModal("julgar")}>Casos reais</button>
+                            <button type="button" className="vz-toque underline-offset-4 hover:underline" style={{ color: MUTE }} onClick={() => setModal("memoria")}>Memória</button>
+                            <button type="button" className="vz-toque underline-offset-4 hover:underline" style={{ color: MUTE }} onClick={() => setModal("insights")}>Insights</button>
+                            <button type="button" className="vz-toque underline-offset-4 hover:underline" style={{ color: MUTE }} onClick={() => setModal("julgar")}>Casos reais</button>
                         </div>
                     </div>
                 </aside>
@@ -550,7 +550,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                             <button
                                 type="button"
                                 onClick={() => setModal("memoria")}
-                                className="mt-2 underline-offset-4 hover:underline"
+                                className="vz-toque mt-2 underline-offset-4 hover:underline"
                                 style={{ fontSize: 12, color: MUTE }}
                             >
                                 Ver a memória completa (e de onde cada coisa veio)
@@ -638,7 +638,7 @@ export function EvaCanvas(props: EvaCanvasProps) {
                             <button
                                 type="button"
                                 onClick={() => setSabeView("hub")}
-                                className="mb-4 inline-flex items-center gap-1.5 underline-offset-4 hover:underline"
+                                className="vz-toque mb-4 inline-flex items-center gap-1.5 underline-offset-4 hover:underline"
                                 style={{ fontSize: 12.5, fontWeight: 600, color: SUB }}
                             >
                                 <ChevronRight style={{ width: 13, height: 13, transform: "rotate(180deg)" }} />

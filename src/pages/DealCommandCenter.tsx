@@ -226,7 +226,7 @@ const StageChips = ({ stages, currentId, onStageChange, disabled }: { stages: St
                         aria-current={active ? "step" : undefined}
                         onClick={() => onStageChange(stage)}
                         title={active ? undefined : `Mover para ${stage.title}`}
-                        className="group flex-[1_0_auto] min-w-[92px] pt-1 pb-2 text-left rounded-md disabled:cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ibx-paper)]"
+                        className="group flex-[1_0_auto] md:flex-1 min-w-[92px] pt-1 pb-2 text-left rounded-md disabled:cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ibx-paper)]"
                     >
                         <span
                             aria-hidden

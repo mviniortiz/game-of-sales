@@ -332,6 +332,8 @@
   color: var(--va-tinta);
   transition: background-color 150ms var(--va-ease), transform 120ms var(--va-ease);
 }
+/* Depois das bases de propósito: regra de celular que vem antes da base não vale. */
+@media (max-width: 767px) { .va-escolha { height: 40px; } .va-icone { width: 40px; height: 40px; } }
 .va-escolha:hover:not(:disabled) { background: #fafafa; }
 .va-escolha:active:not(:disabled) { transform: scale(0.97); }
 .va-escolha:disabled { box-shadow: none; color: var(--va-cinza); cursor: default; padding-left: 0; }

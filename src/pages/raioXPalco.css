@@ -28,3 +28,12 @@
     animation: none;
   }
 }
+
+/* Celular baixo (iPhone SE e parecidos): a Lume encolhe para o botão de conectar
+   caber na primeira tela, sem precisar rolar para achar o passo seguinte. */
+@media (max-width: 639px) and (max-height: 720px) {
+  .rx-palco {
+    margin-top: 12px;
+    zoom: 0.62;
+  }
+}
