@@ -496,6 +496,7 @@ function ConversationView({
                 lado já mostra a mesma resposta com o mesmo botão. */}
             {onOpenEva && evaSuggestionText && !suggestionDismissed && !pendingMedia && !showAudio && (
                 <EvaInlineSuggestion
+                    key={evaSuggestionText}
                     text={evaSuggestionText}
                     onUse={() => {
                         setComposer(evaSuggestionText);
