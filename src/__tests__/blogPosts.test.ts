@@ -1,7 +1,15 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { BLOG_CATEGORIES, BLOG_POSTS, headingId, readMinutes } from "@/data/landing/blogPosts";
+import {
+    BLOG_CATEGORIES,
+    BLOG_POSTS,
+    SEO_DESCRIPTION_MAX,
+    SEO_TITLE_MAX,
+    headingId,
+    readMinutes,
+    relatedPosts,
+} from "@/data/landing/blogPosts";
 
 // O blog lê um JSON só (React e prerender). Estes testes travam o que quebraria
 // em silêncio: capa sem tipo, arquivo de download que não existe, h2 repetido
@@ -39,6 +47,29 @@ describe("posts do blog", () => {
             const ids = p.content.filter((b) => b.type === "h2").map((b) => headingId((b as { text: string }).text));
             expect(new Set(ids).size, p.slug).toBe(ids.length);
         }
+    });
+
+    it("têm título de busca que cabe no Google e descrição curta quando definida", () => {
+        for (const p of BLOG_POSTS) {
+            expect(p.seoTitle, `${p.slug}: falta seoTitle`).toBeTruthy();
+            expect([...(p.seoTitle ?? "")].length, `${p.slug}: seoTitle`).toBeLessThanOrEqual(SEO_TITLE_MAX);
+            if (p.seoDescription) expect([...p.seoDescription].length, `${p.slug}: seoDescription`).toBeLessThanOrEqual(SEO_DESCRIPTION_MAX);
+        }
+    });
+
+    it("estão todos no sitemap.xml", () => {
+        const sitemap = readFileSync(path.join(PUBLIC, "sitemap.xml"), "utf8");
+        for (const p of BLOG_POSTS) expect(sitemap, p.slug).toContain(`<loc>https://vyzon.com.br/blog/${p.slug}</loc>`);
+    });
+
+    it("recebem link de pelo menos 2 outros posts no Leia também", () => {
+        const entradas = new Map(BLOG_POSTS.map((p) => [p.slug, 0]));
+        for (const p of BLOG_POSTS) {
+            const leia = relatedPosts(p);
+            expect(leia.map((r) => r.slug), p.slug).not.toContain(p.slug);
+            for (const r of leia) entradas.set(r.slug, (entradas.get(r.slug) ?? 0) + 1);
+        }
+        for (const [slug, n] of entradas) expect(n, slug).toBeGreaterThanOrEqual(2);
     });
 
     it("não usam travessão", () => {

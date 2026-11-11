@@ -34,7 +34,10 @@ const SELF_CANONICAL_PREFIXES = ["/blog/"];
  * client-side de uma landing para a home não vaza o canonical anterior.
  */
 export function CanonicalManager() {
-  const { pathname } = useLocation();
+  const { pathname: rawPathname } = useLocation();
+  // /blog/<slug>/ também responde 200. O canonical é sempre a URL sem a barra final,
+  // igual ao HTML prerenderizado e ao sitemap.
+  const pathname = rawPathname.length > 1 ? rawPathname.replace(/\/+$/, "") : rawPathname;
 
   useEffect(() => {
     const isSelf =

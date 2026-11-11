@@ -65,9 +65,9 @@ const ANGLES: Record<SolarAngle, AngleCopy> = {
     },
 };
 
-const TITLE = "Propostas de energia solar paradas no WhatsApp | Vyzon";
+const TITLE = "Vyzon: CRM para integradoras de energia solar";
 const DESCRIPTION =
-    "Mandou o orçamento de energia solar e o cliente sumiu? No 2º dia sem resposta, a mensagem pra chamar de volta chega pronta no seu WhatsApp. Você responde 1 e ela sai do seu número.";
+    "CRM para integradoras de energia solar que vendem pelo WhatsApp. No 2º dia sem resposta, a retomada da proposta chega pronta. Você responde 1 e ela sai.";
 
 // Uma visita por ângulo e carregamento de página (o StrictMode do dev roda o efeito duas vezes).
 const viewedAngles = new Set<SolarAngle>();
