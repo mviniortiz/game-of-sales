@@ -1151,21 +1151,24 @@ function EvaInlineSuggestion({ text, onUse, onDismiss }: { text: string; onUse: 
                             <X className="h-3.5 w-3.5" />
                         </button>
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => setInteira((v) => !v)}
-                        disabled={!longa}
-                        aria-expanded={longa ? inteira : undefined}
-                        className="block w-full px-3.5 pt-1 pb-2 text-left text-[14px] disabled:cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--vyz-accent)]"
-                        style={{ color: "#1E1B2E", lineHeight: 1.5 }}
-                    >
-                        <span className={longa && !inteira ? "line-clamp-3" : undefined}>{text}</span>
-                        {longa && (
+                    {longa ? (
+                        <button
+                            type="button"
+                            onClick={() => setInteira((v) => !v)}
+                            aria-expanded={inteira}
+                            className="block w-full px-3.5 pt-1 pb-2 text-left text-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--vyz-accent)]"
+                            style={{ color: "#1E1B2E", lineHeight: 1.5 }}
+                        >
+                            <span className={inteira ? undefined : "line-clamp-3"}>{text}</span>
                             <span className="mt-1 block text-[12.5px] font-semibold text-[var(--vyz-accent)]">
                                 {inteira ? "Mostrar menos" : "Ler tudo"}
                             </span>
-                        )}
-                    </button>
+                        </button>
+                    ) : (
+                        <p className="px-3.5 pt-1 pb-2 text-[14px]" style={{ color: "#1E1B2E", lineHeight: 1.5 }}>
+                            {text}
+                        </p>
+                    )}
                     <div className="px-3.5 pb-3 flex items-center gap-2.5">
                         <button
                             type="button"

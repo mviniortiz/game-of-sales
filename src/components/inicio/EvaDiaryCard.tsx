@@ -102,7 +102,7 @@ export function EvaDiaryCard({ diary }: { diary: EvaDiary }) {
                         type="button"
                         onClick={() => setTraceAberto((v) => !v)}
                         aria-expanded={traceAberto}
-                        className="flex items-center gap-2 rounded-md py-1 text-left text-[12.5px] text-[var(--vyz-text-muted)] outline-none hover:text-[var(--vyz-text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                        className="vz-toque flex items-center gap-2 rounded-md py-1 text-left text-[12.5px] max-md:text-[13.5px] text-[var(--vyz-text-muted)] outline-none hover:text-[var(--vyz-text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                     >
                         <CaretDown
                             size={11}

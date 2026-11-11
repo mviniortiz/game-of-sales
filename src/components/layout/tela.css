@@ -2057,3 +2057,14 @@ button.vp-agenda-mes__num:hover {
         white-space: normal;
     }
 }
+
+/* Celular baixo (iPhone SE e parecidos): a Lume da aba Lume encolhe para os três
+   números aparecerem na primeira tela junto com ela. */
+@media (max-width: 640px) and (max-height: 720px) {
+    .vp-eva__palco {
+        min-height: 392px;
+    }
+    .vp-eva__bot {
+        transform: translateX(50%) scale(0.56);
+    }
+}
