@@ -453,7 +453,11 @@ async function buildBlogPost(post) {
     const template = await readFile(TEMPLATE_PATH, "utf8");
     const config = {
         slug: `blog/${post.slug}`,
-        seo: { title: `${post.title} · Vyzon`, description: post.excerpt },
+        // Mesma regra de seoTitle/seoDescription em src/data/landing/blogPosts.ts.
+        seo: {
+            title: post.seoTitle ?? `${post.title} · Vyzon`,
+            description: post.seoDescription ?? post.excerpt,
+        },
     };
     let html = rewriteHead(template, config);
     // posts são artigos

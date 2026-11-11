@@ -4,7 +4,7 @@ import { ArrowLeft, Download } from "lucide-react";
 import { BlogHeader, BlogFooter, BlogCtaCard, ReadingBar } from "@/components/blog/BlogChrome";
 import { BlogCover } from "@/components/blog/BlogCover";
 import { Block, Toc } from "@/components/blog/BlogBlocks";
-import { getBlogPost, formatBlogDate, headingId, readMinutes, relatedPosts } from "@/data/landing/blogPosts";
+import { getBlogPost, formatBlogDate, headingId, readMinutes, relatedPosts, seoDescription, seoTitle } from "@/data/landing/blogPosts";
 import { logLandingEvent, useContentFunnel } from "@/lib/landingFunnel";
 import "@/components/blog/blog.css";
 
@@ -35,10 +35,10 @@ const BlogPostV2 = () => {
     useEffect(() => {
         if (!post) return;
         const prevTitle = document.title;
-        document.title = `${post.title} · Vyzon`;
+        document.title = seoTitle(post);
         const metaDesc = document.querySelector<HTMLMetaElement>('meta[name="description"]');
         const prevDesc = metaDesc?.content;
-        if (metaDesc) metaDesc.content = post.excerpt;
+        if (metaDesc) metaDesc.content = seoDescription(post);
         return () => {
             document.title = prevTitle;
             if (metaDesc && prevDesc != null) metaDesc.content = prevDesc;

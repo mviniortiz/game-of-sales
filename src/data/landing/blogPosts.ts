@@ -62,8 +62,10 @@ export interface BlogPost {
     category: BlogCategory;
     date: string; // ISO "2026-06-10"
     updated?: string; // ISO, quando o texto foi revisto
-    title: string;
+    title: string; // H1 e cartões; pode ser longo
     excerpt: string;
+    seoTitle?: string; // <title> do Google, até 60 caracteres, palavra-chave na frente
+    seoDescription?: string; // meta description, até 155 caracteres
     cover: BlogCover;
     featured?: boolean;
     content: BlogBlock[];
@@ -90,6 +92,20 @@ export const BLOG_POSTS: BlogPost[] = (postsData as unknown as BlogPost[])
 
 export function getBlogPost(slug: string): BlogPost | undefined {
     return BLOG_POSTS.find((p) => p.slug === slug);
+}
+
+// O que vai no <title> e na meta description. O Google corta o título perto
+// de 60 caracteres e a descrição perto de 155, por isso o post pode ter uma
+// versão curta só para a busca. scripts/prerender-seo.mjs faz a mesma conta.
+export const SEO_TITLE_MAX = 60;
+export const SEO_DESCRIPTION_MAX = 155;
+
+export function seoTitle(post: BlogPost): string {
+    return post.seoTitle ?? `${post.title} · Vyzon`;
+}
+
+export function seoDescription(post: BlogPost): string {
+    return post.seoDescription ?? post.excerpt;
 }
 
 // Id estável de um h2, para o sumário e para link direto (#secao).
@@ -130,10 +146,15 @@ export function readMinutes(post: BlogPost): number {
     return Math.max(2, Math.round(words / 200));
 }
 
-// Posts para "Leia também": mesma categoria primeiro, depois os mais recentes.
+// Posts para "Leia também". Os posts ficam numa roda, agrupados por categoria,
+// e cada um aponta para os n seguintes. Assim todo post recebe n links de
+// outros posts. Antes ("mesma categoria, mais recentes primeiro") os posts
+// antigos de uma categoria cheia ficavam sem nenhum link de entrada.
+const RODA: BlogPost[] = BLOG_CATEGORIES.flatMap((c) => BLOG_POSTS.filter((p) => p.category === c));
+
 export function relatedPosts(post: BlogPost, n = 3): BlogPost[] {
-    const others = BLOG_POSTS.filter((p) => p.slug !== post.slug);
-    const same = others.filter((p) => p.category === post.category);
-    const rest = others.filter((p) => p.category !== post.category);
-    return [...same, ...rest].slice(0, n);
+    const i = RODA.findIndex((p) => p.slug === post.slug);
+    if (i < 0) return [];
+    const total = Math.min(n, RODA.length - 1);
+    return Array.from({ length: total }, (_, k) => RODA[(i + 1 + k) % RODA.length]);
 }
