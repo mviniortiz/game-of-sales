@@ -122,7 +122,7 @@ export function PedemVoce({
                             )}
                             {l.href && (
                                 <button type="button" className="vp-linha__fim" onClick={() => navigate(l.href!)}>
-                                    {l.acao}
+                                    <span className="vp-linha__rotulo">{l.acao}</span>
                                     <CaretRight size={14} weight="bold" aria-hidden />
                                 </button>
                             )}

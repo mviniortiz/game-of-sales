@@ -173,7 +173,7 @@ const LoginV2 = () => {
     return (
         <div className={`vz-auth-claro vz-login ${saindo ? "vz-login--saindo" : ""}`}>
             <section className="vz-login__painel">
-                <button type="button" onClick={() => navigate("/")} className="vz-login__logo self-start" aria-label="Vyzon, voltar ao site">
+                <button type="button" onClick={() => navigate("/")} className="vz-toque vz-login__logo self-start" aria-label="Vyzon, voltar ao site">
                     <ThemeLogo variant="inverse" className="h-[26px] w-auto" />
                 </button>
                 <div className="vz-login__painel-corpo">
@@ -258,7 +258,7 @@ const LoginV2 = () => {
                                     type="button"
                                     onClick={() => setShowSenha((s) => !s)}
                                     aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--vyz-text-muted)] transition-colors duration-150 hover:text-[var(--vyz-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                                    className="vz-toque flex h-8 w-8 items-center justify-center rounded-lg text-[var(--vyz-text-muted)] transition-colors duration-150 hover:text-[var(--vyz-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
                                 >
                                     {showSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
@@ -295,7 +295,7 @@ const LoginV2 = () => {
                         <button
                             type="button"
                             onClick={irRecuperar}
-                            className="self-center text-[13px] text-[var(--vyz-text-muted)] transition-colors duration-150 hover:text-[var(--vyz-text-primary)]"
+                            className="vz-toque self-center text-[13px] text-[var(--vyz-text-muted)] transition-colors duration-150 hover:text-[var(--vyz-text-primary)]"
                         >
                             Esqueci minha senha
                         </button>
@@ -305,7 +305,7 @@ const LoginV2 = () => {
                         <button
                             type="button"
                             onClick={() => navigate("/")}
-                            className="inline-flex items-center gap-1.5 transition-colors duration-150 hover:text-[var(--vyz-text-primary)]"
+                            className="vz-toque inline-flex items-center gap-1.5 transition-colors duration-150 hover:text-[var(--vyz-text-primary)]"
                         >
                             <ArrowLeft className="h-3.5 w-3.5" />
                             Voltar ao site
@@ -315,7 +315,7 @@ const LoginV2 = () => {
                             <button
                                 type="button"
                                 onClick={() => navigate("/criar-conta?plan=pro", { state: { email: email.trim() } })}
-                                className="font-medium text-[var(--vyz-text-primary)] hover:underline"
+                                className="vz-toque font-medium text-[var(--vyz-text-primary)] hover:underline"
                             >
                                 Fazer meu Raio-X grátis
                             </button>

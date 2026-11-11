@@ -22,7 +22,7 @@ export default function Upgrade() {
         <div className="px-4 sm:px-6 py-8 sm:py-10 max-w-5xl mx-auto">
             <button
                 onClick={() => navigate(APP_HOME)}
-                className="mb-6 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--vyz-text-muted)] transition-colors hover:text-[var(--vyz-text-primary)]"
+                className="vz-toque mb-6 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--vyz-text-muted)] transition-colors hover:text-[var(--vyz-text-primary)]"
             >
                 <ArrowLeft size={14} aria-hidden />
                 Voltar ao placar

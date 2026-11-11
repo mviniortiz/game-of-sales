@@ -306,7 +306,7 @@ export default function ConfigurarEva() {
                         </div>
                     </div>
                     {fase !== "placar" && fase !== "importando" && (
-                        <button type="button" onClick={depois} className="rounded-full px-3 py-2 text-[13px] font-medium text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-2)] hover:text-[var(--vyz-text-strong)]">
+                        <button type="button" onClick={depois} className="vz-toque rounded-full px-3 py-2 text-[13px] font-medium text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-2)] hover:text-[var(--vyz-text-strong)]">
                             Fazer depois
                         </button>
                     )}

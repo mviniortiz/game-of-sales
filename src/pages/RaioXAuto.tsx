@@ -221,7 +221,7 @@ export default function RaioXAuto() {
                                 if (companyId) try { localStorage.setItem(raioXDismissKey(companyId), "1"); } catch { /* sem storage */ }
                                 navigate(APP_HOME);
                             }}
-                            className="rounded-full px-3 py-2 text-[13px] font-medium text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-2)] hover:text-[var(--vyz-text-strong)]"
+                            className="vz-toque rounded-full px-3 py-2 text-[13px] font-medium text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-2)] hover:text-[var(--vyz-text-strong)]"
                         >
                             Fazer depois
                         </button>
@@ -288,7 +288,7 @@ export default function RaioXAuto() {
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         onClick={() => medir("whatsapp_click", { step: "ajuda" })}
-                                        className="mt-2 rounded-full px-3 py-1.5 text-[13px] font-medium text-[var(--vyz-text-muted)] underline underline-offset-4 hover:text-[var(--vyz-text-strong)]"
+                                        className="vz-toque mt-2 rounded-full px-3 py-1.5 text-[13px] font-medium text-[var(--vyz-text-muted)] underline underline-offset-4 hover:text-[var(--vyz-text-strong)]"
                                     >
                                         Travou? Fale com o Markus
                                     </a>

@@ -321,13 +321,13 @@ const SignupV2 = () => {
             <div className="grid min-h-screen lg:grid-cols-[1fr_1fr]">
                 <div className="flex flex-col px-5 py-6 sm:px-12 sm:py-9">
                     <div className="flex items-center justify-between gap-3 landing-fade-in">
-                        <button type="button" onClick={() => navigate("/")} className="flex items-center" aria-label="Vyzon, voltar ao site">
+                        <button type="button" onClick={() => navigate("/")} className="vz-toque flex items-center" aria-label="Vyzon, voltar ao site">
                             <ThemeLogo variant="default" className="h-6 w-auto" />
                         </button>
                         <button
                             type="button"
                             onClick={() => navigate("/")}
-                            className="inline-flex items-center gap-1.5 text-[14px] font-medium transition-colors hover:text-[var(--lp-ink)]"
+                            className="vz-toque inline-flex items-center gap-1.5 text-[14px] font-medium transition-colors hover:text-[var(--lp-ink)]"
                             style={{ color: "var(--lp-ink-muted)" }}
                         >
                             <ArrowLeft className="h-4 w-4" aria-hidden />
@@ -401,7 +401,7 @@ const SignupV2 = () => {
                                                         type="button"
                                                         onClick={() => setShowSenha((s) => !s)}
                                                         aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
-                                                        className="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-[var(--lp-ink)]"
+                                                        className="vz-toque flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-[var(--lp-ink)]"
                                                         style={{ color: "var(--lp-ink-subtle)" }}
                                                     >
                                                         {showSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -432,7 +432,7 @@ const SignupV2 = () => {
                                     <div key={`f${erroKey}`} className="vz-shake vz-cadastro__erro" role="alert">
                                         <p className="text-[14px]" style={{ color: "var(--auth-erro)" }}>{erros.form}</p>
                                         {erros.formAction === "login" && (
-                                            <button type="button" onClick={() => navigate("/auth", { state: { email: email.trim() } })} className="vz-cadastro__link mt-1 text-[14px]">
+                                            <button type="button" onClick={() => navigate("/auth", { state: { email: email.trim() } })} className="vz-toque vz-cadastro__link mt-1 text-[14px]">
                                                 Entrar com este email
                                             </button>
                                         )}
@@ -461,7 +461,7 @@ const SignupV2 = () => {
                             {!ssoMode && (
                                 <p className="mt-8 text-[15px] landing-fade-in landing-delay-200" style={{ color: "var(--lp-ink-muted)" }}>
                                     Já tem conta?{" "}
-                                    <button type="button" onClick={() => navigate("/auth")} className="vz-cadastro__link">
+                                    <button type="button" onClick={() => navigate("/auth")} className="vz-toque vz-cadastro__link">
                                         Entrar
                                     </button>
                                 </p>

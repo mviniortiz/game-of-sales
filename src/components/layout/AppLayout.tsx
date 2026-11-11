@@ -76,7 +76,8 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {mostraFaixa && <FaixaPlanoGratis />}
-          {/* No computador tudo vive na sidebar. No celular fica o que não cabe nas abas de baixo. */}
+          {/* No computador tudo vive na sidebar. No celular fica o que não cabe nas abas de baixo.
+              O pb-32 do main deixa o fim da página passar das abas e do botão da Lume. */}
           <header className="md:hidden h-14 flex items-center gap-2 px-3" style={{ background: "var(--vyz-noite)", color: "#fff" }}>
             <SidebarTrigger className="text-white hover:bg-white/10 hover:text-white" aria-label="Abrir menu" />
             <ThemeLogo variant="inverse" className="h-[20px] w-auto" />
@@ -84,7 +85,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
               <WhatsappStatusPill soProblema />
             </div>
           </header>
-          <main className="flex-1 p-3 pb-24 sm:p-4 sm:pb-24 md:px-9 md:py-8 overflow-auto" style={{ background: "var(--vyz-bg)" }}>
+          <main className="flex-1 p-3 pb-32 sm:p-4 sm:pb-32 md:px-9 md:py-8 overflow-auto" style={{ background: "var(--vyz-bg)" }}>
             {/* Animação de entrada padrão de TODA aba: a key por rota remonta e
                 dispara o fade+rise. h-full preserva páginas full-height (Inbox/
                 Pipeline). Respeita prefers-reduced-motion. */}

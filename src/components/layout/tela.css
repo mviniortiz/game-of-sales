@@ -1986,3 +1986,54 @@ button.vp-agenda-mes__num:hover {
         transition: none;
     }
 }
+
+/* ── Dedo ──────────────────────────────────────────────────────────────
+   No celular todo controle das abas tem área de toque de dedo (40px ou mais).
+   Onde crescer a peça estragaria o desenho, cresce só a área (::after), não o
+   que se vê. O computador fica igual. */
+@media (max-width: 767px) {
+    .vp-botao {
+        min-height: 44px;
+    }
+    .vp-botao--chico {
+        min-height: 40px;
+    }
+    .vp-segmento button {
+        height: 40px;
+    }
+    .vp-icone,
+    .vp-icone--chico,
+    .vp-mini {
+        position: relative;
+    }
+    .vp-icone::after,
+    .vp-icone--chico::after,
+    .vp-mini::after {
+        content: "";
+        position: absolute;
+        inset: -6px;
+    }
+
+    /* Linha de "Pedem você": o toque é na linha inteira, não no texto azul do fim.
+       O rótulo fica só para leitor de tela e o detalhe ganha a segunda linha. */
+    .vp-linha__fim::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 16px;
+    }
+    .vp-linha__rotulo {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+    .vp-linha__meio span {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        white-space: normal;
+    }
+}

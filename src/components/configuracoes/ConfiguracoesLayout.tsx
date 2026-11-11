@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   Buildings,
@@ -99,6 +99,15 @@ export default function ConfiguracoesLayout() {
         : "text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-2)] hover:text-[var(--vyz-text-primary)]"
     }`;
 
+  // No celular as abas rolam de lado: a aba aberta entra na faixa, senão o dono
+  // não vê onde está (Aprovação e Faturamento ficam fora da primeira tela).
+  const faixaRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const faixa = faixaRef.current;
+    const aberta = faixa?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (faixa && aberta) faixa.scrollLeft = aberta.offsetLeft - (faixa.clientWidth - aberta.offsetWidth) / 2;
+  }, [currentSection]);
+
   // A raiz é um índice curto; cada linha leva à sua página.
   if (naRaiz) {
     return (
@@ -135,11 +144,11 @@ export default function ConfiguracoesLayout() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr] lg:gap-8">
         <aside className="lg:sticky lg:top-4 lg:self-start">
-          <nav aria-label="Configurações" className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-2 no-scrollbar lg:hidden">
+          <nav ref={faixaRef} aria-label="Configurações" className="relative -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-2 no-scrollbar lg:hidden">
             {visibleGroups.flatMap((g) => g.items).map((item) => {
               const active = currentSection === item.id;
               return (
-                <NavLink key={item.id} to={linkDe(item.path)} aria-current={active ? "page" : undefined} className={`${itemClass(active)} h-8 whitespace-nowrap`}>
+                <NavLink key={item.id} to={linkDe(item.path)} aria-current={active ? "page" : undefined} className={`${itemClass(active)} h-10 whitespace-nowrap`}>
                   <item.icon size={16} weight={active ? "fill" : "regular"} className={active ? "text-[var(--vyz-accent)]" : ""} aria-hidden />
                   {item.label}
                 </NavLink>

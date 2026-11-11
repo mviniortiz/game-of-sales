@@ -4951,13 +4951,15 @@ html.lenis, html.lenis body { height: auto; }
 /* ── Página full-height do app (Inbox/Pipeline/Pulse/Agenda) ──────────────
    Desconta o header real do AppLayout (h-14 = 3.5rem). dvh corrige o Safari
    iOS (100vh assume a toolbar recolhida e corta o composer). */
-/* No celular descontam o topo e as abas de baixo; no computador é a tela toda. */
+/* No celular descontam o topo e as abas de baixo; no computador é a tela toda.
+   As abas (.vz-abas) medem 54px mais a folga de baixo, que é 6px ou a área
+   segura do aparelho: a conta aqui é a mesma, pra não sobrar faixa vazia. */
 .vz-page-full {
-  height: calc(100vh - 3.5rem - 66px);
+  height: calc(100vh - 3.5rem - 60px);
 }
 @supports (height: 100dvh) {
   .vz-page-full {
-    height: calc(100dvh - 3.5rem - 66px - env(safe-area-inset-bottom));
+    height: calc(100dvh - 3.5rem - 54px - max(6px, env(safe-area-inset-bottom)));
   }
 }
 @media (min-width: 768px) {
@@ -5150,4 +5152,26 @@ html.lenis, html.lenis body { height: auto; }
 @media (prefers-reduced-motion: reduce) {
   .vz-cadastro .vz-input, .vz-cadastro__google { transition: none; }
   .vz-cadastro__google:active { transform: none; }
+}
+
+/* ── Celular: campo do app nunca dá zoom no iPhone ───────────────────────
+   O Safari do iOS aproxima a tela ao focar um campo com letra menor que 16px
+   e não volta sozinho. Vale para o app inteiro (html[data-vyz-app], posto pelo
+   AppShell), inclusive nos diálogos, que abrem em portal. Campo que já é maior
+   de propósito fica como está. A landing não entra. */
+@media (max-width: 767px) {
+  html[data-vyz-app] :is(
+      input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"], [type="hidden"]),
+      textarea,
+      select
+    ):not(.text-lg, .text-xl, [class*="text-2xl"], [class*="text-3xl"], [data-input-otp]) {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* Link ou botão de texto pequeno: no celular a área de toque cresce para a de um
+   dedo sem mexer no desenho. */
+@media (max-width: 767px) {
+  .vz-toque { position: relative; }
+  .vz-toque::after { content: ""; position: absolute; inset: -12px -8px; }
 }

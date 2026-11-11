@@ -65,7 +65,7 @@ const RecuperarSenha = () => {
                 <div className="self-start landing-fade-in-up">
                     <button
                         onClick={() => navigate("/auth")}
-                        className="inline-flex items-center gap-1.5 text-[13px] font-medium transition-colors"
+                        className="vz-toque inline-flex items-center gap-1.5 text-[13px] font-medium transition-colors"
                         style={{ color: "rgba(255,255,255,0.5)" }}
                         onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
                         onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}

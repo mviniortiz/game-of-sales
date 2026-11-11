@@ -372,14 +372,14 @@ const Shell = ({ children, placar = false }: { children: React.ReactNode; placar
     <div className="lp-v2 min-h-screen" style={{ background: "var(--lp-paper)", color: "var(--lp-ink)" }}>
         <div className="mx-auto w-full max-w-[880px] px-4 sm:px-5 md:px-8">
             <div className="flex items-center justify-between gap-3 py-5">
-                <Link to="/" aria-label="Vyzon, início">
+                <Link to="/" aria-label="Vyzon, início" className="vz-toque">
                     <ThemeLogo className="h-[22px] w-auto" />
                 </Link>
                 {placar && (
                     <Link
                         to="/orcamentos?dias=90"
                         state={{ doRelatorio: true }}
-                        className="rounded-full px-3 py-2 text-[14px] font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lp-blue)]"
+                        className="vz-toque rounded-full px-3 py-2 text-[14px] font-medium underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lp-blue)]"
                         style={{ color: "var(--lp-ink-70)" }}
                     >
                         Ver no placar
@@ -504,7 +504,7 @@ const ItemCard = ({ row, isAdmin, onToggle, onAmount }: { row: Row } & RowProps)
                             {item.amount ? brl(item.amount) : "valor no PDF"}
                         </span>
                         {isAdmin && item.amount && !item.excluded && (
-                            <button type="button" onClick={() => setEditando(true)} className="text-[12px] underline-offset-4 hover:underline" style={{ color: "var(--lp-ink-40)" }}>
+                            <button type="button" onClick={() => setEditando(true)} className="vz-toque text-[12px] underline-offset-4 hover:underline" style={{ color: "var(--lp-ink-40)" }}>
                                 corrigir
                             </button>
                         )}
@@ -532,7 +532,7 @@ const ItemCard = ({ row, isAdmin, onToggle, onAmount }: { row: Row } & RowProps)
                     <button
                         type="button"
                         onClick={() => onToggle(index, !item.excluded)}
-                        className="inline-flex min-h-[36px] items-center rounded-full border px-3.5 text-[13px] font-medium transition-colors hover:bg-[var(--lp-paper)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lp-blue)]"
+                        className="vz-toque inline-flex min-h-[36px] items-center rounded-full border px-3.5 text-[13px] font-medium transition-colors hover:bg-[var(--lp-paper)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lp-blue)]"
                         style={{ borderColor: "var(--lp-line)", color: "var(--lp-ink-55)" }}
                     >
                         {item.excluded ? "Voltar a contar" : "Não é proposta"}

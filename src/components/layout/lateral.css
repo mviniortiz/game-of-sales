@@ -318,6 +318,25 @@
         display: none;
     }
 }
+/* Menu aberto no celular: cada linha e cada ícone com área de dedo. O atalho de
+   teclado some, que no celular não existe. */
+@media (max-width: 767px) {
+    .vz-lateral {
+        overflow-y: auto;
+    }
+    .vz-nav,
+    .vz-busca {
+        height: 44px;
+        font-size: 15px;
+    }
+    .vz-busca kbd {
+        display: none;
+    }
+    .vz-lateral__icone {
+        width: 40px;
+        height: 40px;
+    }
+}
 @media (prefers-reduced-motion: reduce) {
     .vz-nav,
     .vz-abas a {

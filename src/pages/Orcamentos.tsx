@@ -359,7 +359,7 @@ function QuoteList({
           ))}
         </div>
         <div className="flex w-full items-center gap-2 sm:w-auto">
-          <label className="relative flex h-9 min-w-0 flex-1 items-center sm:w-56 sm:flex-none">
+          <label className="relative flex h-11 min-w-0 flex-1 items-center sm:h-9 sm:w-56 sm:flex-none">
             <span className="sr-only">Buscar cliente ou telefone</span>
             <Search aria-hidden className="pointer-events-none absolute left-3 h-4 w-4 text-[var(--vyz-text-soft)]" />
             <input
@@ -368,14 +368,14 @@ function QuoteList({
               onChange={(e) => onQuery(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Escape") onQuery(""); }}
               placeholder="Buscar cliente ou telefone"
-              className={`h-9 w-full rounded-full border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] pl-9 pr-8 text-[16px] sm:text-[13.5px] text-[var(--vyz-text-primary)] placeholder:text-[var(--vyz-text-soft)] transition-[border-color,box-shadow] duration-150 ${EASE} hover:border-[var(--vyz-border-strong)] focus:border-[var(--vyz-accent)] focus:outline-none focus:shadow-[0_0_0_3px_var(--vyz-accent-soft-12)] [&::-webkit-search-cancel-button]:hidden`}
+              className={`h-11 w-full rounded-full border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] pl-9 pr-8 text-[16px] sm:h-9 sm:text-[13.5px] text-[var(--vyz-text-primary)] placeholder:text-[var(--vyz-text-soft)] transition-[border-color,box-shadow] duration-150 ${EASE} hover:border-[var(--vyz-border-strong)] focus:border-[var(--vyz-accent)] focus:outline-none focus:shadow-[0_0_0_3px_var(--vyz-accent-soft-12)] [&::-webkit-search-cancel-button]:hidden`}
             />
             {query && (
               <button
                 type="button"
                 onClick={() => onQuery("")}
                 aria-label="Limpar busca"
-                className={`absolute right-1.5 flex h-6 w-6 items-center justify-center rounded-full text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-3)] hover:text-[var(--vyz-text-primary)] ${FOCUS}`}
+                className={`absolute right-1.5 flex h-6 w-6 items-center justify-center rounded-full after:absolute after:-inset-2.5 after:content-[''] sm:after:hidden text-[var(--vyz-text-muted)] hover:bg-[var(--vyz-surface-3)] hover:text-[var(--vyz-text-primary)] ${FOCUS}`}
               >
                 <X className="h-3.5 w-3.5" aria-hidden />
               </button>
@@ -383,7 +383,7 @@ function QuoteList({
           </label>
           <DropdownMenu>
             <DropdownMenuTrigger
-              className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-3.5 text-[13px] font-medium text-[var(--vyz-text)] transition-colors duration-150 ${EASE} hover:border-[var(--vyz-border-strong)] hover:text-[var(--vyz-text-primary)] data-[state=open]:border-[var(--vyz-border-strong)] ${FOCUS}`}
+              className={`flex h-11 shrink-0 items-center gap-1.5 rounded-full border border-[var(--vyz-border)] bg-[var(--vyz-surface-1)] px-3.5 text-[13px] sm:h-9 font-medium text-[var(--vyz-text)] transition-colors duration-150 ${EASE} hover:border-[var(--vyz-border-strong)] hover:text-[var(--vyz-text-primary)] data-[state=open]:border-[var(--vyz-border-strong)] ${FOCUS}`}
             >
               <ArrowUpDown className="h-3.5 w-3.5" aria-hidden />
               {SORTS.find((o) => o.key === sort)?.label}
@@ -601,7 +601,7 @@ function RowMenu({ q, name, pending, onOutcome }: { q: QuoteItem; name: string; 
       <DropdownMenuTrigger
         disabled={pending}
         aria-label={`Ações do orçamento de ${name}`}
-        className={`relative z-10 -mr-2 flex h-8 w-8 items-center justify-center rounded-full text-[var(--vyz-text-muted)] transition-colors duration-150 ${EASE} hover:bg-[var(--vyz-surface-3)] hover:text-[var(--vyz-text-primary)] data-[state=open]:bg-[var(--vyz-surface-3)] ${FOCUS}`}
+        className={`relative z-10 -mr-2 flex h-8 w-8 items-center justify-center rounded-full after:absolute after:-inset-1.5 after:content-[''] md:after:hidden text-[var(--vyz-text-muted)] transition-colors duration-150 ${EASE} hover:bg-[var(--vyz-surface-3)] hover:text-[var(--vyz-text-primary)] data-[state=open]:bg-[var(--vyz-surface-3)] ${FOCUS}`}
       >
         <MoreHorizontal className="h-4 w-4" aria-hidden />
       </DropdownMenuTrigger>
