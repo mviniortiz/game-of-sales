@@ -130,7 +130,9 @@ está BLOQUEADO por billing; não criar workflows.
   redirects de compatibilidade.
 - Plano único "Vyzon" R$ 97/mês (id `pro`, decisão de 01/11/2026), tudo liberado,
   até 10 usuários. As 10 primeiras integradoras usam de graça para sempre
-  (03/11/2026): marcar "Pago" no AdminCompanyDetail sem cobrar. Plano Escala (03/11/2026): mais de um
+  (03/11/2026): vaga em `fundadoras` via `conceder_fundadora`, sozinha ao conectar o
+  WhatsApp ou no botão "Nova integradora" (Empresas, edge `admin-nova-integradora`,
+  que também cria o login da dona e manda o convite). "Pago" à mão NÃO ocupa vaga. Plano Escala (03/11/2026): mais de um
   WhatsApp, sem preço; card na home e no /upgrade leva ao formulário público
   `/escala` → RPC `submit_escala_request` → `demo_requests` (source
   `plano_escala`) → card "Escala: <empresa>" no funil do Markus, sem SDR

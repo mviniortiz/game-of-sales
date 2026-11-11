@@ -1,6 +1,7 @@
 // Empresas (só super admin): quem paga, quem é fundadora, quem sumiu. Clicar na
 // linha abre a ficha (plano, situação, logo, equipe); "Entrar" troca para a
-// empresa; o menu tem Raio-X e excluir.
+// empresa; o menu tem Raio-X e excluir. "Nova integradora" cria empresa, login
+// da dona e convite de uma vez (NovaIntegradora.tsx).
 // A situação vem de subscription_status (Pago = 'active'), igual ao resto do
 // produto. A coluna antiga lia um campo "status" que não existe, e marcava
 // todas como "Ativo"; "Produtos" saiu junto com a aba de produtos.
@@ -13,7 +14,7 @@ import { DotsThree, FileMagnifyingGlass, MagnifyingGlass, Plus, SignIn, Trash } 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { NovaIntegradora } from "./NovaIntegradora";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -49,13 +50,10 @@ export function AdminCompanies() {
     const { isSuperAdmin, switchCompany } = useTenant();
     const navigate = useNavigate();
     const qc = useQueryClient();
-    const logoBucket = (import.meta.env?.VITE_SUPABASE_LOGO_BUCKET as string | undefined) || "logos";
 
     const [busca, setBusca] = useState("");
     const [filtro, setFiltro] = useState<Filtro>("todas");
     const [criando, setCriando] = useState(false);
-    const [nome, setNome] = useState("");
-    const [logo, setLogo] = useState<File | null>(null);
     const [excluindo, setExcluindo] = useState<Empresa | null>(null);
 
     const { data: empresas = [], isLoading } = useQuery({
@@ -109,28 +107,6 @@ export function AdminCompanies() {
                 (filtro === "todas" || (filtro === "pagas" && paga(e)) || (filtro === "sem" && !paga(e)) || (filtro === "paradas" && parada(e))),
         );
     }, [empresas, busca, filtro]);
-
-    const criar = useMutation({
-        mutationFn: async () => {
-            let logo_url: string | null = null;
-            if (logo) {
-                const path = `company-logos/${crypto.randomUUID()}.${logo.name.split(".").pop()}`;
-                const { error: up } = await supabase.storage.from(logoBucket).upload(path, logo, { upsert: true });
-                if (up) throw up;
-                logo_url = supabase.storage.from(logoBucket).getPublicUrl(path).data.publicUrl;
-            }
-            const { error } = await supabase.from("companies").insert({ name: nome.trim(), plan: "free", logo_url });
-            if (error) throw error;
-        },
-        onSuccess: () => {
-            toast.success("Empresa criada.");
-            setNome("");
-            setLogo(null);
-            setCriando(false);
-            qc.invalidateQueries({ queryKey: ["admin-companies-with-counts"] });
-        },
-        onError: (e: Error) => toast.error(e.message || "Não deu para criar a empresa."),
-    });
 
     const excluir = useMutation({
         mutationFn: async (id: string) => {
@@ -215,7 +191,7 @@ export function AdminCompanies() {
                         )}
                     </span>
                     <button type="button" className="va-btn" onClick={() => setCriando(true)}>
-                        <Plus size={14} weight="bold" aria-hidden /> Nova empresa
+                        <Plus size={14} weight="bold" aria-hidden /> Nova integradora
                     </button>
                 </div>
             </div>
@@ -317,34 +293,11 @@ export function AdminCompanies() {
                 })}
             </section>
 
-            <Dialog open={criando} onOpenChange={setCriando}>
-                <DialogContent className="va-vars sm:max-w-[420px]">
-                    <DialogHeader>
-                        <DialogTitle>Nova empresa</DialogTitle>
-                        <DialogDescription>Ela entra sem plano. Para liberar, abra a ficha e marque Pago.</DialogDescription>
-                    </DialogHeader>
-                    <form
-                        onSubmit={(ev) => {
-                            ev.preventDefault();
-                            if (nome.trim()) criar.mutate();
-                        }}
-                    >
-                        <div className="grid gap-3">
-                            <label className="va-campo">
-                                <span>Nome</span>
-                                <input value={nome} onChange={(ev) => setNome(ev.target.value)} placeholder="Ex.: Solar Sul Energia" autoFocus />
-                            </label>
-                            <label className="va-campo">
-                                <span>Logo (opcional)</span>
-                                <input type="file" accept="image/*" onChange={(ev) => setLogo(ev.target.files?.[0] ?? null)} className="!h-auto !border-0 !p-0 pt-1 text-[14px]" />
-                            </label>
-                        </div>
-                        <button type="submit" className="va-btn va-btn--grande mt-4 w-full" disabled={!nome.trim() || criar.isPending}>
-                            {criar.isPending ? "Criando…" : "Criar empresa"}
-                        </button>
-                    </form>
-                </DialogContent>
-            </Dialog>
+            <NovaIntegradora
+                aberto={criando}
+                onFechar={() => setCriando(false)}
+                onCriada={() => qc.invalidateQueries({ queryKey: ["admin-companies-with-counts"] })}
+            />
 
             <AlertDialog open={!!excluindo} onOpenChange={(o) => !o && setExcluindo(null)}>
                 <AlertDialogContent className="va-vars">

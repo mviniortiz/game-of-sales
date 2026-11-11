@@ -20,7 +20,7 @@ As cores são os tokens `--vyz-*` do app.
 | Confirmar cadastro | quem se cadastra | Supabase Auth | `supabase/email-templates/confirm-signup.html` |
 | Recuperar senha | quem pede em /recuperar-senha | Supabase Auth | `reset-password.html` |
 | Trocar e-mail | dono da conta | Supabase Auth | `change-email.html` |
-| Convite | convidado pelo painel do Supabase | Supabase Auth | `invite.html` |
+| Convite | dona criada em "Nova integradora" (edge `admin-nova-integradora`) ou pelo painel do Supabase | Supabase Auth | `invite.html` |
 | Link de acesso | ninguém hoje | Supabase Auth | `magic-link.html` |
 | Código de confirmação | ninguém hoje | Supabase Auth | `reauthentication.html` |
 | Boas-vindas de vendedor | vendedor criado em Equipe | edge `admin-create-seller` | `boasVindasVendedor` |
