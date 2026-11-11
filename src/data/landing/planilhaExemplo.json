@@ -1,0 +1,25 @@
+{
+  "legenda": "Exemplo que vem preenchido: sistema de 5,5 kWp por R$ 24.900,00, consumo de 650 kWh por mês.",
+  "linhas": [
+    [
+      "Conta de luz hoje",
+      "R$ 617,50 por mês"
+    ],
+    [
+      "Conta estimada com o sistema",
+      "R$ 47,50 por mês"
+    ],
+    [
+      "Economia por mês",
+      "R$ 570,00"
+    ],
+    [
+      "Parcela do financiamento",
+      "R$ 507,87 em 60 vezes"
+    ],
+    [
+      "Payback simples",
+      "3,6 anos"
+    ]
+  ]
+}

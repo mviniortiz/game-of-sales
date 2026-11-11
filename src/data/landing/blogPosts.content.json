@@ -1287,6 +1287,27 @@
         ]
       },
       {
+        "type": "atalhos",
+        "text": "Prefere outro formato? Estas três páginas também são grátis e sem cadastro.",
+        "items": [
+          {
+            "label": "Gerador de proposta em PDF",
+            "href": "/gerador-proposta-energia-solar",
+            "texto": "Preencha os dados do cliente e baixe a proposta pronta em PDF."
+          },
+          {
+            "label": "Planilha de economia e payback",
+            "href": "/planilha-proposta-energia-solar",
+            "texto": "Calcule economia por mês, parcela e payback antes de montar a proposta."
+          },
+          {
+            "label": "Passo a passo do modelo em Word",
+            "href": "/modelo-proposta-energia-solar-word",
+            "texto": "Arquivo .docx editável, com o passo a passo de cada parte."
+          }
+        ]
+      },
+      {
         "type": "h2",
         "text": "Qual modelo usar"
       },
@@ -1430,7 +1451,7 @@
         "href": "/modelos/modelo-proposta-energia-solar.pdf"
       }
     ],
-    "updated": "2026-11-04",
+    "updated": "2026-11-11",
     "cover": {
       "kind": "proposta",
       "plate": "sol",

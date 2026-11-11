@@ -23,6 +23,8 @@ export type BlogBlock =
     | { type: "prompt"; label?: string; text: string }
     // Quadro da Lume: onde o produto entra no assunto do post, sem botão.
     | { type: "lume"; title: string; text: string }
+    // Atalhos para outras páginas do site (ex.: gerador, planilha), em cartões.
+    | { type: "atalhos"; text: string; items: { label: string; href: string; texto: string }[] }
     // Galeria dos modelos para baixar (prévia + arquivos).
     | { type: "modelos"; items: BlogModelo[] }
     // Tabela de comparação. A 1ª coluna é o nome da linha (th de linha).

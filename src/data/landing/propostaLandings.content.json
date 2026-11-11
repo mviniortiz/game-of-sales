@@ -1,0 +1,171 @@
+{
+  "post": {
+    "href": "/blog/modelo-proposta-comercial-energia-solar",
+    "formato": "Guia no blog",
+    "cartao": "Os 3 modelos de proposta e as 9 partes que o cliente lê, na ordem."
+  },
+  "landings": [
+    {
+      "slug": "gerador-proposta-energia-solar",
+      "formato": "Gerador online",
+      "cartao": "Preencha os dados do cliente e baixe a proposta pronta em PDF.",
+      "seoTitle": "Gerador de proposta de energia solar grátis em PDF",
+      "seoDescription": "Preencha cliente, consumo, potência, valor e pagamento e baixe a proposta de energia solar em PDF. Grátis, sem cadastro, direto no navegador.",
+      "kicker": "Ferramenta grátis",
+      "h1": "Gerador de proposta de energia solar",
+      "sub": "Preencha os dados do cliente e baixe a proposta em PDF. Roda no seu navegador, sem cadastro.",
+      "secoes": [
+        {
+          "h2": "Como usar o gerador",
+          "ol": [
+            "Preencha o nome do cliente, o consumo médio em kWh, a potência do sistema em kWp, o valor e as condições de pagamento.",
+            "Confira a prévia, que mostra os mesmos dados que vão para o PDF.",
+            "Baixe o PDF e mande pelo WhatsApp junto com uma mensagem curta com o valor e a forma de pagamento."
+          ]
+        },
+        {
+          "h2": "O que sai no PDF",
+          "p": [
+            "Uma página com o nome do cliente, a data, a validade, o consumo médio, o sistema proposto, o investimento, as condições de pagamento e o espaço de aceite. Economia e prazo de retorno ficam de fora, porque o gerador escreve só o que você informou."
+          ]
+        }
+      ],
+      "faq": [
+        {
+          "q": "O gerador de proposta é grátis mesmo?",
+          "a": "Sim. Você preenche, baixa o PDF e usa quantas vezes quiser. Não tem cadastro e o arquivo sai sem a marca do Vyzon."
+        },
+        {
+          "q": "Os dados do meu cliente ficam salvos em algum lugar?",
+          "a": "Não. O PDF é montado no seu navegador, e o que você digita não é enviado nem guardado pelo Vyzon. Ao fechar a página, os campos somem."
+        },
+        {
+          "q": "O gerador calcula economia e payback?",
+          "a": "Ele monta a proposta com os números que você informa. Para calcular a economia por mês e o tempo de retorno, use a planilha em Excel e traga os valores para cá."
+        },
+        {
+          "q": "Posso editar a proposta depois de baixar?",
+          "a": "O PDF sai fechado. Para mudar um dado, corrija o campo e baixe de novo. Se você prefere um arquivo editável, use o modelo em Word."
+        }
+      ]
+    },
+    {
+      "slug": "planilha-proposta-energia-solar",
+      "formato": "Planilha em Excel",
+      "cartao": "Calcule economia por mês, parcela e payback antes de montar a proposta.",
+      "seoTitle": "Planilha de proposta de energia solar em Excel grátis",
+      "seoDescription": "Planilha em Excel (.xlsx) para proposta de energia solar: calcula economia por mês, parcela do financiamento e payback. Download grátis, sem cadastro.",
+      "kicker": "Planilha grátis",
+      "h1": "Planilha de proposta de energia solar com economia e payback",
+      "sub": "Um arquivo .xlsx para chegar nos números da proposta: conta de hoje, economia por mês, parcela do financiamento e tempo de retorno.",
+      "arquivos": [
+        { "label": "Baixar a planilha (.xlsx)", "href": "/modelos/planilha-proposta-energia-solar.xlsx" }
+      ],
+      "secoes": [
+        {
+          "h2": "O que a planilha calcula",
+          "ul": [
+            "Conta de luz de hoje e conta estimada depois do sistema, com a taxa mínima da distribuidora.",
+            "Economia por mês e no primeiro ano.",
+            "Payback simples e o ano em que a economia acumulada passa o investimento, com o reajuste de tarifa que você informar.",
+            "Parcela do financiamento, para colocar ao lado da conta de luz de hoje.",
+            "Economia acumulada ano a ano, em 25 anos."
+          ]
+        },
+        {
+          "h2": "Como usar",
+          "ol": [
+            "Na aba Cálculo, troque os valores em amarelo pelos dados da conta do cliente e do sistema que você dimensionou.",
+            "Ajuste as premissas: geração por kWp na sua cidade, reajuste anual da tarifa e o que a distribuidora deixa de compensar.",
+            "Copie os números da aba Resumo para a proposta."
+          ]
+        },
+        {
+          "h2": "Os números são estimativa",
+          "p": [
+            "Os valores que vêm preenchidos são exemplo. A geração muda com a cidade e o telhado, a tarifa muda com a distribuidora e a regra de compensação muda com o ano de conexão do sistema. Confira as premissas antes de mostrar o resultado ao cliente."
+          ]
+        }
+      ],
+      "atalho": {
+        "texto": "Com os números prontos, monte o PDF da proposta em um minuto.",
+        "label": "Abrir o gerador de proposta",
+        "href": "/gerador-proposta-energia-solar"
+      },
+      "faq": [
+        {
+          "q": "A planilha abre no Google Sheets?",
+          "a": "Sim. Ela é um arquivo .xlsx com fórmulas comuns, como SE, MÍNIMO e PGTO. Envie o arquivo para o Google Drive e abra com o Planilhas."
+        },
+        {
+          "q": "Como a planilha calcula o payback?",
+          "a": "O payback simples divide o valor do sistema pela economia do primeiro ano. A planilha também mostra o ano em que a economia acumulada passa o investimento, já com o reajuste da tarifa e a perda de geração dos módulos."
+        },
+        {
+          "q": "Os valores que vêm na planilha servem para qualquer cliente?",
+          "a": "Não. Eles são exemplo e estão em amarelo para você trocar. Use a conta do cliente, a geração estimada para a cidade e a regra de compensação da distribuidora."
+        },
+        {
+          "q": "A planilha considera o financiamento?",
+          "a": "Sim. Você informa a entrada, o número de parcelas e os juros ao mês, e ela calcula a parcela para comparar com a conta de luz de hoje."
+        }
+      ]
+    },
+    {
+      "slug": "modelo-proposta-energia-solar-word",
+      "formato": "Modelo em Word",
+      "cartao": "Arquivo .docx editável, com o passo a passo de cada parte.",
+      "seoTitle": "Proposta comercial de energia solar em Word para baixar",
+      "seoDescription": "Modelo de proposta comercial de energia solar em Word (.docx), grátis e sem cadastro. Veja o que preencher em cada parte antes de mandar ao cliente.",
+      "kicker": "Modelo grátis",
+      "h1": "Modelo de proposta comercial de energia solar em Word",
+      "sub": "Um arquivo .docx para editar no Word ou no Google Docs, com o que preencher em cada parte.",
+      "arquivos": [
+        { "label": "Proposta completa (.docx)", "href": "/modelos/modelo-proposta-energia-solar.docx" },
+        { "label": "Versão para empresa (.docx)", "href": "/modelos/proposta-energia-solar-empresa.docx" },
+        { "label": "Resumo de 1 página (.docx)", "href": "/modelos/resumo-proposta-energia-solar-whatsapp.docx" }
+      ],
+      "previa": {
+        "src": "/modelos/previa/modelo-proposta-energia-solar.webp",
+        "alt": "Primeira página do modelo de proposta de energia solar em Word"
+      },
+      "secoes": [
+        {
+          "h2": "Como preencher o modelo",
+          "ol": [
+            "Troque tudo o que está em amarelo e entre colchetes. O que não é campo já está escrito para o cliente ler.",
+            "Capa: nome do cliente, endereço da instalação, data, validade e o seu nome com WhatsApp. Coloque o seu logo no lugar do texto LOGO DA SUA EMPRESA.",
+            "Resumo: a conta de luz de hoje, o sistema em kWp, o investimento e o tempo de retorno. Se o cliente ler só uma página, vai ser essa, então confira os quatro números antes de enviar.",
+            "Consumo, sistema e equipamentos: unidade consumidora, geração estimada, marca e modelo dos módulos e do inversor, com a garantia de cada um.",
+            "Investimento e formas de pagamento: o valor à vista, o financiamento com a parcela e o cartão, cada um com a sua observação.",
+            "Prazos, garantias e próximo passo: quando o sistema fica ligado, quem atende se algo parar e o que o cliente faz para aprovar."
+          ]
+        },
+        {
+          "h2": "Antes de enviar",
+          "p": [
+            "Salve em PDF. No Word, vá em Arquivo, Salvar como e escolha PDF. O PDF abre igual em qualquer celular. Antes, procure por colchetes no arquivo para não deixar campo sem preencher."
+          ]
+        }
+      ],
+      "faq": [
+        {
+          "q": "O modelo abre no Google Docs?",
+          "a": "Sim. Envie o arquivo .docx para o Google Drive e abra com o Google Docs."
+        },
+        {
+          "q": "Mando a proposta em Word ou em PDF?",
+          "a": "Edite no Word e envie em PDF. O PDF abre igual em qualquer celular e o cliente não consegue alterar os valores sem querer."
+        },
+        {
+          "q": "Tem modelo para empresa e resumo de uma página?",
+          "a": "Sim. Além da proposta completa residencial, esta página tem a versão para empresa e o resumo de uma página para mandar no WhatsApp, os dois em Word."
+        },
+        {
+          "q": "Preciso fazer cadastro para baixar?",
+          "a": "Não. O download é direto e os modelos são grátis."
+        }
+      ]
+    }
+  ]
+}
