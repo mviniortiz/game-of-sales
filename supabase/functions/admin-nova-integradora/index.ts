@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     if (!lido.ok) return resp({ error: lido.erro }, 400);
     const p = lido.pedido;
 
-    const { data: jaTem } = await admin.from("profiles").select("id").ilike("email", p.email).limit(1);
+    const { data: jaTem } = await admin.from("profiles").select("id").eq("email", p.email).limit(1);
     if (jaTem && jaTem.length > 0) return resp({ error: "Esse e-mail já tem login no Vyzon." }, 409);
 
     if (p.fundadora) {
@@ -50,9 +50,17 @@ Deno.serve(async (req) => {
 
     const companyId = crypto.randomUUID();
     let userId: string | null = null;
-    const desfaz = async () => {
-        if (userId) await admin.auth.admin.deleteUser(userId).catch(() => {});
-        await admin.from("companies").delete().eq("id", companyId);
+    // true só quando o login e a empresa saíram mesmo.
+    const desfaz = async (): Promise<boolean> => {
+        let ok = true;
+        if (userId) {
+            const { error } = await admin.auth.admin.deleteUser(userId);
+            if (error) ok = false;
+        }
+        const { error } = await admin.from("companies").delete().eq("id", companyId);
+        if (error) ok = false;
+        if (!ok) console.error(JSON.stringify({ at: "admin-nova-integradora", desfazer_falhou: companyId, user: userId }));
+        return ok;
     };
 
     try {
@@ -103,7 +111,11 @@ Deno.serve(async (req) => {
         return resp({ ok: true, company_id: companyId, numero, aviso });
     } catch (e) {
         console.error("[admin-nova-integradora]", e);
-        await desfaz();
-        return resp({ error: "Não deu para criar a integradora. Nada ficou gravado." }, 500);
+        const limpo = await desfaz();
+        return resp({
+            error: limpo
+                ? "Não deu para criar a integradora. Nada ficou gravado."
+                : `Não deu para criar a integradora, e sobrou parte do cadastro (empresa ${companyId}). Me avise para limpar.`,
+        }, 500);
     }
 });

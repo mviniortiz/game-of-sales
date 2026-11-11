@@ -2,7 +2,7 @@
 // e-mail + vaga das 10 grátis, num envio só (edge admin-nova-integradora).
 // Substitui o "Nova empresa", que criava a empresa sem ninguém dentro.
 import { useState, type FormEvent } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle } from "@phosphor-icons/react";
 import { supabase } from "@/integrations/supabase/client";
 import { lerVaga } from "@/lib/fundadora";
@@ -19,11 +19,19 @@ export function NovaIntegradora({ aberto, onFechar, onCriada }: { aberto: boolea
     const [erro, setErro] = useState<string | null>(null);
     const [pronto, setPronto] = useState<(Resposta & { email: string; empresa: string }) | null>(null);
 
-    const { data: vaga } = useQuery({
+    const qc = useQueryClient();
+    const { data: vaga, isLoading: lendoVagas, isError: semVagas } = useQuery({
         queryKey: ["vagas-fundadora"],
         enabled: aberto,
-        queryFn: async () => lerVaga((await supabase.rpc("minha_vaga_fundadora" as never)).data),
+        queryFn: async () => {
+            const { data, error } = await supabase.rpc("minha_vaga_fundadora" as never);
+            const v = lerVaga(data);
+            if (error || !v) throw new Error("vagas");
+            return v;
+        },
     });
+    // Sem a contagem não dá pra saber se ainda tem vaga: o envio espera.
+    const vagasLidas = !!vaga && !lendoVagas && !semVagas;
     const restam = vaga?.vagas_restantes ?? 0;
     // Com vaga sobrando, o normal hoje é entrar como uma das grátis.
     const vaiGratis = gratis ?? restam > 0;
@@ -43,6 +51,7 @@ export function NovaIntegradora({ aberto, onFechar, onCriada }: { aberto: boolea
         },
         onSuccess: (r) => {
             setPronto({ ...r, email: f.email.trim().toLowerCase(), empresa: f.empresa.trim() });
+            qc.invalidateQueries({ queryKey: ["vagas-fundadora"] });
             onCriada();
         },
         onError: (e: Error) => setErro(e.message),
@@ -64,7 +73,7 @@ export function NovaIntegradora({ aberto, onFechar, onCriada }: { aberto: boolea
     const enviar = (ev: FormEvent) => {
         ev.preventDefault();
         setErro(null);
-        if (!f.empresa.trim() || !f.email.trim()) return;
+        if (!f.empresa.trim() || !f.email.trim() || !vagasLidas) return;
         criar.mutate();
     };
 
@@ -131,9 +140,13 @@ export function NovaIntegradora({ aberto, onFechar, onCriada }: { aberto: boolea
                                         </button>
                                     </div>
                                     <span className="va-ajuda">
-                                        {restam > 0
-                                            ? `${restam === 1 ? "Resta 1 vaga" : `Restam ${restam} vagas`}. Grátis pra sempre, Lume liberada.`
-                                            : "As 10 vagas grátis já foram usadas. Ela entra só com o Raio-X."}
+                                        {lendoVagas
+                                            ? "Contando as vagas…"
+                                            : semVagas
+                                              ? "Não deu pra ler as vagas. Feche e abra de novo."
+                                              : restam > 0
+                                                ? `${restam === 1 ? "Resta 1 vaga" : `Restam ${restam} vagas`}. Grátis pra sempre, Lume liberada.`
+                                                : "As 10 vagas grátis já foram usadas. Ela entra só com o Raio-X."}
                                     </span>
                                 </div>
                             </div>
@@ -145,7 +158,7 @@ export function NovaIntegradora({ aberto, onFechar, onCriada }: { aberto: boolea
                             <button
                                 type="submit"
                                 className="va-btn va-btn--grande mt-4 w-full"
-                                disabled={!f.empresa.trim() || !f.email.trim() || criar.isPending}
+                                disabled={!f.empresa.trim() || !f.email.trim() || !vagasLidas || criar.isPending}
                             >
                                 {criar.isPending ? "Criando…" : "Criar e enviar convite"}
                             </button>
