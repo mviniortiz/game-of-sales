@@ -5194,8 +5194,9 @@ html.lenis, html.lenis body { height: auto; }
    O Safari do iOS aproxima a tela ao focar um campo com letra menor que 16px
    e não volta sozinho. Vale para o app inteiro (html[data-vyz-app], posto pelo
    AppShell), inclusive nos diálogos, que abrem em portal. Campo que já é maior
-   de propósito fica como está. A landing não entra. */
-@media (max-width: 767px) {
+   de propósito fica como está. A landing não entra. O iPad também aproxima,
+   por isso vale para toda tela de toque. */
+@media (max-width: 767px), (pointer: coarse) {
   html[data-vyz-app] :is(
       input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"], [type="hidden"]),
       textarea,
@@ -5206,8 +5207,8 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 /* Link ou botão de texto pequeno: no celular a área de toque cresce para a de um
-   dedo sem mexer no desenho. */
-@media (max-width: 767px) {
+   dedo sem mexer no desenho. Vale também para tablet e celular deitado. */
+@media (max-width: 767px), (pointer: coarse) {
   .vz-toque { position: relative; }
   .vz-toque::after { content: ""; position: absolute; inset: -12px -8px; }
 }

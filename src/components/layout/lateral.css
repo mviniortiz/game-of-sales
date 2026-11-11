@@ -7,7 +7,16 @@
     padding: 20px 12px 14px;
     background: var(--vyz-noite);
     color: #fff;
-    overflow: hidden;
+    /* Tela baixa (celular deitado, notebook com zoom): o menu rola em vez de
+       esconder Configurações e a conta embaixo da dobra. */
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+.vz-lateral > * {
+    flex-shrink: 0;
 }
 .vz-lateral[data-recolhida] {
     padding-inline: 8px;
@@ -318,17 +327,11 @@
         display: none;
     }
 }
-/* Menu aberto no celular: cada linha e cada ícone com área de dedo. O atalho de
-   teclado some, que no celular não existe. Em aparelho baixo (iPhone SE) as
+/* Celular ou qualquer tela de toque (iPad, celular deitado): sem atalho de
+   teclado e com ícone na área de um dedo. Em aparelho baixo (iPhone SE) as
    linhas ficam na altura de sempre, pra o menu caber sem rolar; se ainda assim
    faltar tela, ele rola em vez de espremer. */
-@media (max-width: 767px) {
-    .vz-lateral {
-        overflow-y: auto;
-    }
-    .vz-lateral > * {
-        flex-shrink: 0;
-    }
+@media (max-width: 767px), (pointer: coarse) {
     .vz-busca kbd {
         display: none;
     }

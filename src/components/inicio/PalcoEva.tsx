@@ -29,7 +29,18 @@ export function PalcoEva({
         anterior.current = rascunho;
     }, [rascunho, enviados]);
 
-    if (carregando) return <section className="vp-palco" data-calmo aria-busy="true" style={{ minHeight: 160 }} />;
+    // Carregando: esqueleto entre o palco calmo (sem rascunho) e o com rascunho,
+    // pra mudar pouco de altura quando o dado chega. O Início segura "Pedem você"
+    // até aqui responder, então a lista não pula depois de aparecer.
+    if (carregando)
+        return (
+            <section className="vp-palco" data-calmo aria-busy="true" aria-label="Carregando">
+                <p className="vp-palco__rotulo">{"\u00a0"}</p>
+                <div className="vp-palco__titulo">{"\u00a0"}</div>
+                <p className="vp-palco__motivo">{"\u00a0"}</p>
+                <p className="vp-balao" style={{ minHeight: "4em" }} />
+            </section>
+        );
 
     const atual = rascunho ?? saiu;
     const estado: EvaBotState = rascunho ? "alert" : saiu ? "happy" : "idle";

@@ -153,7 +153,8 @@ const Inicio = () => {
                         prioridades={pendingAll}
                         orcamentos={quotes}
                         obras={(obras.data ?? []).filter((o) => travada(o, prazosObra))}
-                        carregando={queueLoading}
+                        // Espera o palco e a prospecção: o que chegava depois da lista a empurrava.
+                        carregando={queueLoading || diary.loading || (!preview && prospeccao.isLoading)}
                         diaResolvido={dayComplete}
                         aoResolver={actions.resolve}
                         aoAdiar={actions.snooze}
