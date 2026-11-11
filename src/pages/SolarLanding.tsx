@@ -7,6 +7,7 @@ import { CONTACT, whatsappUrl } from "@/config/contact";
 import { PLANS, formatPrice } from "@/config/plans";
 import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { EvaBot, type EvaBotState } from "@/components/eva/EvaBot";
+import { PROPOSTA_LANDINGS } from "@/data/landing/propostaLandings";
 
 // Home de produção: integradores de energia solar. Uma ação só na página
 // inteira, criar a conta e ver as propostas paradas (o Raio-X grátis), com o
@@ -572,6 +573,11 @@ const Footer = ({ onSuporte }: { onSuporte: () => void }) => (
             <a href={whatsappUrl(CONTACT.defaultMessage)} target="_blank" rel="noopener noreferrer" onClick={onSuporte}>
                 Suporte no WhatsApp
             </a>
+            {PROPOSTA_LANDINGS.map((l) => (
+                <Link key={l.slug} to={`/${l.slug}`}>
+                    {l.rodape}
+                </Link>
+            ))}
             <Link to="/blog">Blog</Link>
             <Link to="/politica-privacidade">Privacidade</Link>
             <Link to="/termos-de-servico">Termos</Link>

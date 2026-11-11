@@ -16,6 +16,7 @@ export interface PropostaSecao {
 export interface PropostaLanding {
     slug: string;
     formato: string; // nome curto no cartão de "Outros formatos"
+    rodape: string; // nome do link no rodapé da home, que não tem o contexto "proposta"
     cartao: string; // uma linha sobre o que a página entrega
     seoTitle: string; // <title>, até 60 caracteres, palavra-chave na frente
     seoDescription: string; // meta description, até 155 caracteres

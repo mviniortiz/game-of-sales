@@ -8,6 +8,7 @@
     {
       "slug": "gerador-proposta-energia-solar",
       "formato": "Gerador online",
+      "rodape": "Gerador de proposta",
       "cartao": "Preencha os dados do cliente e baixe a proposta pronta em PDF.",
       "seoTitle": "Gerador de proposta de energia solar grátis em PDF",
       "seoDescription": "Preencha cliente, consumo, potência, valor e pagamento e baixe a proposta de energia solar em PDF. Grátis, sem cadastro, direto no navegador.",
@@ -52,6 +53,7 @@
     {
       "slug": "planilha-proposta-energia-solar",
       "formato": "Planilha em Excel",
+      "rodape": "Planilha de proposta",
       "cartao": "Calcule economia por mês, parcela e payback antes de montar a proposta.",
       "seoTitle": "Planilha de proposta de energia solar em Excel grátis",
       "seoDescription": "Planilha em Excel (.xlsx) para proposta de energia solar: calcula economia por mês, parcela do financiamento e payback. Download grátis, sem cadastro.",
@@ -114,6 +116,7 @@
     {
       "slug": "modelo-proposta-energia-solar-word",
       "formato": "Modelo em Word",
+      "rodape": "Proposta em Word",
       "cartao": "Arquivo .docx editável, com o passo a passo de cada parte.",
       "seoTitle": "Proposta comercial de energia solar em Word para baixar",
       "seoDescription": "Modelo de proposta comercial de energia solar em Word (.docx), grátis e sem cadastro. Veja o que preencher em cada parte antes de mandar ao cliente.",

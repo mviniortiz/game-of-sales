@@ -501,6 +501,10 @@ async function buildBlogIndex(posts) {
       <ul style="padding-left:20px;">
           ${list}
       </ul>
+      <h2 style="font-size:22px;margin:28px 0 10px;">Proposta de energia solar em outros formatos</h2>
+      <ul style="padding-left:20px;">
+          ${PROPOSTA.landings.map((l) => `<li style="margin:0 0 10px;"><a href="/${escapeAttr(l.slug)}" style="color:#1556C0;font-weight:600;">${escapeHtml(l.formato)}</a>: ${escapeHtml(l.cartao)}</li>`).join("\n          ")}
+      </ul>
     </div>
   </noscript>`;
     html = html.replace("</body>", `${noscript}\n</body>`);

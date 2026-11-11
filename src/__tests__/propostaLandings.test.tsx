@@ -79,6 +79,22 @@ describe("landings de proposta", () => {
         link.remove();
     });
 
+    it("recebem link da home e do índice do blog, e o post de modelos não disputa a busca do Word", () => {
+        const home = readFileSync(path.join(ROOT, "index.html"), "utf8");
+        const rodape = readFileSync(path.join(ROOT, "src/pages/SolarLanding.tsx"), "utf8");
+        const blog = readFileSync(path.join(ROOT, "src/pages/BlogV2.tsx"), "utf8");
+        expect(rodape).toContain("PROPOSTA_LANDINGS.map");
+        expect(blog).toContain("PROPOSTA_LANDINGS.map");
+        for (const l of PROPOSTA_LANDINGS) {
+            expect(l.rodape.length).toBeGreaterThan(0);
+            // A versão sem JavaScript da home é escrita à mão no index.html.
+            expect(home).toContain(`href="/${l.slug}"`);
+            expect(home).toContain(`>${l.rodape}</a>`);
+        }
+        const post = getBlogPost(PROPOSTA_POST.href.replace("/blog/", ""));
+        expect(post!.seoTitle).not.toMatch(/word|excel|planilha|gerador/i);
+    });
+
     it("não usam travessão", () => {
         expect(JSON.stringify([PROPOSTA_LANDINGS, PROPOSTA_POST])).not.toMatch(/[—–]/);
     });
