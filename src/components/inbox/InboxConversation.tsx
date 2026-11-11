@@ -1373,6 +1373,7 @@ function Composer({
     // só aparece quando o campo está focado. Renderiza sempre (reserva o espaço,
     // sem pulo de layout) e faz fade pela opacidade.
     const [focused, setFocused] = useState(false);
+    const temTexto = value.trim().length > 0;
 
     // Auto-cresce com o conteúdo (digitado OU injetado pela "Usar resposta" da
     // Lume), até um teto (~128px). Sem isto, texto longo virava uma caixa de 1
@@ -1422,7 +1423,7 @@ function Composer({
                     type="button"
                     onClick={onAttach}
                     disabled={!onAttach}
-                    className="h-10 w-10 md:h-8 md:w-8 rounded-full flex items-center justify-center transition-colors shrink-0 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed"
+                    className={`h-10 w-10 md:h-8 md:w-8 rounded-full flex items-center justify-center transition-colors shrink-0 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed ${offline ? "max-[399px]:hidden" : ""}`}
                     style={{ color: "#64748B" }}
                     title={onAttach ? "Anexar imagem, vídeo ou documento" : "Anexo indisponível"}
                     aria-label="Anexar mídia"
@@ -1448,17 +1449,21 @@ function Composer({
                     onKeyDown={onKeyDown}
                     onFocus={() => setFocused(true)}
                     onBlur={() => setFocused(false)}
-                    placeholder={offline ? "WhatsApp desconectado. Reconecte para enviar" : "Mensagem"}
+                    placeholder={offline ? "WhatsApp desconectado" : "Mensagem"}
                     rows={1}
                     className="flex-1 bg-transparent outline-none text-base md:text-[13.5px] py-2 md:py-1.5 px-1 resize-none max-h-32"
                     style={{ color: "#0F1730", lineHeight: 1.45 }}
                 />
 
+                {/* Celular estreito (< 400px): como no WhatsApp, o microfone só com o
+                    campo vazio e a seta só com texto. Os dois juntos espremiam o campo
+                    a 86px no iPhone SE. Sem conexão o anexo e o áudio também não saem e o
+                    lugar fica para o Reconectar. */}
                 {canSendAudio && (
                     <button
                         type="button"
                         onClick={onOpenAudio}
-                        className="h-10 w-10 md:h-8 md:w-8 rounded-full flex items-center justify-center transition-colors shrink-0 hover:bg-white"
+                        className={`h-10 w-10 md:h-8 md:w-8 rounded-full flex items-center justify-center transition-colors shrink-0 hover:bg-white ${temTexto || offline ? "max-[399px]:hidden" : ""}`}
                         style={{ color: "#64748B" }}
                         title="Gravar áudio"
                         aria-label="Gravar áudio"
@@ -1485,7 +1490,7 @@ function Composer({
                     disabled={!value.trim() || sending}
                     aria-label={sending ? "Enviando mensagem" : "Enviar mensagem"}
                     title="Enviar"
-                    className="h-10 w-10 md:h-9 md:w-9 rounded-full flex items-center justify-center text-white transition-all hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                    className={`h-10 w-10 md:h-9 md:w-9 rounded-full flex items-center justify-center text-white transition-all hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shrink-0 ${canSendAudio && !temTexto && !sending ? "max-[399px]:hidden" : ""}`}
                     style={{
                         background: "linear-gradient(135deg, #1556C0, #4A8CE8)",
                         boxShadow: "0 4px 12px -4px rgba(21,86,192,0.4)",

@@ -7,7 +7,8 @@ import {
   closestCorners,
   pointerWithin,
   rectIntersection,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragStartEvent,
@@ -176,6 +177,9 @@ const LIST_TH = "text-[10.5px] uppercase font-semibold tracking-[0.07em] text-mu
 
 // Filtros, ordem e modo de exibição valem entre visitas (por navegador). Busca
 // não entra: texto digitado é da tarefa do momento.
+// Vazio estável enquanto a busca corre: um [] novo a cada render refazia o efeito
+// que copia para a lista local.
+const SEM_DEALS: never[] = [];
 const FILTERS_KEY = "vyz:pipeline:filtros";
 type SavedFilters = {
   view?: "kanban" | "list";
@@ -200,7 +204,7 @@ function loadSavedFilters(): SavedFilters {
 }
 
 const CHIP =
-  "inline-flex h-10 sm:h-8 items-center gap-1.5 rounded-full px-3.5 sm:px-3 text-[13px] sm:text-[11.5px] font-medium transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]";
+  "inline-flex h-10 sm:mouse:h-8 items-center gap-1.5 rounded-full px-3.5 sm:px-3 text-[13px] sm:text-[11.5px] font-medium transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]";
 const CHIP_ON = "bg-[var(--vyz-accent-soft-10)] text-[var(--vyz-accent-text)] ring-1 ring-[var(--vyz-accent-border)]";
 const CHIP_OFF =
   "border border-input bg-background text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/15 dark:hover:bg-white/[0.06]";
@@ -549,13 +553,12 @@ export default function CRM() {
     [selectedSellers, searchQuery, applyAdvancedFilters, filterQuoteParked, quoteByDeal, filterRottingDeals, filterStatusKind, filterActive, kindOf],
   );
 
-  // Optimized sensors for fast, responsive drag
+  // Mouse: arrasta depois de 6px (abaixo disso foi clique). Dedo: segura um
+  // instante e arrasta; passada rápida continua rolando as colunas. Com um sensor
+  // só de ponteiro, no tablet o navegador rolava a tela e o card nunca saía do lugar.
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 6, // Slightly higher threshold reduces accidental/jittery drags
-      },
-    })
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } })
   );
 
   // Persiste os estágios do funil atual (editor). Substitui o localStorage.
@@ -565,7 +568,7 @@ export default function CRM() {
   };
 
   // Fetch deals (escopados ao funil selecionado)
-  const { data: deals = [], isLoading } = useQuery({
+  const { data: deals = SEM_DEALS, isLoading } = useQuery({
     queryKey: ["deals", effectiveCompanyId, selectedPipelineId],
     queryFn: async () => {
       let query = supabase
@@ -699,10 +702,12 @@ export default function CRM() {
     staleTime: 15000,
   });
 
+  // Só espelha na lista local. Gravar `deals` de volta no cache enquanto a busca
+  // ainda corria punha "lista vazia" como resposta: o Funil mostrava "Nenhuma
+  // oportunidade" e "0 clientes" até os cards chegarem (segundos no 3G).
   useEffect(() => {
     setLocalDeals(deals);
-    queryClient.setQueryData(["deals", effectiveCompanyId, selectedPipelineId], deals);
-  }, [deals, queryClient, effectiveCompanyId]);
+  }, [deals]);
 
   // Fetch vendors for filter
   const { data: vendors = [] } = useQuery({
@@ -1239,7 +1244,7 @@ export default function CRM() {
             type="button"
             aria-pressed={active}
             onClick={() => setViewMode(v.id)}
-            className={`h-9 sm:h-7 rounded-full px-3.5 sm:px-3 text-[13px] sm:text-[11.5px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
+            className={`h-9 sm:mouse:h-7 rounded-full px-3.5 sm:px-3 text-[13px] sm:text-[11.5px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
               active
                 ? "bg-muted text-foreground shadow-sm ring-1 ring-border/60 dark:bg-white/10 dark:ring-white/15"
                 : "text-muted-foreground hover:text-foreground"
@@ -1296,7 +1301,7 @@ export default function CRM() {
                             aria-pressed={filterQuoteParked}
                             onClick={() => setFilterQuoteParked((prev) => !prev)}
                             title={filterQuoteParked ? "Mostrar todas" : "Ver só os orçamentos sem resposta"}
-                            className={`inline-flex h-9 sm:h-6 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 sm:px-2 -mx-0.5 font-semibold tabular-nums transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
+                            className={`inline-flex h-9 sm:mouse:h-6 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 sm:px-2 -mx-0.5 font-semibold tabular-nums transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] ${
                               filterQuoteParked
                                 ? "bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200"
                                 : "text-amber-700 hover:bg-amber-50 dark:text-amber-300/90 dark:hover:bg-amber-500/10"
@@ -1345,7 +1350,7 @@ export default function CRM() {
                 aria-label={selectionMode ? "Selecionando" : "Selecionar"}
                 aria-pressed={selectionMode}
                 title="Selecionar vários para mover ou apagar"
-                className={`min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-9 h-9 rounded-full ${selectionMode ? "bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90" : "border-border hover:bg-muted text-foreground"}`}
+                className={`min-h-[44px] min-w-[44px] sm:mouse:min-h-0 sm:mouse:min-w-9 h-9 rounded-full ${selectionMode ? "bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] hover:bg-[var(--vyz-btn-solid)] hover:opacity-90" : "border-border hover:bg-muted text-foreground"}`}
               >
                 <CheckSquarePh size={16} weight="duotone" className={selectionMode ? "sm:mr-2" : ""} />
                 {/* Fora do modo de seleção fica só o ícone: são ações de vez em quando
@@ -1359,7 +1364,7 @@ export default function CRM() {
                   size="sm"
                   onClick={selectedDeals.size === allVisibleDealIds.length ? deselectAll : selectAll}
                   aria-label={selectedDeals.size === allVisibleDealIds.length ? "Desmarcar todos" : "Selecionar todos"}
-                  className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-9 rounded-full"
+                  className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:mouse:min-h-0 sm:mouse:min-w-0 h-9 rounded-full"
                 >
                   <CheckCheckPh size={16} weight="duotone" className="sm:mr-2" />
                   <span className="hidden sm:inline">
@@ -1374,7 +1379,7 @@ export default function CRM() {
                 onClick={() => setShowConfig(true)}
                 aria-label="Configurar funil"
                 title="Configurar etapas do funil"
-                className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-9 h-9 rounded-full"
+                className="border-border hover:bg-muted text-foreground min-h-[44px] min-w-[44px] sm:mouse:min-h-0 sm:mouse:min-w-9 h-9 rounded-full"
               >
                 <SettingsPh size={16} weight="duotone" />
               </Button>
@@ -1383,10 +1388,10 @@ export default function CRM() {
                 size="sm"
                 onClick={() => setShowNewDeal(true)}
                 aria-label="Novo cliente"
-                className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] font-semibold hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 active:scale-[0.98] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:active:scale-100 min-h-[44px] sm:min-h-0 h-9"
+                className="rounded-full bg-[var(--vyz-btn-solid)] text-[var(--vyz-btn-on)] font-semibold hover:bg-[var(--vyz-btn-solid)] hover:opacity-90 active:scale-[0.98] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:active:scale-100 min-h-[44px] sm:mouse:min-h-0 h-9"
               >
-                <PlusPh size={16} weight="bold" className="sm:mr-1.5" />
-                <span className="hidden sm:inline">Novo cliente</span>
+                <PlusPh size={16} weight="bold" className="lg:mr-1.5" />
+                <span className="hidden lg:inline">Novo cliente</span>
               </Button>
             </div>
           </div>
@@ -1394,7 +1399,7 @@ export default function CRM() {
           {/* Row 2: Toolbar — search à esquerda (largura fixa sensata), controles empurrados com ml-auto.
               F5P.4e: removido spacer flex-1 que squeezava o search no layout anterior. */}
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="relative w-full sm:w-56 2xl:w-72 flex-shrink-0">
+            <div className="relative w-full sm:w-auto sm:min-w-[200px] sm:flex-1 lg:w-56 lg:flex-none 2xl:w-72">
               <SearchPh size={15} weight="duotone" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 pointer-events-none" />
               <Input
                 ref={searchRef}
@@ -1429,7 +1434,7 @@ export default function CRM() {
             {/* Controles empurrados à direita. No mobile QUEBRAM em linhas (antes
                 transbordavam pra fora da tela, deixando o filtro de vendedores
                 inacessível); no desktop seguem em linha única alinhados à direita. */}
-            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:flex-1 sm:min-w-0 sm:justify-end">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto lg:flex-1 lg:min-w-0 lg:justify-end">
               <button
                 type="button"
                 onClick={() => setShowFilters(!showFilters)}
@@ -1449,7 +1454,7 @@ export default function CRM() {
               <div className="sm:hidden">{viewToggle}</div>
 
               {/* No celular os seletores ficam atrás de "Filtros"; no desktop, sempre à vista. */}
-              <div className={showFilters ? "contents" : "hidden sm:contents"}>
+              <div className={showFilters ? "contents" : "hidden lg:contents"}>
               {/* Seletor de funil (pipeline) */}
               {pipelines.length > 0 ? (
                 <FilterSelect
@@ -1703,7 +1708,7 @@ export default function CRM() {
                     <button
                       type="button"
                       onClick={clearAllFilters}
-                      className="inline-flex h-10 sm:h-8 items-center gap-1.5 rounded-full px-3 text-[13px] sm:text-[11.5px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
+                      className="inline-flex h-10 sm:mouse:h-8 items-center gap-1.5 rounded-full px-3 text-[13px] sm:text-[11.5px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
                     >
                       Limpar tudo
                     </button>
@@ -1727,7 +1732,7 @@ export default function CRM() {
               <button
                 type="button"
                 onClick={clearAllFilters}
-                className="inline-flex h-10 sm:h-8 items-center rounded-full border border-border px-4 sm:px-3.5 text-[13px] sm:text-[12px] font-medium text-foreground hover:bg-muted transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                className="inline-flex h-10 sm:mouse:h-8 items-center rounded-full border border-border px-4 sm:px-3.5 text-[13px] sm:text-[12px] font-medium text-foreground hover:bg-muted transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
               >
                 Limpar filtros
               </button>
@@ -1735,7 +1740,7 @@ export default function CRM() {
               <button
                 type="button"
                 onClick={() => setShowNewDeal(true)}
-                className="inline-flex h-10 sm:h-8 items-center gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] px-4 sm:px-3.5 text-[13px] sm:text-[12px] font-semibold text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
+                className="inline-flex h-10 sm:mouse:h-8 items-center gap-1.5 rounded-full bg-[var(--vyz-btn-solid)] px-4 sm:px-3.5 text-[13px] sm:text-[12px] font-semibold text-[var(--vyz-btn-on)] hover:opacity-90 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)]"
               >
                 <PlusPh size={13} weight="bold" /> Novo cliente
               </button>

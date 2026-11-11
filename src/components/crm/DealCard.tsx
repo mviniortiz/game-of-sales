@@ -91,15 +91,18 @@ export function quoteStatus(q: QuoteItem): { text: string; tone: string; dot: st
 // sm do CRM.tsx); o cartão precisa usar o mesmo corte, senão entre 640 e 767px
 // o arraste fica desligado num board que é de computador.
 const BELOW_SM = "(max-width: 639px)";
-function useBelowSm() {
-  const [below, setBelow] = useState(() => typeof window !== "undefined" && window.matchMedia(BELOW_SM).matches);
+// Aparelho sem mouse (celular, iPad): nada pode depender de passar o mouse em cima.
+const SEM_MOUSE = "(hover: none)";
+function useMedia(query: string) {
+  const [bate, setBate] = useState(() => typeof window !== "undefined" && window.matchMedia(query).matches);
   useEffect(() => {
-    const mq = window.matchMedia(BELOW_SM);
-    const onChange = () => setBelow(mq.matches);
+    const mq = window.matchMedia(query);
+    const onChange = () => setBate(mq.matches);
+    onChange();
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
-  }, []);
-  return below;
+  }, [query]);
+  return bate;
 }
 
 // Format BRL as user types (same as NewDealModal)
@@ -117,7 +120,8 @@ type EditableField = "title" | "customer_name" | "value";
 
 export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDelete, onMarkWon, quote = null, selectionMode = false, isSelected = false, onToggleSelect, stageNeighbors, onSwipeMove, context, tags = [], showAssignee = true }: DealCardProps) => {
   const navigate = useNavigate();
-  const isMobile = useBelowSm();
+  const isMobile = useMedia(BELOW_SM);
+  const semMouse = useMedia(SEM_MOUSE);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const pressStart = useRef<{ x: number; y: number } | null>(null);
@@ -205,8 +209,9 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
   const isOverdue = deal.expected_close_date
     ? isPast(parseISO(deal.expected_close_date)) : false;
 
-  // Whether inline editing is allowed (disabled in selection mode)
-  const canInlineEdit = !selectionMode;
+  // Editar direto no card é coisa de mouse (o cursor de texto avisa). No toque,
+  // tocar no nome ou no valor abria o teclado em vez da ficha do cliente.
+  const canInlineEdit = !selectionMode && !semMouse;
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     pressStart.current = { x: e.clientX, y: e.clientY };
@@ -220,7 +225,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
       return;
     }
     if (editingField) return; // Don't navigate while editing
-    // Mesmo limiar do PointerSensor do CRM (6px): abaixo disso foi clique, não arraste.
+    // Mesmo limiar do MouseSensor do CRM (6px): abaixo disso foi clique, não arraste.
     const start = pressStart.current;
     if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) >= 6) return;
     e.stopPropagation();
@@ -518,7 +523,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
                 onClick={e => e.stopPropagation()}
                 onPointerDown={e => e.stopPropagation()}
                 onMouseDown={e => e.stopPropagation()}
-                className={`relative -mr-1.5 -mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md max-md:after:absolute max-md:after:-inset-2.5 max-md:after:content-[''] text-[var(--vyz-text-muted)] transition-[opacity,background-color,color] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[var(--vyz-surface-3)] hover:text-[var(--vyz-text-primary)] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] data-[state=open]:bg-[var(--vyz-surface-3)] data-[state=open]:opacity-100 ${isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                className={`relative -mr-1.5 -mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md max-md:after:absolute max-md:after:-inset-2.5 max-md:after:content-[''] text-[var(--vyz-text-muted)] transition-[opacity,background-color,color] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[var(--vyz-surface-3)] hover:text-[var(--vyz-text-primary)] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vyz-accent)] data-[state=open]:bg-[var(--vyz-surface-3)] data-[state=open]:opacity-100 ${isMobile || semMouse ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
               >
                 <MoreHorizontal className="h-4 w-4" aria-hidden />
               </DropdownMenuTrigger>

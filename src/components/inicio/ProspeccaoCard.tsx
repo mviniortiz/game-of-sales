@@ -48,9 +48,10 @@ export function ProspeccaoCard({ data, loading, error }: { data?: ProspeccaoHoje
             </section>
         );
     }
-    if (loading) {
-        return <div aria-busy="true" aria-label="Carregando a prospecção" className="h-[120px] rounded-[18px] bg-[var(--vyz-surface-3)] motion-safe:animate-pulse" />;
-    }
+    // Carregando não reserva lugar: quase toda conta não tem prospecção ligada, e o
+    // bloco de 120px que sumia em seguida puxava "Pedem você" pra cima e pra baixo.
+    // O Início segura a lista até isto responder (ver Inicio.tsx).
+    if (loading) return null;
     if (!data?.ativo) return null;
 
     const itens = ordenarItens(data.itens ?? []);

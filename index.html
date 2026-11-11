@@ -114,11 +114,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
   </noscript>
+  <!-- Só a Inter é pré-carregada. Satoshi e Sentient ficaram da landing antiga:
+       home, login, cadastro e Raio-X não usam, e Orçamentos e Configurar Lume
+       baixam a Satoshi quando abrem (@font-face abaixo). Pré-carregar custava
+       97 kB em toda primeira visita. -->
   <link rel="preload" as="font" type="font/woff2" href="/fonts/inter/inter-variable-latin.woff2" crossorigin />
-  <link rel="preload" as="font" type="font/woff2" href="/fonts/satoshi/satoshi-700.woff2" crossorigin />
-  <link rel="preload" as="font" type="font/woff2" href="/fonts/satoshi/satoshi-900.woff2" crossorigin />
-  <link rel="preload" as="font" type="font/woff2" href="/fonts/sentient/sentient-italic-500.woff2" crossorigin />
-  <link rel="preload" as="font" type="font/woff2" href="/fonts/sentient/sentient-400.woff2" crossorigin />
   <style>
     @font-face {
       font-family: 'Inter';
