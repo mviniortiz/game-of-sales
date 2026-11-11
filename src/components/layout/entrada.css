@@ -246,6 +246,51 @@
 }
 
 
+/* Recuperar e escolher senha (MolduraEntrada): sem a cena, o painel em coluna
+   fica com a frase no meio e mais estreito que o do login. */
+@media (min-width: 1024px) {
+  .vz-login--senha .vz-login__painel { width: min(38vw, 520px); padding-bottom: 40px; }
+  .vz-login--senha .vz-login__painel-corpo { justify-content: center; padding-top: 0; padding-bottom: 12vh; }
+}
+.vz-senha__selo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--vyz-border-subtle);
+  background: var(--vyz-surface-1);
+  color: var(--vyz-text-primary);
+  animation: vzSeloChega 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.vz-senha__selo[data-tom="bom"] { border-color: color-mix(in srgb, #16a34a 30%, transparent); background: color-mix(in srgb, #16a34a 8%, white); color: #15803d; }
+.vz-senha__selo[data-tom="alerta"] { border-color: var(--vyz-sol-line); background: var(--vyz-sol-soft); color: var(--vyz-text-primary); }
+@keyframes vzSeloChega { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: none; } }
+.vz-senha__email { font-weight: 600; color: var(--vyz-text-primary); overflow-wrap: anywhere; }
+.vz-senha__secundario {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  border-radius: 999px;
+  border: 1px solid var(--vyz-border);
+  background: var(--vyz-surface-1);
+  color: var(--vyz-text-primary);
+  font-size: 15px;
+  font-weight: 600;
+  transition: border-color 160ms cubic-bezier(0.22, 1, 0.36, 1), transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vz-senha__secundario:hover:not(:disabled) { border-color: var(--vyz-border-strong); }
+.vz-senha__secundario:active:not(:disabled) { transform: scale(0.985); }
+.vz-senha__secundario:focus-visible { outline: 2px solid var(--vyz-accent); outline-offset: 2px; }
+.vz-senha__secundario:disabled { opacity: 0.55; }
+.vz-senha__regras { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--vyz-text-muted); }
+.vz-senha__regras li { display: inline-flex; align-items: center; gap: 6px; transition: color 160ms ease; }
+.vz-senha__regras li[data-ok="true"] { color: #15803d; }
+
 /* Celular baixo (iPhone SE e parecidos): o painel azul encolhe para o botão
    Entrar caber na primeira tela. */
 @media (max-width: 767px) and (max-height: 720px) {
@@ -255,7 +300,7 @@
   .vz-login__form { padding-top: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .vz-login__caixa { animation: none; }
+  .vz-login__caixa, .vz-senha__selo { animation: none; }
   .vz-login__painel, .vz-google { transition: none; }
   .vz-google:hover:not(:disabled) { transform: none; }
 }

@@ -2,50 +2,53 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Loader2, MailCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { ThemeLogo } from "@/components/ui/ThemeLogo";
 import { AuthField } from "@/components/auth/AuthField";
+import { MolduraEntrada, SeloEntrada } from "@/components/auth/MolduraEntrada";
 
-// AUTH.1 — recuperar senha no MESMO sistema visual do login/cadastro
-// (dark, vz-input, entrada em stagger). Antes era um card esmeralda isolado.
-// Email preenchido quando vem do login via router state. Reenviar de verdade
-// (chama resetPasswordForEmail de novo) com cooldown de 30s.
+// Recuperar senha na moldura do login (painel azul + formulário claro). O
+// e-mail vem preenchido quando chega do login (router state). Reenviar chama
+// resetPasswordForEmail de novo, com espera de 30s.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const ESPERA_S = 30;
 
 const RecuperarSenha = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [email, setEmail] = useState(
-        (((location.state as { email?: string } | null)?.email) ?? "").toLowerCase(),
-    );
+    const [email, setEmail] = useState((((location.state as { email?: string } | null)?.email) ?? "").toLowerCase());
     const [erro, setErro] = useState<string | null>(null);
     const [erroKey, setErroKey] = useState(0);
     const [loading, setLoading] = useState(false);
     const [enviado, setEnviado] = useState(false);
-    const [reenvioCooldown, setReenvioCooldown] = useState(0);
+    const [espera, setEspera] = useState(0);
+    const [reenviado, setReenviado] = useState(false);
 
     useEffect(() => {
-        if (reenvioCooldown <= 0) return;
-        const t = window.setTimeout(() => setReenvioCooldown((s) => s - 1), 1000);
+        if (espera <= 0) return;
+        const t = window.setTimeout(() => setEspera((s) => s - 1), 1000);
         return () => window.clearTimeout(t);
-    }, [reenvioCooldown]);
+    }, [espera]);
 
-    const envia = async () => {
+    const falha = (msg: string) => {
+        setErro(msg);
+        setErroKey((k) => k + 1);
+    };
+
+    const envia = async (reenvio = false) => {
         setLoading(true);
         try {
-            const redirectUrl = `${window.location.origin}/redefinir-senha`;
             const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-                redirectTo: redirectUrl,
+                redirectTo: `${window.location.origin}/redefinir-senha`,
             });
             if (error) {
-                setErro("Não foi possível enviar agora. Tente de novo em instantes.");
-                setErroKey((k) => k + 1);
-            } else {
-                setEnviado(true);
-                setReenvioCooldown(30);
+                falha(/rate|security purposes/i.test(error.message) ? "Muitos pedidos seguidos. Espere um minuto e tente de novo." : "Não deu para enviar agora. Tente de novo em instantes.");
+                return;
             }
+            setErro(null);
+            setEnviado(true);
+            setReenviado(reenvio);
+            setEspera(ESPERA_S);
         } catch {
-            setErro("Erro ao processar sua solicitação.");
-            setErroKey((k) => k + 1);
+            falha("Não deu para enviar agora. Confira sua internet e tente de novo.");
         } finally {
             setLoading(false);
         }
@@ -53,104 +56,94 @@ const RecuperarSenha = () => {
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        if (!email.trim()) { setErro("Informe seu email."); setErroKey((k) => k + 1); return; }
-        if (!EMAIL_RE.test(email.trim())) { setErro("Email inválido."); setErroKey((k) => k + 1); return; }
-        setErro(null);
+        if (!email.trim()) return falha("Informe seu e-mail.");
+        if (!EMAIL_RE.test(email.trim())) return falha("Confira o e-mail: parece faltar alguma parte.");
         await envia();
     };
 
+    const voltarLogin = () => navigate("/auth", { state: { email: email.trim() } });
+
     return (
-        <div className="lp-v2" style={{ minHeight: "100vh", backgroundColor: "#07080A", color: "#fff" }}>
-            <div className="mx-auto flex min-h-screen w-full max-w-[440px] flex-col px-6 py-8 sm:px-8">
-                <div className="self-start landing-fade-in-up">
+        <MolduraEntrada kick="Acesso" frase="Esqueceu a senha?" destaque="Em um minuto você volta.">
+            {!enviado ? (
+                <>
+                    <h1 className="text-[32px] font-semibold leading-[38px] tracking-[-0.025em] text-[var(--vyz-text-primary)]">Recuperar senha</h1>
+                    <p className="mt-2 text-[15px] leading-6 text-[var(--vyz-text-muted)]">
+                        Digite o e-mail da sua conta. Mandamos um link para você criar uma senha nova.
+                    </p>
+
+                    <form className="mt-7 flex flex-col gap-4" onSubmit={onSubmit} noValidate>
+                        <AuthField
+                            label="E-mail"
+                            type="email"
+                            placeholder="voce@suaempresa.com"
+                            value={email}
+                            onChange={(v) => {
+                                setEmail(v);
+                                if (erro) setErro(null);
+                            }}
+                            autoComplete="email"
+                            autoFocus
+                            error={erro}
+                            errorKey={erroKey}
+                        />
+                        <button type="submit" disabled={loading} aria-busy={loading} className="vz-btn vz-btn--primary mt-2 min-h-[48px] w-full disabled:opacity-60">
+                            {loading ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Enviando…
+                                </span>
+                            ) : (
+                                "Enviar link"
+                            )}
+                        </button>
+                    </form>
+
                     <button
-                        onClick={() => navigate("/auth")}
-                        className="vz-toque inline-flex items-center gap-1.5 text-[13px] font-medium transition-colors"
-                        style={{ color: "rgba(255,255,255,0.5)" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
+                        type="button"
+                        onClick={voltarLogin}
+                        className="vz-toque mt-8 inline-flex items-center gap-1.5 text-[13px] text-[var(--vyz-text-muted)] transition-colors duration-150 hover:text-[var(--vyz-text-primary)]"
                     >
                         <ArrowLeft className="h-3.5 w-3.5" />
                         Voltar para o login
                     </button>
-                </div>
+                </>
+            ) : (
+                <div role="status">
+                    <SeloEntrada>
+                        <MailCheck className="h-5 w-5" />
+                    </SeloEntrada>
+                    <h1 className="mt-5 text-[32px] font-semibold leading-[38px] tracking-[-0.025em] text-[var(--vyz-text-primary)]">Confira seu e-mail</h1>
+                    <p className="mt-2 text-[15px] leading-6 text-[var(--vyz-text-muted)]">
+                        Se <span className="vz-senha__email">{email.trim()}</span> tiver conta no Vyzon, o link chega em instantes. Ele vale por 1 hora.
+                    </p>
+                    <p className="mt-3 text-[13px] leading-5 text-[var(--vyz-text-muted)]">Não achou? Olhe no spam e em Promoções.</p>
 
-                <div className="flex flex-1 items-center">
-                    {!enviado ? (
-                        <div className="w-full py-12">
-                            <div className="landing-fade-in-up landing-delay-100">
-                                <ThemeLogo variant="inverse" className="h-6 w-auto" />
-                            </div>
-                            <h1 className="lp-display mt-8 landing-fade-in-up landing-delay-150" style={{ fontSize: "clamp(2rem, 3.6vw, 2.6rem)", lineHeight: 1.05, letterSpacing: "-0.03em", color: "#fff" }}>
-                                Recuperar senha
-                            </h1>
-                            <p className="mt-2.5 landing-fade-in-up landing-delay-200" style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.98rem", lineHeight: 1.5 }}>
-                                Digite seu email e enviamos o link pra você criar uma nova.
-                            </p>
-
-                            <form className="mt-8 flex flex-col gap-5 landing-fade-in-up landing-delay-300" onSubmit={onSubmit} noValidate>
-                                <AuthField
-                                    label="Email"
-                                    type="email"
-                                    placeholder="voce@suaempresa.com"
-                                    value={email}
-                                    onChange={(v) => { setEmail(v); if (erro) setErro(null); }}
-                                    autoComplete="email"
-                                    autoFocus
-                                    error={erro}
-                                    errorKey={erroKey}
-                                />
-                                <button type="submit" disabled={loading} className="vz-btn vz-btn--light mt-1 w-full disabled:opacity-50">
-                                    {loading ? (
-                                        <span className="flex items-center justify-center gap-2">
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            Enviando…
-                                        </span>
-                                    ) : (
-                                        "Enviar link de recuperação"
-                                    )}
-                                </button>
-                            </form>
-                        </div>
-                    ) : (
-                        <div className="w-full py-12 text-center">
-                            <div
-                                className="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
-                                style={{ background: "rgba(52,211,153,0.12)", animation: "landing-fade-in-up 0.4s cubic-bezier(0.22,1,0.36,1) both" }}
-                            >
-                                <MailCheck className="h-7 w-7" style={{ color: "#34D399" }} />
-                            </div>
-                            <h1 className="lp-display mt-7" style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.3rem)", lineHeight: 1.05, letterSpacing: "-0.03em", color: "#fff" }}>
-                                Email enviado
-                            </h1>
-                            <p className="mt-3 text-[14.5px]" style={{ color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
-                                Se <strong style={{ color: "#fff", fontWeight: 600 }}>{email.trim()}</strong> tiver conta, o link chega em instantes. Confira o spam também.
-                            </p>
-                            <button
-                                type="button"
-                                onClick={envia}
-                                disabled={loading || reenvioCooldown > 0}
-                                className="mt-8 inline-flex items-center gap-2 text-[13.5px] underline underline-offset-4 transition-opacity disabled:opacity-50"
-                                style={{ color: "rgba(255,255,255,0.65)" }}
-                            >
-                                {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                                {reenvioCooldown > 0 ? `Pode reenviar em ${reenvioCooldown}s` : "Não chegou? Reenviar"}
-                            </button>
-                            <div className="mt-9">
-                                <button
-                                    type="button"
-                                    onClick={() => navigate("/auth", { state: { email: email.trim() } })}
-                                    className="rounded-full px-6 py-3 text-[14px] font-semibold transition-opacity hover:opacity-90"
-                                    style={{ background: "#fff", color: "#0B1220" }}
-                                >
-                                    Voltar para o login
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    <div className="mt-7 flex flex-col gap-3">
+                        <button type="button" onClick={voltarLogin} className="vz-btn vz-btn--primary min-h-[48px] w-full">
+                            Voltar para o login
+                        </button>
+                        <button type="button" onClick={() => envia(true)} disabled={loading || espera > 0} className="vz-senha__secundario">
+                            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                            {espera > 0 ? `Reenviar em ${espera}s` : "Reenviar o link"}
+                        </button>
+                    </div>
+                    <p className="mt-4 min-h-5 text-center text-[13px] text-[var(--vyz-text-muted)]" aria-live="polite">
+                        {erro ?? (reenviado && espera > 0 ? "Link novo enviado. Use o mais recente." : "")}
+                    </p>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setEnviado(false);
+                            setErro(null);
+                        }}
+                        className="vz-toque mt-2 block w-full text-center text-[13px] text-[var(--vyz-text-muted)] transition-colors duration-150 hover:text-[var(--vyz-text-primary)]"
+                    >
+                        Usar outro e-mail
+                    </button>
                 </div>
-            </div>
-        </div>
+            )}
+        </MolduraEntrada>
     );
 };
 
