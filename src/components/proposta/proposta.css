@@ -1,0 +1,156 @@
+/* ════════════════════════════════════════════════════════════════════════
+   Landings de proposta (gerador, planilha, Word). Escopo .vpr dentro de
+   .lp-v2.lp-solar.vb: herda os tokens da home e as peças do blog (blog.css).
+   Aqui só o que é próprio destas páginas: formulário, folha de prévia, caixa
+   de download e os cartões de "outros formatos".
+   ══════════════════════════════════════════════════════════════════════ */
+.vpr-palco { margin-top: 32px; }
+.vpr-corpo { max-width: 780px; padding-bottom: 32px; }
+.vpr-corpo > .vb-prosa { margin-top: 56px; }
+.vpr-secao { display: flex; flex-direction: column; gap: 20px; }
+.vpr-secao + .vpr-secao { margin-top: 12px; }
+.vpr-secao .vb-h2 { margin-top: 0; }
+
+/* ── Gerador: formulário e folha lado a lado ── */
+.vpr-gerador { display: grid; gap: 28px; align-items: start; }
+@media (min-width: 960px) { .vpr-gerador { grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 40px; } }
+
+.vpr-form {
+  display: grid;
+  gap: 22px;
+  padding: 22px 18px;
+  border: 1px solid var(--lp-line);
+  border-radius: 22px;
+  background: var(--lp-white, #fff);
+}
+@media (min-width: 640px) { .vpr-form { padding: 28px; } }
+.vpr-form__linha { display: grid; gap: 18px; }
+@media (min-width: 640px) { .vpr-form__linha { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.vpr-form__dupla { display: grid; gap: 18px; }
+@media (min-width: 640px) { .vpr-form__dupla { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.vpr-form fieldset { display: grid; gap: 18px; margin: 0; padding: 22px 0 0; border: 0; border-top: 1px solid var(--lp-line); }
+.vpr-form legend { float: left; width: 100%; padding: 0; font-size: 15px; font-weight: 700; }
+.vpr-form legend span { font-weight: 500; color: var(--lp-ink-muted); }
+
+.vpr-rotulo { display: block; margin-bottom: 8px; font-size: 15px; font-weight: 600; }
+.vpr-campo {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--lp-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--lp-ink);
+  font: inherit;
+  font-size: 16px; /* 16px evita o zoom do iOS ao focar */
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+textarea.vpr-campo { padding: 12px 14px; line-height: 1.5; resize: vertical; }
+.vpr-campo::placeholder { color: var(--lp-ink-subtle); opacity: 0.75; }
+.vpr-campo:hover { border-color: color-mix(in srgb, var(--lp-ink) 32%, transparent); }
+.vpr-campo:focus-visible { border-color: var(--lp-blue); box-shadow: 0 0 0 3px rgba(21, 86, 192, 0.18); }
+.vpr-campo[aria-invalid="true"] { border-color: #b42318; }
+.vpr-campo[aria-invalid="true"]:focus-visible { box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.16); }
+.vpr-erro { margin-top: 6px; font-size: 14px; font-weight: 500; color: #b42318; }
+.vpr-form__nota { font-size: 14px; line-height: 1.55; color: var(--lp-ink-muted); }
+.vpr-form .vs-btn { width: 100%; }
+.vpr-form .vs-btn svg { width: 18px; height: 18px; }
+
+/* Depois do download: o convite para acompanhar a proposta */
+.vpr-depois { padding: 24px 22px; border-radius: 22px; animation: vpr-sobe 320ms var(--vb-ease) both; }
+.vpr-depois:focus { outline: none; }
+.vpr-depois:focus-visible { outline: 3px solid var(--lp-blue); outline-offset: 3px; }
+.vpr-depois__titulo { font-size: clamp(1.35rem, 2.4vw, 1.7rem); line-height: 1.12; }
+.vpr-depois__texto { margin-top: 10px; font-size: 16px; line-height: 1.55; }
+.vpr-depois__linha { font-size: 14px; line-height: 1.5; }
+@keyframes vpr-sobe { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Folha: a prévia da proposta, nas proporções de uma A4 */
+.vpr-folha-caixa { position: relative; }
+@media (min-width: 960px) { .vpr-folha-caixa { position: sticky; top: 92px; } }
+.vpr-folha-rotulo { margin-bottom: 10px; font-size: 14px; font-weight: 600; color: var(--lp-ink-muted); }
+.vpr-folha {
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+  padding: 26px 24px 22px;
+  border-radius: 6px;
+  background: #fff;
+  color: #14161a;
+  font-family: Arial, Helvetica, sans-serif;
+  box-shadow: 0 0 0 1px rgba(13, 20, 33, 0.08), 0 1px 2px rgba(13, 20, 33, 0.05), 0 18px 40px -22px rgba(13, 20, 33, 0.35);
+  overflow-wrap: anywhere;
+}
+.vpr-folha__topo { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid #dadde1; font-size: 13px; }
+.vpr-folha__topo strong { font-weight: 700; }
+.vpr-folha__topo span { color: #5b616b; text-align: right; }
+.vpr-folha__sobre { margin-top: 26px; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; color: #5b616b; }
+.vpr-folha__titulo { margin-top: 8px; font-size: 22px; font-weight: 700; line-height: 1.15; letter-spacing: -0.01em; }
+.vpr-folha__meta { display: flex; gap: 32px; margin-top: 16px; }
+.vpr-folha__meta dt, .vpr-folha__num dt { font-size: 10.5px; color: #5b616b; }
+.vpr-folha__meta dd { margin: 2px 0 0; font-size: 13px; font-weight: 700; }
+.vpr-folha__nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 22px; }
+.vpr-folha__num { padding: 12px 10px; border-radius: 6px; background: #f4f5f3; }
+.vpr-folha__num dd { margin: 6px 0 0; font-size: 15px; font-weight: 700; line-height: 1.2; }
+.vpr-folha__num small { display: block; margin-top: 4px; font-size: 10.5px; font-weight: 400; color: #5b616b; }
+.vpr-folha__h { margin-top: 24px; font-size: 13.5px; font-weight: 700; }
+.vpr-folha__pag { margin-top: 8px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+.vpr-folha__aceite { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: auto; padding-top: 44px; }
+.vpr-folha__aceite div { padding-top: 6px; border-top: 1px solid #14161a; font-size: 11.5px; font-weight: 700; }
+.vpr-folha__aceite small { display: block; font-size: 10.5px; font-weight: 400; color: #5b616b; }
+.vpr-vazio { color: #9aa0a9; font-weight: 400; }
+
+/* ── Planilha e Word: caixa de download com a prévia ao lado ── */
+.vpr-baixa { display: grid; gap: 28px; align-items: start; }
+@media (min-width: 860px) { .vpr-baixa { grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 40px; } }
+.vpr-baixa__caixa { padding: 24px 22px; border: 1px solid var(--lp-line); border-radius: 22px; background: var(--lp-white, #fff); }
+@media (min-width: 640px) { .vpr-baixa__caixa { padding: 28px; } }
+.vpr-baixa__titulo { font-size: 18px; font-weight: 700; }
+.vpr-baixa__texto { margin-top: 8px; font-size: 16px; line-height: 1.55; color: var(--lp-ink-muted); }
+.vpr-baixa__botoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.vpr-baixa__botoes .vs-btn svg { width: 18px; height: 18px; }
+.vpr-baixa__linha { margin-top: 14px; font-size: 14px; color: var(--lp-ink-muted); }
+
+/* Recorte da planilha: os números do exemplo, com cara de célula */
+.vpr-grade { border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 0 0 1px rgba(13, 20, 33, 0.1), 0 1px 2px rgba(13, 20, 33, 0.05), 0 18px 40px -24px rgba(13, 20, 33, 0.3); }
+.vpr-grade table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.vpr-grade caption { padding: 12px 14px; text-align: left; font-size: 13.5px; line-height: 1.45; color: var(--lp-ink-muted); background: #f4f5f3; }
+.vpr-grade th, .vpr-grade td { padding: 12px 14px; border-top: 1px solid rgba(13, 20, 33, 0.1); text-align: left; vertical-align: top; }
+.vpr-grade th { font-weight: 500; color: var(--lp-ink-muted); }
+.vpr-grade td { font-weight: 700; text-align: right; white-space: nowrap; }
+
+.vpr-previa { border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 0 0 1px rgba(13, 20, 33, 0.1), 0 1px 2px rgba(13, 20, 33, 0.05), 0 18px 40px -24px rgba(13, 20, 33, 0.3); }
+.vpr-previa img { display: block; width: 100%; height: auto; }
+
+/* ── Atalho largo para o gerador (os cartões de "outros formatos" são .vb-atalho, do blog.css) ── */
+.vpr-atalho {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 36px;
+  padding: 20px;
+  border: 1.5px solid var(--lp-ink);
+  border-radius: 18px;
+  background: var(--lp-white, #fff);
+  color: var(--lp-ink);
+  transition: transform 160ms var(--vb-ease), box-shadow 160ms var(--vb-ease);
+}
+@media (min-width: 640px) { .vpr-atalho { flex-direction: row; align-items: center; justify-content: space-between; gap: 20px; } }
+.vpr-atalho__texto { font-size: 17px; line-height: 1.45; color: var(--lp-ink-muted); }
+.vpr-atalho__acao { display: inline-flex; align-items: center; gap: 8px; font-size: 16.5px; font-weight: 700; white-space: nowrap; }
+.vpr-atalho svg { width: 18px; height: 18px; transition: transform 220ms var(--vb-ease); }
+.vpr-atalho:focus-visible { outline: 3px solid var(--lp-blue); outline-offset: 3px; }
+.vpr-atalho:active { transform: none; box-shadow: none; }
+@media (hover: hover) and (pointer: fine) {
+  .vpr-atalho:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 0 var(--lp-ink); }
+  .vpr-atalho:hover svg { transform: translateX(4px); }
+}
+.vpr-outros { margin-top: 3.2rem; }
+.vpr-outros .vb-atalhos { margin-top: 20px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vpr-depois { animation: none; }
+  .vpr-campo, .vpr-atalho, .vpr-atalho svg { transition: none; }
+  .vpr-atalho:hover { transform: none; }
+}

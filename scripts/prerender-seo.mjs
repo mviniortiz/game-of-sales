@@ -348,6 +348,7 @@ function renderBlogBlock(b) {
     if (b.type === "mensagem") return `<figure style="margin:22px 0;padding:14px 16px;border-radius:12px;background:#efeae2;"><figcaption style="font-size:13px;color:#555;margin:0 0 8px;font-weight:600;">${escapeHtml(b.label || "Mensagem pronta")}</figcaption><p style="margin:0;padding:10px 12px;border-radius:10px;background:#d9fdd3;color:#111;white-space:pre-line;">${escapeHtml(b.text)}</p></figure>`;
     if (b.type === "prompt") return `<figure style="margin:22px 0;padding:16px;border-radius:12px;background:#0f1730;color:#fff;"><figcaption style="font-size:13px;color:#ffc933;margin:0 0 8px;font-weight:600;">${escapeHtml(b.label || "Prompt")}</figcaption><pre style="margin:0;white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:14px;line-height:1.6;">${escapeHtml(b.text)}</pre></figure>`;
     if (b.type === "lume") return `<aside style="margin:22px 0;padding:16px 18px;border-radius:12px;background:#e8effb;"><p style="font-weight:700;color:#111;margin:0 0 6px;">${escapeHtml(b.title)}</p><p style="color:#333;margin:0;">${escapeHtml(b.text)}</p></aside>`;
+    if (b.type === "atalhos") return `<p style="color:#222;margin:0 0 8px;">${escapeHtml(b.text)}</p><ul style="padding-left:20px;color:#222;margin:0 0 16px;">${b.items.map((it) => `<li style="margin:0 0 8px;"><a href="${escapeAttr(it.href)}" style="color:#1556C0;font-weight:600;">${escapeHtml(it.label)}</a>: ${escapeHtml(it.texto)}</li>`).join("")}</ul>`;
     if (b.type === "modelos") return `<ul style="padding-left:20px;color:#222;margin:0 0 16px;">${b.items.map((m) => `<li style="margin:0 0 12px;"><strong>${escapeHtml(m.titulo)}</strong>: ${escapeHtml(m.descricao)} ${m.arquivos.map((a) => `<a href="${escapeAttr(a.href)}" style="color:#1556C0;">Baixar em ${escapeHtml(a.label)}</a>`).join(" · ")}</li>`).join("")}</ul>`;
     if (b.type === "escolha") return `<section style="margin:22px 0;"><p style="font-weight:700;margin:0 0 8px;">${escapeHtml(b.titulo)}</p><ul style="padding-left:20px;color:#222;margin:0 0 16px;">${b.opcoes.map((o) => `<li style="margin:0 0 10px;">${escapeHtml(o.situacao)}: <strong>${escapeHtml(o.indicacao)}</strong>. ${escapeHtml(o.porque)}</li>`).join("")}</ul></section>`;
     if (b.type === "ficha") return `<aside style="margin:18px 0;padding:16px 18px;border:1px solid #e6e4dd;border-radius:12px;"><p style="font-size:13px;color:#555;margin:0 0 8px;">${escapeHtml(b.tipo)}</p><dl style="margin:0 0 12px;">${b.fatos.map(([k, v]) => `<dt style="font-weight:600;color:#111;">${escapeHtml(k)}</dt><dd style="margin:0 0 6px;color:#333;">${escapeHtml(v)}</dd>`).join("")}</dl><p style="margin:0 0 8px;color:#222;"><strong>Combina com:</strong> ${escapeHtml(b.combina)}</p><p style="margin:0;color:#222;"><strong>Fique de olho:</strong> ${escapeHtml(b.atencao)}</p>${b.fonte ? `<p style="margin:10px 0 0;font-size:13px;"><a href="${escapeAttr(b.fonte.href)}" rel="nofollow noopener" style="color:#1556C0;">${escapeHtml(b.fonte.label)}</a></p>` : ""}</aside>`;
@@ -526,6 +527,106 @@ async function buildBlogIndex(posts) {
     console.log(`✓ dist/blog/index.html  (${html.length.toLocaleString()} bytes)`);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// LANDINGS DE PROPOSTA (/gerador-proposta-energia-solar, /planilha-proposta-
+// energia-solar, /modelo-proposta-energia-solar-word)
+//
+// Mesma ideia do blog: cada página sai com title/description/canonical
+// próprios, o texto inteiro no <noscript> e JSON-LD de FAQ e trilha. FONTE
+// ÚNICA: o JSON que o React lê (src/data/landing/propostaLandings.content.json).
+const PROPOSTA = JSON.parse(
+    await readFile(path.join(ROOT, "src/data/landing/propostaLandings.content.json"), "utf8")
+);
+
+function renderPropostaNoscript(l) {
+    const secoes = l.secoes
+        .map((s) => {
+            const p = (s.p || []).map((t) => `<p style="color:#222;margin:0 0 16px;">${escapeHtml(t)}</p>`).join("");
+            const ol = s.ol ? `<ol style="padding-left:22px;color:#222;margin:0 0 16px;">${s.ol.map((t) => `<li style="margin:0 0 10px;">${escapeHtml(t)}</li>`).join("")}</ol>` : "";
+            const ul = s.ul ? `<ul style="padding-left:20px;color:#222;margin:0 0 16px;">${s.ul.map((t) => `<li style="margin:0 0 8px;">${escapeHtml(t)}</li>`).join("")}</ul>` : "";
+            return `<h2 style="font-size:21px;line-height:1.3;margin:30px 0 10px;">${escapeHtml(s.h2)}</h2>${p}${ol}${ul}`;
+        })
+        .join("\n        ");
+    const arquivos = (l.arquivos || []).length
+        ? `<p style="margin:0 0 20px;padding:14px 16px;border:1px solid #e6e4dd;border-radius:10px;"><strong>Baixe grátis, sem cadastro:</strong> ${l.arquivos.map((a) => `<a href="${escapeAttr(a.href)}" style="color:#1556C0;">${escapeHtml(a.label)}</a>`).join(" · ")}</p>`
+        : `<p style="margin:0 0 20px;padding:14px 16px;border:1px solid #e6e4dd;border-radius:10px;">O gerador roda no navegador e precisa do JavaScript ligado.</p>`;
+    const atalho = l.atalho
+        ? `<p style="margin:0 0 16px;">${escapeHtml(l.atalho.texto)} <a href="${escapeAttr(l.atalho.href)}" style="color:#1556C0;font-weight:600;">${escapeHtml(l.atalho.label)}</a></p>`
+        : "";
+    const outros = [
+        ...PROPOSTA.landings.filter((o) => o.slug !== l.slug).map((o) => ({ href: `/${o.slug}`, formato: o.formato, cartao: o.cartao })),
+        PROPOSTA.post,
+    ];
+    return `
+  <noscript>
+    <div style="max-width:720px;margin:0 auto;padding:32px 20px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.7;color:#111;">
+      <main>
+        <p style="font-size:13px;color:#555;margin:0 0 8px;">${escapeHtml(l.kicker)}</p>
+        <h1 style="font-size:32px;line-height:1.15;margin:0 0 14px;">${escapeHtml(l.h1)}</h1>
+        <p style="font-size:18px;color:#333;margin:0 0 24px;">${escapeHtml(l.sub)}</p>
+        ${arquivos}
+        ${secoes}
+        ${atalho}
+        <h2 style="font-size:21px;line-height:1.3;margin:30px 0 10px;">Perguntas frequentes</h2>
+        ${l.faq.map((f) => `<h3 style="font-size:17px;line-height:1.35;margin:22px 0 6px;">${escapeHtml(f.q)}</h3><p style="color:#222;margin:0 0 16px;">${escapeHtml(f.a)}</p>`).join("\n        ")}
+        <h2 style="font-size:21px;line-height:1.3;margin:30px 0 10px;">Outros formatos de proposta</h2>
+        <ul style="padding-left:20px;margin:0;">${outros.map((o) => `<li style="margin:0 0 8px;"><a href="${escapeAttr(o.href)}" style="color:#1556C0;font-weight:600;">${escapeHtml(o.formato)}</a>: ${escapeHtml(o.cartao)}</li>`).join("")}</ul>
+        <p style="margin:28px 0 0;">
+          <a href="/criar-conta?segmento=energia_solar" style="display:inline-block;padding:10px 18px;background:#111;color:#fff;text-decoration:none;border-radius:999px;margin:0 6px 6px 0;"><strong>Ver minhas propostas paradas</strong></a>
+          <span style="display:block;font-size:13px;color:#555;margin-top:6px;">Grátis e sem cartão. Você cria a conta, conecta o WhatsApp e em uns 3 minutos vê as propostas paradas dos últimos 90 dias.</span>
+        </p>
+      </main>
+      <footer style="border-top:1px solid #eee;margin-top:28px;padding-top:20px;font-size:13px;color:#555;">
+        <p style="margin:0;"><strong>Vyzon</strong>, o sistema que acompanha cada proposta de energia solar que você manda pelo WhatsApp. <a href="/" style="color:#1556C0;">vyzon.com.br</a> · <a href="/blog" style="color:#1556C0;">Blog</a></p>
+      </footer>
+    </div>
+  </noscript>`;
+}
+
+function renderPropostaJsonLd(l) {
+    const url = `${ORIGIN}/${l.slug}`;
+    const graph = [
+        {
+            "@type": "WebPage",
+            name: l.h1,
+            description: l.seoDescription,
+            inLanguage: "pt-BR",
+            url,
+            publisher: { "@type": "Organization", name: "Vyzon", url: `${ORIGIN}/` },
+        },
+        {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Vyzon", item: `${ORIGIN}/` },
+                { "@type": "ListItem", position: 2, name: l.h1, item: url },
+            ],
+        },
+        {
+            "@type": "FAQPage",
+            mainEntity: l.faq.map((f) => ({
+                "@type": "Question",
+                name: f.q,
+                acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
+        },
+    ];
+    return `<script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@graph": graph })}</script>`;
+}
+
+async function buildPropostaLanding(l) {
+    const template = await readFile(TEMPLATE_PATH, "utf8");
+    let html = rewriteHead(template, { slug: l.slug, seo: { title: l.seoTitle, description: l.seoDescription } });
+    html = stripHomeNoscripts(html);
+    html = html.replace("</body>", `${renderPropostaNoscript(l)}\n</body>`);
+    html = stripHomeJsonLd(html);
+    html = html.replace("</head>", `  ${renderPropostaJsonLd(l)}\n</head>`);
+
+    const outDir = path.join(DIST, l.slug);
+    if (!existsSync(outDir)) await mkdir(outDir, { recursive: true });
+    await writeFile(path.join(outDir, "index.html"), html, "utf8");
+    console.log(`✓ dist/${l.slug}/index.html  (${html.length.toLocaleString()} bytes)`);
+}
+
 if (!existsSync(TEMPLATE_PATH)) {
     console.error(`✗ ${TEMPLATE_PATH} não encontrado. Rode 'vite build' primeiro.`);
     process.exit(1);
@@ -541,5 +642,8 @@ for (const cfg of SIMPLE_ROUTES) {
 await buildBlogIndex(BLOG_POSTS);
 for (const post of BLOG_POSTS) {
     await buildBlogPost(post);
+}
+for (const landing of PROPOSTA.landings) {
+    await buildPropostaLanding(landing);
 }
 console.log("\nDone.");

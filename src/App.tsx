@@ -28,6 +28,10 @@ const SolarAngleRoute = () => {
 };
 const BlogV2 = lazy(() => import("./pages/BlogV2"));
 const BlogPostV2 = lazy(() => import("./pages/BlogPostV2"));
+// Landings de proposta de energia solar: gerador em PDF, planilha e modelo em Word.
+const GeradorProposta = lazy(() => import("./pages/proposta/GeradorProposta"));
+const PlanilhaProposta = lazy(() => import("./pages/proposta/PlanilhaProposta"));
+const ModeloPropostaWord = lazy(() => import("./pages/proposta/ModeloPropostaWord"));
 
 // Página temporária de validação da nova lateral da Lume na Inbox (remover após integrar).
 const EvaAssistPreview = lazy(() => import("./pages/EvaAssistPreview"));
@@ -54,6 +58,9 @@ const App = () => (
         <Route path="/relatorio/:token" element={<Suspense fallback={<LazyFallback />}><RaioXReport /></Suspense>} />
         <Route path="/blog" element={<Suspense fallback={<LazyFallback />}><BlogV2 /></Suspense>} />
         <Route path="/blog/:slug" element={<Suspense fallback={<LazyFallback />}><BlogPostV2 /></Suspense>} />
+        <Route path="/gerador-proposta-energia-solar" element={<Suspense fallback={<LazyFallback />}><GeradorProposta /></Suspense>} />
+        <Route path="/planilha-proposta-energia-solar" element={<Suspense fallback={<LazyFallback />}><PlanilhaProposta /></Suspense>} />
+        <Route path="/modelo-proposta-energia-solar-word" element={<Suspense fallback={<LazyFallback />}><ModeloPropostaWord /></Suspense>} />
         {/* Personas /para-* despublicadas 2026-06-16 — 301 → home no vercel.json. */}
         {/* /alternativas e /alternativa-* despublicadas 2026-11-03 (comparativo de CRM genérico, fora do nicho solar) — 301 → home no vercel.json. */}
         {/* Rotas /crm-* despublicadas 2026-06-10 — 301 → home no vercel.json. */}

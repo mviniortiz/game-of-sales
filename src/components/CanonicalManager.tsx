@@ -13,6 +13,9 @@ const SELF_CANONICAL = new Set<string>([
   "/politica-privacidade",
   "/termos-de-servico",
   "/blog",
+  "/gerador-proposta-energia-solar",
+  "/planilha-proposta-energia-solar",
+  "/modelo-proposta-energia-solar-word",
 ]);
 
 // Rotas com slug dinâmico que devem ter canonical próprio (a URL real da página).

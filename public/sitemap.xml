@@ -101,6 +101,26 @@
     <priority>0.4</priority>
   </url>
 
+  <!-- Ferramentas e modelos de proposta (prerenderizados em dist/<slug>/ por scripts/prerender-seo.mjs) -->
+  <url>
+    <loc>https://vyzon.com.br/gerador-proposta-energia-solar</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://vyzon.com.br/planilha-proposta-energia-solar</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://vyzon.com.br/modelo-proposta-energia-solar-word</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
   <!-- Legais -->
   <url>
     <loc>https://vyzon.com.br/politica-privacidade</loc>

@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { ArrowDown, ArrowUpRight, Check, Copy, Download } from "lucide-react";
 import { EvaBot } from "@/components/eva/EvaBot";
 import { headingId, type BlogBlock, type BlogModelo, type BlogOpcao } from "@/data/landing/blogPosts";
@@ -286,6 +287,24 @@ export function Block({ block, onEvent }: { block: BlogBlock; onEvent: (placemen
             return <Escolha titulo={block.titulo} opcoes={block.opcoes} onEvent={onEvent} />;
         case "ficha":
             return <Ficha block={block} onEvent={onEvent} />;
+        case "atalhos":
+            return (
+                <nav aria-label={block.text}>
+                    <p className="vb-p">{block.text}</p>
+                    <ul className="vb-atalhos mt-4">
+                        {block.items.map((it) => (
+                            <li key={it.href}>
+                                <Link to={it.href} className="vb-atalho" onClick={() => onEvent("atalho", { destino: it.href })}>
+                                    <span className="vb-atalho__nome">
+                                        {it.label} <ArrowUpRight aria-hidden="true" />
+                                    </span>
+                                    <span className="vb-atalho__texto">{it.texto}</span>
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+            );
         case "modelos":
             return <Modelos items={block.items} onDownload={(label) => onEvent("download", { arquivo: label })} />;
         default:
