@@ -7,6 +7,7 @@ import { EvaBot } from "@/components/eva/EvaBot";
 import { BLOG_POSTS, BLOG_CATEGORIES, formatBlogDate, readMinutes, type BlogModelo, type BlogPost } from "@/data/landing/blogPosts";
 import { logLandingEvent, useContentFunnel } from "@/lib/landingFunnel";
 import "@/components/blog/blog.css";
+import { PROPOSTA_LANDINGS } from "@/data/landing/propostaLandings";
 
 // Blog (rota /blog) no sistema Lume em campo, o mesmo da home: creme, Geist 600,
 // faixas chapadas de sol e noite, cartões brancos e a Lume sentada na borda.
@@ -181,6 +182,13 @@ const BlogV2 = () => {
                                     </li>
                                 ))}
                             </ul>
+                            <nav className="vb-modelos-faixa__mais" aria-label="Outros formatos de proposta">
+                                {PROPOSTA_LANDINGS.map((l) => (
+                                    <Link key={l.slug} to={`/${l.slug}`} className="vb-link-claro" onClick={() => cta(`landing:${l.slug}`)}>
+                                        {l.formato} <ArrowRight aria-hidden="true" />
+                                    </Link>
+                                ))}
+                            </nav>
                         </div>
                     </section>
                 )}

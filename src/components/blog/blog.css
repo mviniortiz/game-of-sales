@@ -158,6 +158,7 @@
 .vb-link-claro { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: #fff; }
 .vb-link-claro svg { width: 17px; height: 17px; transition: transform 220ms var(--vb-ease); }
 .vb-link-claro:hover svg { transform: translateX(4px); }
+.vb-modelos-faixa__mais { display: flex; flex-wrap: wrap; gap: 12px 28px; margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(255, 255, 255, 0.14); }
 .vb-mini-modelos { display: grid; gap: 16px; margin: 28px 0 0; padding: 0; list-style: none; }
 @media (min-width: 720px) { .vb-mini-modelos { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
 .vb-mini-modelo { display: flex; flex-direction: column; gap: 12px; }
