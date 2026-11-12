@@ -35,6 +35,10 @@ export type QuoteItem = {
   draft_at: string | null;
   system_kwp?: number | null;
   stop_reason?: StopReason | null;
+  /** Tique azul na mensagem do orçamento. Não prova que abriu o PDF. */
+  seen?: boolean;
+  /** Quando o tique azul chegou; vazio se chegou antes do rastreio. */
+  seen_at?: string | null;
 };
 
 export type QuoteBoard = {
@@ -72,6 +76,7 @@ export const EMPTY_QUOTE_BOARD: QuoteBoard = {
 };
 
 const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString();
+const hoursAgo = (n: number) => new Date(Date.now() - n * 3_600_000).toISOString();
 const sampleItem = (p: Partial<QuoteItem> & Pick<QuoteItem, "id" | "state" | "days">): QuoteItem => ({
   deal_id: `d-${p.id}`, conversation_id: `c-${p.id}`, contact_name: null, contact_phone: null, amount: null,
   detected_by: "pdf", sent_at: daysAgo(p.days), outcome: null, recovered: false, followup_sent_at: null,
@@ -79,18 +84,19 @@ const sampleItem = (p: Partial<QuoteItem> & Pick<QuoteItem, "id" | "state" | "da
 });
 const SAMPLE_QUOTE_BOARD: QuoteBoard = {
   totals: {
-    parked_amount: 115_300, parked_count: 5, no_reply_count: 3, went_quiet_count: 2,
+    parked_amount: 135_000, parked_count: 6, no_reply_count: 4, went_quiet_count: 2,
     your_turn_amount: 18_400, your_turn_count: 1, talking_count: 1,
     recovered_amount: 23_900, recovered_count: 1, won_amount: 35_500, won_count: 2,
-    lost_count: 1, expired_count: 1, total_count: 11,
+    lost_count: 1, expired_count: 1, total_count: 12,
   },
   items: [
     sampleItem({ id: "p1", state: "your_turn", days: 1, contact_name: "Marcos Vieira", amount: 18_400, sent_at: daysAgo(6) }),
     sampleItem({ id: "p2", state: "went_quiet", days: 8, contact_name: "Padaria Trigo Bom", amount: 61_200, sent_at: daysAgo(12), draft_status: "pending", draft_at: daysAgo(0) }),
-    sampleItem({ id: "p3", state: "no_reply", days: 5, contact_name: "Carlos Menezes", amount: 23_900, draft_status: "sent", draft_at: daysAgo(3), followup_sent_at: daysAgo(3) }),
+    sampleItem({ id: "p3", state: "no_reply", days: 5, contact_name: "Carlos Menezes", amount: 23_900, draft_status: "sent", draft_at: daysAgo(3), followup_sent_at: daysAgo(3), seen: true, seen_at: daysAgo(4) }),
     sampleItem({ id: "p4", state: "went_quiet", days: 4, contact_name: "Juliana Rocha", amount: 14_300, sent_at: daysAgo(9) }),
     sampleItem({ id: "p5", state: "no_reply", days: 22, contact_name: "Ana Paula Ribeiro", amount: 15_900, draft_status: "rejected", draft_at: daysAgo(19) }),
-    sampleItem({ id: "p6", state: "no_reply", days: 1, contact_name: null, contact_phone: "5521988887777", amount: null, detected_by: "text" }),
+    sampleItem({ id: "p6", state: "no_reply", days: 1, contact_name: null, contact_phone: "5521988887777", amount: null, detected_by: "text", seen: true, seen_at: hoursAgo(3) }),
+    sampleItem({ id: "p12", state: "no_reply", days: 3, contact_name: "Oficina Duas Rodas", amount: 19_700, draft_status: "pending", draft_at: daysAgo(0), seen: true, seen_at: daysAgo(2) }),
     sampleItem({ id: "p7", state: "talking", days: 1, contact_name: "Condomínio Vila Verde", amount: 142_000, sent_at: daysAgo(4) }),
     sampleItem({ id: "p8", state: "won", days: 2, contact_name: "Rafael Nunes", amount: 23_900, recovered: true, outcome: "won", followup_sent_at: daysAgo(9), sent_at: daysAgo(16) }),
     sampleItem({ id: "p9", state: "won", days: 6, contact_name: "Mercado Bom Preço", amount: 11_600, outcome: "won", sent_at: daysAgo(14) }),

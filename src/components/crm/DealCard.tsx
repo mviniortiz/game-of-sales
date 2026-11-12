@@ -25,7 +25,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { proximaAcaoLabel } from "@/lib/eva/qualificationSchema";
 import type { QuoteItem } from "@/hooks/useQuoteBoard";
-import { ago, evaLine, stateLine } from "@/lib/quoteText";
+import { ago, evaLine, quando, seenLine, stateLine } from "@/lib/quoteText";
 import type { PipelineDealContext } from "@/hooks/usePipelineContextData";
 // F6T.2 — tags transversais (sistema F6T.1) substituem visualmente o deal_tags legado
 import type { Tag } from "@/types/tags";
@@ -75,7 +75,14 @@ const EVA_DERIVED_READ: Record<string, string> = {
 export function quoteStatus(q: QuoteItem): { text: string; tone: string; dot: string } | null {
   switch (q.state) {
     case "no_reply":
-      return { text: `Sem resposta ao orçamento · ${ago(q.days)}`, tone: "text-amber-700 dark:text-amber-300", dot: "bg-amber-500" };
+      return {
+        // Card é estreito: "Viu ontem às 14:32" cabe; a frase inteira fica no title.
+        text: seenLine(q)
+          ? (q.seen_at ? `Viu ${quando(q.seen_at)}, sem resposta` : "Viu, sem resposta")
+          : `Sem resposta ao orçamento · ${ago(q.days)}`,
+        tone: "text-amber-700 dark:text-amber-300",
+        dot: "bg-amber-500",
+      };
     case "went_quiet":
       return { text: `Cliente sumiu · ${ago(q.days)}`, tone: "text-amber-700 dark:text-amber-300", dot: "bg-amber-500" };
     case "your_turn":
@@ -815,7 +822,7 @@ export const DealCard = memo(({ deal, isDragging = false, formatCurrency, onDele
           {quote && quoteStatus(quote) ? (
             <span
               className={`inline-flex items-center gap-1 tabular-nums whitespace-nowrap flex-shrink-0 font-medium ${quoteStatus(quote)!.tone}`}
-              title={stateLine(quote)}
+              title={[stateLine(quote), seenLine(quote)].filter(Boolean).join(" · ")}
             >
               <span className={`w-1.5 h-1.5 rounded-full ${quoteStatus(quote)!.dot}`} aria-hidden />
               {quoteStatus(quote)!.text}
