@@ -488,6 +488,13 @@ const MOTIVO: Record<StopReason, { nome: string; tom?: "ruim" }> = {
 const chipDe = (q: QuoteItem) => (OPEN_QUOTE_STATES.includes(q.state) && q.stop_reason ? MOTIVO[q.stop_reason] : SITUACAO[q.state]);
 const kwp = (q: QuoteItem) => (q.system_kwp != null ? `${String(q.system_kwp).replace(".", ",")} kWp` : null);
 
+// Retomada esperando o 1 do dono vem antes de tudo: no celular não tem painel.
+const linhaDe = (q: QuoteItem) =>
+  (q.draft_status === "pending" ? evaLine(q) : null) ||
+  [kwp(q), seenLine(q)].filter(Boolean).join(" · ") ||
+  evaLine(q) ||
+  (q.detected_by === "pdf" ? "Orçamento em PDF" : "Orçamento por mensagem");
+
 function QuoteRow({
   q, aberta, onAbrir, pending, onOutcome,
 }: { q: QuoteItem; aberta: boolean; onAbrir: () => void; pending: boolean; onOutcome: (o: QuoteOutcome) => void }) {
@@ -508,7 +515,7 @@ function QuoteRow({
         <button type="button" className={`truncate text-left text-[15px] font-semibold text-[var(--vyz-text-primary)] ${FOCUS}`} aria-pressed={aberta}>
           {name}
         </button>
-        <span>{[kwp(q), seenLine(q)].filter(Boolean).join(" · ") || evaLine(q) || (q.detected_by === "pdf" ? "Orçamento em PDF" : "Orçamento por mensagem")}</span>
+        <span>{linhaDe(q)}</span>
       </span>
       <span className="vp-chip" data-tom={situacao.tom}>{situacao.nome}</span>
       <span className="vp-fila__dias">
