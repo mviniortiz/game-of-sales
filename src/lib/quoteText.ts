@@ -45,6 +45,28 @@ export function stateLine(q: QuoteItem): string {
   }
 }
 
+const hora = (d: Date) => d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+/** "hoje às 14:32", "ontem às 09:10", "08/11 às 18:05". */
+export function quando(iso: string, agora: Date = new Date()): string {
+  const d = new Date(iso);
+  const dia = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((dia(agora) - dia(d)) / 86_400_000);
+  if (diff <= 0) return `hoje às ${hora(d)}`;
+  if (diff === 1) return `ontem às ${hora(d)}`;
+  return `${d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} às ${hora(d)}`;
+}
+
+/**
+ * Tique azul na mensagem do orçamento que ainda não teve resposta. Depois que o
+ * cliente responde, ter visto é óbvio e a linha some. Sem tique não diz nada:
+ * quem desligou a confirmação de leitura nunca aparece como visto.
+ */
+export function seenLine(q: Pick<QuoteItem, "state" | "seen" | "seen_at">, agora?: Date): string | null {
+  if (q.state !== "no_reply" || !q.seen) return null;
+  return q.seen_at ? `Viu a mensagem ${quando(q.seen_at, agora)}` : "Viu a mensagem";
+}
+
 /** O que a Lume fez por este orçamento. Só para orçamento aberto. */
 export function evaLine(q: QuoteItem): string | null {
   if (!OPEN_QUOTE_STATES.includes(q.state) || !q.draft_status) return null;
