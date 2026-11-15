@@ -361,7 +361,7 @@ export function buildDraftMessage(params: {
     linhas.push("", params.text, "");
     linhas.push(params.noGrupo
         ? "👍 envia · 👎 descarta · ou responda esta mensagem com o texto corrigido"
-        : "Responda 1 para enviar, 2 para descartar, ou escreva o texto corrigido.");
+        : "Responda 1 para enviar, 2 para descartar, ou responda esta mensagem com o texto corrigido.");
     return linhas.join("\n");
 }
 
@@ -605,6 +605,12 @@ export function parseOwnerCommand(rawText: string): ParsedCommand {
     if (inicio.startsWith(EVA_PREFIX.toLowerCase()) || inicio.startsWith(PREFIXO_ANTIGO.toLowerCase())) {
         return { code: null, intent: "none" };
     }
+    // Aviso automático de outra ferramenta no mesmo chat ("📤 Prospecção: enviei...",
+    // "🔔 ... respondeu"): começa com emoji. Sem isso, com um rascunho só aberto, o
+    // aviso virava "texto corrigido" e saía para o lead.
+    if (/^\p{Extended_Pictographic}/u.test(raw)) {
+        return { code: null, intent: "none" };
+    }
 
     let rest = raw;
     let code: string | null = null;
@@ -653,6 +659,10 @@ export async function handleOwnerCommand(
 
     const parsed = parseOwnerCommand(params.text);
     if (parsed.intent === "none" && !parsed.code) return { handled: false };
+    // Texto corrigido só vale com código (A2 texto) ou respondendo o aviso. Texto
+    // solto no chat do dono é anotação ou aviso de outra ferramenta: em 02/11 um
+    // aviso do Workana virou "texto corrigido" do único rascunho aberto e saiu pro lead.
+    if (parsed.intent === "replace" && !parsed.code && !params.targetSuggestionId) return { handled: false };
 
     // Desfazer: a mensagem aprovada ainda está nos 20 segundos de espera. "2" e
     // "cancela" logo depois do "1" também valem como desfazer.
@@ -666,7 +676,7 @@ export async function handleOwnerCommand(
                 .update({ status: "pending", send_at: null, applied_payload: null })
                 .eq("id", agendado.id).eq("status", "agendado").select("id").maybeSingle();
             if (voltou) {
-                await reply(`Desfeito, não enviei. O rascunho ${agendado.approval_code} continua aberto: responda 1 para enviar, 2 para descartar ou escreva o texto corrigido.`);
+                await reply(`Desfeito, não enviei. O rascunho ${agendado.approval_code} continua aberto: responda 1 para enviar, 2 para descartar ou ${agendado.approval_code} e o texto corrigido.`);
                 return { handled: true, action: "desfeito", suggestionId: agendado.id };
             }
         }
@@ -726,7 +736,7 @@ export async function handleOwnerCommand(
     }
 
     if (parsed.intent === "none") {
-        await reply(`Rascunho ${target.approval_code}: responda 1 para enviar, 2 para descartar, ou escreva o texto corrigido.`,
+        await reply(`Rascunho ${target.approval_code}: responda 1 para enviar, 2 para descartar, ou ${target.approval_code} e o texto corrigido.`,
         );
         return { handled: true, action: "help", suggestionId: target.id };
     }
