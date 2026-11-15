@@ -58,10 +58,50 @@ O nome do remetente das edges vem do secret `RESEND_FROM_EMAIL` (hoje
 "Markus — Vyzon", com travessão); o dos e-mails de auth vem do SMTP do painel
 ("Vyzon" <contato@vyzon.com.br>).
 
+## Link que a prévia não gasta (15/11/2026)
+
+O link direto do Supabase (`{{ .ConfirmationURL }}`, `/auth/v1/verify?token=...`)
+entra no primeiro acesso, seja de quem for. A prévia de link do WhatsApp e o
+antivírus de e-mail abrem o endereço sozinhos e gastam o link antes da pessoa. Em
+11/11/2026 as duas sessões da única conta criada à mão eram do robô de prévia do
+WhatsApp (`WhatsApp/2.23.20.0` em `auth.sessions`).
+
+Convite e recuperar senha agora levam à nossa página com o código:
+
+```
+{{ .SiteURL }}/redefinir-senha?token_hash={{ .TokenHash }}&type=invite
+{{ .SiteURL }}/redefinir-senha?token_hash={{ .TokenHash }}&type=recovery
+```
+
+Abrir a página não gasta nada. O código só é conferido quando a pessoa salva a
+senha (`RedefinirSenha`, `src/lib/linkDeAcesso.ts`). O link antigo segue aceito
+para e-mail já enviado.
+
+**Falta aplicar em produção** (o código sozinho não muda o e-mail que sai):
+
+1. Publicar o site com esta página (merge na `main`). Antes disso o link novo cai
+   numa página que não sabe ler o código.
+2. Depois, colar `supabase/email-templates/invite.html` e `reset-password.html` no
+   painel do Supabase (Authentication, Emails, Templates: "Invite user" e "Reset
+   password").
+3. Conferir em Authentication, URL Configuration que o Site URL é
+   `https://vyzon.com.br` (é o `{{ .SiteURL }}`).
+
+Link gerado à mão para mandar por WhatsApp: use `auth.admin.generateLink` e monte
+o endereço com `properties.hashed_token` no formato acima (`montarLinkDeAcesso`).
+Nunca cole o `action_link` no WhatsApp.
+
+O convite vale 1 hora (`mailer_otp_exp = 3600`). Dona que abre o e-mail no dia
+seguinte cai em "Esse link venceu" e precisa pedir outro. O painel aceita até
+86400 (24h) em Authentication, Emails, "Email OTP Expiration"; se mudar, troque
+"1 hora" em `mensagens.ts` e em `RedefinirSenha.tsx` e rode o gerador.
+
 ## Achados que ficaram de fora
 
-- `mailer_autoconfirm = true` no painel: o e-mail de confirmação de cadastro não sai
-  em produção, e o `config.toml` diz `enable_confirmations = true`.
+- `mailer_autoconfirm = true` no painel (conferido de novo em 15/11/2026 em
+  `/auth/v1/settings`): o e-mail de confirmação de cadastro não sai em produção, e
+  o `config.toml` diz `enable_confirmations = true`. Confirmar cadastro e trocar
+  e-mail seguem com `{{ .ConfirmationURL }}`.
 - `admin-create-seller` manda a senha do vendedor por e-mail, em texto. O ideal é um
   convite com link para a pessoa criar a própria senha.
 - Remetente padrão agora é `Vyzon <suporte@vyzon.com.br>` em todas as edges quando

@@ -305,6 +305,7 @@ import { Button } from "@/components/ui/button";
 import { FileDown, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { medirPropostaGerada } from "@/lib/proposta/medir";
 
 interface ProposalPDFButtonProps {
     deal: { id: string; title: string; customer_name: string; customer_email?: string; customer_phone?: string };
@@ -329,6 +330,7 @@ export const ProposalPDFButton = ({ deal, products, companyName, logoUrl, brandC
                 companyName, logoUrl, brandColor, dealTitle: deal.title,
                 customerName: deal.customer_name, customerEmail: deal.customer_email, customerPhone: deal.customer_phone, items,
             });
+            medirPropostaGerada({ origem: "produtos_do_negocio", itens: items.length, valor: computeProposalTotal(items), pdf: true });
             toast.success(`Proposta gerada: ${fileName}`);
         } catch (error) {
             console.error("Error generating PDF:", error);

@@ -12,6 +12,7 @@ import {
   DEFAULT_SECTIONS, SECTION_LABELS,
   type ProposalItem, type ProposalSection,
 } from "./ProposalPDFGenerator";
+import { medirPropostaGerada } from "@/lib/proposta/medir";
 
 interface NovaPropostaModalProps {
   open: boolean;
@@ -55,7 +56,7 @@ export function NovaPropostaModal({ open, onClose, deal, companyName, logoUrl }:
     setSections(DEFAULT_SECTIONS.map((s) => ({ ...s }))); setBrandColor("#1556C0");
   };
 
-  const persist = async (): Promise<boolean> => {
+  const persist = async (pdf: boolean): Promise<boolean> => {
     if (validItems.length === 0) { toast.error("Adicione ao menos um item com nome"); return false; }
     setBusy(true);
     try {
@@ -66,17 +67,18 @@ export function NovaPropostaModal({ open, onClose, deal, companyName, logoUrl }:
         conditions: conditions.trim() || null, intro: intro.trim() || null, about: about.trim() || null,
         brand_color: brandColor, sections, total,
       });
+      medirPropostaGerada({ origem: "editor", itens: validItems.length, valor: total, pdf });
       return true;
     } catch { toast.error("Erro ao salvar a proposta"); return false; }
     finally { setBusy(false); }
   };
 
   const handleSave = async () => {
-    if (await persist()) { toast.success("Proposta salva!"); reset(); onClose(); }
+    if (await persist(false)) { toast.success("Proposta salva!"); reset(); onClose(); }
   };
 
   const handleSaveAndPdf = async () => {
-    if (await persist()) {
+    if (await persist(true)) {
       await generateProposalPDF({
         companyName, logoUrl, brandColor, dealTitle: deal.title,
         customerName: deal.customer_name || "Cliente", customerEmail: deal.customer_email || undefined, customerPhone: deal.customer_phone || undefined,

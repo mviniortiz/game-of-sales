@@ -1,16 +1,27 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, CheckCircle2, Circle, Clock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthField } from "@/components/auth/AuthField";
 import { MolduraEntrada, SeloEntrada } from "@/components/auth/MolduraEntrada";
 import { APP_HOME } from "@/config/routes";
+import { linkNoEndereco } from "@/lib/linkDeAcesso";
 
 // Escolher senha: aonde chegam o link de "recuperar senha", o convite de
-// integradora nova e o link de acesso direto. A sessão vem do link
-// (PASSWORD_RECOVERY ou SIGNED_IN); sem ela em alguns segundos, ou com erro no
-// endereço, o link venceu e a tela diz isso em vez de ficar em "Verificando".
-// Texto neutro de propósito: serve pra quem troca e pra quem cria a primeira.
+// integradora nova e o link de acesso direto.
+//
+// O link dos e-mails traz ?token_hash=...&type=... e só é gasto quando a
+// pessoa salva a senha. Abrir a página não gasta nada: a prévia de link do
+// WhatsApp e o antivírus do e-mail abrem o endereço sozinhos, e com o link
+// antigo do Supabase (que entrava no primeiro acesso) eles gastavam o link
+// antes da dona. Em 11/11/2026 as duas sessões da única conta criada à mão
+// eram do robô de prévia do WhatsApp.
+//
+// O formato antigo segue aceito para e-mail já enviado: a sessão vem no
+// endereço (PASSWORD_RECOVERY ou SIGNED_IN); sem ela em alguns segundos, ou com
+// erro no endereço, o link venceu e a tela diz isso em vez de ficar em
+// "Verificando". Texto neutro de propósito: serve pra quem troca e pra quem
+// cria a primeira.
 const ESPERA_LINK_MS = 8000;
 const MIN = 8;
 
@@ -25,7 +36,10 @@ const erroNoEndereco = () => {
 
 const RedefinirSenha = () => {
     const navigate = useNavigate();
-    const [fase, setFase] = useState<Fase>(() => (erroNoEndereco() ? "venceu" : "abrindo"));
+    // Guardado na montagem: o endereço é limpo depois que o link é gasto.
+    const [link] = useState(() => linkNoEndereco());
+    const linkGasto = useRef(false);
+    const [fase, setFase] = useState<Fase>(() => (erroNoEndereco() ? "venceu" : link ? "pronto" : "abrindo"));
     const [senha, setSenha] = useState("");
     const [confirma, setConfirma] = useState("");
     const [ver, setVer] = useState(false);
@@ -71,6 +85,23 @@ const RedefinirSenha = () => {
 
         setLoading(true);
         try {
+            // O link só é gasto aqui, por quem digitou a senha. Se salvar a senha
+            // falhar depois, a sessão já existe e a nova tentativa pula este passo.
+            if (link && !linkGasto.current) {
+                const { error: erroLink } = await supabase.auth.verifyOtp(link);
+                if (erroLink) {
+                    // Sem resposta do servidor o link não foi gasto: dá para tentar de novo.
+                    if (!erroLink.status) {
+                        setErros({ form: "Não deu para conferir o link. Confira sua internet e tente de novo." });
+                        setErroKey((k) => k + 1);
+                    } else {
+                        setFase("venceu");
+                    }
+                    return;
+                }
+                linkGasto.current = true;
+                window.history.replaceState(null, "", window.location.pathname);
+            }
             const { error } = await supabase.auth.updateUser({ password: senha });
             if (!error) {
                 setFase("salvo");

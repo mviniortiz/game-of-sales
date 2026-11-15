@@ -1,6 +1,6 @@
 # Plano de tagging do app (como as integradoras usam o Vyzon)
 
-Versão 1, 08/11/2026. Vale para o app logado. O site e o blog seguem `landing_events` e `src/lib/landingFunnel.ts`.
+Versão 1, 08/11/2026. Vale para o app logado. O site e o blog seguem `landing_events` e `src/lib/landingFunnel.ts`, com o dicionário em `docs/analytics/medicao-site.md`.
 
 ## Perguntas que o plano responde
 
@@ -79,6 +79,17 @@ Tudo passa por um helper só, `trackApp(evento, props)` em `src/lib/appAnalytics
 | `deal_stage_changed` | Mudou de etapa | `para_tipo` (aberta, ganho, perdido), `origem` (arrastar, menu) |
 | `quote_outcome_set` | Marcou resultado no Orçamentos | `resultado` |
 | `filter_applied` | Trocou filtro ou aba de lista | `tela`, `filtro` |
+| `proposal_generated` | Proposta salva no editor do negócio, ou PDF gerado dos produtos do negócio | `origem` (editor, produtos_do_negocio), `itens`, `valor`, `pdf` (sim/não) |
+
+### Marcos (uma vez por empresa)
+
+Saem por `trackPrimeiroDaEmpresa`, que conta no banco e só dispara quando é mesmo o primeiro. Antes de 15/11/2026, `first_deal_created` e `first_sale_created` saíam a cada negócio e a cada venda.
+
+| Evento | Quando | Props |
+| --- | --- | --- |
+| `first_deal_created` | Primeiro negócio da empresa | |
+| `first_sale_created` | Primeira venda da empresa | `valor` |
+| `first_proposal_generated` | Primeira proposta da empresa. Marco de ativação e evento-chave no GA4 | `origem` |
 
 ### Lembretes e equipe
 
@@ -86,7 +97,7 @@ Tudo passa por um helper só, `trackApp(evento, props)` em `src/lib/appAnalytics
 | --- | --- | --- |
 | `reminder_completed` | Concluiu lembrete | `atrasado` (sim/não) |
 | `reminder_snoozed` | Adiou lembrete | |
-| `team_invite_sent` | Já existe em `FUNNEL_EVENTS` | |
+| `team_invite_sent` | Reservado: nenhuma tela dispara ainda | |
 
 O que já acontece no servidor não vira evento de tela. Aprovação do aviso da Lume pelo WhatsApp (1, 2 ou texto), orçamento que voltou e obra criada pelo negócio ganho já estão nas tabelas `agent_suggestions`, `quote_tracking` e `obras`. As views juntam esses dados com `app_events`.
 

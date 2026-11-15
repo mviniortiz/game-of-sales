@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { usePlano } from "@/hooks/usePlano";
-import { clarityIdentify, claritySet } from "@/lib/analytics";
+import { clarityIdentify, claritySet, marcarInterno } from "@/lib/analytics";
 import { APP_EVENTS, setAppContext, telaDaRota, trackApp } from "@/lib/appAnalytics";
 
 const INICIO_KEY = "vyz_app_sessao_iniciada";
@@ -28,6 +28,8 @@ export function AppAnalytics() {
             clarityIdentify(user.id);
             if (empresa) claritySet("empresa", empresa);
             claritySet("papel", isSuperAdmin ? "super_admin" : isAdmin ? "admin" : "vendedor");
+            // Navegador do time: sai dos relatórios pelo filtro de tráfego interno do GA4.
+            if (isSuperAdmin) marcarInterno();
             if (!carregando) claritySet("plano", pago ? "pago" : "free");
         } catch {
             // analytics nunca quebra a tela

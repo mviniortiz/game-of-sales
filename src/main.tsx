@@ -37,8 +37,8 @@ if (typeof window !== "undefined") {
 
   // initAnalytics carrega gtag.js (~320KB gzip GA4+GAds) — aguarda primeira
   // interação OU timeout 4s. Mesmo pattern do Meta Pixel em index.html —
-  // tira gtag da janela TBT do Lighthouse sem perder conversions (usuário
-  // sempre interage antes de submeter form de demo).
+  // tira gtag da janela TBT do Lighthouse. O que dispara antes disso espera na
+  // fila do analytics.ts e sai quando o script carrega.
   let analyticsBooted = false;
   const bootAnalytics = () => {
     if (analyticsBooted) return;

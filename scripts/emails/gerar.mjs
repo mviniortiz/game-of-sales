@@ -29,6 +29,7 @@ for (const [arquivo, gerar] of auth) {
 // Prévias: o mesmo e-mail com dados de exemplo no lugar dos placeholders.
 const exemplo = (s) => s
     .replaceAll("{{ .ConfirmationURL }}", "https://vyzon.com.br/auth/v1/verify?token=exemplo&amp;type=recovery")
+    .replaceAll("{{ .TokenHash }}", "exemplo")
     .replaceAll("{{ .Email }}", "carla@solarsul.com.br")
     .replaceAll("{{ .NewEmail }}", "carla.souza@solarsul.com.br")
     .replaceAll("{{ .Token }}", "482913")

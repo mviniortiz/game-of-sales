@@ -154,15 +154,17 @@ const SignupV2 = () => {
         }
     };
 
-    // Conta criada é o Lead da campanha do Meta (o Raio-X automático começa
-    // aqui). Analytics nunca derruba o cadastro.
-    const marcarLead = () => {
+    // Cadastro completo = empresa criada. É o Lead da campanha do Meta e o
+    // register_complete do GA4, uma vez só por conta: quem ainda vai confirmar o
+    // e-mail não conta aqui (conta quando voltar e a empresa nascer).
+    // Analytics nunca derruba o cadastro.
+    const marcarLead = (via: "email" | "sessao") => {
         try {
             (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq?.("track", "Lead", { content_name: "raio_x_auto" });
         } catch {
             /* sem pixel */
         }
-        trackBehavior(FUNNEL_EVENTS.REGISTER_COMPLETE, { plan });
+        trackBehavior(FUNNEL_EVENTS.REGISTER_COMPLETE, { plan, via });
     };
 
     // Cria a empresa sem plano e vincula o usuário logado como admin. O
@@ -205,7 +207,7 @@ const SignupV2 = () => {
             if (ssoMode) {
                 setCriandoConta(true);
                 await createCompany();
-                marcarLead();
+                marcarLead("sessao");
                 toast.success("Conta criada.");
                 navigate(RAIO_X, { replace: true });
                 return;
@@ -240,14 +242,13 @@ const SignupV2 = () => {
                 // Conta criada mas sem sessão: a confirmação de email está ativa.
                 // Mostrar a tela dedicada em vez de navegar (senão a pessoa cai
                 // no login sem entender o que aconteceu).
-                trackBehavior(FUNNEL_EVENTS.REGISTER_START, { step: "confirm_email_sent", plan });
+                trackBehavior(FUNNEL_EVENTS.REGISTER_EMAIL_SENT, { plan });
                 logLandingEvent(FUNNEL_PAGE, "solar", "form_submit", { step: "confirm_email" });
-                marcarLead();
                 setConfirmSentTo(email.trim().toLowerCase());
                 return;
             }
             await createCompany();
-            marcarLead();
+            marcarLead("email");
             toast.success("Conta criada.");
             navigate(RAIO_X, { replace: true });
         } catch (err) {
