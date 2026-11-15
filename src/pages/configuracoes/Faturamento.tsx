@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { PLANS, formatPrice } from "@/config/plans";
 import { whatsappUrl } from "@/config/contact";
 import { formatError, normalizeSubscriptionStatus, type SubscriptionStatus } from "@/lib/utils";
+import { trackPurchase } from "@/lib/analytics";
 import { usePreviewConfig } from "./preview";
 
 // Preço, features e limites vêm da fonte única em src/config/plans.ts.
@@ -21,6 +22,18 @@ interface Subscription {
   stripe_customer_id: string | null;
 }
 
+// Compra medida uma vez por assinatura: voltar para ?assinatura=ok ou recarregar
+// não conta de novo. Espera o envio antes de a tela trocar.
+async function medirCompra(transactionId: string) {
+  const chave = `vyz_compra_medida_${transactionId}`;
+  try {
+    if (localStorage.getItem(chave)) return;
+    localStorage.setItem(chave, "1");
+  } catch {
+    // sem storage: mede mesmo assim
+  }
+  await trackPurchase({ value: PLANS.pro.monthlyPrice ?? 0, transactionId, plan: PLANS.pro.id });
+}
 
 export default function Faturamento() {
   const { isAdmin, companyId } = useAuth();
@@ -81,12 +94,13 @@ export default function Faturamento() {
       tentativas += 1;
       const { data } = await supabase
         .from("companies")
-        .select("subscription_status")
+        .select("subscription_status, stripe_subscription_id")
         .eq("id", effectiveCompanyId)
         .maybeSingle();
       if (data?.subscription_status === "active") {
         window.clearInterval(timer);
         toast.success("Pagamento aprovado. Sua conta está liberada.");
+        await medirCompra(data.stripe_subscription_id || effectiveCompanyId);
         // Recarrega para o menu e as travas lerem a assinatura nova. Vai para o
         // placar: conta paga sem a Lume configurada segue sozinha para a
         // conversa de configuração, e quem já configurou vê os primeiros passos.

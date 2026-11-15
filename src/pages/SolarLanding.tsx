@@ -75,10 +75,8 @@ const viewedAngles = new Set<SolarAngle>();
 
 const SolarLanding = ({ angle = "sumiu" }: { angle?: SolarAngle }) => {
     const copy = ANGLES[angle];
-    const trackWhatsappClick = (placement: string) => {
-        trackEvent(FUNNEL_EVENTS.LANDING_CTA_CLICK, { page: "home_solar", cta: "whatsapp", placement });
-        logLandingEvent(FUNNEL_PAGE, angle, "whatsapp_click", { placement });
-    };
+    // logLandingEvent grava no banco e espelha a ação no GA4.
+    const trackWhatsappClick = (placement: string) => logLandingEvent(FUNNEL_PAGE, angle, "whatsapp_click", { placement });
     const trackFormCta = (placement: string) => logLandingEvent(FUNNEL_PAGE, angle, "cta_click", { placement });
 
     useEffect(() => {

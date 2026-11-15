@@ -24,6 +24,11 @@ export const APP_EVENTS = {
     DEAL_STAGE_CHANGED: "deal_stage_changed",
     QUOTE_OUTCOME_SET: "quote_outcome_set",
     FILTER_APPLIED: "filter_applied",
+    PROPOSAL_GENERATED: "proposal_generated",
+    // Marcos: uma vez por empresa (trackPrimeiroDaEmpresa)
+    FIRST_DEAL_CREATED: "first_deal_created",
+    FIRST_SALE_CREATED: "first_sale_created",
+    FIRST_PROPOSAL_GENERATED: "first_proposal_generated",
     // Lembretes
     REMINDER_COMPLETED: "reminder_completed",
     REMINDER_SNOOZED: "reminder_snoozed",
@@ -174,6 +179,34 @@ export function trackApp(event: AppEventName, props: Props = {}) {
     } catch {
         // idem
     }
+}
+
+/**
+ * Marco que só vale na primeira vez da empresa (primeiro negócio, primeira
+ * proposta). `contar` devolve quantos já existem no banco depois da ação; o
+ * evento só sai quando é o primeiro. A resposta fica guardada neste navegador,
+ * então a contagem roda uma vez por empresa e não a cada ação.
+ */
+export async function trackPrimeiroDaEmpresa(event: AppEventName, contar: () => PromiseLike<number | null>, props: Props = {}) {
+    try {
+        const chave = `vyz_marco_${event}_${empresaAtual ?? "sem_empresa"}`;
+        if (localStorage.getItem(chave)) return;
+        const total = await contar();
+        // Não deu para contar: tenta de novo na próxima ação.
+        if (total === null) return;
+        localStorage.setItem(chave, "1");
+        if (total <= 1) trackApp(event, props);
+    } catch {
+        // idem
+    }
+}
+
+/** Quantas linhas a empresa atual tem numa tabela (sob RLS). null se a leitura falhar. */
+export async function contarDaEmpresa(tabela: "deals" | "vendas" | "proposals"): Promise<number | null> {
+    if (!empresaAtual) return null;
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { count, error } = await supabase.from(tabela).select("id", { count: "exact", head: true }).eq("company_id", empresaAtual);
+    return error ? null : (count ?? 0);
 }
 
 /** Só para testes: esvazia a fila sem enviar. */

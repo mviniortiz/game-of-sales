@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { trackEvent, FUNNEL_EVENTS } from "@/lib/analytics";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -43,7 +42,7 @@ import {
   Calendar, Flame, CheckCircle2, CalendarIcon
 } from "lucide-react";
 import { type Stage, deriveLegacyStage } from "@/lib/pipelineStyles";
-import { APP_EVENTS, trackApp } from "@/lib/appAnalytics";
+import { APP_EVENTS, contarDaEmpresa, trackApp, trackPrimeiroDaEmpresa } from "@/lib/appAnalytics";
 
 const schema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
@@ -192,8 +191,8 @@ export const NewDealModal = ({ open, onClose, onSuccess, stages, pipelineId }: N
       setSubmitted(true);
       setTimeout(() => {
         setSubmitted(false);
-        trackEvent(FUNNEL_EVENTS.FIRST_DEAL_CREATED);
         trackApp(APP_EVENTS.DEAL_CREATED, { origem: "manual" });
+        void trackPrimeiroDaEmpresa(APP_EVENTS.FIRST_DEAL_CREATED, () => contarDaEmpresa("deals"));
         toast.success("Oportunidade criada!");
         form.reset();
         setDisplayValue("");

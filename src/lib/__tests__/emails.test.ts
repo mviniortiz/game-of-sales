@@ -44,9 +44,20 @@ describe("e-mails do Vyzon", () => {
     });
 
     it("placeholders do Go passam intactos", () => {
-        expect(m.authRecuperarSenha().html).toContain('href="{{ .ConfirmationURL }}"');
+        expect(m.authConfirmarCadastro().html).toContain('href="{{ .ConfirmationURL }}"');
         expect(m.authTrocarEmail().html).toContain("{{ .NewEmail }}");
         expect(m.authReautenticar().html).toContain("{{ .Token }}");
+    });
+
+    // O link direto do Supabase entra no primeiro acesso: a prévia de link do
+    // WhatsApp e o antivírus do e-mail gastavam o convite antes da dona.
+    it.each([
+        ["convite", m.authConvite(), "invite"],
+        ["recuperar senha", m.authRecuperarSenha(), "recovery"],
+    ])("%s leva à página do Vyzon com o código, sem o link que entra sozinho", (_nome, e, tipo) => {
+        expect(e.html).toContain(`href="{{ .SiteURL }}/redefinir-senha?token_hash={{ .TokenHash }}&amp;type=${tipo}"`);
+        expect(e.text).toContain(`{{ .SiteURL }}/redefinir-senha?token_hash={{ .TokenHash }}&type=${tipo}`);
+        expect(e.html).not.toContain("{{ .ConfirmationURL }}");
     });
 
     it("escapa o que vem de fora", () => {

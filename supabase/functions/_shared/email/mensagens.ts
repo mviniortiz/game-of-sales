@@ -9,6 +9,12 @@ import { renderEmail, type Bloco, type EmailPronto } from "./layout.ts";
 // Os placeholders do Go ({{ .ConfirmationURL }}, {{ .Email }}) ficam como texto e o
 // Supabase troca na hora do envio. O link vale 1 hora (mailer_otp_exp = 3600 no
 // painel em 04/11/2026; mudou lá, muda aqui).
+//
+// Convite e recuperar senha NÃO usam {{ .ConfirmationURL }}: esse endereço entra
+// no primeiro acesso, e a prévia de link do WhatsApp ou o antivírus do e-mail
+// gastam o link antes da pessoa. Eles levam à nossa página com o código, que só
+// é conferido quando a pessoa salva a senha (src/lib/linkDeAcesso.ts).
+const linkDeSenha = (tipo: "invite" | "recovery") => `{{ .SiteURL }}/redefinir-senha?token_hash={{ .TokenHash }}&type=${tipo}`;
 
 export function authConfirmarCadastro(): EmailPronto {
     return renderEmail({
@@ -33,7 +39,7 @@ export function authRecuperarSenha(): EmailPronto {
         blocos: [
             { tipo: "texto", texto: "Recebemos um pedido para trocar a senha da conta {{ .Email }} no Vyzon. Se foi você, use o botão abaixo. O link vale por 1 hora." },
         ],
-        botao: { texto: "Criar senha nova", url: "{{ .ConfirmationURL }}" },
+        botao: { texto: "Criar senha nova", url: linkDeSenha("recovery") },
         linkReserva: true,
         nota: "Não pediu? Ignore este e-mail. Sua senha atual continua valendo.",
         rodape: "Você recebeu este e-mail porque alguém pediu para redefinir a senha desta conta.",
@@ -64,7 +70,7 @@ export function authConvite(): EmailPronto {
         blocos: [
             { tipo: "texto", texto: "Criaram um acesso ao Vyzon para {{ .Email }}. Defina sua senha pelo botão abaixo e você já entra. O link vale por 1 hora." },
         ],
-        botao: { texto: "Definir senha", url: "{{ .ConfirmationURL }}" },
+        botao: { texto: "Definir senha", url: linkDeSenha("invite") },
         linkReserva: true,
         nota: "Não esperava este convite? Ignore este e-mail.",
         rodape: "Você recebeu este e-mail porque alguém convidou este endereço para o Vyzon.",

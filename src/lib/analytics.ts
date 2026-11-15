@@ -1,128 +1,208 @@
-// Analytics & Conversion Tracking
-// Supports Google Analytics 4 (GA4) + Google Ads conversions
+// Medição do site e do app: GA4 + Google Ads (gtag.js) e Microsoft Clarity.
+// Regras que este arquivo garante:
+//   1. Só o site no ar mede (vyzon.com.br e subdomínios). Localhost e prévia da
+//      Vercel não carregam o gtag.js nem mandam nada.
+//   2. Nenhum evento se perde por ter saído cedo: o gtag.js só carrega depois da
+//      primeira interação, então o que dispara antes fica numa fila (guardada na
+//      sessão do navegador) e sai quando o script carrega, mesmo que a página
+//      tenha trocado no meio.
+//   3. Aparelho do time marca o tráfego como interno (traffic_type), para o
+//      filtro de tráfego interno do GA4 tirar dos relatórios.
 
 import { getAttribution } from "./attribution";
 
 const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
 const GADS_CONVERSION_ID = import.meta.env.VITE_GADS_CONVERSION_ID || "AW-18055201052";
-const GADS_CONVERSION_LABEL = "1oljCLaqtJMcEJyCsqFD";
-const GADS_DEMO_CONVERSION_LABEL = import.meta.env.VITE_GADS_DEMO_CONVERSION_LABEL;
+// Conversão "Compra" do Google Ads: assinatura paga, na volta do Stripe.
+const GADS_PURCHASE_LABEL = "1oljCLaqtJMcEJyCsqFD";
 
-// SHA-256 hex — Google Ads Enhanced Conversions espera lowercase, trimmed, hashed
-async function sha256Hex(value: string): Promise<string | undefined> {
-  try {
-    const normalized = value.trim().toLowerCase();
-    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(normalized));
-    return Array.from(new Uint8Array(buf))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-  } catch {
-    return undefined;
-  }
-}
-
-// E.164 best-effort: remove não-dígitos, garante + na frente
-function normalizePhone(raw: string): string {
-  const digits = raw.replace(/\D/g, "");
-  if (!digits) return "";
-  // Se já parece BR completo (13 dígitos com 55) ou já tem código, mantém
-  if (digits.startsWith("55") && digits.length >= 12) return `+${digits}`;
-  // Adiciona +55 default BR
-  if (digits.length >= 10) return `+55${digits}`;
-  return `+${digits}`;
-}
-
-// Type-safe gtag
 declare global {
   interface Window {
-    gtag: (...args: any[]) => void;
-    dataLayer: any[];
+    gtag: (...args: unknown[]) => void;
+    dataLayer: unknown[];
     // Microsoft Clarity — carregado pelo stub no index.html (após 1ª interação).
-    clarity?: (...args: any[]) => void;
+    clarity?: (...args: unknown[]) => void;
   }
 }
 
-// Funnel event names
+export type EventParams = Record<string, string | number | boolean>;
+
+// Nomes dos eventos do site e do funil de conta. Os do app logado ficam em
+// APP_EVENTS (src/lib/appAnalytics.ts).
 export const FUNNEL_EVENTS = {
-  // Landing page
+  // Landing
   LANDING_VIEW: "landing_page_view",
-  LANDING_CTA_CLICK: "landing_cta_click",
-  LANDING_PRICING_VIEW: "landing_pricing_view",
-  LANDING_SCROLL_DEPTH: "scroll_depth",
-  DEMO_OPEN: "demo_open",
-  AGENT_BUILDER_START: "agent_builder_start",
-  AGENT_BUILDER_LEAD: "agent_builder_lead",
-  ORCAMENTO_LEAD: "orcamento_lp_lead",
 
-  // Registration
+  // Cadastro
   REGISTER_START: "register_start",
+  /** Conta criada, esperando a pessoa confirmar o e-mail. Ainda não é cadastro. */
+  REGISTER_EMAIL_SENT: "register_email_sent",
+  /** Empresa criada: o cadastro acabou. Uma vez por conta. */
   REGISTER_COMPLETE: "register_complete",
-
-  // Onboarding steps
-  ONBOARDING_START: "onboarding_start",
-  ONBOARDING_STEP: "onboarding_step",
-  ONBOARDING_COMPANY: "onboarding_company_complete",
-  ONBOARDING_PROFILE: "onboarding_profile_complete",
-  ONBOARDING_PIPELINE: "onboarding_pipeline_complete",
-  ONBOARDING_COMPLETE: "onboarding_complete",
-
-  // Payment
-  PAYMENT_START: "payment_start",
-  PAYMENT_PLAN_SELECT: "payment_plan_select",
-  PAYMENT_SUBMIT: "payment_submit",
-  PAYMENT_SUCCESS: "payment_success",
-  PAYMENT_ERROR: "payment_error",
 
   // Plano
   PLAN_LOCK_VIEW: "plan_lock_view",
   UPGRADE_CLICK: "upgrade_click",
-
-  // Demo
-  DEMO_REQUEST_SUBMIT: "demo_request_submit",
-  DEMO_SCHEDULED: "demo_scheduled",
-
-  // Engagement
-  FIRST_DEAL_CREATED: "first_deal_created",
-  FIRST_SALE_CREATED: "first_sale_created",
-  TEAM_INVITE_SENT: "team_invite_sent",
+  /** Assinatura paga confirmada na volta do Stripe (evento padrão do GA4). */
+  PURCHASE: "purchase",
 } as const;
 
-// Initialize GA4 script dynamically
+// ── Trava de domínio ────────────────────────────────────────────────────────
+
+const DOMINIO_MEDIDO = /(^|\.)vyzon\.com\.br$/;
+
+/** Só o site no ar mede. Mesma regra do Pixel e do Clarity no index.html. */
+export function dominioMedido(host: string = typeof window === "undefined" ? "" : window.location.hostname): boolean {
+  return DOMINIO_MEDIDO.test(host);
+}
+
+// ── Tráfego interno ─────────────────────────────────────────────────────────
+
+const INTERNO_KEY = "vyz_interno";
+let internoAvisado = false;
+
+/**
+ * Marca (ou desmarca) este navegador como do time. Vale daqui pra frente, em
+ * qualquer página. Também dá para marcar abrindo o site com ?interno=1 e
+ * desmarcar com ?interno=0.
+ */
+export function marcarInterno(sim = true) {
+  try {
+    if (sim) localStorage.setItem(INTERNO_KEY, "1");
+    else localStorage.removeItem(INTERNO_KEY);
+  } catch {
+    // sem storage: vale só para esta página
+  }
+  // Uma vez por página: quem chama a cada render não enche a fila.
+  if (!sim || internoAvisado) return;
+  internoAvisado = true;
+  gtag("set", { traffic_type: "internal" });
+}
+
+/** Este navegador é do time? */
+export function ehInterno(): boolean {
+  try {
+    const q = new URLSearchParams(window.location.search).get("interno");
+    if (q === "1") localStorage.setItem(INTERNO_KEY, "1");
+    if (q === "0") localStorage.removeItem(INTERNO_KEY);
+    return localStorage.getItem(INTERNO_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+// ── Fila ────────────────────────────────────────────────────────────────────
+// "esperando": o gtag.js ainda não carregou; tudo vai para a fila.
+// "ligado": o script carregou; vai direto.
+// "desligado": fora do domínio ou sem ID do GA4; nada é guardado nem enviado.
+
+type Comando = [string, ...unknown[]];
+type Estado = "esperando" | "ligado" | "desligado";
+
+const FILA_KEY = "vyz_ga_fila";
+const TETO_FILA = 60;
+
+let estado: Estado = typeof window !== "undefined" && !!GA_MEASUREMENT_ID && dominioMedido() ? "esperando" : "desligado";
+let iniciado = false;
+let fila: Comando[] = estado === "esperando" ? lerFila() : [];
+
+function lerFila(): Comando[] {
+  try {
+    const salvo = JSON.parse(sessionStorage.getItem(FILA_KEY) || "[]");
+    return Array.isArray(salvo) ? (salvo.filter((c) => Array.isArray(c) && typeof c[0] === "string") as Comando[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function salvarFila() {
+  try {
+    if (fila.length) sessionStorage.setItem(FILA_KEY, JSON.stringify(fila));
+    else sessionStorage.removeItem(FILA_KEY);
+  } catch {
+    // sem storage: a fila vale só para esta página
+  }
+}
+
+/** Único caminho até o gtag. Nunca joga exceção: medição não derruba a tela. */
+function gtag(...comando: Comando) {
+  try {
+    if (estado === "desligado") return;
+    if (estado === "ligado") {
+      window.gtag(...comando);
+      return;
+    }
+    if (fila.length >= TETO_FILA) return;
+    fila.push(comando);
+    salvarFila();
+  } catch {
+    // idem
+  }
+}
+
+function soltarFila() {
+  estado = "ligado";
+  const pendentes = fila;
+  fila = [];
+  salvarFila();
+  for (const comando of pendentes) {
+    try {
+      window.gtag(...comando);
+    } catch {
+      // um comando ruim não segura os outros
+    }
+  }
+}
+
+/**
+ * Carrega o gtag.js e configura o GA4. Chamado pelo main.tsx depois da primeira
+ * interação (ou de 4s), para o script ficar fora da janela de TBT.
+ */
 export function initAnalytics() {
-  if (!GA_MEASUREMENT_ID) return;
+  if (estado === "desligado" || iniciado) return;
+  iniciado = true;
+  try {
+    window.dataLayer = window.dataLayer || [];
+    // Precisa empurrar o objeto `arguments`: o gtag.js ignora array comum.
+    window.gtag = function () {
+      // eslint-disable-next-line prefer-rest-params
+      window.dataLayer.push(arguments);
+    };
+    window.gtag("js", new Date());
+    internoAvisado = ehInterno();
+    window.gtag("config", GA_MEASUREMENT_ID, {
+      send_page_view: true,
+      ...(internoAvisado ? { traffic_type: "internal" } : {}),
+    });
+    // Google Ads (AW-...) já tem config feito pelo inline script do index.html.
+    // Não reconfigurar aqui para evitar double-config que pode suprimir conversions.
 
-  // Avoid double-init
-  if (document.getElementById("ga-script")) return;
+    // Marca a SESSÃO com a hipótese de consciência (não só a conversão), pra dar
+    // pra segmentar conversão por estágio mental no GA4/Clarity.
+    reportAwareness();
 
-  // Load gtag.js
-  const script = document.createElement("script");
-  script.id = "ga-script";
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-  document.head.appendChild(script);
-
-  // Initialize dataLayer
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = function () {
-    window.dataLayer.push(arguments);
-  };
-  window.gtag("js", new Date());
-  window.gtag("config", GA_MEASUREMENT_ID, {
-    send_page_view: true,
-  });
-
-  // Google Ads (AW-...) já tem config feito pelo inline script do index.html.
-  // Não reconfigurar aqui para evitar double-config que pode suprimir conversions.
-
-  // Marca a SESSÃO com a hipótese de consciência (não só a conversão), pra dar
-  // pra segmentar conversão por estágio mental no GA4/Clarity. Sem isso a média
-  // esconde o erro (página converte no agregado e desperdiça tráfego alto-intenção).
-  reportAwareness();
+    const script = document.createElement("script");
+    script.id = "ga-script";
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+    // A fila só sai com o script de pé: antes disso a página pode trocar e o
+    // que estiver só no dataLayer morre junto.
+    script.onload = soltarFila;
+    // Bloqueador de anúncio: o script nunca vem. Para de guardar o que não vai sair.
+    script.onerror = () => {
+      estado = "desligado";
+      fila = [];
+      salvarFila();
+    };
+    document.head.appendChild(script);
+  } catch {
+    estado = "desligado";
+  }
 }
 
 // Envia canal + hipótese de consciência pro GA4 (user_property + evento) e Clarity
 // (tags filtráveis). Lê o first-touch já capturado no bootstrap (getAttribution).
-export function reportAwareness() {
+function reportAwareness() {
   try {
     const a = getAttribution();
     if (!a) return;
@@ -132,11 +212,11 @@ export function reportAwareness() {
       utm_campaign: a.utm_campaign || "(none)",
       query_intent: a.query_intent || "(none)",
     };
-    // user_property: segmenta relatórios inteiros por consciência, não só eventos.
-    window.gtag?.("set", "user_properties", {
+    // user_property na frente da fila: vale para os eventos que esperavam.
+    fila.unshift(["set", "user_properties", {
       awareness_hypothesis: params.awareness_hypothesis,
       traffic_source: params.traffic_source,
-    });
+    }]);
     trackEvent("awareness_detected", params);
     claritySet("awareness", params.awareness_hypothesis);
     claritySet("traffic_source", params.traffic_source);
@@ -145,132 +225,56 @@ export function reportAwareness() {
   }
 }
 
-// Track a custom event — sem send_to, vai pra TODOS destinos configurados
-// (GA4 G-YK8230WKT3 + Google Ads AW-18055201052)
-export function trackEvent(
-  eventName: string,
-  params?: Record<string, string | number | boolean>
-) {
-  try {
-    window.gtag?.("event", eventName, params || {});
-  } catch {
-    // Silently fail - analytics should never break the app
-  }
+/**
+ * Evento para o GA4 (e para o Google Ads, que escuta o mesmo gtag). Pode ser
+ * chamado a qualquer hora: antes do gtag.js carregar, espera na fila.
+ */
+export function trackEvent(eventName: string, params?: EventParams) {
+  gtag("event", eventName, params || {});
 }
 
-// Track Google Ads conversion
-export function trackConversion(
-  conversionLabel: string,
-  value?: number,
-  currency = "BRL"
-) {
-  if (!GADS_CONVERSION_ID || !conversionLabel) return;
-
-  try {
-    window.gtag?.("event", "conversion", {
-      send_to: `${GADS_CONVERSION_ID}/${conversionLabel}`,
-      value,
-      currency,
-    });
-  } catch {
-    // Silently fail
+/**
+ * Assinatura paga. Manda o `purchase` do GA4 e a conversão "Compra" do Google
+ * Ads. A promessa resolve quando já é seguro trocar de página: na hora, se o
+ * evento ficou na fila (ela sobrevive à troca), ou quando o GA4 confirma o
+ * envio, com teto de 1,2s.
+ */
+export function trackPurchase(o: { value: number; transactionId: string; plan: string }): Promise<void> {
+  const compra = {
+    transaction_id: o.transactionId,
+    value: o.value,
+    currency: "BRL",
+    items: [{ item_id: o.plan, item_name: "Vyzon", price: o.value, quantity: 1 }],
+  };
+  const ads = {
+    send_to: `${GADS_CONVERSION_ID}/${GADS_PURCHASE_LABEL}`,
+    value: o.value,
+    currency: "BRL",
+    transaction_id: o.transactionId,
+  };
+  clarityEvent(FUNNEL_EVENTS.PURCHASE);
+  clarityUpgrade(FUNNEL_EVENTS.PURCHASE);
+  if (estado !== "ligado") {
+    gtag("event", FUNNEL_EVENTS.PURCHASE, compra);
+    gtag("event", "conversion", ads);
+    return Promise.resolve();
   }
-}
-
-// Track Google Ads purchase conversion (registration/checkout)
-export function trackPurchaseConversion(value?: number, transactionId?: string, isNewCustomer = true) {
-  try {
-    window.gtag?.("event", "conversion", {
-      send_to: `${GADS_CONVERSION_ID}/${GADS_CONVERSION_LABEL}`,
-      value: value || 1.0,
-      currency: "BRL",
-      transaction_id: transactionId || "",
-      new_customer: isNewCustomer,
-    });
-  } catch {
-    // Silently fail
-  }
-}
-
-// Track Google Ads demo request conversion (lead signal for PMax).
-// Atribuição de click é feita pelo auto-tagging do Google Ads (cookie _gcl_aw),
-// NÃO precisa passar gclid manualmente. Enhanced Conversions só é enviado se
-// flag VITE_GADS_ENHANCED_CONVERSIONS estiver ativada (precisa ser habilitado
-// no painel do Google Ads antes, senão a conversion inteira pode ser rejeitada).
-export async function trackDemoConversion(opts?: { email?: string; phone?: string; value?: number; leadId?: string }) {
-  if (!GADS_DEMO_CONVERSION_LABEL) {
-    console.warn(
-      "[analytics] VITE_GADS_DEMO_CONVERSION_LABEL not set — demo conversion will NOT be sent to Google Ads"
-    );
-    return;
-  }
-
-  // gtag.js pode não ter carregado (adblocker, network, CSP). Sem ele a conversion
-  // só vai pro dataLayer e nunca chega ao servidor Google Ads.
-  if (typeof window.gtag !== "function") {
-    console.warn("[gads] window.gtag unavailable — demo conversion NOT delivered (adblocker or script load failure)");
-    return;
-  }
-
-  const enhancedEnabled = import.meta.env.VITE_GADS_ENHANCED_CONVERSIONS === "true";
-
-  if (enhancedEnabled && (opts?.email || opts?.phone)) {
-    try {
-      const userData: Record<string, string> = {};
-      if (opts.email) {
-        const h = await sha256Hex(opts.email);
-        if (h) userData.sha256_email_address = h;
-      }
-      if (opts.phone) {
-        const h = await sha256Hex(normalizePhone(opts.phone));
-        if (h) userData.sha256_phone_number = h;
-      }
-      if (Object.keys(userData).length) {
-        window.gtag("set", "user_data", userData);
-      }
-    } catch {
-      // Enhanced Conversions nunca pode bloquear a conversão principal
-    }
-  }
-
-  try {
-    const sendTo = `${GADS_CONVERSION_ID}/${GADS_DEMO_CONVERSION_LABEL}`;
-    let acked = false;
-    const ackTimeoutId = window.setTimeout(() => {
-      if (!acked) {
-        console.warn(`[gads] demo conversion NOT acked in 3s — hit likely blocked`, sendTo);
-      }
-    }, 3000);
-
-    window.gtag("event", "conversion", {
-      send_to: sendTo,
-      currency: "BRL",
-      value: opts?.value ?? 50,
-      transaction_id: opts?.leadId,
+  return new Promise((resolve) => {
+    const teto = window.setTimeout(resolve, 1200);
+    gtag("event", FUNNEL_EVENTS.PURCHASE, {
+      ...compra,
       event_callback: () => {
-        acked = true;
-        window.clearTimeout(ackTimeoutId);
-        console.log("[gads] demo conversion acked", sendTo);
+        window.clearTimeout(teto);
+        resolve();
       },
     });
-  } catch (e) {
-    console.warn("[gads] trackDemoConversion threw", e);
-  }
+    gtag("event", "conversion", ads);
+  });
 }
 
-// Track page view (for SPA navigation)
-export function trackPageView(path: string, title?: string) {
-  if (!GA_MEASUREMENT_ID) return;
-
-  try {
-    window.gtag?.("event", "page_view", {
-      page_path: path,
-      page_title: title,
-      send_to: GA_MEASUREMENT_ID,
-    });
-  } catch {
-    // Silently fail
-  }
+/** Só para testes: estado da fila e do envio. */
+export function _medicao() {
+  return { estado, fila: [...fila] };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -317,25 +321,17 @@ export function clarityUpgrade(reason: string) {
   }
 }
 
-// Eventos de comportamento da demo/Lume. Mesmos nomes em GA4 (funil mensurável) e
-// no Clarity (filtro de sessão). Use trackBehavior() pra disparar nos dois.
+// Eventos de comportamento da navegação e da Lume. Mesmos nomes em GA4 (funil
+// mensurável) e no Clarity (filtro de sessão). Use trackBehavior() pra disparar nos dois.
 export const DEMO_EVENTS = {
-  DEMO_START: "demo_start",
-  EVA_STEP_VIEW: "eva_step_view",
   NAV_TAB_CLICK: "nav_tab_click",
-  NAV_OFF_FLOW: "nav_off_flow",
-  DEMO_CTA: "demo_cta",
-  DEMO_COMPLETE: "demo_complete",
   EVA_SUGGESTION_SHOWN: "eva_suggestion_shown",
   EVA_SUGGESTION_ACCEPTED: "eva_suggestion_accepted",
   EVA_SUGGESTION_ADJUSTED: "eva_suggestion_adjusted",
 } as const;
 
 /** Dispara um evento de comportamento em GA4 (+Ads) E no Clarity de uma vez. */
-export function trackBehavior(
-  eventName: string,
-  params?: Record<string, string | number | boolean>
-) {
+export function trackBehavior(eventName: string, params?: EventParams) {
   trackEvent(eventName, params);
   clarityEvent(eventName);
 }

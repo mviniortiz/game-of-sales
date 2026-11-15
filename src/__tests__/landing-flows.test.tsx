@@ -53,12 +53,9 @@ vi.mock('@/lib/sentry', () => ({
 
 vi.mock('@/lib/analytics', () => ({
     trackEvent: vi.fn(),
+    ehInterno: () => false,
     FUNNEL_EVENTS: {
-        LANDING_VIEW: 'landing_view',
-        LANDING_CTA_CLICK: 'landing_cta_click',
-        DEMO_FORM_VIEW: 'demo_form_view',
-        DEMO_FORM_SUBMIT: 'demo_form_submit',
-        DEMO_SCHEDULED: 'demo_scheduled',
+        LANDING_VIEW: 'landing_page_view',
     },
 }));
 
